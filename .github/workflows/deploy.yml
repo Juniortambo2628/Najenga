@@ -91,189 +91,189 @@ jobs:
       - name: Setup index.php and symlinks
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
-set -e
+          set -e
 
-# Frontend index.php
-cat > ~/najenga.okjtech.co.ke/index.php << 'ENDPHP'
-<?php
+          # Frontend index.php
+          cat > ~/najenga.okjtech.co.ke/index.php << 'ENDPHP'
+          <?php
 
-use Illuminate\Http\Request;
+          use Illuminate\Http\Request;
 
-define('LARAVEL_START', microtime(true));
+          define('LARAVEL_START', microtime(true));
 
-if (file_exists($maintenance = __DIR__ . '/../najenga-core/storage/framework/maintenance.php')) {
-    require $maintenance;
-}
+          if (file_exists($maintenance = __DIR__ . '/../najenga-core/storage/framework/maintenance.php')) {
+              require $maintenance;
+          }
 
-require __DIR__ . '/../najenga-core/vendor/autoload.php';
+          require __DIR__ . '/../najenga-core/vendor/autoload.php';
 
-$app = require_once __DIR__ . '/../najenga-core/bootstrap/app.php';
+          $app = require_once __DIR__ . '/../najenga-core/bootstrap/app.php';
 
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+          $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-$response = $kernel->handle(
-    $request = Request::capture()
-)->send();
+          $response = $kernel->handle(
+              $request = Request::capture()
+          )->send();
 
-$kernel->terminate($request, $response);
-ENDPHP
+          $kernel->terminate($request, $response);
+          ENDPHP
 
-# .htaccess for Apache
-cat > ~/najenga.okjtech.co.ke/.htaccess << 'ENDHT'
-RewriteEngine On
-RewriteRule ^(.*)$ public/$1 [L]
-ENDHT
+          # .htaccess for Apache
+          cat > ~/najenga.okjtech.co.ke/.htaccess << 'ENDHT'
+          RewriteEngine On
+          RewriteRule ^(.*)$ public/$1 [L]
+          ENDHT
 
-# Backend index.php
-cat > ~/najenga-core/public/index.php << 'ENDPHP2'
-<?php
+          # Backend index.php
+          cat > ~/najenga-core/public/index.php << 'ENDPHP2'
+          <?php
 
-use Illuminate\Http\Request;
+          use Illuminate\Http\Request;
 
-define('LARAVEL_START', microtime(true));
+          define('LARAVEL_START', microtime(true));
 
-if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
-    require $maintenance;
-}
+          if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+              require $maintenance;
+          }
 
-require __DIR__.'/../vendor/autoload.php';
+          require __DIR__.'/../vendor/autoload.php';
 
-$app = require_once __DIR__.'/../bootstrap/app.php';
+          $app = require_once __DIR__.'/../bootstrap/app.php';
 
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+          $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-$response = $kernel->handle(
-    $request = Request::capture()
-)->send();
+          $response = $kernel->handle(
+              $request = Request::capture()
+          )->send();
 
-$kernel->terminate($request, $response);
-ENDPHP2
+          $kernel->terminate($request, $response);
+          ENDPHP2
 
-# Storage symlink
-if [ ! -L ~/najenga.okjtech.co.ke/storage ]; then
-  rm -rf ~/najenga.okjtech.co.ke/storage
-  ln -s ~/najenga-core/storage/app/public ~/najenga.okjtech.co.ke/storage
-  echo "Storage symlink created"
-else
-  echo "Storage symlink already exists"
-fi
+          # Storage symlink
+          if [ ! -L ~/najenga.okjtech.co.ke/storage ]; then
+            rm -rf ~/najenga.okjtech.co.ke/storage
+            ln -s ~/najenga-core/storage/app/public ~/najenga.okjtech.co.ke/storage
+            echo "Storage symlink created"
+          else
+            echo "Storage symlink already exists"
+          fi
 
-echo "index.php and symlinks configured"
-ENDSSH
+          echo "index.php and symlinks configured"
+          ENDSSH
 
       - name: Install composer dependencies on server
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
-set -e
-cd ~/najenga-core
+          set -e
+          cd ~/najenga-core
 
-if command -v composer &> /dev/null; then
-  COMPOSER="composer"
-elif [ -f ~/composer.phar ]; then
-  COMPOSER="php ~/composer.phar"
-else
-  echo "Installing composer..."
-  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-  php composer-setup.php --install-dir=~ --filename=composer.phar
-  rm composer-setup.php
-  COMPOSER="php ~/composer.phar"
-fi
+          if command -v composer &> /dev/null; then
+            COMPOSER="composer"
+          elif [ -f ~/composer.phar ]; then
+            COMPOSER="php ~/composer.phar"
+          else
+            echo "Installing composer..."
+            php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+            php composer-setup.php --install-dir=~ --filename=composer.phar
+            rm composer-setup.php
+            COMPOSER="php ~/composer.phar"
+          fi
 
-$COMPOSER install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-echo "Composer dependencies installed"
-ENDSSH
+          $COMPOSER install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+          echo "Composer dependencies installed"
+          ENDSSH
 
       - name: Set permissions
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
-set -e
-cd ~/najenga-core
-chmod -R 775 storage
-chmod -R 775 bootstrap/cache
-chmod 600 .env
-chmod -R 755 ~/najenga.okjtech.co.ke
-echo "Permissions set"
-ENDSSH
+          set -e
+          cd ~/najenga-core
+          chmod -R 775 storage
+          chmod -R 775 bootstrap/cache
+          chmod 600 .env
+          chmod -R 755 ~/najenga.okjtech.co.ke
+          echo "Permissions set"
+          ENDSSH
 
       - name: Run migrations and cache
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
-set -e
-cd ~/najenga-core
-php artisan migrate --force
-php artisan config:cache
-php artisan event:cache
-php artisan route:cache
-php artisan view:cache
-php artisan icons:cache 2>/dev/null || true
-php artisan queue:restart 2>/dev/null || true
-echo "Migrations and caching completed"
-ENDSSH
+          set -e
+          cd ~/najenga-core
+          php artisan migrate --force
+          php artisan config:cache
+          php artisan event:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan icons:cache 2>/dev/null || true
+          php artisan queue:restart 2>/dev/null || true
+          echo "Migrations and caching completed"
+          ENDSSH
 
       - name: Verify deployment
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
-set -e
-echo "=== Deployment Verification ==="
-echo ""
+          set -e
+          echo "=== Deployment Verification ==="
+          echo ""
 
-ERRORS=0
+          ERRORS=0
 
-# Check storage symlink
-if [ -L ~/najenga.okjtech.co.ke/storage ]; then
-  echo "OK: Storage symlink exists"
-else
-  echo "FAIL: Storage symlink MISSING"
-  ERRORS=$((ERRORS+1))
-fi
+          # Check storage symlink
+          if [ -L ~/najenga.okjtech.co.ke/storage ]; then
+            echo "OK: Storage symlink exists"
+          else
+            echo "FAIL: Storage symlink MISSING"
+            ERRORS=$((ERRORS+1))
+          fi
 
-# Check key directories
-for dir in ~/najenga-core/app ~/najenga-core/bootstrap ~/najenga-core/config ~/najenga-core/database ~/najenga-core/resources ~/najenga-core/routes ~/najenga-core/vendor ~/najenga-core/storage/app/public ~/najenga-core/storage/logs; do
-  if [ -d "$dir" ]; then
-    echo "OK: $dir"
-  else
-    echo "FAIL: $dir MISSING"
-    ERRORS=$((ERRORS+1))
-  fi
-done
+          # Check key directories
+          for dir in ~/najenga-core/app ~/najenga-core/bootstrap ~/najenga-core/config ~/najenga-core/database ~/najenga-core/resources ~/najenga-core/routes ~/najenga-core/vendor ~/najenga-core/storage/app/public ~/najenga-core/storage/logs; do
+            if [ -d "$dir" ]; then
+              echo "OK: $dir"
+            else
+              echo "FAIL: $dir MISSING"
+              ERRORS=$((ERRORS+1))
+            fi
+          done
 
-# Check .env
-if [ -f ~/najenga-core/.env ]; then
-  echo "OK: .env exists"
-else
-  echo "FAIL: .env MISSING"
-  ERRORS=$((ERRORS+1))
-fi
+          # Check .env
+          if [ -f ~/najenga-core/.env ]; then
+            echo "OK: .env exists"
+          else
+            echo "FAIL: .env MISSING"
+            ERRORS=$((ERRORS+1))
+          fi
 
-# Check frontend index.php
-if [ -f ~/najenga.okjtech.co.ke/index.php ]; then
-  echo "OK: Frontend index.php exists"
-else
-  echo "FAIL: Frontend index.php MISSING"
-  ERRORS=$((ERRORS+1))
-fi
+          # Check frontend index.php
+          if [ -f ~/najenga.okjtech.co.ke/index.php ]; then
+            echo "OK: Frontend index.php exists"
+          else
+            echo "FAIL: Frontend index.php MISSING"
+            ERRORS=$((ERRORS+1))
+          fi
 
-echo ""
-if [ $ERRORS -eq 0 ]; then
-  echo "=== ALL CHECKS PASSED ==="
-else
-  echo "=== $ERRORS CHECKS FAILED ==="
-  exit 1
-fi
-ENDSSH
+          echo ""
+          if [ $ERRORS -eq 0 ]; then
+            echo "=== ALL CHECKS PASSED ==="
+          else
+            echo "=== $ERRORS CHECKS FAILED ==="
+            exit 1
+          fi
+          ENDSSH
 
       - name: Post-deploy cleanup
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
-set -e
-cd ~/najenga-core
-rm -rf bootstrap/cache/*.php
-rm -rf storage/framework/views/*.php
-rm -rf storage/framework/sessions/*
-find storage/logs -name "*.log" -mtime +7 -delete 2>/dev/null || true
-find storage/app -name "temp_receipts/*" -mtime +1 -delete 2>/dev/null || true
-echo "Cleanup completed"
-ENDSSH
+          set -e
+          cd ~/najenga-core
+          rm -rf bootstrap/cache/*.php
+          rm -rf storage/framework/views/*.php
+          rm -rf storage/framework/sessions/*
+          find storage/logs -name "*.log" -mtime +7 -delete 2>/dev/null || true
+          find storage/app -name "temp_receipts/*" -mtime +1 -delete 2>/dev/null || true
+          echo "Cleanup completed"
+          ENDSSH
 
       - name: Cleanup local bundle
         if: always()
