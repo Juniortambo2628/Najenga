@@ -15,12 +15,11 @@ return new class extends Migration
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
             $table->text('body');
-            $table->integer('user_id'); // Signed int to match users.id
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             
             // Manual morphs to control length and type
             $table->string('commentable_type', 191); 
-            $table->integer('commentable_id'); // Int to match photos.id/projects.id
+            $table->unsignedBigInteger('commentable_id');
             $table->index(['commentable_type', 'commentable_id']);
             
             $table->timestamps();
