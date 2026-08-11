@@ -39,6 +39,10 @@ jobs:
 
       - name: Generate APP_KEY if empty
         run: |
+          if [ ! -f .env.production ]; then
+            cp .env.example .env.production
+            echo "Created .env.production from .env.example"
+          fi
           if ! grep -q "APP_KEY=base64:" .env.production 2>/dev/null || [ -z "$(grep 'APP_KEY=base64:' .env.production 2>/dev/null | cut -d'=' -f2)" ]; then
             KEY=$(php artisan key:generate --show)
             sed -i "s|^APP_KEY=.*|APP_KEY=base64:$KEY|" .env.production
