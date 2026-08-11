@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('username', 50);
+            $table->string('email', 100);
+            $table->string('password');
+            $table->string('first_name', 50);
+            $table->string('last_name', 50);
+            $table->string('phone', 20)->nullable();
+            $table->string('telegram_chat_id')->nullable();
+            $table->enum('role', ['admin', 'client', 'manager'])->default('client');
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
+            $table->string('profile_image')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->rememberToken();
+            $table->timestamps();
+
+            $table->unique('email');
+            $table->unique('username');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('users');
+    }
+};

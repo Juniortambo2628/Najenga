@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom theme colors matching legacy Najenga design */
+@layer base {
+    html, body {
+        @apply overflow-x-hidden;
+        max-width: 100vw;
+    }
+    :root {
+        --color-maroon: 139 0 0;
+        --color-crimson: 220 20 60;
+        --color-success: 40 167 69;
+        --color-warning: 255 193 7;
+        --color-danger: 220 53 69;
+    }
+}
+
+@layer components {
+    /* ============================================
+       LANDING PAGE STANDARDIZED CLASSES
+       ============================================ */
+
+    /* Landing CTA primary button (used in ScrollSection) */
+    .landing-cta-primary {
+        @apply inline-flex items-center gap-2 px-8 py-3 bg-white text-black font-semibold rounded-full transition-colors duration-300 hover:bg-gray-200;
+    }
+
+    /* Landing CTA section buttons (brand gradient) */
+    .landing-cta-brand {
+        @apply inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 shadow-xl bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white hover:shadow-lg hover:shadow-[rgb(139,0,0)]/25;
+    }
+
+    .landing-cta-secondary {
+        @apply inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 border-2 border-white text-white hover:bg-white/10;
+    }
+
+    /* Scroll arrows for ScrollSection */
+    .landing-scroll-arrow {
+        @apply w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all duration-300 hover:bg-white/20 hover:scale-110 cursor-pointer;
+    }
+
+    /* Scroll card tags */
+    .landing-card-tag {
+        @apply text-xs text-white/70 bg-white/10 backdrop-blur-sm px-2 py-1 rounded-full;
+    }
+
+    /* Landing section headings (uppercase, bold, tight leading) */
+    .landing-section-title {
+        @apply text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight uppercase;
+    }
+
+    /* Landing section body text */
+    .landing-section-text {
+        @apply text-lg text-gray-400 leading-relaxed;
+    }
+
+    /* ============================================
+       END LANDING PAGE STANDARDIZED CLASSES
+       ============================================ */
+
+    /* ============================================
+       AUTH PAGE STANDARDIZED CLASSES
+       ============================================ */
+
+    .auth-input {
+        @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 transition-all duration-300 focus:outline-none focus:border-[rgb(139,0,0)] focus:ring-2 focus:ring-[rgb(139,0,0)]/30;
+    }
+
+    .auth-submit {
+        @apply w-full py-3.5 px-6 bg-white text-black font-semibold rounded-full shadow-lg transition-all duration-300 hover:bg-gray-200 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed mt-2;
+    }
+
+    /* ============================================
+       END AUTH PAGE STANDARDIZED CLASSES
+       ============================================ */
+
+    /* Glass Card effect */
+    .glass-card {
+        @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg transition-all duration-300;
+    }
+    .glass-card:hover {
+        @apply -translate-y-1 shadow-xl;
+    }
+
+    /* Primary Button with gradient */
+    .btn-primary {
+        @apply bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white font-semibold rounded-full px-6 py-2 transition-all duration-300 hover:shadow-lg;
+    }
+
+    /* Quick Action Button */
+    .quick-action-btn {
+        @apply flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 text-gray-300 transition-all duration-300 hover:bg-white/10 hover:text-white hover:-translate-y-0.5 no-underline;
+    }
+    .quick-action-icon {
+        @apply w-12 h-12 rounded-full flex items-center justify-center text-xl bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white;
+    }
+
+    /* Glass Navigation Button */
+    .glass-nav-btn {
+        @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium transition-all duration-300 hover:bg-white/20;
+    }
+
+    /* Glass Stats Bar */
+    .glass-stat-bar {
+        @apply bg-white/10 backdrop-blur-md border border-white/20;
+    }
+    .glass-stat-bar > div + div {
+        @apply border-l border-white/20;
+    }
+
+    /* Hide scrollbar for horizontal scroll sections */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    /* Subtle transparent scrollbar — applied globally */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    }
+
+    /* Global scrollbar for all scrollable areas */
+    ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+    }
+
+    /* React Chat Elements dark theme overrides */
+    .dark-theme .rce-container-ccl {
+        background-color: transparent !important;
+    }
+    .dark-theme .rce-citem {
+        background-color: transparent !important;
+        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    .dark-theme .rce-citem:hover {
+        background-color: rgba(255,255,255,0.05) !important;
+    }
+    .dark-theme .rce-citem-body--top-title {
+        color: #fff !important;
+    }
+    .dark-theme .rce-citem-body--bottom-status {
+        color: #666 !important;
+    }
+    .rce-mbox {
+        background-color: #1a1a1a !important;
+        color: #eee !important;
+        box-shadow: none !important;
+        border-radius: 12px !important;
+    }
+    .rce-mbox-right {
+        background-color: #8B0000 !important;
+        color: #fff !important;
+    }
+    .rce-mbox-text {
+        color: inherit !important;
+    }
+    .rce-mbox-time {
+        color: rgba(255,255,255,0.4) !important;
+    }
+    .rce-input {
+        background-color: #1a1a1a !important;
+        color: #fff !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+    }
+}

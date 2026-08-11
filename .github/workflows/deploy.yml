@@ -1,0 +1,301 @@
+name: Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ["Pre-Deploy Tests & Auto-Fix"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, json, bcmath, pdo, pdo_mysql, fileinfo, gd, zip, imagick
+          coverage: none
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-progress --prefer-dist
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Generate APP_KEY if empty
+        run: |
+          if ! grep -q "APP_KEY=base64:" .env.production 2>/dev/null || [ -z "$(grep 'APP_KEY=base64:' .env.production 2>/dev/null | cut -d'=' -f2)" ]; then
+            KEY=$(php artisan key:generate --show)
+            sed -i "s|^APP_KEY=.*|APP_KEY=base64:$KEY|" .env.production
+            echo "Generated new APP_KEY"
+          else
+            echo "APP_KEY already set"
+          fi
+
+      - name: Prepare deployment bundle
+        run: |
+          mkdir -p deploy-bundle
+          mkdir -p deploy-bundle/backend
+          rsync -a --exclude='node_modules' --exclude='vendor' --exclude='.git' --exclude='public/build' \
+                --exclude='deploy-bundle' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' \
+                --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' \
+                ./ deploy-bundle/backend/
+          mkdir -p deploy-bundle/public
+          cp -r public/* deploy-bundle/public/
+          cp -r public/build deploy-bundle/public/ 2>/dev/null || true
+          cp .env.production deploy-bundle/backend/.env
+          echo "Bundle prepared: $(find deploy-bundle/ -type f | wc -l) files"
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "SSH configured"
+
+      - name: Create directories on server
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "set -e; mkdir -p ~/najenga-core/{storage/app/public,storage/framework/{cache/data,sessions,views},storage/logs,bootstrap/cache}; mkdir -p ~/najenga.okjtech.co.ke/build/assets; echo 'Directories created'"
+
+      - name: Deploy backend files
+        run: |
+          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} -r deploy-bundle/backend/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga-core/
+          echo "Backend deployed"
+
+      - name: Deploy public files
+        run: |
+          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} -r deploy-bundle/public/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga.okjtech.co.ke/
+          echo "Public deployed"
+
+      - name: Deploy .env
+        run: |
+          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} deploy-bundle/backend/.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga-core/.env
+          echo ".env deployed"
+
+      - name: Setup index.php and symlinks
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+set -e
+
+# Frontend index.php
+cat > ~/najenga.okjtech.co.ke/index.php << 'ENDPHP'
+<?php
+
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+if (file_exists($maintenance = __DIR__ . '/../najenga-core/storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+require __DIR__ . '/../najenga-core/vendor/autoload.php';
+
+$app = require_once __DIR__ . '/../najenga-core/bootstrap/app.php';
+
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+$response = $kernel->handle(
+    $request = Request::capture()
+)->send();
+
+$kernel->terminate($request, $response);
+ENDPHP
+
+# .htaccess for Apache
+cat > ~/najenga.okjtech.co.ke/.htaccess << 'ENDHT'
+RewriteEngine On
+RewriteRule ^(.*)$ public/$1 [L]
+ENDHT
+
+# Backend index.php
+cat > ~/najenga-core/public/index.php << 'ENDPHP2'
+<?php
+
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+require __DIR__.'/../vendor/autoload.php';
+
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+$response = $kernel->handle(
+    $request = Request::capture()
+)->send();
+
+$kernel->terminate($request, $response);
+ENDPHP2
+
+# Storage symlink
+if [ ! -L ~/najenga.okjtech.co.ke/storage ]; then
+  rm -rf ~/najenga.okjtech.co.ke/storage
+  ln -s ~/najenga-core/storage/app/public ~/najenga.okjtech.co.ke/storage
+  echo "Storage symlink created"
+else
+  echo "Storage symlink already exists"
+fi
+
+echo "index.php and symlinks configured"
+ENDSSH
+
+      - name: Install composer dependencies on server
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+set -e
+cd ~/najenga-core
+
+if command -v composer &> /dev/null; then
+  COMPOSER="composer"
+elif [ -f ~/composer.phar ]; then
+  COMPOSER="php ~/composer.phar"
+else
+  echo "Installing composer..."
+  php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+  php composer-setup.php --install-dir=~ --filename=composer.phar
+  rm composer-setup.php
+  COMPOSER="php ~/composer.phar"
+fi
+
+$COMPOSER install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+echo "Composer dependencies installed"
+ENDSSH
+
+      - name: Set permissions
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+set -e
+cd ~/najenga-core
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
+chmod 600 .env
+chmod -R 755 ~/najenga.okjtech.co.ke
+echo "Permissions set"
+ENDSSH
+
+      - name: Run migrations and cache
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+set -e
+cd ~/najenga-core
+php artisan migrate --force
+php artisan config:cache
+php artisan event:cache
+php artisan route:cache
+php artisan view:cache
+php artisan icons:cache 2>/dev/null || true
+php artisan queue:restart 2>/dev/null || true
+echo "Migrations and caching completed"
+ENDSSH
+
+      - name: Verify deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+set -e
+echo "=== Deployment Verification ==="
+echo ""
+
+ERRORS=0
+
+# Check storage symlink
+if [ -L ~/najenga.okjtech.co.ke/storage ]; then
+  echo "OK: Storage symlink exists"
+else
+  echo "FAIL: Storage symlink MISSING"
+  ERRORS=$((ERRORS+1))
+fi
+
+# Check key directories
+for dir in ~/najenga-core/app ~/najenga-core/bootstrap ~/najenga-core/config ~/najenga-core/database ~/najenga-core/resources ~/najenga-core/routes ~/najenga-core/vendor ~/najenga-core/storage/app/public ~/najenga-core/storage/logs; do
+  if [ -d "$dir" ]; then
+    echo "OK: $dir"
+  else
+    echo "FAIL: $dir MISSING"
+    ERRORS=$((ERRORS+1))
+  fi
+done
+
+# Check .env
+if [ -f ~/najenga-core/.env ]; then
+  echo "OK: .env exists"
+else
+  echo "FAIL: .env MISSING"
+  ERRORS=$((ERRORS+1))
+fi
+
+# Check frontend index.php
+if [ -f ~/najenga.okjtech.co.ke/index.php ]; then
+  echo "OK: Frontend index.php exists"
+else
+  echo "FAIL: Frontend index.php MISSING"
+  ERRORS=$((ERRORS+1))
+fi
+
+echo ""
+if [ $ERRORS -eq 0 ]; then
+  echo "=== ALL CHECKS PASSED ==="
+else
+  echo "=== $ERRORS CHECKS FAILED ==="
+  exit 1
+fi
+ENDSSH
+
+      - name: Post-deploy cleanup
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+set -e
+cd ~/najenga-core
+rm -rf bootstrap/cache/*.php
+rm -rf storage/framework/views/*.php
+rm -rf storage/framework/sessions/*
+find storage/logs -name "*.log" -mtime +7 -delete 2>/dev/null || true
+find storage/app -name "temp_receipts/*" -mtime +1 -delete 2>/dev/null || true
+echo "Cleanup completed"
+ENDSSH
+
+      - name: Cleanup local bundle
+        if: always()
+        run: rm -rf deploy-bundle
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "## Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Frontend:** https://najenga.okjtech.co.ke" >> $GITHUB_STEP_SUMMARY
+          echo "**Backend:** /home/${{ secrets.SSH_USER }}/najenga-core" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployed:" >> $GITHUB_STEP_SUMMARY
+          echo "- Frontend assets (built)" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend Laravel application" >> $GITHUB_STEP_SUMMARY
+          echo "- Production .env" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Server actions:" >> $GITHUB_STEP_SUMMARY
+          echo "- Composer install (--no-dev)" >> $GITHUB_STEP_SUMMARY
+          echo "- Database migrations" >> $GITHUB_STEP_SUMMARY
+          echo "- Config/route/view caching" >> $GITHUB_STEP_SUMMARY
+          echo "- Storage symlink" >> $GITHUB_STEP_SUMMARY
+          echo "- Permissions set" >> $GITHUB_STEP_SUMMARY
+          echo "- Cleanup of old files" >> $GITHUB_STEP_SUMMARY

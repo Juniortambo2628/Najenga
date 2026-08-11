@@ -1,0 +1,94 @@
+#-----------------------------------------------
+# Dependencies
+#-----------------------------------------------
+/node_modules
+/vendor
+/composer.phar
+
+#-----------------------------------------------
+# Build artifacts
+#-----------------------------------------------
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+
+#-----------------------------------------------
+# Environment files (SECRETS - never commit)
+#-----------------------------------------------
+.env
+.env.backup
+.env.production
+.env.local
+.env.staging
+.env.testing
+
+#-----------------------------------------------
+# SSH keys for CI/CD (SECRETS - never commit)
+#-----------------------------------------------
+github-actions-*
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+#-----------------------------------------------
+# IDE / Editor
+#-----------------------------------------------
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+/.phpactor.json
+*.swp
+*.swo
+*~
+
+#-----------------------------------------------
+# OS files
+#-----------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+#-----------------------------------------------
+# Testing / Coverage
+#-----------------------------------------------
+/.phpunit.cache
+/.phpunit.result.cache
+phpunit.xml.bak
+coverage/
+
+#-----------------------------------------------
+# Laravel specific
+#-----------------------------------------------
+/storage/pail
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+!storage/logs/.gitignore
+
+#-----------------------------------------------
+# npm
+#-----------------------------------------------
+npm-debug.log*
+
+#-----------------------------------------------
+# Misc
+#-----------------------------------------------
+*.log
+composer.phar
+create-shortcut.bat
+create-shortcut.ps1
+create_notifications_table.php
+eng.traineddata
+fix_i_tags2.ps1
+ocr-worker.mjs
+start-dev.bat
+start-dev.ps1
+status-dev.bat
+status-dev.ps1
+stop-dev.bat
+stop-dev.ps1
