@@ -51,6 +51,15 @@ jobs:
             echo "APP_KEY already set"
           fi
 
+      - name: Inject DB credentials into .env.production
+        run: |
+          sed -i "s|^DB_HOST=.*|DB_HOST=${{ secrets.DB_HOST }}|" .env.production
+          sed -i "s|^DB_PORT=.*|DB_PORT=${{ secrets.DB_PORT }}|" .env.production
+          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${{ secrets.DB_DATABASE }}|" .env.production
+          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${{ secrets.DB_USERNAME }}|" .env.production
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.DB_PASSWORD }}|" .env.production
+          echo "DB credentials injected"
+
       - name: Prepare deployment bundle
         run: |
           mkdir -p deploy-bundle
