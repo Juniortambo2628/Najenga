@@ -14,9 +14,12 @@ return new class extends Migration
         if (!Schema::hasTable('conversation_user')) {
             Schema::create('conversation_user', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('conversation_id')->constrained()->onDelete('cascade');
-                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->unsignedBigInteger('conversation_id');
+                $table->unsignedBigInteger('user_id');
                 $table->timestamps();
+
+                $table->foreign('conversation_id')->references('id')->on('conversations')->onDelete('cascade');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             });
         }
     }

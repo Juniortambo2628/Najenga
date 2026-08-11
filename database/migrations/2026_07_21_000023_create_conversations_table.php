@@ -14,9 +14,11 @@ return new class extends Migration
         if (!Schema::hasTable('conversations')) {
             Schema::create('conversations', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('project_id')->nullable()->constrained()->onDelete('cascade');
+                $table->unsignedBigInteger('project_id')->nullable();
                 $table->timestamp('last_message_at')->nullable();
                 $table->timestamps();
+
+                $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
             });
         }
     }

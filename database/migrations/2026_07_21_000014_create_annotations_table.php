@@ -14,13 +14,16 @@ return new class extends Migration
         if (!Schema::hasTable('annotations')) {
             Schema::create('annotations', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('photo_id')->constrained()->onDelete('cascade');
-                $table->foreignId('user_id')->constrained()->onDelete('cascade');
-                $table->decimal('x', 5, 2); // Percentage position
-                $table->decimal('y', 5, 2); // Percentage position
+                $table->unsignedBigInteger('photo_id');
+                $table->unsignedBigInteger('user_id');
+                $table->decimal('x', 5, 2);
+                $table->decimal('y', 5, 2);
                 $table->text('body');
                 $table->boolean('resolved')->default(false);
                 $table->timestamps();
+
+                $table->foreign('photo_id')->references('id')->on('photos')->onDelete('cascade');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             });
         }
     }
