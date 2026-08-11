@@ -37,10 +37,6 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
-      - name: Verify .env exists on server
-        run: |
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "test -f ~/najenga-core/.env && echo '.env exists' || (echo '.env MISSING on server - create it manually' && exit 1)"
-
       - name: Prepare deployment bundle
         run: |
           mkdir -p deploy-bundle
@@ -48,11 +44,11 @@ jobs:
           rsync -a --exclude='node_modules' --exclude='vendor' --exclude='.git' --exclude='public/build' \
                 --exclude='deploy-bundle' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' \
                 --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' \
+                --exclude='.env' --exclude='.env.production' \
                 ./ deploy-bundle/backend/
           mkdir -p deploy-bundle/public
           cp -r public/* deploy-bundle/public/
           cp -r public/build deploy-bundle/public/ 2>/dev/null || true
-          cp .env.production deploy-bundle/backend/.env
           echo "Bundle prepared: $(find deploy-bundle/ -type f | wc -l) files"
 
       - name: Setup SSH
@@ -62,6 +58,10 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
           echo "SSH configured"
+
+      - name: Verify .env exists on server
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "test -f ~/najenga-core/.env && echo '.env exists' || (echo '.env MISSING on server - create it manually' && exit 1)"
 
       - name: Create directories on server
         run: |
