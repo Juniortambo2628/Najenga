@@ -58,6 +58,7 @@ jobs:
           sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${{ secrets.DB_DATABASE }}|" .env.production
           sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${{ secrets.DB_USERNAME }}|" .env.production
           sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.DB_PASSWORD }}|" .env.production
+          sed -i "s|^CACHE_STORE=.*|CACHE_STORE=file|" .env.production
           echo "DB credentials injected"
 
       - name: Prepare deployment bundle
