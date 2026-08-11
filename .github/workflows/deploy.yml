@@ -45,7 +45,7 @@ jobs:
           fi
           if ! grep -q "APP_KEY=base64:" .env.production 2>/dev/null || [ -z "$(grep 'APP_KEY=base64:' .env.production 2>/dev/null | cut -d'=' -f2)" ]; then
             KEY=$(php artisan key:generate --show)
-            sed -i "s|^APP_KEY=.*|APP_KEY=base64:$KEY|" .env.production
+            sed -i "s|^APP_KEY=.*|APP_KEY=$KEY|" .env.production
             echo "Generated new APP_KEY"
           else
             echo "APP_KEY already set"
