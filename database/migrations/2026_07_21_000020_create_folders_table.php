@@ -19,8 +19,8 @@ return new class extends Migration
                 $table->unsignedBigInteger('parent_id')->nullable();
                 $table->timestamps();
 
-                $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-                $table->foreign('parent_id')->references('id')->on('folders')->onDelete('cascade');
+                $table->index('project_id');
+                $table->index('parent_id');
             });
         }
     }

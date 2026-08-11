@@ -22,8 +22,8 @@ return new class extends Migration
                 $table->boolean('resolved')->default(false);
                 $table->timestamps();
 
-                $table->foreign('photo_id')->references('id')->on('photos')->onDelete('cascade');
-                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+                $table->index('photo_id');
+                $table->index('user_id');
             });
         }
     }

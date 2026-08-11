@@ -18,7 +18,7 @@ return new class extends Migration
                 $table->timestamp('last_message_at')->nullable();
                 $table->timestamps();
 
-                $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
+                $table->index('project_id');
             });
         }
     }
