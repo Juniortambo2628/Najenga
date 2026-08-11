@@ -12,32 +12,30 @@ return new class extends Migration
             return;
         }
 
-        // On MySQL, add_missing_performance_indexes and add_missing_indexes
-        // may have created explicit indexes that duplicate FK implicit indexes.
-        // MySQL attaches the FK constraint to the explicit index, so we must
-        // drop the FK first, drop the index, then re-add the FK.
+        $tables = ['expenses', 'photos', 'documents', 'project_user', 'messages'];
 
-        $fkDrops = [
-            'expenses' => ['project_id' => 'expenses_project_id_foreign', 'user_id' => 'expenses_user_id_foreign'],
-            'photos' => ['project_id' => 'photos_project_id_foreign', 'user_id' => 'photos_user_id_foreign'],
-            'documents' => ['project_id' => 'documents_project_id_foreign', 'user_id' => 'documents_user_id_foreign'],
-            'project_user' => ['project_id' => 'project_user_project_id_foreign', 'user_id' => 'project_user_user_id_foreign'],
-            'messages' => ['conversation_id' => 'messages_conversation_id_foreign', 'user_id' => 'messages_user_id_foreign'],
-        ];
+        foreach ($tables as $table) {
+            if (!Schema::hasTable($table)) {
+                continue;
+            }
 
-        foreach ($fkDrops as $table => $columns) {
-            foreach ($columns as $column => $fkName) {
-                $indexName = "{$table}_{$column}_index";
+            $foreignKeys = DB::select(
+                "SELECT CONSTRAINT_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL",
+                [$table]
+            );
+
+            foreach ($foreignKeys as $fk) {
+                $indexName = "{$table}_{$fk->COLUMN_NAME}_index";
                 if (Schema::hasIndex($table, $indexName)) {
-                    DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fkName}`");
+                    DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fk->CONSTRAINT_NAME}`");
                     Schema::table($table, fn ($t) => $t->dropIndex($indexName));
-                    Schema::table($table, function ($t) use ($column, $fkName) {
-                        $refTable = match ($column) {
+                    Schema::table($table, function ($t) use ($fk) {
+                        $refTable = match ($fk->COLUMN_NAME) {
                             'project_id' => 'projects',
                             'user_id' => 'users',
                             'conversation_id' => 'conversations',
                         };
-                        $t->foreign($column)->references('id')->on($refTable)->onDelete('cascade');
+                        $t->foreign($fk->COLUMN_NAME)->references('id')->on($refTable)->onDelete('cascade');
                     });
                 }
             }
