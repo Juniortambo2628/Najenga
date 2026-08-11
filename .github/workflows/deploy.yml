@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   workflow_run:
-    workflows: ["Pre-Deploy Tests & Auto-Fix"]
+    workflows: ["CI Tests"]
     types: [completed]
     branches: [main]
   workflow_dispatch:
