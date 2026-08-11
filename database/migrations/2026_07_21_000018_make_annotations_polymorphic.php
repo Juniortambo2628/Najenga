@@ -12,17 +12,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First delete existing annotations as preserving them requires more complex logic
-        // and we are in dev mode essentially.
         DB::table('annotations')->delete();
 
         Schema::table('annotations', function (Blueprint $table) {
-            $table->dropForeign(['photo_id']);
+            $foreignKeys = DB::select("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY' AND TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'annotations'");
+            foreach ($foreignKeys as $fk) {
+                if (str_contains($fk->CONSTRAINT_NAME, 'photo_id')) {
+                    $table->dropForeign($fk->CONSTRAINT_NAME);
+                }
+            }
+            $table->dropIndex(['photo_id']);
             $table->dropColumn('photo_id');
-            
+
             $table->unsignedBigInteger('annotatable_id');
             $table->string('annotatable_type');
-            
+
             $table->index(['annotatable_type', 'annotatable_id']);
         });
     }
@@ -35,8 +39,9 @@ return new class extends Migration
         Schema::table('annotations', function (Blueprint $table) {
             $table->dropIndex(['annotatable_type', 'annotatable_id']);
             $table->dropColumn(['annotatable_id', 'annotatable_type']);
-            
-            $table->foreignId('photo_id')->constrained()->onDelete('cascade');
+
+            $table->unsignedBigInteger('photo_id');
+            $table->index('photo_id');
         });
     }
 };
