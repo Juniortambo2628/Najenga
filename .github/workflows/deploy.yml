@@ -37,30 +37,9 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
-      - name: Generate APP_KEY if empty
+      - name: Verify .env exists on server
         run: |
-          if [ ! -f .env.production ]; then
-            cp .env.example .env.production
-            echo "Created .env.production from .env.example"
-          fi
-          if ! grep -q "APP_KEY=base64:" .env.production 2>/dev/null || [ -z "$(grep 'APP_KEY=base64:' .env.production 2>/dev/null | cut -d'=' -f2)" ]; then
-            KEY=$(php artisan key:generate --show)
-            sed -i "s|^APP_KEY=.*|APP_KEY=$KEY|" .env.production
-            echo "Generated new APP_KEY"
-          else
-            echo "APP_KEY already set"
-          fi
-
-      - name: Inject DB credentials into .env.production
-        run: |
-          sed -i "s|^DB_HOST=.*|DB_HOST=${{ secrets.DB_HOST }}|" .env.production
-          sed -i "s|^DB_PORT=.*|DB_PORT=${{ secrets.DB_PORT }}|" .env.production
-          sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${{ secrets.DB_DATABASE }}|" .env.production
-          sed -i "s|^DB_USERNAME=.*|DB_USERNAME=${{ secrets.DB_USERNAME }}|" .env.production
-          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=${{ secrets.DB_PASSWORD }}|" .env.production
-          sed -i "s|^CACHE_STORE=.*|CACHE_STORE=file|" .env.production
-          sed -i "s|^SESSION_DRIVER=.*|SESSION_DRIVER=file|" .env.production
-          echo "DB credentials injected"
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "test -f ~/najenga-core/.env && echo '.env exists' || (echo '.env MISSING on server - create it manually' && exit 1)"
 
       - name: Prepare deployment bundle
         run: |
@@ -97,11 +76,6 @@ jobs:
         run: |
           scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} -r deploy-bundle/public/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga.okjtech.co.ke/
           echo "Public deployed"
-
-      - name: Deploy .env
-        run: |
-          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} deploy-bundle/backend/.env ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga-core/.env
-          echo ".env deployed"
 
       - name: Setup index.php and symlinks
         run: |
