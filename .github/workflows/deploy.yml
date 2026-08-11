@@ -149,6 +149,11 @@ jobs:
             echo "Storage symlink already exists"
           fi
 
+          # Build assets symlink (Vite manifest)
+          rm -rf ~/najenga-core/public/build
+          ln -s ~/najenga.okjtech.co.ke/build ~/najenga-core/public/build
+          echo "Build symlink created"
+
           echo "index.php and symlinks configured"
           ENDSSH
 
