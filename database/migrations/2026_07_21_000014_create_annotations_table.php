@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('annotations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('photo_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->decimal('x', 5, 2); // Percentage position
-            $table->decimal('y', 5, 2); // Percentage position
-            $table->text('body');
-            $table->boolean('resolved')->default(false);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('annotations')) {
+            Schema::create('annotations', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('photo_id')->constrained()->onDelete('cascade');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->decimal('x', 5, 2); // Percentage position
+                $table->decimal('y', 5, 2); // Percentage position
+                $table->text('body');
+                $table->boolean('resolved')->default(false);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

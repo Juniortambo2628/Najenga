@@ -12,18 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::dropIfExists('comments'); // Ensure clean state
-        Schema::create('comments', function (Blueprint $table) {
-            $table->id();
-            $table->text('body');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            
-            // Manual morphs to control length and type
-            $table->string('commentable_type', 191); 
-            $table->unsignedBigInteger('commentable_id');
-            $table->index(['commentable_type', 'commentable_id']);
-            
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('comments')) {
+            Schema::create('comments', function (Blueprint $table) {
+                $table->id();
+                $table->text('body');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                
+                // Manual morphs to control length and type
+                $table->string('commentable_type', 191); 
+                $table->unsignedBigInteger('commentable_id');
+                $table->index(['commentable_type', 'commentable_id']);
+                
+                $table->timestamps();
+            });
+        }
     }
 
     /**
