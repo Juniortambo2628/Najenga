@@ -76,12 +76,20 @@ class OcrService
             }
         }
 
-        $output = @shell_exec('where tesseract 2>nul');
-        if ($output) {
-            $path = trim(explode("\n", $output)[0]);
-            if ($path && file_exists($path)) {
-                return $path;
+        try {
+            $command = DIRECTORY_SEPARATOR === '\\' ? ['where', 'tesseract'] : ['which', 'tesseract'];
+            $process = new Process($command);
+            $process->setTimeout(5);
+            $process->run();
+
+            if ($process->isSuccessful()) {
+                $path = trim(explode("\n", $process->getOutput())[0]);
+                if ($path && file_exists($path)) {
+                    return $path;
+                }
             }
+        } catch (\Throwable $e) {
+            // Ignore execution errors
         }
 
         return null;
