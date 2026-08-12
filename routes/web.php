@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/expenses/create', [\App\Http\Controllers\Api\ExpenseController::class, 'create'])->name('expenses.create');
     Route::post('/expenses', [\App\Http\Controllers\Api\ExpenseController::class, 'store'])->name('expenses.store');
     Route::post('/expenses/batch', [\App\Http\Controllers\Api\ExpenseController::class, 'batchStore'])->name('expenses.batch');
+    Route::delete('/expenses/batch', [\App\Http\Controllers\Api\ExpenseController::class, 'batchDestroy'])->name('expenses.batchDestroy');
     Route::get('/expenses/{expense}', [\App\Http\Controllers\Api\ExpenseController::class, 'show'])->name('expenses.show');
     Route::get('/expenses/{expense}/edit', [\App\Http\Controllers\Api\ExpenseController::class, 'edit'])->name('expenses.edit');
     Route::patch('/expenses/{expense}', [\App\Http\Controllers\Api\ExpenseController::class, 'update'])->name('expenses.update');

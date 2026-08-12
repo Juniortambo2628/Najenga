@@ -288,7 +288,9 @@ class ReceiptController extends Controller
 
     public function show(\App\Models\Receipt $receipt)
     {
-        return response()->json($receipt->load('expense'));
+        return \Inertia\Inertia::render('Receipts/Show', [
+            'receipt' => $receipt->load('expense'),
+        ]);
     }
 
     public function edit(\App\Models\Receipt $receipt)

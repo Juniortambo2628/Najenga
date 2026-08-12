@@ -104,7 +104,10 @@ class DocumentController extends Controller
 
     public function show(Document $document)
     {
-        return response()->json($document->load('project:id,name', 'folder:id,name'));
+        return Inertia::render('Documents/Show', [
+            'document' => $document->load('project:id,name', 'folder:id,name')
+                ->append('file_url', 'thumb_url'),
+        ]);
     }
 
     public function edit(Document $document)

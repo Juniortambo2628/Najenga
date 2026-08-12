@@ -109,14 +109,36 @@ class ExpenseController extends Controller
         ]);
     }
 
+    public function batchDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:expenses,id',
+        ]);
+
+        $user = auth()->user();
+        $ids = $request->input('ids');
+
+        $deleted = Expense::withoutSyncingToSearch(fn () =>
+            Expense::whereIn('id', $ids)
+                ->where('user_id', $user->id)
+                ->delete()
+        );
+
+        return response()->json([
+            'deleted' => $deleted,
+            'message' => "{$deleted} expense" . ($deleted !== 1 ? "s" : "") . " deleted",
+        ]);
+    }
+
     public function show(Expense $expense)
     {
         $this->authorize('view', $expense);
 
-        return response()->json(
-            $expense->load('project:id,name')
-                ->append('receipt_url', 'receipt_thumb_url')
-        );
+        return Inertia::render('Expenses/Show', [
+            'expense' => $expense->load('project:id,name')
+                ->append('receipt_url', 'receipt_thumb_url'),
+        ]);
     }
 
     public function uploadReceipt(Request $request, Expense $expense)

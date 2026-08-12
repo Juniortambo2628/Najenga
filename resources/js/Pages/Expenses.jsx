@@ -15,6 +15,7 @@ import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -174,26 +175,13 @@ export default function Expenses({ expenses = [], projects = [] }) {
     const handleBulkDelete = async () => {
         if (!confirm(`Delete ${selectedCount} expense${selectedCount !== 1 ? 's' : ''}?`)) return;
         const ids = [...selectedItems];
-        let failed = 0;
-        for (const id of ids) {
-            try {
-                await new Promise((resolve, reject) => {
-                    router.delete(`/expenses/${id}`, {
-                        preserveScroll: true,
-                        onSuccess: resolve,
-                        onError: reject,
-                    });
-                });
-            } catch {
-                failed++;
-            }
+        try {
+            const res = await axios.delete('/expenses/batch', { data: { ids } });
+            toast.success(res.data.message || `${ids.length} expense${ids.length !== 1 ? 's' : ''} deleted`);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to delete expenses');
         }
         clearSelection();
-        if (failed > 0) {
-            toast.error(`Failed to delete ${failed} expense${failed !== 1 ? 's' : ''}`);
-        } else {
-            toast.success(`${ids.length} expense${ids.length !== 1 ? 's' : ''} deleted`);
-        }
         router.reload({ only: ['expenses'] });
     };
 
@@ -291,9 +279,8 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         />
                     </Suspense>
                 ) : filteredExpenses.length > 0 ? (
-                    <div className="bg-gray-900/50 border border-white/10 rounded-2xl overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-gray-400">
+                    <div className="bg-gray-900/50 border border-white/10 rounded-2xl overflow-x-auto">
+                            <table className="min-w-full text-left text-gray-400">
                                 <thead className="bg-black/20 text-gray-200 uppercase text-xs font-semibold">
                                     <tr>
                                         <th className="px-6 py-4 w-10">
@@ -379,7 +366,6 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                     )}
                                 </tbody>
                             </table>
-                        </div>
                     </div>
                 ) : null}
             </div>

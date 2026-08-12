@@ -86,7 +86,10 @@ class PhotoController extends Controller
 
     public function show(Photo $photo)
     {
-        return response()->json($photo->load('project:id,name', 'annotations', 'comments'));
+        return Inertia::render('Photos/Show', [
+            'photo' => $photo->load('project:id,name')
+                ->append('photo_url', 'thumb_url', 'preview_url'),
+        ]);
     }
 
     public function edit(Photo $photo)
