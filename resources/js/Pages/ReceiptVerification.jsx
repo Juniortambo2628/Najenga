@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
-const axios = window.axios;
+import axios from 'axios';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -38,6 +38,18 @@ export default function ReceiptVerification() {
     const [currentTempPath, setCurrentTempPath] = useState('');
     const [currentFileId, setCurrentFileId] = useState(null);
 
+    const getAxiosConfig = (extraHeaders = {}) => {
+        const token = document.head.querySelector('meta[name="csrf-token"]')?.content;
+        return {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': token,
+                ...extraHeaders
+            },
+            withCredentials: true
+        };
+    };
+
     const handleFileChange = (e) => {
         const selected = Array.from(e.target.files || []);
         if (selected.length === 0) return;
@@ -71,9 +83,9 @@ export default function ReceiptVerification() {
         data.append('receipt', entry.file);
 
         try {
-            const response = await axios.post('/receipts/analyze', data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await axios.post('/receipts/analyze', data, getAxiosConfig({
+                'Content-Type': 'multipart/form-data'
+            }));
 
             if (response.data.success) {
                 const ext = response.data.extracted;
@@ -106,6 +118,7 @@ export default function ReceiptVerification() {
                 if (populated.reference_number) {
                     try {
                         const matchResponse = await axios.get('/receipts/match', {
+                            ...getAxiosConfig(),
                             params: {
                                 reference_number: populated.reference_number,
                                 date: populated.expense_date,
@@ -166,7 +179,7 @@ export default function ReceiptVerification() {
             await axios.post('/receipts/store', {
                 ...formData,
                 temp_path: currentTempPath,
-            });
+            }, getAxiosConfig());
 
             setQueue(prev => prev.map(entry =>
                 entry.id === currentFileId ? { ...entry, status: 'saved' } : entry
@@ -211,7 +224,7 @@ export default function ReceiptVerification() {
         }));
 
         try {
-            const response = await axios.post('/receipts/store-bulk', { expenses });
+            const response = await axios.post('/receipts/store-bulk', { expenses }, getAxiosConfig());
 
             const savedIds = new Set((response.data.saved || []).map(s => s.index));
             setQueue(prev => prev.map((entry, i) => {
