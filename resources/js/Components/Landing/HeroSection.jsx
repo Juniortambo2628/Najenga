@@ -5,9 +5,9 @@ import Badge from './Badge';
 import GlassButton from './GlassButton';
 
 const HERO_STATS = [
-    { value: '1000+', label: 'Active Users' },
-    { value: '50K+', label: 'Projects Managed' },
-    { value: '98%', label: 'Satisfaction' },
+    { value: 'AI', label: 'Smart Receipt Analysis', icon: 'fa-receipt' },
+    { value: 'Pro', label: 'Timeline Projections', icon: 'fa-calendar-check' },
+    { value: '360', label: 'Budget Planning', icon: 'fa-chart-pie' },
 ];
 
 export default function HeroSection({ auth }) {
@@ -97,7 +97,7 @@ export default function HeroSection({ auth }) {
                                 transition={{ duration: 0.6, delay: 0.2 }}
                             >
                                 <Badge variant="glass" className="mb-6">
-                                    Nairobi &middot; Mombasa &middot; Kisumu &middot; Eldoret
+                                    Build with purpose
                                 </Badge>
                             </motion.div>
                             <motion.h1
@@ -150,7 +150,10 @@ export default function HeroSection({ auth }) {
                     >
                         {HERO_STATS.map((stat, idx) => (
                             <div key={idx} className="px-8 py-5 text-center">
-                                <div className="text-3xl font-bold text-white">{stat.value}</div>
+                                <div className="flex items-center justify-center gap-2 mb-1">
+                                    <i className={`fas ${stat.icon} text-[#DC143C]`}></i>
+                                    <span className="text-3xl font-bold text-white">{stat.value}</span>
+                                </div>
                                 <div className="text-sm text-white/60 mt-1">{stat.label}</div>
                             </div>
                         ))}

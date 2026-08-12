@@ -15,7 +15,7 @@ export default function ScrollSection({ id, title, description, buttonText, butt
     };
 
     return (
-        <section id={id} className={`min-h-screen flex items-center bg-black ${className}`}>
+        <section id={id} className={`landing-section bg-black ${className}`}>
             <div className="w-full px-8 md:px-16 lg:px-24">
                 <div className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} gap-12 lg:gap-16 items-center`}>
                     {/* Text Content */}

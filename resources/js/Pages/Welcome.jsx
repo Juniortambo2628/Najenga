@@ -125,7 +125,7 @@ const TESTIMONIALS = [
 
 export default function Welcome({ auth }) {
     return (
-        <div className="overflow-x-hidden w-full max-w-full">
+        <div className="w-full">
             <Head title="Najenga - Professional Construction Management Platform" />
 
             <HeroSection auth={auth} />
@@ -183,7 +183,7 @@ export default function Welcome({ auth }) {
                     </ScrollReveal>
                     <ScrollReveal delay={0.15}>
                         <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
-                            Join 1000+ construction professionals who trust Najenga to manage their projects efficiently
+                            Join construction professionals who trust Najenga to manage their projects efficiently
                         </p>
                     </ScrollReveal>
                     <ScrollReveal delay={0.3}>
