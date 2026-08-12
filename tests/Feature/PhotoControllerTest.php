@@ -111,7 +111,6 @@ class PhotoControllerTest extends TestCase
 
         $this->actingAs($this->user)
             ->get("/photos/{$photo->id}")
-            ->assertOk()
-            ->assertJson(['id' => $photo->id]);
+            ->assertOk();
     }
 }

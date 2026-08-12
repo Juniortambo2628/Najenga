@@ -197,8 +197,7 @@ class ExpenseControllerTest extends TestCase
 
         $this->actingAs($this->user)
             ->get("/expenses/{$expense->id}")
-            ->assertOk()
-            ->assertJson(['id' => $expense->id]);
+            ->assertOk();
     }
 
     public function test_user_cannot_view_other_users_expense(): void

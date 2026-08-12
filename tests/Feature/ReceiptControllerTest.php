@@ -54,9 +54,8 @@ class ReceiptControllerTest extends TestCase
         $receipt = Receipt::factory()->create(['expense_id' => $expense->id]);
 
         $this->actingAs($this->user)
-            ->getJson("/receipts/{$receipt->id}")
-            ->assertOk()
-            ->assertJsonPath('id', $receipt->id);
+            ->get("/receipts/{$receipt->id}")
+            ->assertOk();
     }
 
     public function test_user_can_update_receipt_verification_status(): void

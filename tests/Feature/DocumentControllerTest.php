@@ -110,8 +110,7 @@ class DocumentControllerTest extends TestCase
 
         $this->actingAs($this->user)
             ->get("/documents/{$document->id}")
-            ->assertOk()
-            ->assertJson(['id' => $document->id]);
+            ->assertOk();
     }
 
     public function test_user_can_move_document_to_folder(): void

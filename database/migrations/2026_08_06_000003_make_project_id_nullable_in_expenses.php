@@ -10,12 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('expenses', function (Blueprint $table) {
-            $foreignKeys = DB::select(
-                "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'expenses' AND COLUMN_NAME = 'project_id' AND REFERENCED_TABLE_NAME IS NOT NULL"
-            );
-            foreach ($foreignKeys as $fk) {
-                $table->dropForeign($fk->CONSTRAINT_NAME);
-            }
+            $table->dropForeign(['project_id']);
             $table->unsignedBigInteger('project_id')->nullable()->change();
             $table->index('project_id');
         });

@@ -15,12 +15,7 @@ return new class extends Migration
         DB::table('annotations')->delete();
 
         Schema::table('annotations', function (Blueprint $table) {
-            $foreignKeys = DB::select("SELECT CONSTRAINT_NAME FROM information_schema.TABLE_CONSTRAINTS WHERE CONSTRAINT_TYPE = 'FOREIGN KEY' AND TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'annotations'");
-            foreach ($foreignKeys as $fk) {
-                if (str_contains($fk->CONSTRAINT_NAME, 'photo_id')) {
-                    $table->dropForeign($fk->CONSTRAINT_NAME);
-                }
-            }
+            $table->dropForeign(['photo_id']);
             $table->dropIndex(['photo_id']);
             $table->dropColumn('photo_id');
 
