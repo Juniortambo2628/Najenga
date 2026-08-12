@@ -28,14 +28,7 @@ export default function SearchFilterBar({
                         key={filter.name}
                         value={filter.value}
                         onChange={(e) => filter.onChange(e.target.value)}
-                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#8B0000]/50 focus:ring-1 focus:ring-[#8B0000]/30 transition-colors cursor-pointer appearance-none"
-                        style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'right 0.75rem center',
-                            backgroundSize: '1rem',
-                            paddingRight: '2.5rem',
-                        }}
+                        className="select-chevron bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#8B0000]/50 focus:ring-1 focus:ring-[#8B0000]/30 transition-colors cursor-pointer appearance-none"
                     >
                         <option value="" className="bg-gray-900 text-white">{filter.label}</option>
                         {filter.options.map((opt) => (

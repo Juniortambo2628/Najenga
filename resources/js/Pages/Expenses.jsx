@@ -9,6 +9,7 @@ import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import SearchFilterBar from '@/Components/SearchFilterBar';
 import PrimaryButton from '@/Components/PrimaryButton';
+import DashboardHero from '@/Components/DashboardHero';
 import Modal from '@/Components/Modal';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
@@ -201,18 +202,25 @@ export default function Expenses({ expenses = [], projects = [] }) {
             <Head title="Expenses" />
 
             <div onClick={closeContextMenu}>
-                <ContextToolbar
-                    projects={projects}
-                    currentProjectId={activeProjectId}
-                    onProjectChange={setActiveProjectId}
-                    pageTitle="Expenses"
-                    pageSubtitle={`${filteredExpenses.length} expense${filteredExpenses.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
-                    selectedCount={selectedCount}
+                <DashboardHero
+                    title="Expenses"
+                    subtitle={`${filteredExpenses.length} expense${filteredExpenses.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Expenses' },
+                    ]}
                     actions={
                         <PrimaryButton onClick={() => { reset(); setIsAddModalOpen(true); }}>
                             <i className="fas fa-plus mr-1"></i>Add Expense
                         </PrimaryButton>
                     }
+                />
+                <ContextToolbar
+                    projects={projects}
+                    currentProjectId={activeProjectId}
+                    onProjectChange={setActiveProjectId}
+                    selectedCount={selectedCount}
                 >
                     <div className="flex items-center gap-3 flex-wrap">
                         <BulkActions

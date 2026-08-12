@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import StatCard from '@/Components/StatCard';
 import StatusBadge from '@/Components/StatusBadge';
 import EmptyState from '@/Components/EmptyState';
+import DashboardHero from '@/Components/DashboardHero';
 import { formatCurrency } from '@/Config/currencies';
 
 const QuickAction = ({ href, icon, label }) => (
@@ -31,15 +32,14 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
 
             <div className="py-8 bg-black min-h-screen">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    {/* Welcome Section */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-white">
-                            Welcome back, {auth.user.first_name || auth.user.name}!
-                        </h1>
-                        <p className="text-gray-400 mt-1">
-                            Here's what's happening with your construction projects.
-                        </p>
-                    </div>
+                    <DashboardHero
+                        title={`Welcome back, ${auth.user.first_name || auth.user.name}!`}
+                        subtitle="Here's what's happening with your construction projects."
+                        breadcrumbs={[
+                            { label: 'Home', href: '/home' },
+                            { label: 'Dashboard' },
+                        ]}
+                    />
 
                     {/* Statistics Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

@@ -201,9 +201,89 @@ class ReceiptController extends Controller
 
     public function store(StoreReceiptRequest $request)
     {
+        $matchedExpense = null;
+
+        if ($request->reference_number) {
+            $query = Expense::where('reference_number', $request->reference_number)
+                ->where('user_id', Auth::id());
+
+            $candidates = $query->get();
+
+            if ($candidates->count() === 1) {
+                $matchedExpense = $candidates->first();
+            } elseif ($candidates->count() > 1 && $request->expense_date) {
+                $matchedExpense = $candidates->firstWhere('expense_date', $request->expense_date);
+                if (!$matchedExpense && $request->time) {
+                    $matchedExpense = $candidates->first(function ($e) use ($request) {
+                        return $e->expense_date === $request->expense_date
+                            && $e->time === $request->time;
+                    });
+                }
+                if (!$matchedExpense) {
+                    $matchedExpense = $candidates->first();
+                }
+            }
+        }
+
+        if ($matchedExpense) {
+            $this->attachReceiptMedia(
+                $matchedExpense,
+                $request->temp_path,
+                $request->reference_number,
+                $request->recipient,
+                $request->input('ocr_source', 'local-tesseract')
+            );
+
+            return response()->json([
+                'success' => true,
+                'expense' => $matchedExpense->fresh(),
+                'matched' => true,
+            ]);
+        }
+
         $expense = \App\Models\Expense::withoutSyncingToSearch(fn () => $this->createExpenseFromRequest($request));
 
-        return response()->json(['success' => true, 'expense' => $expense->fresh()]);
+        return response()->json(['success' => true, 'expense' => $expense->fresh(), 'matched' => false]);
+    }
+
+    public function match(Request $request)
+    {
+        $request->validate([
+            'reference_number' => 'required|string',
+            'date' => 'nullable|date',
+            'time' => 'nullable|string',
+        ]);
+
+        $query = Expense::where('reference_number', $request->reference_number)
+            ->where('user_id', Auth::id());
+
+        $candidates = $query->get();
+
+        if ($candidates->isEmpty()) {
+            return response()->json(['matched' => false]);
+        }
+
+        $matched = null;
+
+        if ($candidates->count() === 1) {
+            $matched = $candidates->first();
+        } else {
+            $matched = $candidates->firstWhere('expense_date', $request->date);
+            if (!$matched && $request->time) {
+                $matched = $candidates->first(function ($e) use ($request) {
+                    return $e->expense_date === $request->date
+                        && $e->time === $request->time;
+                });
+            }
+            if (!$matched) {
+                $matched = $candidates->first();
+            }
+        }
+
+        return response()->json([
+            'matched' => true,
+            'expense' => $matched->load('media'),
+        ]);
     }
 
     public function show(\App\Models\Receipt $receipt)

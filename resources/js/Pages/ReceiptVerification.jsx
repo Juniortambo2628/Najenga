@@ -8,6 +8,7 @@ import InputError from '@/Components/InputError';
 import SelectInput from '@/Components/SelectInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import DashboardHero from '@/Components/DashboardHero';
 import { EXPENSE_CATEGORIES } from '@/Config/expenses';
 
 const CATEGORIES = EXPENSE_CATEGORIES;
@@ -100,6 +101,28 @@ export default function ReceiptVerification() {
                 setRawText(response.data.text);
                 setCurrentTempPath(response.data.temp_path);
                 setCurrentFileId(entry.id);
+
+                // Check for matching expenses after OCR
+                if (populated.reference_number) {
+                    try {
+                        const matchResponse = await axios.get('/receipts/match', {
+                            params: {
+                                reference_number: populated.reference_number,
+                                date: populated.expense_date,
+                                time: populated.time,
+                            }
+                        });
+                        if (matchResponse.data.matched) {
+                            const matchedExpense = matchResponse.data.expense;
+                            setQueue(prev => prev.map((e, i) => i === idx ? {
+                                ...e,
+                                matchedExpense: matchedExpense,
+                            } : e));
+                        }
+                    } catch (err) {
+                        // Silently fail - matching is optional
+                    }
+                }
             } else {
                 setQueue(prev => prev.map((e, i) => i === idx ? {
                     ...e,
@@ -236,16 +259,23 @@ export default function ReceiptVerification() {
             <Head title="Receipt Verification" />
 
             <div className="max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-white">Receipt Verification</h1>
-                    {queue.length > 0 && (
-                        <div className="flex items-center gap-3 text-sm text-gray-400">
-                            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">{pendingCount} pending</span>
-                            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">{readyCount} ready</span>
-                            <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">{savedCount} saved</span>
-                        </div>
-                    )}
-                </div>
+                <DashboardHero
+                    title="Receipt Verification"
+                    subtitle="Upload and verify receipts with OCR"
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Receipt Verification' },
+                    ]}
+                />
+
+                {queue.length > 0 && (
+                    <div className="flex items-center gap-3 text-sm text-gray-400 mb-6">
+                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">{pendingCount} pending</span>
+                        <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">{readyCount} ready</span>
+                        <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">{savedCount} saved</span>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left: Upload + Queue */}
@@ -504,6 +534,19 @@ export default function ReceiptVerification() {
                                         <InputError message={errors.category} className="mt-1" />
                                     </div>
                                 </div>
+
+                                {/* Matched Expense Indicator */}
+                                {queue[currentIndex]?.matchedExpense && (
+                                    <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+                                        <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                                            <i className="fas fa-link"></i>
+                                            <span>Matched to existing expense</span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {queue[currentIndex].matchedExpense.title} &mdash; KES {Number(queue[currentIndex].matchedExpense.amount).toLocaleString()} ({queue[currentIndex].matchedExpense.expense_date})
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Purpose */}
                                 <div>

@@ -207,7 +207,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                 </aside>
 
                 {/* Main Content Area */}
-                <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+                <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-hidden ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
                     {/* Top Navbar */}
                     <header className="h-16 bg-black border-b border-white/10 flex items-center justify-between px-4 sticky top-0 z-10">
                         {/* Left Side - Toggle & Breadcrumb */}
@@ -218,7 +218,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                             >
                                 <i className="fas fa-bars text-lg"></i>
                             </button>
-                            <span className="text-white font-semibold hidden sm:block">{pageTitle || 'Dashboard'}</span>
+                            <span className="text-white font-semibold hidden md:block">{pageTitle || 'Dashboard'}</span>
                         </div>
 
                         {/* Right Side - User Menu */}
@@ -244,7 +244,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center">
                                         <i className="fas fa-user text-white text-sm"></i>
                                     </div>
-                                    <span className="hidden sm:block">{user.first_name || user.name || 'User'} {user.last_name || ''}</span>
+                                    <span className="hidden lg:block">{user.first_name || user.name || 'User'} {user.last_name || ''}</span>
                                     <i className="fas fa-chevron-down text-xs"></i>
                                 </button>
 
@@ -283,7 +283,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                     </header>
 
                     {/* Page Content */}
-                    <main className="flex-1 py-8 px-4">
+                    <main className="flex-1 py-8 px-4 overflow-x-hidden min-w-0">
                         {children}
                     </main>
                 </div>
