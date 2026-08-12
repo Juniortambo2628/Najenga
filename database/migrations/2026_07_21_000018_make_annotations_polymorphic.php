@@ -15,7 +15,6 @@ return new class extends Migration
         DB::table('annotations')->delete();
 
         Schema::table('annotations', function (Blueprint $table) {
-            $table->dropForeign(['photo_id']);
             $table->dropIndex(['photo_id']);
             $table->dropColumn('photo_id');
 
