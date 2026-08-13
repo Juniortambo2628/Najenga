@@ -210,7 +210,7 @@ class OcrService
      */
     protected function cloudFallback(string $absolutePath, string $language): array
     {
-        if (!filter_var(env('OCR_CLOUD_FALLBACK', false), FILTER_VALIDATE_BOOL)) {
+        if (!filter_var(config('ocr.cloud_fallback', false), FILTER_VALIDATE_BOOL)) {
             return [
                 'success' => false,
                 'message' => 'No local OCR engine found (Tesseract CLI or Node worker) and cloud fallback is disabled. Install Tesseract to enable receipt scanning.',
