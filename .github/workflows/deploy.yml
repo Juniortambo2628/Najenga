@@ -262,9 +262,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
           set -e
           cd ~/najenga-core
-          rm -rf bootstrap/cache/*.php
           rm -rf storage/framework/views/*.php
-          rm -rf storage/framework/sessions/*
           find storage/logs -name "*.log" -mtime +7 -delete 2>/dev/null || true
           find storage/app -name "temp_receipts/*" -mtime +1 -delete 2>/dev/null || true
           echo "Cleanup completed"
