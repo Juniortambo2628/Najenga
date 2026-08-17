@@ -97,17 +97,12 @@ class AnalyticsController extends Controller
         $isSqlite = config('database.default') === 'sqlite' || config('database.connections.' . config('database.default') . '.driver') === 'sqlite';
 
         $ymRaw = $isSqlite ? "strftime('%Y-%m', expense_date)" : "DATE_FORMAT(expense_date, '%Y-%m')";
-        $ymExpr = DB::raw($ymRaw);
 
         $monthlyExpenses = (clone $expenseQuery)
             ->whereNotNull('expense_date')
-            ->select(
-                DB::raw("{$ymRaw} as year_month"),
-                DB::raw('SUM(amount) as total'),
-                DB::raw('COUNT(*) as count')
-            )
-            ->groupBy($ymExpr)
-            ->orderBy($ymExpr, 'desc')
+            ->selectRaw("{$ymRaw} as year_month, SUM(amount) as total, COUNT(*) as count")
+            ->groupByRaw($ymRaw)
+            ->orderByRaw($ymRaw . ' desc')
             ->limit($monthLimit)
             ->get()
             ->reverse()
