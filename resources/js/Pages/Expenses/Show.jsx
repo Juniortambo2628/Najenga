@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import Breadcrumb from '@/Components/Breadcrumb';
+import DashboardHero from '@/Components/DashboardHero';
 import { formatCurrency } from '@/Config/currencies';
 import { PAYMENT_LABELS } from '@/Config/expenses';
 import { useState } from 'react';
@@ -117,32 +117,29 @@ export default function Show({ expense }) {
             <Head title={expense.title} />
 
             <div className="max-w-4xl mx-auto">
-                <Breadcrumb items={[
-                    { label: 'Expenses', href: route('expenses') },
-                    { label: expense.title },
-                ]} />
-
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">{expense.title}</h1>
-                        {expense.project_name && expense.project_name !== 'N/A' && (
-                            <p className="text-gray-400 mt-1 flex items-center gap-2">
-                                <i className="fas fa-folder text-xs"></i> {expense.project_name}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex gap-3">
-                        <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[expense.status] || statusColors.paid}`}>
-                            {expense.status?.toUpperCase()}
-                        </span>
-                        <Link
-                            href={route('expenses.edit', expense.id)}
-                            className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                        >
-                            <i className="fas fa-edit mr-2"></i> Edit
-                        </Link>
-                    </div>
-                </div>
+                <DashboardHero
+                    title={expense.title}
+                    subtitle={expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details'}
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Expenses', href: '/expenses' },
+                        { label: expense.title },
+                    ]}
+                    actions={
+                        <div className="flex gap-3">
+                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[expense.status] || statusColors.paid}`}>
+                                {expense.status?.toUpperCase()}
+                            </span>
+                            <Link
+                                href={route('expenses.edit', expense.id)}
+                                className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
+                            >
+                                <i className="fas fa-edit mr-2"></i> Edit
+                            </Link>
+                        </div>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">

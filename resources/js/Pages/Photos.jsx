@@ -1,6 +1,5 @@
 import ImageAnnotator from '@/Components/ImageAnnotator';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-
 import { Head, router } from '@inertiajs/react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
@@ -16,6 +15,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import PhotoCard from '@/Components/PhotoCard';
 import SearchFilterBar from '@/Components/SearchFilterBar';
 import BulkActions from '@/Components/BulkActions';
+import DashboardHero from '@/Components/DashboardHero';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -145,6 +145,20 @@ export default function Photos({ photos = [], projects = [] }) {
             />
 
             <div onClick={closeContextMenu}>
+                <DashboardHero
+                    title="Photos"
+                    subtitle={`${filteredPhotos.length} photo${filteredPhotos.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Photos' },
+                    ]}
+                    actions={
+                        <PrimaryButton onClick={() => setIsUploadModalOpen(true)}>
+                            <i className="fas fa-upload"></i> Upload Photo
+                        </PrimaryButton>
+                    }
+                />
                 {/* Context Toolbar */}
                 <ContextToolbar
                     projects={projects}

@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import DashboardHero from '@/Components/DashboardHero';
 
 export default function Index({ receipts = [] }) {
     return (
@@ -7,19 +8,24 @@ export default function Index({ receipts = [] }) {
             <Head title="Receipts" />
 
             <div>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">Receipts</h1>
-                        <p className="text-gray-400 mt-1">View and manage uploaded receipts</p>
-                    </div>
-                    <Link
-                        href={route('receipt-verification')}
-                        className="px-6 py-3 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2"
-                    >
-                        <i className="fas fa-receipt"></i>
-                        Verify Receipt
-                    </Link>
-                </div>
+                <DashboardHero
+                    title="Receipts"
+                    subtitle="View and manage uploaded receipts"
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Receipts' },
+                    ]}
+                    actions={
+                        <Link
+                            href={route('receipt-verification')}
+                            className="px-6 py-3 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2"
+                        >
+                            <i className="fas fa-receipt"></i>
+                            Verify Receipt
+                        </Link>
+                    }
+                />
 
                 <div className="bg-black/50 border border-white/10 rounded-2xl overflow-hidden">
                     <div className="overflow-x-auto">

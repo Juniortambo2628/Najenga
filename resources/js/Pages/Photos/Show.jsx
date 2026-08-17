@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import Breadcrumb from '@/Components/Breadcrumb';
+import DashboardHero from '@/Components/DashboardHero';
 
 export default function Show({ photo }) {
     return (
@@ -8,34 +8,31 @@ export default function Show({ photo }) {
             <Head title={photo.title} />
 
             <div className="max-w-4xl mx-auto">
-                <Breadcrumb items={[
-                    { label: 'Photos', href: route('photos') },
-                    { label: photo.title },
-                ]} />
-
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">{photo.title}</h1>
-                        {photo.project?.name && (
-                            <p className="text-gray-400 mt-1 flex items-center gap-2">
-                                <i className="fas fa-folder text-xs"></i> {photo.project.name}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex gap-3">
-                        {photo.is_featured && (
-                            <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                <i className="fas fa-star mr-1"></i>Featured
-                            </span>
-                        )}
-                        <Link
-                            href={route('photos.edit', photo.id)}
-                            className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                        >
-                            <i className="fas fa-edit mr-2"></i> Edit
-                        </Link>
-                    </div>
-                </div>
+                <DashboardHero
+                    title={photo.title}
+                    subtitle={photo.project?.name || 'Photo details'}
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Photos', href: '/photos' },
+                        { label: photo.title },
+                    ]}
+                    actions={
+                        <div className="flex gap-3">
+                            {photo.is_featured && (
+                                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                    <i className="fas fa-star mr-1"></i>Featured
+                                </span>
+                            )}
+                            <Link
+                                href={route('photos.edit', photo.id)}
+                                className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
+                            >
+                                <i className="fas fa-edit mr-2"></i> Edit
+                            </Link>
+                        </div>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">

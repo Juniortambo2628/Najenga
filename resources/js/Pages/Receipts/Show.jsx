@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import Breadcrumb from '@/Components/Breadcrumb';
+import DashboardHero from '@/Components/DashboardHero';
 import { formatCurrency } from '@/Config/currencies';
 
 function DetailRow({ label, value, mono = false }) {
@@ -26,32 +26,29 @@ export default function Show({ receipt }) {
             <Head title={receipt.original_name || 'Receipt'} />
 
             <div className="max-w-4xl mx-auto">
-                <Breadcrumb items={[
-                    { label: 'Receipts', href: route('receipts.index') },
-                    { label: receipt.original_name || `Receipt #${receipt.id}` },
-                ]} />
-
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">{receipt.original_name || `Receipt #${receipt.id}`}</h1>
-                        {expense && (
-                            <p className="text-gray-400 mt-1 flex items-center gap-2">
-                                <i className="fas fa-receipt text-xs"></i> Expense: {expense.title}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex gap-3">
-                        <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[receipt.verification_status] || statusColors.pending}`}>
-                            {receipt.verification_status?.replace('_', ' ').toUpperCase() || 'PENDING'}
-                        </span>
-                        <Link
-                            href={route('receipts.edit', receipt.id)}
-                            className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                        >
-                            <i className="fas fa-edit mr-2"></i> Edit
-                        </Link>
-                    </div>
-                </div>
+                <DashboardHero
+                    title={receipt.original_name || `Receipt #${receipt.id}`}
+                    subtitle={expense ? `Expense: ${expense.title}` : 'Receipt details'}
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Receipts', href: '/receipts' },
+                        { label: receipt.original_name || `Receipt #${receipt.id}` },
+                    ]}
+                    actions={
+                        <div className="flex gap-3">
+                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[receipt.verification_status] || statusColors.pending}`}>
+                                {receipt.verification_status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                            </span>
+                            <Link
+                                href={route('receipts.edit', receipt.id)}
+                                className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
+                            >
+                                <i className="fas fa-edit mr-2"></i> Edit
+                            </Link>
+                        </div>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">

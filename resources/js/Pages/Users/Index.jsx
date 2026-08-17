@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import PageHeader from '@/Components/PageHeader';
+import DashboardHero from '@/Components/DashboardHero';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
@@ -234,10 +234,14 @@ export default function Index({ users }) {
         <AuthenticatedLayout>
             <Head title="User Management" />
 
-            <PageHeader
+            <DashboardHero
                 title="User Management"
                 subtitle="Manage platform users and their roles"
-                selectedCount={selectedCount}
+                breadcrumbs={[
+                    { label: 'Home', href: '/home' },
+                    { label: 'Dashboard', href: '/dashboard' },
+                    { label: 'Users' },
+                ]}
                 actions={
                     <div className="flex items-center gap-3">
                         <BulkActions

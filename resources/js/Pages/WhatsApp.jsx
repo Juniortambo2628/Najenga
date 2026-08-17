@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import DashboardHero from '@/Components/DashboardHero';
 
 export default function WhatsApp() {
     return (
@@ -8,12 +9,15 @@ export default function WhatsApp() {
 
             <div>
                 <div className="max-w-7xl mx-auto">
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h1 className="text-3xl font-bold text-white">WhatsApp Integration</h1>
-                            <p className="text-gray-400 mt-1">Manage WhatsApp notifications and settings</p>
-                        </div>
-                    </div>
+                    <DashboardHero
+                        title="WhatsApp Integration"
+                        subtitle="Manage WhatsApp notifications and settings"
+                        breadcrumbs={[
+                            { label: 'Home', href: '/home' },
+                            { label: 'Dashboard', href: '/dashboard' },
+                            { label: 'WhatsApp' },
+                        ]}
+                    />
 
                     <div className="grid md:grid-cols-2 gap-8">
                         <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-8">

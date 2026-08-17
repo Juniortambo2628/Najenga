@@ -19,6 +19,7 @@ import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import DashboardHero from '@/Components/DashboardHero';
 
 // Configure PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -156,6 +157,28 @@ export default function Documents({ documents = [], folders = [], projects = [] 
             />
 
             <div onClick={closeContextMenu}>
+                <DashboardHero
+                    title="Documents"
+                    subtitle={`${filteredDocuments.length} document${filteredDocuments.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Documents' },
+                    ]}
+                    actions={
+                        <>
+                            <button
+                                onClick={() => setIsNewFolderModalOpen(true)}
+                                className="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 rounded-xl hover:bg-white/10 transition text-sm font-medium"
+                            >
+                                <i className="fas fa-folder-plus mr-1"></i> New Folder
+                            </button>
+                            <PrimaryButton onClick={() => setIsUploadModalOpen(true)}>
+                                <i className="fas fa-upload"></i> Upload
+                            </PrimaryButton>
+                        </>
+                    }
+                />
                 {/* Context Toolbar */}
                 <ContextToolbar
                     projects={projects}

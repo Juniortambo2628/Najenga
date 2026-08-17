@@ -73,6 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Timeline
     Route::get('/timeline', [\App\Http\Controllers\Api\ProjectTimelineController::class, 'index'])->name('timeline');
+    Route::get('/api/timeline/data', [\App\Http\Controllers\Api\ProjectTimelineController::class, 'timelineData'])->name('timeline.data');
     Route::get('/timeline/create', [\App\Http\Controllers\Api\ProjectTimelineController::class, 'create'])->name('timeline.create');
     Route::post('/timelines', [\App\Http\Controllers\Api\ProjectTimelineController::class, 'store'])->name('timelines.store');
     Route::get('/timeline/{timeline}', [\App\Http\Controllers\Api\ProjectTimelineController::class, 'show'])->name('timeline.show');
@@ -136,6 +137,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/whatsapp', fn() => \Inertia\Inertia::render('WhatsApp'))->name('whatsapp');
     Route::get('/messages', fn() => \Inertia\Inertia::render('Messages'))->name('messages');
     Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
+    Route::get('/api/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics.api');
 
     // Full-text search (MeiliSearch)
     Route::get('/search', [\App\Http\Controllers\SearchController::class, 'index'])->name('search');

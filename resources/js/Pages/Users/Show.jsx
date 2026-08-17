@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import Breadcrumb from '@/Components/Breadcrumb';
+import DashboardHero from '@/Components/DashboardHero';
 import StatusBadge from '@/Components/StatusBadge';
 
 export default function Show({ user }) {
@@ -8,22 +8,24 @@ export default function Show({ user }) {
         <AuthenticatedLayout>
             <Head title={`${user.first_name} ${user.last_name}`} />
             <div className="max-w-4xl mx-auto">
-                <Breadcrumb items={[
-                    { label: 'Users', href: route('users.index') },
-                    { label: `${user.first_name} ${user.last_name}` },
-                ]} />
-
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-white">
-                        {user.first_name} {user.last_name}
-                    </h1>
-                    <Link
-                        href={route('users.edit', user.id)}
-                        className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
-                    >
-                        <i className="fas fa-edit mr-2"></i>Edit
-                    </Link>
-                </div>
+                <DashboardHero
+                    title={`${user.first_name} ${user.last_name}`}
+                    subtitle="User profile"
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Users', href: '/users' },
+                        { label: `${user.first_name} ${user.last_name}` },
+                    ]}
+                    actions={
+                        <Link
+                            href={route('users.edit', user.id)}
+                            className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
+                        >
+                            <i className="fas fa-edit mr-2"></i>Edit
+                        </Link>
+                    }
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-black/50 border border-white/10 rounded-2xl p-6">

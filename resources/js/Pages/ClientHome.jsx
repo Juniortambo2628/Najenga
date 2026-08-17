@@ -8,6 +8,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-coverflow';
 import { useState } from 'react';
 import FileUploadModal from '@/Components/FileUploadModal';
+import DashboardHero from '@/Components/DashboardHero';
 
 export default function ClientHome({ auth, projects = [], recentPhotos = [] }) {
     const user = auth.user;
@@ -45,15 +46,13 @@ export default function ClientHome({ auth, projects = [], recentPhotos = [] }) {
                 For the 'Quick Actions' button, user might prefer the full verification flow. */ }
 
             <div>
-                {/* Welcome Section */}
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-white mb-2">
-                        Welcome back, {user.first_name || user.name}! 👋
-                    </h1>
-                    <p className="text-xl text-gray-400">
-                        Manage your construction projects with ease
-                    </p>
-                </div>
+                <DashboardHero
+                    title={`Welcome back, ${user.first_name || user.name}!`}
+                    subtitle="Manage your construction projects with ease"
+                    breadcrumbs={[
+                        { label: 'Home' },
+                    ]}
+                />
 
                 {/* Photo Carousel */}
                 <div className="mb-12">

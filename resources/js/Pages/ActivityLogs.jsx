@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import PageHeader from '@/Components/PageHeader';
+import DashboardHero from '@/Components/DashboardHero';
 
 export default function ActivityLogs({ logs }) {
     return (
@@ -9,9 +9,14 @@ export default function ActivityLogs({ logs }) {
 
             <div>
                 <div className="mx-auto max-w-7xl">
-                    <PageHeader
+                    <DashboardHero
                         title="Activity Logs"
                         subtitle="Review system actions and changes"
+                        breadcrumbs={[
+                            { label: 'Home', href: '/home' },
+                            { label: 'Dashboard', href: '/dashboard' },
+                            { label: 'Activity Logs' },
+                        ]}
                     />
 
                     <div className="dashboard-card overflow-hidden">

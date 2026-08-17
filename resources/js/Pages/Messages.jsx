@@ -4,6 +4,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { MessageBox, ChatList, Input, Button } from 'react-chat-elements';
 import 'react-chat-elements/dist/main.css';
+import DashboardHero from '@/Components/DashboardHero';
 
 export default function Messages() {
     const { auth } = usePage().props;

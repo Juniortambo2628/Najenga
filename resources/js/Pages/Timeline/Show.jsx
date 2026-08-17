@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import Breadcrumb from '@/Components/Breadcrumb';
+import DashboardHero from '@/Components/DashboardHero';
 import StatusBadge from '@/Components/StatusBadge';
 
 export default function Show({ timeline }) {
@@ -8,20 +8,24 @@ export default function Show({ timeline }) {
         <AuthenticatedLayout>
             <Head title={timeline.title} />
             <div className="max-w-4xl mx-auto">
-                <Breadcrumb items={[
-                    { label: 'Timeline', href: route('timeline') },
-                    { label: timeline.title },
-                ]} />
-
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-white">{timeline.title}</h1>
-                    <Link
-                        href={route('timeline.edit', timeline.id)}
-                        className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
-                    >
-                        <i className="fas fa-edit mr-2"></i>Edit
-                    </Link>
-                </div>
+                <DashboardHero
+                    title={timeline.title}
+                    subtitle="Milestone details"
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Timeline', href: '/timeline' },
+                        { label: timeline.title },
+                    ]}
+                    actions={
+                        <Link
+                            href={route('timeline.edit', timeline.id)}
+                            className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
+                        >
+                            <i className="fas fa-edit mr-2"></i>Edit
+                        </Link>
+                    }
+                />
 
                 <div className="bg-black/50 border border-white/10 rounded-2xl p-6">
                     <dl className="space-y-4 text-sm">

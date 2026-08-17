@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import Breadcrumb from '@/Components/Breadcrumb';
+import DashboardHero from '@/Components/DashboardHero';
 
 function DetailRow({ label, value, mono = false }) {
     return (
@@ -29,27 +29,24 @@ export default function Show({ document }) {
             <Head title={document.title} />
 
             <div className="max-w-4xl mx-auto">
-                <Breadcrumb items={[
-                    { label: 'Documents', href: route('documents') },
-                    { label: document.title },
-                ]} />
-
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white">{document.title}</h1>
-                        {document.project?.name && (
-                            <p className="text-gray-400 mt-1 flex items-center gap-2">
-                                <i className="fas fa-folder text-xs"></i> {document.project.name}
-                            </p>
-                        )}
-                    </div>
-                    <Link
-                        href={route('documents.edit', document.id)}
-                        className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                    >
-                        <i className="fas fa-edit mr-2"></i> Edit
-                    </Link>
-                </div>
+                <DashboardHero
+                    title={document.title}
+                    subtitle={document.project?.name || 'Document details'}
+                    breadcrumbs={[
+                        { label: 'Home', href: '/home' },
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Documents', href: '/documents' },
+                        { label: document.title },
+                    ]}
+                    actions={
+                        <Link
+                            href={route('documents.edit', document.id)}
+                            className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
+                        >
+                            <i className="fas fa-edit mr-2"></i> Edit
+                        </Link>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
