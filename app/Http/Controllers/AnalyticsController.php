@@ -191,13 +191,13 @@ class AnalyticsController extends Controller
                 'count' => (int) $row->count,
             ]);
 
-        // Documents by type
+        // Documents by category
         $documentsByType = (clone $docQuery)
-            ->select('document_type', DB::raw('COUNT(*) as count'))
-            ->groupBy('document_type')
+            ->select('category', DB::raw('COUNT(*) as count'))
+            ->groupBy('category')
             ->get()
             ->map(fn ($row) => [
-                'type' => $row->document_type ?: 'Other',
+                'type' => $row->category ?: 'Other',
                 'count' => (int) $row->count,
             ]);
 
