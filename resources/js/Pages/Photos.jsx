@@ -157,11 +157,6 @@ export default function Photos({ photos = [], projects = [] }) {
                         { label: 'Dashboard', href: '/dashboard' },
                         { label: 'Photos' },
                     ]}
-                    actions={
-                        <PrimaryButton onClick={() => setIsUploadModalOpen(true)}>
-                            <i className="fas fa-upload"></i> Upload Photo
-                        </PrimaryButton>
-                    }
                 />
                 {/* Context Toolbar */}
                 <ContextToolbar

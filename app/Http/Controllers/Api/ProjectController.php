@@ -42,10 +42,13 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
+        $totalExpenses = $project->expenses()->sum('amount');
+
         return \Inertia\Inertia::render('Projects/Show', [
             'project' => $project->load(['client', 'users']),
             'photos' => $project->photos()->latest()->take(6)->get(),
             'expenses' => $project->expenses()->latest()->take(5)->get(),
+            'totalExpenses' => (float) $totalExpenses,
             'documents' => $project->documents()->latest()->take(5)->get(),
         ]);
     }

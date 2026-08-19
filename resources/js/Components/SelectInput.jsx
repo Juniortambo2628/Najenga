@@ -14,7 +14,7 @@ export default forwardRef(function SelectInput(
             }
         >
             {placeholder && (
-                <option value="" className="bg-gray-900 text-gray-500">{placeholder}</option>
+                <option value="" className="bg-gray-900 text-gray-400">{placeholder}</option>
             )}
             {children}
         </select>

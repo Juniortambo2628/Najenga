@@ -15,6 +15,42 @@
         --color-warning: 255 193 7;
         --color-danger: 220 53 69;
     }
+
+    /* Fix native select dropdown option visibility on dark backgrounds */
+    select {
+        color-scheme: dark;
+    }
+    select option {
+        background-color: #111827;
+        color: #f3f4f6;
+        padding: 8px 12px;
+    }
+    select option:hover,
+    select option:focus,
+    select option:active,
+    select option:checked {
+        background-color: #8B0000;
+        color: #ffffff;
+    }
+    select option[value=""] {
+        color: #9ca3af;
+    }
+
+    /* Global input, textarea, select theming */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    input[type="datetime-local"],
+    input[type="search"],
+    input[type="url"],
+    textarea,
+    select {
+        @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 transition-all duration-200;
+        @apply focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50;
+    }
 }
 
 @layer components {

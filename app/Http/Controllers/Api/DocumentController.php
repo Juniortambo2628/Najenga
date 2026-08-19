@@ -69,33 +69,46 @@ class DocumentController extends Controller
         }
 
         $uploadedDocuments = [];
+        $errors = [];
 
         if ($request->hasFile('documents')) {
-            foreach ($request->file('documents') as $file) {
-                $document = Document::create([
-                    'user_id' => $request->user()->id,
-                    'project_id' => $projectId,
-                    'folder_id' => $request->folder_id,
-                    'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
-                    'original_name' => $file->getClientOriginalName(),
-                    'file_path' => '',
-                    'filename' => $file->getClientOriginalName(),
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
-                ]);
+            foreach ($request->file('documents') as $index => $file) {
+                try {
+                    $document = Document::create([
+                        'user_id' => $request->user()->id,
+                        'project_id' => $projectId,
+                        'folder_id' => $request->folder_id ?: null,
+                        'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                        'original_name' => $file->getClientOriginalName(),
+                        'file_path' => '',
+                        'filename' => $file->getClientOriginalName(),
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                    ]);
 
-                $this->attachUploadedFile($document, $file, 'files');
+                    $this->attachUploadedFile($document, $file, 'files');
 
-                if ($media = $document->getFirstMedia('files')) {
-                    $relativePath = \Illuminate\Support\Str::after($media->getUrl(), '/storage/');
-                    $document->update(['file_path' => $relativePath]);
+                    if ($media = $document->getFirstMedia('files')) {
+                        $relativePath = \Illuminate\Support\Str::after($media->getUrl(), '/storage/');
+                        $document->update(['file_path' => $relativePath]);
+                    }
+
+                    $uploadedDocuments[] = $document->fresh();
+                } catch (\Exception $e) {
+                    $errors[] = ['index' => $index, 'file' => $file->getClientOriginalName(), 'error' => $e->getMessage()];
                 }
-
-                $uploadedDocuments[] = $document->fresh();
             }
         }
 
-        return response()->json(['message' => 'Documents uploaded successfully', 'documents' => $uploadedDocuments]);
+        if (empty($uploadedDocuments) && !empty($errors)) {
+            return response()->json(['message' => 'Upload failed', 'errors' => $errors], 500);
+        }
+
+        return response()->json([
+            'message' => 'Documents uploaded successfully',
+            'documents' => $uploadedDocuments,
+            'errors' => $errors ?: null,
+        ]);
     }
 
     public function show(Document $document)

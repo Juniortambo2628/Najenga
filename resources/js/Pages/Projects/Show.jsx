@@ -4,7 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency } from '@/Config/currencies';
 
-export default function Show({ project, photos, expenses, documents, auth }) {
+export default function Show({ project, photos, expenses, totalExpenses = 0, documents, auth }) {
     const [showShareModal, setShowShareModal] = useState(false);
 
     const teamMembers = project.users || [];
@@ -51,7 +51,7 @@ export default function Show({ project, photos, expenses, documents, auth }) {
                     </div>
                     <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
                         <p className="text-gray-400 text-sm mb-1">Expenses</p>
-                        <p className="text-2xl font-bold text-white">$0.00</p>
+                        <p className="text-2xl font-bold text-white">{formatCurrency(totalExpenses, project.currency)}</p>
                     </div>
                    <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
                         <p className="text-gray-400 text-sm mb-1">Start Date</p>
