@@ -100,7 +100,7 @@ class AnalyticsController extends Controller
 
         $monthlyExpenses = (clone $expenseQuery)
             ->whereNotNull('expense_date')
-            ->selectRaw("{$ymRaw} as year_month, SUM(amount) as total, COUNT(*) as count")
+            ->selectRaw("{$ymRaw} as `expense_month`, SUM(amount) as total, COUNT(*) as count")
             ->groupByRaw($ymRaw)
             ->orderByRaw($ymRaw . ' desc')
             ->limit($monthLimit)
@@ -108,8 +108,8 @@ class AnalyticsController extends Controller
             ->reverse()
             ->values()
             ->map(fn ($row) => [
-                'month' => Carbon::parse($row->year_month . '-01')->format('M Y'),
-                'short' => Carbon::parse($row->year_month . '-01')->format('M'),
+                'month' => Carbon::parse($row->expense_month . '-01')->format('M Y'),
+                'short' => Carbon::parse($row->expense_month . '-01')->format('M'),
                 'total' => (float) $row->total,
                 'count' => (int) $row->count,
             ]);
@@ -118,14 +118,14 @@ class AnalyticsController extends Controller
         $dailyExpenses = Expense::where('user_id', $userId)
             ->where('expense_date', '>=', Carbon::now()->subDays(30))
             ->select(
-                DB::raw('DATE(expense_date) as day'),
+                DB::raw('DATE(expense_date) as expense_day'),
                 DB::raw('SUM(amount) as total')
             )
-            ->groupBy('day')
-            ->orderBy('day')
+            ->groupBy('expense_day')
+            ->orderBy('expense_day')
             ->get()
             ->map(fn ($row) => [
-                'date' => $row->day,
+                'date' => $row->expense_day,
                 'total' => (float) $row->total,
             ]);
 
