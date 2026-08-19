@@ -74,7 +74,7 @@ class ProjectTimelineController extends Controller
                 'title' => $d->title,
                 'file_path' => $d->file_path,
                 'category' => $d->category,
-                'document_type' => $d->document_type,
+                'category' => $d->category,
                 'date' => $d->document_date?->format('Y-m-d'),
                 'project_id' => $d->project_id,
                 'project_name' => $d->project?->name ?? 'N/A',
@@ -166,7 +166,7 @@ class ProjectTimelineController extends Controller
                 'id' => $d->id,
                 'title' => $d->title,
                 'file_path' => $d->file_path,
-                'document_type' => $d->document_type,
+                'category' => $d->category,
                 'date' => $d->document_date?->format('Y-m-d'),
                 'project_id' => $d->project_id,
             ]);
