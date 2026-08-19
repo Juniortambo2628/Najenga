@@ -16,6 +16,7 @@ class StoreDocumentRequest extends FormRequest
         return [
             'documents.*' => 'required|file|max:51200',
             'project_id' => 'nullable|exists:projects,id',
+            'folder_id' => 'nullable|exists:folders,id',
         ];
     }
 }

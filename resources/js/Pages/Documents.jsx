@@ -117,23 +117,17 @@ export default function Documents({ documents = [], folders = [], projects = [] 
              link.click();
         }},
         { label: 'Share', icon: 'fa-share-alt', action: () => alert('Shared!') },
-        { label: 'Delete', icon: 'fa-trash', danger: true, action: () => {
+        { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
             if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
-                const ids = Array.from(selectedItems);
-                Promise.all(ids.map(id =>
-                    new Promise((resolve, reject) => {
-                        router.delete(`/documents/${id}`, {
-                            preserveScroll: true,
-                            onSuccess: () => { if (previewDoc?.id === id) setPreviewDoc(null); resolve(); },
-                            onError: reject,
-                        });
-                    })
-                )).then(() => {
+                try {
+                    const ids = [...selectedItems];
+                    await axios.delete('/documents/batch', { data: { ids } });
                     clearSelection();
                     toast.success(`${ids.length} document${ids.length !== 1 ? 's' : ''} deleted`);
-                }).catch(() => {
-                    toast.error('Failed to delete some documents');
-                });
+                    router.reload({ only: ['documents'] });
+                } catch (e) {
+                    toast.error('Failed to delete documents');
+                }
             }
         }},
     ];
@@ -154,6 +148,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': []
                 }}
                 title="Upload Documents"
+                extraData={currentFolderId ? { folder_id: currentFolderId } : {}}
             />
 
             <div onClick={closeContextMenu}>
@@ -190,19 +185,17 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     bulkActions={
                         <>
                             <button className="text-white hover:text-gray-200"><i className="fas fa-download"></i></button>
-                            <button className="text-white hover:text-gray-200" onClick={() => {
+                            <button className="text-white hover:text-gray-200" onClick={async () => {
                                 if (confirm(`Delete ${selectedCount} items?`)) {
-                                    const ids = Array.from(selectedItems);
-                                    Promise.all(ids.map(id =>
-                                        new Promise((resolve, reject) => {
-                                            router.delete(`/documents/${id}`, { preserveScroll: true, onSuccess: resolve, onError: reject });
-                                        })
-                                    )).then(() => {
+                                    try {
+                                        const ids = [...selectedItems];
+                                        await axios.delete('/documents/batch', { data: { ids } });
                                         clearSelection();
                                         toast.success(`${ids.length} document${ids.length !== 1 ? 's' : ''} deleted`);
-                                    }).catch(() => {
-                                        toast.error('Failed to delete some documents');
-                                    });
+                                        router.reload({ only: ['documents'] });
+                                    } catch (e) {
+                                        toast.error('Failed to delete documents');
+                                    }
                                 }
                             }}><i className="fas fa-trash"></i></button>
                             <button className="text-white hover:text-gray-200" onClick={clearSelection}><i className="fas fa-times"></i></button>

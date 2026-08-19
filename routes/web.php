@@ -64,6 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'show'])->name('documents.show');
     Route::get('/documents/{document}/edit', [\App\Http\Controllers\Api\DocumentController::class, 'edit'])->name('documents.edit');
     Route::patch('/documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'update'])->name('documents.update');
+    Route::delete('/documents/batch', [\App\Http\Controllers\Api\DocumentController::class, 'batchDestroy'])->name('documents.batchDestroy');
     Route::delete('/documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::patch('/documents/{document}/move', [\App\Http\Controllers\Api\DocumentController::class, 'move'])->name('documents.move');
 

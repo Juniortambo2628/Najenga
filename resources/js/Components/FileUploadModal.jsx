@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import imageCompression from 'browser-image-compression';
 import axios from 'axios';
@@ -16,13 +16,23 @@ const COMPRESSION_OPTIONS = {
 
 const BATCH_SIZE = 10;
 
-export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFileTypes, title = "Upload Files", onUploadComplete }) {
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFileTypes, title = "Upload Files", onUploadComplete, extraData = {} }) {
     const [files, setFiles] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState(null);
     const [compressing, setCompressing] = useState(false);
     const [compressionInfo, setCompressionInfo] = useState(null);
+    const [minimized, setMinimized] = useState(false);
+    const [uploadedCount, setUploadedCount] = useState(0);
+    const [failedCount, setFailedCount] = useState(0);
+    const [totalFileCount, setTotalFileCount] = useState(0);
 
     const onDrop = useCallback(async (acceptedFiles) => {
         setCompressing(true);
@@ -89,11 +99,15 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
 
         setUploading(true);
         setProgress(0);
+        setMinimized(true);
+        setTotalFileCount(files.length);
+        setUploadedCount(0);
+        setFailedCount(0);
 
         const fieldName = uploadUrl.includes('documents') ? 'documents[]' : 'photos[]';
         const totalBatches = Math.ceil(files.length / BATCH_SIZE);
-        let uploadedCount = 0;
-        let failedCount = 0;
+        let uploaded = 0;
+        let failed = 0;
 
         for (let batch = 0; batch < totalBatches; batch++) {
             const start = batch * BATCH_SIZE;
@@ -103,6 +117,12 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
             const formData = new FormData();
             batchFiles.forEach(file => {
                 formData.append(fieldName, file);
+            });
+
+            Object.entries(extraData).forEach(([key, value]) => {
+                if (value !== null && value !== undefined) {
+                    formData.append(key, value);
+                }
             });
 
             try {
@@ -119,37 +139,137 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                 });
-                uploadedCount += batchFiles.length;
+                uploaded += batchFiles.length;
+                setUploadedCount(uploaded);
             } catch {
-                failedCount += batchFiles.length;
+                failed += batchFiles.length;
+                setFailedCount(failed);
             }
         }
 
-        if (failedCount === 0) {
+        setUploading(false);
+        setProgress(100);
+
+        if (failed === 0) {
             setUploadStatus('success');
             setFiles([]);
             if (onUploadComplete) onUploadComplete();
             setTimeout(() => {
-                onClose();
-                setUploadStatus(null);
-                setProgress(0);
-            }, 1500);
+                resetAndClose();
+            }, 3000);
         } else {
             setUploadStatus('error');
         }
+    };
 
+    const resetAndClose = () => {
+        setFiles([]);
         setUploading(false);
+        setProgress(0);
+        setUploadStatus(null);
+        setMinimized(false);
+        setUploadedCount(0);
+        setFailedCount(0);
+        setTotalFileCount(0);
+        setCompressionInfo(null);
+        onClose();
+    };
+
+    const handleClose = () => {
+        if (uploading) {
+            setMinimized(true);
+        } else {
+            resetAndClose();
+        }
     };
 
     const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-    const formatSize = (bytes) => {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / 1048576).toFixed(1) + ' MB';
-    };
+
+    // Background upload widget (minimized state)
+    if (minimized && (uploading || uploadStatus)) {
+        return (
+            <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4">
+                <div className="bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-80 overflow-hidden">
+                    {/* Header */}
+                    <div
+                        className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/5 transition"
+                        onClick={() => setMinimized(false)}
+                    >
+                        <div className="flex items-center gap-3">
+                            {uploading ? (
+                                <div className="w-8 h-8 rounded-full bg-[#8B0000]/20 flex items-center justify-center">
+                                    <i className="fas fa-cloud-upload-alt text-[#DC143C] text-sm animate-pulse"></i>
+                                </div>
+                            ) : uploadStatus === 'success' ? (
+                                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                                    <i className="fas fa-check text-green-400 text-sm"></i>
+                                </div>
+                            ) : (
+                                <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
+                                    <i className="fas fa-exclamation text-red-400 text-sm"></i>
+                                </div>
+                            )}
+                            <div>
+                                <p className="text-white text-sm font-medium">
+                                    {uploading ? 'Uploading...' : uploadStatus === 'success' ? 'Upload Complete' : 'Upload Failed'}
+                                </p>
+                                <p className="text-gray-500 text-xs">
+                                    {uploading ? `${progress}%` : `${uploadedCount}/${totalFileCount} files`}
+                                </p>
+                            </div>
+                        </div>
+                        {!uploading && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); resetAndClose(); }}
+                                className="text-gray-500 hover:text-white transition p-1"
+                            >
+                                <i className="fas fa-times text-sm"></i>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Progress bar */}
+                    {uploading && (
+                        <div className="px-4 pb-3">
+                            <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                    className="bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] h-full transition-all duration-300"
+                                    style={{ width: `${progress}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Status messages */}
+                    {uploadStatus === 'success' && (
+                        <div className="px-4 pb-3">
+                            <p className="text-green-400 text-xs">
+                                <i className="fas fa-check-circle mr-1"></i>
+                                {uploadedCount} file{uploadedCount !== 1 ? 's' : ''} uploaded successfully
+                            </p>
+                        </div>
+                    )}
+                    {uploadStatus === 'error' && (
+                        <div className="px-4 pb-3">
+                            <p className="text-red-400 text-xs">
+                                <i className="fas fa-exclamation-circle mr-1"></i>
+                                {failedCount} file{failedCount !== 1 ? 's' : ''} failed
+                            </p>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); resetAndClose(); }}
+                                className="text-xs text-gray-400 hover:text-white mt-1 underline"
+                            >
+                                Dismiss
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <Modal show={isOpen} onClose={onClose} maxWidth="2xl">
+        <Modal show={isOpen} onClose={handleClose} maxWidth="2xl">
             <div className="flex justify-between items-center p-6 border-b border-white/10">
                 <h3 className="text-xl font-bold text-white">{title}</h3>
                 {files.length > 0 && (
@@ -226,27 +346,7 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                     </div>
                 )}
 
-                {uploading && (
-                    <div className="mt-6">
-                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Uploading batch {Math.ceil(progress / (100 / Math.ceil(files.length / BATCH_SIZE)))} of {Math.ceil(files.length / BATCH_SIZE)}...</span>
-                            <span>{progress}%</span>
-                        </div>
-                        <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-                            <div
-                                className="bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] h-full transition-all duration-300"
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                )}
-
-                {uploadStatus === 'success' && (
-                    <div className="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 text-center text-sm font-medium">
-                        <i className="fas fa-check-circle mr-2"></i> Upload Complete!
-                    </div>
-                )}
-                {uploadStatus === 'error' && (
+                {uploadStatus === 'error' && !uploading && (
                     <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-center text-sm font-medium">
                         <i className="fas fa-exclamation-circle mr-2"></i> Some files failed. Please try again.
                     </div>
@@ -254,8 +354,8 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
             </div>
 
             <div className="p-6 border-t border-white/10 flex justify-end gap-3">
-                <SecondaryButton onClick={onClose} disabled={uploading}>
-                    Cancel
+                <SecondaryButton onClick={handleClose} disabled={uploading}>
+                    {uploading ? 'Minimize' : 'Cancel'}
                 </SecondaryButton>
                 <PrimaryButton onClick={handleUpload} disabled={files.length === 0 || uploading || compressing}>
                     {uploading ? 'Uploading...' : compressing ? 'Compressing...' : `Upload ${files.length} Files`}

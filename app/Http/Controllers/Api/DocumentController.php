@@ -72,24 +72,20 @@ class DocumentController extends Controller
 
         if ($request->hasFile('documents')) {
             foreach ($request->file('documents') as $file) {
-                // 1. Create the document row first so MediaLibrary has a parent
                 $document = Document::create([
                     'user_id' => $request->user()->id,
                     'project_id' => $projectId,
+                    'folder_id' => $request->folder_id,
                     'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
                     'original_name' => $file->getClientOriginalName(),
-                    'file_path' => '', // mirrored from media after attachment
+                    'file_path' => '',
                     'filename' => $file->getClientOriginalName(),
                     'file_size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
                 ]);
 
-                // 2. Attach the uploaded file to the "files" media collection
                 $this->attachUploadedFile($document, $file, 'files');
 
-                // 3. Mirror the media URL to legacy file_path column so
-                //    existing frontend code that reads file_path keeps working.
-                //    Strip app URL + /storage/ prefix to get a relative path.
                 if ($media = $document->getFirstMedia('files')) {
                     $relativePath = \Illuminate\Support\Str::after($media->getUrl(), '/storage/');
                     $document->update(['file_path' => $relativePath]);
@@ -137,6 +133,28 @@ class DocumentController extends Controller
         Document::withoutSyncingToSearch(fn () => $document->delete());
 
         return $this->respondOrRedirect($request, '/documents', 'Document deleted successfully');
+    }
+
+    public function batchDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:documents,id',
+        ]);
+
+        $user = auth()->user();
+        $ids = $request->input('ids');
+
+        $deleted = Document::withoutSyncingToSearch(fn () =>
+            Document::whereIn('id', $ids)
+                ->where('user_id', $user->id)
+                ->delete()
+        );
+
+        return response()->json([
+            'deleted' => $deleted,
+            'message' => "{$deleted} document" . ($deleted !== 1 ? "s" : "") . " deleted",
+        ]);
     }
 
     public function move(Request $request, Document $document)
