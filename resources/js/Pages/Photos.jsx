@@ -123,11 +123,15 @@ export default function Photos({ photos = [], projects = [] }) {
         { label: 'Share', icon: 'fa-share-alt', action: () => alert('Sharing not implemented yet') },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
             if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
-                for (const id of selectedItems) {
-                    await router.delete(`/photos/${id}`);
+                try {
+                    const ids = [...selectedItems];
+                    await axios.delete('/photos/batch', { data: { ids } });
+                    clearSelection();
+                    toast.success('Photos deleted successfully');
+                    router.reload({ only: ['photos'] });
+                } catch (e) {
+                    toast.error('Failed to delete photos');
                 }
-                clearSelection();
-                toast.success('Photos deleted successfully');
             }
         }},
     ];
@@ -175,11 +179,15 @@ export default function Photos({ photos = [], projects = [] }) {
                                 title="Delete Selected"
                                 onClick={async () => {
                                     if (confirm(`Delete ${selectedCount} items?`)) {
-                                        for (const id of selectedItems) {
-                                            await router.delete(`/photos/${id}`);
+                                        try {
+                                            const ids = [...selectedItems];
+                                            await axios.delete('/photos/batch', { data: { ids } });
+                                            clearSelection();
+                                            toast.success('Photos deleted successfully');
+                                            router.reload({ only: ['photos'] });
+                                        } catch (e) {
+                                            toast.error('Failed to delete photos');
                                         }
-                                        clearSelection();
-                                        toast.success('Photos deleted successfully');
                                     }
                                 }}
                             >
@@ -208,11 +216,15 @@ export default function Photos({ photos = [], projects = [] }) {
                                         title="Delete Selected"
                                         onClick={async () => {
                                             if (confirm(`Delete ${selectedCount} items?`)) {
-                                                for (const id of selectedItems) {
-                                                    await router.delete(`/photos/${id}`);
+                                                try {
+                                                    const ids = [...selectedItems];
+                                                    await axios.delete('/photos/batch', { data: { ids } });
+                                                    clearSelection();
+                                                    toast.success('Photos deleted successfully');
+                                                    router.reload({ only: ['photos'] });
+                                                } catch (e) {
+                                                    toast.error('Failed to delete photos');
                                                 }
-                                                clearSelection();
-                                                toast.success('Photos deleted successfully');
                                             }
                                         }}
                                     >

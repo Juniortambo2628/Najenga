@@ -106,13 +106,18 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
             });
 
             try {
+                const csrfToken = document.head.querySelector('meta[name="csrf-token"]')?.content;
                 await axios.post(uploadUrl, formData, {
                     onUploadProgress: (progressEvent) => {
                         const batchProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                         const overallProgress = Math.round(((batch * 100 + batchProgress) / (totalBatches * 100)) * 100);
                         setProgress(overallProgress);
                     },
-                    headers: { 'Content-Type': 'multipart/form-data' },
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
                 });
                 uploadedCount += batchFiles.length;
             } catch {

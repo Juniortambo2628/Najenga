@@ -113,7 +113,6 @@ class PhotoController extends Controller
     {
         $this->authorize('delete', $photo);
 
-        // MediaLibrary handles file cleanup automatically when the model is deleted
         Photo::withoutSyncingToSearch(fn () => $photo->delete());
 
         if ($request->wantsJson() && !$request->header('X-Inertia')) {
@@ -121,5 +120,27 @@ class PhotoController extends Controller
         }
 
         return redirect()->back()->with('success', 'Photo deleted successfully');
+    }
+
+    public function batchDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:photos,id',
+        ]);
+
+        $user = auth()->user();
+        $ids = $request->input('ids');
+
+        $deleted = Photo::withoutSyncingToSearch(fn () =>
+            Photo::whereIn('id', $ids)
+                ->where('user_id', $user->id)
+                ->delete()
+        );
+
+        return response()->json([
+            'deleted' => $deleted,
+            'message' => "{$deleted} photo" . ($deleted !== 1 ? "s" : "") . " deleted",
+        ]);
     }
 }

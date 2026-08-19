@@ -54,6 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/photos/{photo}', [\App\Http\Controllers\Api\PhotoController::class, 'show'])->name('photos.show');
     Route::get('/photos/{photo}/edit', [\App\Http\Controllers\Api\PhotoController::class, 'edit'])->name('photos.edit');
     Route::patch('/photos/{photo}', [\App\Http\Controllers\Api\PhotoController::class, 'update'])->name('photos.update');
+    Route::delete('/photos/batch', [\App\Http\Controllers\Api\PhotoController::class, 'batchDestroy'])->name('photos.batchDestroy');
     Route::delete('/photos/{photo}', [\App\Http\Controllers\Api\PhotoController::class, 'destroy'])->name('photos.destroy');
 
     // Documents
