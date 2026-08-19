@@ -107,7 +107,7 @@ class PdfFirstPageThumbnail extends ImageGenerator
         $candidates = ['gswin64c', 'gswin32c', 'gs'];
         foreach ($candidates as $binary) {
             $cmd = PHP_OS_FAMILY === 'Windows' ? "where $binary 2>nul" : "which $binary 2>/dev/null";
-            $output = @shell_exec($cmd);
+            $output = function_exists('shell_exec') ? @shell_exec($cmd) : null;
             if ($output) {
                 $path = trim(explode("\n", $output)[0]);
                 if ($path && file_exists($path)) {
@@ -121,6 +121,10 @@ class PdfFirstPageThumbnail extends ImageGenerator
 
     protected function renderViaGhostscript(string $gsBinary, string $pdfPath, string $outputPath, int $pageNumber): void
     {
+        if (!function_exists('exec') && !function_exists('shell_exec')) {
+            throw new \RuntimeException('Neither exec() nor shell_exec() are available — PDF thumbnail generation is disabled on this server.');
+        }
+
         $cmd = sprintf(
             '%s -q -dNOPAUSE -dBATCH -sDEVICE=jpeg -r150 -dFirstPage=%d -dLastPage=%d -sOutputFile=%s %s 2>&1',
             escapeshellarg($gsBinary),
