@@ -501,32 +501,55 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                 <div className="flex flex-col lg:flex-row h-full overflow-hidden">
                     {/* Content Area */}
                     <div className="flex-1 bg-black/20 flex flex-col items-center justify-center relative overflow-hidden">
-                        {previewDoc && (
-                           previewDoc.file_path.toLowerCase().endsWith('.pdf') ? (
-                               <iframe 
-                                   src={`/storage/${previewDoc.file_path.split('/').map(segment => encodeURIComponent(segment)).join('/')}`} 
-                                   className="w-full h-full rounded-lg shadow-lg border-0"
-                                   title="PDF Preview"
-                               />
-                           ) : (
-                               ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => previewDoc.file_path.toLowerCase().endsWith(ext)) ? (
-                                   <ImageAnnotator resource={previewDoc} type="document" />
-                               ) : (
-                                   <div className="text-center p-8">
-                                       <i className="fas fa-file-alt text-6xl text-gray-600 mb-4"></i>
-                                       <p className="text-gray-400 mb-4 font-medium">Preview not available for this file type.</p>
-                                       <a 
-                                           href={`/storage/${previewDoc.file_path}`} 
-                                           download 
-                                           className="inline-flex items-center gap-2 px-6 py-2 bg-[#8B0000] text-white rounded-lg hover:bg-[#DC143C] transition font-bold"
-                                       >
-                                           <i className="fas fa-download"></i>
-                                           Download to View
-                                       </a>
-                                   </div>
-                               )
-                           )
-                        )}
+                        {previewDoc && (() => {
+                            const fp = previewDoc.file_path.toLowerCase();
+                            const fileUrl = `/storage/${previewDoc.file_path.split('/').map(segment => encodeURIComponent(segment)).join('/')}`;
+                            const isPdf = fp.endsWith('.pdf');
+                            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => fp.endsWith(ext));
+                            const isOffice = fp.endsWith('.docx') || fp.endsWith('.doc') || fp.endsWith('.xlsx') || fp.endsWith('.xls') || fp.endsWith('.pptx') || fp.endsWith('.ppt');
+                            const isText = fp.endsWith('.txt') || fp.endsWith('.csv') || fp.endsWith('.json') || fp.endsWith('.xml') || fp.endsWith('.md');
+
+                            if (isPdf) {
+                                return <iframe src={fileUrl} className="w-full h-full rounded-lg shadow-lg border-0" title="PDF Preview" />;
+                            }
+                            if (isImage) {
+                                return <ImageAnnotator resource={previewDoc} type="document" />;
+                            }
+                            if (isOffice) {
+                                return (
+                                    <iframe
+                                        src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(window.location.origin + fileUrl)}`}
+                                        className="w-full h-full rounded-lg shadow-lg border-0"
+                                        title="Document Preview"
+                                    />
+                                );
+                            }
+                            if (isText) {
+                                return (
+                                    <div className="w-full h-full overflow-auto p-6">
+                                        <pre className="text-gray-300 text-sm font-mono whitespace-pre-wrap bg-black/30 rounded-xl p-4 border border-white/10">
+                                            Loading...
+                                        </pre>
+                                    </div>
+                                );
+                            }
+                            return (
+                                <div className="text-center p-8">
+                                    <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+                                        <i className="fas fa-file text-4xl text-gray-500"></i>
+                                    </div>
+                                    <p className="text-gray-400 mb-4 font-medium">Preview not available for this file type.</p>
+                                    <a 
+                                        href={fileUrl} 
+                                        download 
+                                        className="inline-flex items-center gap-2 px-6 py-2 bg-[#8B0000] text-white rounded-lg hover:bg-[#DC143C] transition font-bold"
+                                    >
+                                        <i className="fas fa-download"></i>
+                                        Download to View
+                                    </a>
+                                </div>
+                            );
+                        })()}
                     </div>
  
                      {/* Sidebar Area */}

@@ -198,17 +198,17 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         { label: 'Dashboard', href: '/dashboard' },
                         { label: 'Expenses' },
                     ]}
-                    actions={
-                        <PrimaryButton onClick={() => { reset(); setIsAddModalOpen(true); }}>
-                            <i className="fas fa-plus mr-1"></i>Add Expense
-                        </PrimaryButton>
-                    }
                 />
                 <ContextToolbar
                     projects={projects}
                     currentProjectId={activeProjectId}
                     onProjectChange={setActiveProjectId}
                     selectedCount={selectedCount}
+                    actions={
+                        <PrimaryButton onClick={() => { reset(); setIsAddModalOpen(true); }}>
+                            <i className="fas fa-plus mr-1"></i>Add Expense
+                        </PrimaryButton>
+                    }
                 >
                     <div className="flex items-center gap-3 flex-wrap">
                         <BulkActions

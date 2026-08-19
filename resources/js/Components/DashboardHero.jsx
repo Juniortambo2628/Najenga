@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 
-export default function DashboardHero({ title, subtitle, breadcrumbs = [], actions }) {
+export default function DashboardHero({ title, subtitle, breadcrumbs = [] }) {
     return (
         <div className="mb-6">
             {/* Breadcrumbs */}
@@ -21,17 +21,10 @@ export default function DashboardHero({ title, subtitle, breadcrumbs = [], actio
                 </nav>
             )}
             
-            {/* Title Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
-                    {subtitle && <p className="text-gray-400 mt-1 text-sm md:text-base">{subtitle}</p>}
-                </div>
-                {actions && (
-                    <div className="flex flex-wrap gap-3">
-                        {actions}
-                    </div>
-                )}
+            {/* Title */}
+            <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>
+                {subtitle && <p className="text-gray-400 mt-1 text-sm md:text-base">{subtitle}</p>}
             </div>
         </div>
     );

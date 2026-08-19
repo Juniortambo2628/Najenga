@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import StatCard from '@/Components/StatCard';
 import Card from '@/Components/Card';
 import DashboardHero from '@/Components/DashboardHero';
+import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import { formatCurrency } from '@/Config/currencies';
 
@@ -212,38 +213,31 @@ export default function Analytics({
                         { label: 'Dashboard', href: '/dashboard' },
                         { label: 'Analytics' },
                     ]}
+                />
+
+                {/* Context Toolbar with project filter + period selector */}
+                <ContextToolbar
+                    projects={projects}
+                    currentProjectId={projectFilter}
+                    onProjectChange={(val) => handleContextChange(period, val)}
                     actions={
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={projectFilter || ''}
-                                onChange={(e) => handleContextChange(period, e.target.value || null)}
-                                className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-gray-300 focus:outline-none focus:border-[#8B0000]"
-                            >
-                                <option value="">All Projects</option>
-                                {projects.map((p) => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
+                        <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+                            {PERIODS.map((p) => (
+                                <button
+                                    key={p.value}
+                                    onClick={() => handleContextChange(p.value, projectFilter)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                                        period === p.value
+                                            ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
+                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
                         </div>
                     }
                 />
-
-                {/* Period Selector */}
-                <div className="flex gap-1 mb-6 bg-gray-900/50 border border-white/10 rounded-xl p-1 w-fit">
-                    {PERIODS.map((p) => (
-                        <button
-                            key={p.value}
-                            onClick={() => handleContextChange(p.value, projectFilter)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                                period === p.value
-                                    ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
-                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                            }`}
-                        >
-                            {p.label}
-                        </button>
-                    ))}
-                </div>
 
                 {/* Overview Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">

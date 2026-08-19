@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import DashboardHero from '@/Components/DashboardHero';
+import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import StatusBadge from '@/Components/StatusBadge';
 import Modal from '@/Components/Modal';
@@ -247,22 +248,16 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                         { label: 'Dashboard', href: '/dashboard' },
                         { label: 'Timeline' },
                     ]}
+                />
+
+                <ContextToolbar
+                    projects={projects}
+                    currentProjectId={filterProject}
+                    onProjectChange={(val) => setFilterProject(val)}
                     actions={
-                        <div className="flex items-center gap-3">
-                            <select
-                                value={filterProject || ''}
-                                onChange={(e) => setFilterProject(e.target.value || null)}
-                                className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-gray-300 focus:outline-none focus:border-[#8B0000]"
-                            >
-                                <option value="">All Projects</option>
-                                {projects.map((p) => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
-                            <PrimaryButton onClick={() => openModal()}>
-                                <i className="fas fa-plus"></i> Add Milestone
-                            </PrimaryButton>
-                        </div>
+                        <PrimaryButton onClick={() => openModal()}>
+                            <i className="fas fa-plus"></i> Add Milestone
+                        </PrimaryButton>
                     }
                 />
 
