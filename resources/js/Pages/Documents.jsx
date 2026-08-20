@@ -23,6 +23,7 @@ import DashboardHero from '@/Components/DashboardHero';
 
 // Configure PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.setVerbosityLevel(pdfjs.VerbosityLevel.ERRORS);
 
 export default function Documents({ documents = [], folders = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
