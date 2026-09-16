@@ -8,6 +8,7 @@ use App\Models\Expense;
 use App\Models\WhatsAppContact;
 use App\Models\WhatsAppLog;
 use App\Models\WhatsAppWebhookEvent;
+use App\Jobs\ProcessWhatsAppReceipt;
 use App\Services\ReceiptProcessingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -170,61 +171,12 @@ class WhatsAppController extends Controller
     }
 
     /**
-     * Process a receipt image from WhatsApp.
+     * Queue a receipt image from WhatsApp for background OCR processing.
+     * The webhook must return 200 within seconds or Meta will retry.
      */
     private function processReceipt(string $mediaId, User $user): void
     {
-        try {
-            // Download media from Meta Graph API
-            $accessToken = config('services.meta.whatsapp_access_token');
-            $mediaUrl = "https://graph.facebook.com/v18.0/{$mediaId}";
-
-            $response = Http::withToken($accessToken)->get($mediaUrl);
-
-            if ($response->failed()) {
-                Log::error('Failed to fetch WhatsApp media: ' . $response->body());
-                return;
-            }
-
-            $mediaData = $response->json();
-            $downloadUrl = $mediaData['url'] ?? null;
-
-            if (!$downloadUrl) {
-                Log::error('No download URL in WhatsApp media response');
-                return;
-            }
-
-            // Download the actual image
-            $imageResponse = Http::withToken($accessToken)->get($downloadUrl);
-
-            if ($imageResponse->failed()) {
-                Log::error('Failed to download WhatsApp image');
-                return;
-            }
-
-            // Use ReceiptProcessingService for consistent OCR processing
-            $expense = $this->receiptService->processReceiptFromUrl($downloadUrl, $user);
-
-            if ($expense) {
-                $this->sendWhatsAppMessage(
-                    $user->phone,
-                    "Receipt processed successfully! Amount: {$expense->currency} " . number_format($expense->amount, 2) .
-                    "\nTitle: {$expense->title}" .
-                    "\nStatus: {$expense->status}"
-                );
-            } else {
-                $this->sendWhatsAppMessage(
-                    $user->phone,
-                    "Receipt received but could not be processed. Please try again or upload manually."
-                );
-            }
-        } catch (\Exception $e) {
-            Log::error('WhatsApp receipt processing error: ' . $e->getMessage());
-            $this->sendWhatsAppMessage(
-                $user->phone,
-                "Sorry, there was an error processing your receipt. Please try again later."
-            );
-        }
+        ProcessWhatsAppReceipt::dispatch($mediaId, $user->id);
     }
 
     /**

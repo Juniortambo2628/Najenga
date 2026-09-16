@@ -17,4 +17,28 @@ export default defineConfig({
             port: 5176,
         },
     },
+    build: {
+        sourcemap: 'hidden',
+        chunkSizeWarningLimit: 800,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) return;
+                    if (id.includes('ag-grid')) return 'aggrid';
+                    if (id.includes('xlsx')) return 'xlsx';
+                    if (id.includes('tesseract.js')) return 'tesseract';
+                    if (id.includes('react-pdf') || id.includes('pdfjs-dist')) return 'pdf';
+                    if (id.includes('framer-motion')) return 'motion';
+                    if (id.includes('swiper')) return 'swiper';
+                    if (id.includes('@annotorious')) return 'annotorious';
+                    if (id.includes('react-chat-elements') || id.includes('react-mentions')) return 'chat';
+                    if (id.includes('date-fns')) return 'datefns';
+                    if (id.includes('browser-image-compression')) return 'imgcompress';
+                    if (id.includes('react-dom') || id.includes('scheduler') || /[\\/]react[\\/]/.test(id)) return 'react-core';
+                    if (id.includes('@inertiajs')) return 'inertia';
+                    return 'vendor';
+                },
+            },
+        },
+    },
 });

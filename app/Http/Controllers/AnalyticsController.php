@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\ProjectTimeline;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -22,6 +23,17 @@ class AnalyticsController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $period = $request->input('period', '6months');
+
+        $cacheKey = "analytics:{$userId}:" . md5(json_encode([$projectId, $startDate, $endDate, $period]));
+        $payload = Cache::remember($cacheKey, now()->addMinutes(5), fn () => $this->buildPayload(
+            $userId, $projectId, $startDate, $endDate, $period
+        ));
+
+        return Inertia::render('Analytics', $payload);
+    }
+
+    private function buildPayload($userId, $projectId, $startDate, $endDate, $period): array
+    {
 
         // Base queries
         $expenseQuery = Expense::where('user_id', $userId);
@@ -221,7 +233,7 @@ class AnalyticsController extends Controller
             $projectSummaries
         );
 
-        return Inertia::render('Analytics', [
+        return [
             'stats' => [
                 'totalExpenses' => (float) $totalExpenses,
                 'totalProjects' => $totalProjects,
@@ -244,7 +256,7 @@ class AnalyticsController extends Controller
             'milestoneStatusBreakdown' => $milestoneStatusBreakdown,
             'insights' => $insights,
             'projects' => Project::where('client_id', $userId)->get(['id', 'name']),
-        ]);
+        ];
     }
 
     private function generateInsights(

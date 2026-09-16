@@ -2,8 +2,19 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/health', function () {
+    $checks = ['app' => true, 'db' => false, 'cache' => false, 'storage_writable' => false];
+    try { DB::select('select 1'); $checks['db'] = true; } catch (\Throwable $e) {}
+    try { Cache::put('health_probe', 1, 5); $checks['cache'] = Cache::get('health_probe') === 1; } catch (\Throwable $e) {}
+    $checks['storage_writable'] = is_writable(storage_path('logs'));
+    $ok = ! in_array(false, $checks, true);
+    return response()->json(['status' => $ok ? 'ok' : 'degraded', 'checks' => $checks, 'time' => now()->toIso8601String()], $ok ? 200 : 503);
+})->name('health');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -136,7 +147,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Other pages
     Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity.logs');
-    Route::get('/whatsapp', fn() => \Inertia\Inertia::render('WhatsApp'))->name('whatsapp');
+    Route::middleware('admin')->group(function () {
+        Route::get('/whatsapp', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'index'])->name('whatsapp');
+        Route::post('/whatsapp/test-send', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'testSend'])->name('whatsapp.test-send');
+    });
     Route::get('/messages', fn() => \Inertia\Inertia::render('Messages'))->name('messages');
     Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/api/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics.api');
@@ -145,8 +159,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/search', [\App\Http\Controllers\SearchController::class, 'index'])->name('search');
     Route::get('/api/search/live', [\App\Http\Controllers\SearchController::class, 'live'])->name('search.live');
 
-    // Storage
-    Route::get('/storage/{path}', [\App\Http\Controllers\StorageController::class, 'show'])->where('path', '.*')->name('storage.show');
+    // Private files (auth-gated). Public assets are served directly from
+    // the /storage symlink by the web server without hitting Laravel.
+    Route::get('/private-files/{path}', [\App\Http\Controllers\StorageController::class, 'show'])->where('path', '.*')->name('private.file');
 });
 
 Route::middleware('auth')->group(function () {

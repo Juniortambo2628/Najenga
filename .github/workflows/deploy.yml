@@ -45,10 +45,13 @@ jobs:
                 --exclude='deploy-bundle' --exclude='storage/logs/*' --exclude='storage/framework/cache/*' \
                 --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' \
                 --exclude='.env' --exclude='.env.production' \
+                --exclude='tests' --exclude='public/test_*.php' \
                 ./ deploy-bundle/backend/
           mkdir -p deploy-bundle/public
           cp -r public/* deploy-bundle/public/
           cp -r public/build deploy-bundle/public/ 2>/dev/null || true
+          # Remove any lingering test/debug scripts from the bundle public dir.
+          rm -f deploy-bundle/public/test_*.php deploy-bundle/backend/public/test_*.php
           echo "Bundle prepared: $(find deploy-bundle/ -type f | wc -l) files"
 
       - name: Setup SSH
@@ -67,15 +70,41 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "set -e; mkdir -p ~/najenga-core/{storage/app/public,storage/framework/{cache/data,sessions,views},storage/logs,bootstrap/cache}; mkdir -p ~/najenga.okjtech.co.ke/build/assets; echo 'Directories created'"
 
-      - name: Deploy backend files
+      - name: Deploy backend files (rsync --delete)
         run: |
-          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} -r deploy-bundle/backend/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga-core/
-          echo "Backend deployed"
+          rsync -az --delete \
+            --exclude='.env' \
+            --exclude='storage' \
+            --exclude='bootstrap/cache' \
+            --exclude='vendor' \
+            --exclude='public/build' \
+            --exclude='public/storage' \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
+            deploy-bundle/backend/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga-core/
+          echo "Backend deployed (rsync)"
 
-      - name: Deploy public files
+      - name: Deploy public files (rsync)
         run: |
-          scp -i ~/.ssh/deploy_key -P ${{ secrets.SSH_PORT }} -r deploy-bundle/public/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga.okjtech.co.ke/
+          rsync -az \
+            --exclude='storage' \
+            --exclude='index.php' \
+            --exclude='.htaccess' \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
+            deploy-bundle/public/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga.okjtech.co.ke/
           echo "Public deployed"
+
+      - name: Ensure log file exists and is writable
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+          set -e
+          cd ~/najenga-core
+          mkdir -p storage/logs
+          touch storage/logs/laravel.log
+          chmod 664 storage/logs/laravel.log
+          # Remove any leftover test scripts from server
+          rm -f ~/najenga.okjtech.co.ke/test_*.php ~/najenga-core/public/test_*.php
+          echo "Log file ready"
+          ENDSSH
 
       - name: Setup index.php and symlinks
         run: |
@@ -197,13 +226,36 @@ jobs:
           set -e
           cd ~/najenga-core
           php artisan migrate --force
+          php artisan optimize:clear
           php artisan config:cache
           php artisan event:cache
           php artisan route:cache
           php artisan view:cache
           php artisan queue:restart 2>/dev/null || true
-          echo "Migrations and caching completed"
+          # Bust OPcache by touching the entry scripts (works when opcache.validate_timestamps=1).
+          touch ~/najenga.okjtech.co.ke/index.php || true
+          touch ~/najenga-core/public/index.php || true
+          echo "Migrations, caching and opcache bust completed"
           ENDSSH
+
+      - name: Health check
+        run: |
+          set +e
+          for i in 1 2 3 4 5; do
+            RESP=$(curl -sS -o /tmp/health.json -w "%{http_code}" --max-time 20 https://najenga.okjtech.co.ke/health || echo "000")
+            echo "Attempt $i: HTTP $RESP"
+            if [ "$RESP" = "200" ]; then
+              cat /tmp/health.json
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Health check FAILED"
+          cat /tmp/health.json 2>/dev/null || true
+          echo "--- Recent laravel log ---"
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "ls -t ~/najenga-core/storage/logs/*.log 2>/dev/null | head -1 | xargs -r tail -n 100" || true
+          exit 1
 
       - name: Verify deployment
         run: |
@@ -266,6 +318,19 @@ jobs:
           find storage/logs -name "*.log" -mtime +7 -delete 2>/dev/null || true
           find storage/app -name "temp_receipts/*" -mtime +1 -delete 2>/dev/null || true
           echo "Cleanup completed"
+          ENDSSH
+
+      - name: Dump server logs on failure
+        if: failure()
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH' || true
+          echo "=== laravel.log (last 200 lines) ==="
+          ls -t ~/najenga-core/storage/logs/*.log 2>/dev/null | head -1 | xargs -r tail -n 200
+          echo ""
+          echo "=== .env presence ==="
+          test -f ~/najenga-core/.env && echo "present ($(wc -l < ~/najenga-core/.env) lines)" || echo "MISSING"
+          echo "=== disk ==="
+          df -h ~ 2>/dev/null || true
           ENDSSH
 
       - name: Cleanup local bundle
