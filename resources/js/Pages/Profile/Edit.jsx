@@ -4,8 +4,9 @@ import DashboardHero from '@/Components/DashboardHero';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import LinkWhatsAppForm from './Partials/LinkWhatsAppForm';
 
-export default function Edit({ mustVerifyEmail, status }) {
+export default function Edit({ mustVerifyEmail, status, whatsapp }) {
     return (
         <AuthenticatedLayout>
             <Head title="Settings" />
@@ -33,6 +34,11 @@ export default function Edit({ mustVerifyEmail, status }) {
                     {/* Update Password */}
                     <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
                         <UpdatePasswordForm />
+                    </section>
+
+                    {/* WhatsApp Number */}
+                    <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <LinkWhatsAppForm whatsapp={whatsapp} />
                     </section>
 
                     {/* Two-Factor Authentication */}

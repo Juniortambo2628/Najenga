@@ -28,6 +28,7 @@ class User extends Authenticatable
         'profile_image',
         'telegram_chat_id',
         'whatsapp_wa_id',
+        'whatsapp_verified_at',
     ];
 
     /**
@@ -49,6 +50,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'whatsapp_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

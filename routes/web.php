@@ -168,6 +168,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // WhatsApp number linking (verify via 6-digit code sent to WhatsApp)
+    Route::post('/profile/whatsapp/send-code', [\App\Http\Controllers\Api\WhatsAppLinkController::class, 'sendCode'])->name('profile.whatsapp.send-code');
+    Route::post('/profile/whatsapp/verify', [\App\Http\Controllers\Api\WhatsAppLinkController::class, 'verifyCode'])->name('profile.whatsapp.verify');
+    Route::delete('/profile/whatsapp', [\App\Http\Controllers\Api\WhatsAppLinkController::class, 'unlink'])->name('profile.whatsapp.unlink');
 });
 
 require __DIR__.'/auth.php';

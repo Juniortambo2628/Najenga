@@ -29,6 +29,20 @@ After changing any of those, redeploy so `config:cache` picks them up.
 
 The second one only matters once `QUEUE_CONNECTION` is not `sync`.
 
+## Error alerting (optional)
+
+Zero-install: pipe errors to Slack via an incoming webhook.
+
+```
+LOG_STACK=daily,slack
+LOG_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+LOG_LEVEL=info                # daily channel level
+# Slack channel uses env('LOG_LEVEL','critical') — override with:
+# LOG_SLACK_LEVEL isn't defined; the stack sends >=info to Slack too.
+```
+
+For a full error tracker, add `sentry/sentry-laravel` and set `SENTRY_LARAVEL_DSN`. Run `composer require sentry/sentry-laravel` locally, commit, and it activates on next deploy.
+
 ## Debugging on production
 
 - `tail -f ~/najenga-core/storage/logs/laravel-$(date +%F).log` (daily rotated file).
