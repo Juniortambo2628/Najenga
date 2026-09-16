@@ -25,6 +25,16 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', [
+    'effectiveDate' => '16 September 2026',
+    'contactEmail' => 'najenga-info@okjtech.co.ke',
+]))->name('privacy');
+
+Route::get('/terms', fn () => Inertia::render('Legal/Terms', [
+    'effectiveDate' => '16 September 2026',
+    'contactEmail' => 'najenga-info@okjtech.co.ke',
+]))->name('terms');
+
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
