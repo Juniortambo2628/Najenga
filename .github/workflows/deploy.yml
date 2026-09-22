@@ -70,28 +70,25 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "set -e; mkdir -p ~/najenga-core/{storage/app/public,storage/framework/{cache/data,sessions,views},storage/logs,bootstrap/cache}; mkdir -p ~/najenga.okjtech.co.ke/build/assets; echo 'Directories created'"
 
-      - name: Deploy backend files (rsync --delete)
+      - name: Deploy backend files (tar over ssh)
         run: |
-          rsync -az --delete \
-            --exclude='.env' \
-            --exclude='storage' \
-            --exclude='bootstrap/cache' \
-            --exclude='vendor' \
-            --exclude='public/build' \
-            --exclude='public/storage' \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
-            deploy-bundle/backend/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga-core/
-          echo "Backend deployed (rsync)"
+          # cPanel host has no rsync; stream a tarball and extract server-side.
+          # tar --overwrite refreshes changed files without touching .env,
+          # storage/, vendor/, bootstrap/cache/, public/build, public/storage
+          # (all already excluded from the bundle build step above).
+          tar -C deploy-bundle/backend -cf - . | \
+            ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+              "tar -C ~/najenga-core -xf - --overwrite --no-same-owner"
+          echo "Backend deployed (tar/ssh)"
 
-      - name: Deploy public files (rsync)
+      - name: Deploy public files (tar over ssh)
         run: |
-          rsync -az \
-            --exclude='storage' \
-            --exclude='index.php' \
-            --exclude='.htaccess' \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
-            deploy-bundle/public/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/najenga.okjtech.co.ke/
-          echo "Public deployed"
+          tar -C deploy-bundle/public --exclude='index.php' --exclude='.htaccess' --exclude='storage' -cf - . | \
+            ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+              "tar -C ~/najenga.okjtech.co.ke -xf - --overwrite --no-same-owner"
+          echo "Public deployed (tar/ssh)"
 
       - name: Ensure log file exists and is writable
         run: |
