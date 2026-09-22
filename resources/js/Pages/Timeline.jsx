@@ -43,10 +43,11 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => onToggle(item.id)}
-                    className="rounded border-white/20 bg-white/5 text-[#8B0000] focus:ring-[#8B0000] mt-3"
+                    aria-label={`Select ${item.title}`}
+                    className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C] mt-3"
                 />
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 z-10 mt-2 bg-gradient-to-r ${config.color}`}>
-                    <i className={`fas ${config.icon} text-white`}></i>
+                    <i aria-hidden="true" className={`fas ${config.icon} text-white`}></i>
                 </div>
             </div>
 
@@ -63,10 +64,10 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
                         {item.type === 'milestone' && (
                             <>
                                 <button onClick={() => onEdit(item)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition" title="Edit">
-                                    <i className="fas fa-pen text-sm"></i>
+                                    <i aria-hidden="true" className="fas fa-pen text-sm"></i>
                                 </button>
                                 <button onClick={() => onDelete(item)} className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition" title="Delete">
-                                    <i className="fas fa-trash text-sm"></i>
+                                    <i aria-hidden="true" className="fas fa-trash text-sm"></i>
                                 </button>
                             </>
                         )}
@@ -75,15 +76,15 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
 
                 {item.description && <p className="text-gray-400 mb-3">{item.description}</p>}
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                <div className="flex flex-wrap gap-4 text-sm text-gray-400">
                     {item.date && (
-                        <span><i className="fas fa-calendar mr-2"></i>{item.date}</span>
+                        <span><i aria-hidden="true" className="fas fa-calendar mr-2"></i>{item.date}</span>
                     )}
                     {item.end_date && (
-                        <span><i className="fas fa-flag-checkered mr-2"></i>End: {item.end_date}</span>
+                        <span><i aria-hidden="true" className="fas fa-flag-checkered mr-2"></i>End: {item.end_date}</span>
                     )}
                     {item.project_name && (
-                        <span><i className="fas fa-project-diagram mr-2"></i>{item.project_name}</span>
+                        <span><i aria-hidden="true" className="fas fa-project-diagram mr-2"></i>{item.project_name}</span>
                     )}
                     {item.type === 'expense' && (
                         <>
@@ -94,7 +95,7 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
                         </>
                     )}
                     {item.type === 'photo' && item.location && (
-                        <span><i className="fas fa-map-marker-alt mr-2"></i>{item.location}</span>
+                        <span><i aria-hidden="true" className="fas fa-map-marker-alt mr-2"></i>{item.location}</span>
                     )}
                     {item.type === 'document' && item.document_type && (
                         <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{item.document_type}</span>
@@ -119,9 +120,9 @@ function StatsBar({ expenses, photos, documents, milestones }) {
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
             {stats.map((s) => (
                 <div key={s.label} className="bg-gray-900/50 border border-white/10 rounded-xl p-4 text-center">
-                    <i className={`fas ${s.icon} ${s.color} text-lg mb-1`}></i>
+                    <i aria-hidden="true" className={`fas ${s.icon} ${s.color} text-lg mb-1`}></i>
                     <div className="text-white font-bold text-lg">{s.value}</div>
-                    <div className="text-gray-500 text-xs uppercase tracking-wider">{s.label}</div>
+                    <div className="text-gray-400 text-xs uppercase tracking-wider">{s.label}</div>
                 </div>
             ))}
         </div>
@@ -256,7 +257,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     onProjectChange={(val) => setFilterProject(val)}
                     actions={
                         <PrimaryButton onClick={() => openModal()}>
-                            <i className="fas fa-plus"></i> Add Milestone
+                            <i aria-hidden="true" className="fas fa-plus"></i> Add Milestone
                         </PrimaryButton>
                     }
                 />
@@ -277,7 +278,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                             >
-                                <i className={`fas ${tab.icon}`}></i>
+                                <i aria-hidden="true" className={`fas ${tab.icon}`}></i>
                                 {tab.label}
                                 {count > 0 && (
                                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-white/20' : 'bg-white/10'}`}>
@@ -295,10 +296,10 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                         <span className="text-sm font-semibold text-[#DC143C]">{selectedCount} selected</span>
                         <div className="w-px h-4 bg-[#8B0000]/30"></div>
                         <button onClick={handleBulkDelete} className="text-white hover:text-gray-200 text-sm">
-                            <i className="fas fa-trash mr-1"></i> Delete
+                            <i aria-hidden="true" className="fas fa-trash mr-1"></i> Delete
                         </button>
                         <button onClick={deselectAll} className="text-gray-400 hover:text-white text-sm">
-                            <i className="fas fa-times mr-1"></i> Clear
+                            <i aria-hidden="true" className="fas fa-times mr-1"></i> Clear
                         </button>
                     </div>
                 )}
@@ -363,11 +364,11 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                 <div key={expense.id} className="bg-gray-900/50 border border-white/10 rounded-2xl p-5 flex items-center justify-between hover:border-yellow-500/30 transition">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center">
-                                            <i className="fas fa-receipt text-white text-sm"></i>
+                                            <i aria-hidden="true" className="fas fa-receipt text-white text-sm"></i>
                                         </div>
                                         <div>
                                             <h4 className="text-white font-medium">{expense.title}</h4>
-                                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                                            <div className="flex items-center gap-3 text-sm text-gray-400">
                                                 <span>{expense.date}</span>
                                                 <span>{expense.project_name}</span>
                                                 {expense.category && <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{expense.category}</span>}
@@ -397,14 +398,14 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                                 className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                             />
                                         ) : (
-                                            <i className="fas fa-image text-3xl text-gray-600"></i>
+                                            <i aria-hidden="true" className="fas fa-image text-3xl text-gray-400"></i>
                                         )}
                                     </div>
                                     <div className="p-3">
                                         <h4 className="text-white text-sm font-medium truncate">{photo.title}</h4>
                                         <div className="flex items-center justify-between mt-1">
-                                            <span className="text-gray-500 text-xs">{photo.date}</span>
-                                            {photo.project_name && <span className="text-gray-500 text-[10px] truncate max-w-[100px]">{photo.project_name}</span>}
+                                            <span className="text-gray-400 text-xs">{photo.date}</span>
+                                            {photo.project_name && <span className="text-gray-400 text-[10px] truncate max-w-[100px]">{photo.project_name}</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -421,11 +422,11 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                 <div key={doc.id} className="bg-gray-900/50 border border-white/10 rounded-2xl p-5 flex items-center justify-between hover:border-purple-500/30 transition">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                                            <i className="fas fa-file-alt text-white text-sm"></i>
+                                            <i aria-hidden="true" className="fas fa-file-alt text-white text-sm"></i>
                                         </div>
                                         <div>
                                             <h4 className="text-white font-medium">{doc.title}</h4>
-                                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                                            <div className="flex items-center gap-3 text-sm text-gray-400">
                                                 <span>{doc.date}</span>
                                                 <span>{doc.project_name}</span>
                                                 {doc.document_type && <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{doc.document_type}</span>}
@@ -437,9 +438,10 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                             <a
                                                 href={`/storage/${doc.file_path.split('/').map((s) => encodeURIComponent(s)).join('/')}`}
                                                 download
+                                                aria-label={`Download ${doc.title || 'document'}`}
                                                 className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition"
                                             >
-                                                <i className="fas fa-download"></i>
+                                                <i aria-hidden="true" className="fas fa-download"></i>
                                             </a>
                                         )}
                                     </div>
@@ -457,51 +459,54 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <InputLabel value="Title" />
-                            <TextInput value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="Milestone title" className="mt-1 block w-full" />
-                            <InputError message={errors.title} className="mt-1" />
+                            <InputLabel htmlFor="timeline-title" value="Title" />
+                            <TextInput id="timeline-title" aria-invalid={!!errors.title} aria-describedby={errors.title ? 'timeline-title-error' : undefined} value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="Milestone title" className="mt-1 block w-full" />
+                            <InputError id="timeline-title-error" message={errors.title} className="mt-1" />
                         </div>
                         <div>
-                            <InputLabel value="Description" />
+                            <InputLabel htmlFor="timeline-description" value="Description" />
                             <textarea
+                                id="timeline-description"
+                                aria-invalid={!!errors.description}
+                                aria-describedby={errors.description ? 'timeline-description-error' : undefined}
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
                                 rows={3}
-                                className="mt-1 block w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[rgb(139,0,0)] focus:border-transparent resize-none"
+                                className="mt-1 block w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(139,0,0)] focus:border-transparent resize-none"
                                 placeholder="Describe this milestone"
                             />
-                            <InputError message={errors.description} className="mt-1" />
+                            <InputError id="timeline-description-error" message={errors.description} className="mt-1" />
                         </div>
                         <div>
-                            <InputLabel value="Project" />
-                            <SelectInput value={data.project_id} onChange={(e) => setData('project_id', e.target.value)} placeholder="Select a project" className="mt-1 block w-full">
+                            <InputLabel htmlFor="timeline-project-id" value="Project" />
+                            <SelectInput id="timeline-project-id" aria-invalid={!!errors.project_id} aria-describedby={errors.project_id ? 'timeline-project-id-error' : undefined} value={data.project_id} onChange={(e) => setData('project_id', e.target.value)} placeholder="Select a project" className="mt-1 block w-full">
                                 {projects.map((p) => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </SelectInput>
-                            <InputError message={errors.project_id} className="mt-1" />
+                            <InputError id="timeline-project-id-error" message={errors.project_id} className="mt-1" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <InputLabel value="Start Date" />
-                                <TextInput type="date" value={data.start_date} onChange={(e) => setData('start_date', e.target.value)} className="mt-1 block w-full" />
-                                <InputError message={errors.start_date} className="mt-1" />
+                                <InputLabel htmlFor="timeline-start-date" value="Start Date" />
+                                <TextInput id="timeline-start-date" aria-invalid={!!errors.start_date} aria-describedby={errors.start_date ? 'timeline-start-date-error' : undefined} type="date" value={data.start_date} onChange={(e) => setData('start_date', e.target.value)} className="mt-1 block w-full" />
+                                <InputError id="timeline-start-date-error" message={errors.start_date} className="mt-1" />
                             </div>
                             <div>
-                                <InputLabel value="End Date" />
-                                <TextInput type="date" value={data.end_date} onChange={(e) => setData('end_date', e.target.value)} className="mt-1 block w-full" />
-                                <InputError message={errors.end_date} className="mt-1" />
+                                <InputLabel htmlFor="timeline-end-date" value="End Date" />
+                                <TextInput id="timeline-end-date" aria-invalid={!!errors.end_date} aria-describedby={errors.end_date ? 'timeline-end-date-error' : undefined} type="date" value={data.end_date} onChange={(e) => setData('end_date', e.target.value)} className="mt-1 block w-full" />
+                                <InputError id="timeline-end-date-error" message={errors.end_date} className="mt-1" />
                             </div>
                         </div>
                         <div>
-                            <InputLabel value="Status" />
-                            <SelectInput value={data.status} onChange={(e) => setData('status', e.target.value)} className="mt-1 block w-full">
+                            <InputLabel htmlFor="timeline-status" value="Status" />
+                            <SelectInput id="timeline-status" aria-invalid={!!errors.status} aria-describedby={errors.status ? 'timeline-status-error' : undefined} value={data.status} onChange={(e) => setData('status', e.target.value)} className="mt-1 block w-full">
                                 <option value="pending">Pending</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="completed">Completed</option>
                                 <option value="delayed">Delayed</option>
                             </SelectInput>
-                            <InputError message={errors.status} className="mt-1" />
+                            <InputError id="timeline-status-error" message={errors.status} className="mt-1" />
                         </div>
                         <div className="flex justify-end gap-3 pt-5 border-t border-white/10">
                             <SecondaryButton onClick={closeModal} type="button">Cancel</SecondaryButton>

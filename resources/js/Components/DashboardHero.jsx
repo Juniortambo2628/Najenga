@@ -8,7 +8,7 @@ export default function DashboardHero({ title, subtitle, breadcrumbs = [] }) {
                 <nav className="flex items-center gap-2 mb-3 text-sm">
                     {breadcrumbs.map((item, index) => (
                         <span key={index} className="flex items-center gap-2">
-                            {index > 0 && <i className="fas fa-chevron-right text-gray-600 text-xs"></i>}
+                            {index > 0 && <i aria-hidden="true" className="fas fa-chevron-right text-gray-400 text-xs"></i>}
                             {item.href ? (
                                 <Link href={item.href} className="text-gray-400 hover:text-white transition">
                                     {item.label}

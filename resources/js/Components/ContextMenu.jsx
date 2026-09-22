@@ -5,6 +5,32 @@ export default function ContextMenu({ options, position, onClose }) {
     const menuRef = useRef(null);
     const [style, setStyle] = useState({ top: position.y, left: position.x });
 
+    // Keyboard support: focus the first item, arrows move, Escape/Tab close and
+    // focus returns to whatever opened the menu.
+    useEffect(() => {
+        const opener = document.activeElement;
+        menuRef.current?.querySelector('[role="menuitem"]')?.focus({ preventScroll: true });
+        return () => {
+            if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
+        };
+    }, []);
+
+    const handleKeyDown = (e) => {
+        const items = [...(menuRef.current?.querySelectorAll('[role="menuitem"]') ?? [])];
+        const i = items.indexOf(document.activeElement);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const next = e.key === 'ArrowDown' ? (i + 1) % items.length : (i - 1 + items.length) % items.length;
+            items[next]?.focus();
+        } else if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault();
+            items[e.key === 'Home' ? 0 : items.length - 1]?.focus();
+        } else if (e.key === 'Escape' || e.key === 'Tab') {
+            e.preventDefault();
+            onClose();
+        }
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -52,12 +78,17 @@ export default function ContextMenu({ options, position, onClose }) {
     return createPortal(
         <div 
             ref={menuRef}
+            role="menu"
+            onKeyDown={handleKeyDown}
             className="fixed z-50 bg-black border border-white/20 rounded-lg shadow-xl py-2 w-48 overflow-hidden backdrop-blur-md"
             style={style}
         >
             {options.map((option, index) => (
                 <button
                     key={index}
+                    type="button"
+                    role="menuitem"
+                    tabIndex={-1}
                     onClick={(e) => {
                         e.stopPropagation();
                         option.action();
@@ -70,7 +101,7 @@ export default function ContextMenu({ options, position, onClose }) {
                         }
                     `}
                 >
-                    {option.icon && <i className={`fas ${option.icon} w-5 text-center`}></i>}
+                    {option.icon && <i aria-hidden="true" className={`fas ${option.icon} w-5 text-center`}></i>}
                     {option.label}
                 </button>
             ))}

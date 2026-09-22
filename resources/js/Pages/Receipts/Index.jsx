@@ -21,7 +21,7 @@ export default function Index({ receipts = [] }) {
                             href={route('receipt-verification')}
                             className="px-6 py-3 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2"
                         >
-                            <i className="fas fa-receipt"></i>
+                            <i aria-hidden="true" className="fas fa-receipt"></i>
                             Verify Receipt
                         </Link>
                     }
@@ -42,7 +42,7 @@ export default function Index({ receipts = [] }) {
                             <tbody>
                                 {receipts.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
                                             No receipts found.
                                         </td>
                                     </tr>
@@ -54,7 +54,7 @@ export default function Index({ receipts = [] }) {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500">
-                                                        <i className="fas fa-file-image text-sm"></i>
+                                                        <i aria-hidden="true" className="fas fa-file-image text-sm"></i>
                                                     </div>
                                                     <span className="text-white text-sm font-medium">{receipt.filename || 'Unknown'}</span>
                                                 </div>

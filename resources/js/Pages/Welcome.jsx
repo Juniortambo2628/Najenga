@@ -196,7 +196,7 @@ export default function Welcome({ auth }) {
                             </a>
                         </div>
                         <p className="text-white/70 text-sm">
-                            <i className="fas fa-check-circle mr-2"></i>
+                            <i aria-hidden="true" className="fas fa-check-circle mr-2"></i>
                             No credit card required &bull; Free 30-day trial &bull; Cancel anytime
                         </p>
                     </ScrollReveal>
@@ -215,7 +215,7 @@ export default function Welcome({ auth }) {
                                 <p className="text-gray-400">
                                     Streamlining construction project management with modern technology.
                                 </p>
-                                <p className="text-gray-500 mt-2">
+                                <p className="text-gray-400 mt-2">
                                     <strong>Powered by OKJ Technologies</strong>
                                 </p>
                             </div>
@@ -243,7 +243,7 @@ export default function Welcome({ auth }) {
                                 </ul>
                             </div>
                         </div>
-                        <div className="border-t border-white/10 mt-12 pt-8 text-center text-gray-500">
+                        <div className="border-t border-white/10 mt-12 pt-8 text-center text-gray-400">
                             <p>&copy; {new Date().getFullYear()} Najenga by OKJ Technologies. All rights reserved.</p>
                         </div>
                     </ScrollReveal>

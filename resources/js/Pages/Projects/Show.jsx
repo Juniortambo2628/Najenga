@@ -19,14 +19,14 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                     <div>
                         <div className="flex items-center gap-3 mb-2">
                             <Link href={route('projects')} className="text-gray-400 hover:text-white transition">
-                                <i className="fas fa-arrow-left"></i> Projects
+                                <i aria-hidden="true" className="fas fa-arrow-left"></i> Projects
                             </Link>
-                            <span className="text-gray-600">/</span>
+                            <span className="text-gray-400">/</span>
                             <span className="text-gray-200">{project.name}</span>
                         </div>
                         <h1 className="text-3xl font-bold text-white">{project.name}</h1>
                         <p className="text-gray-400 mt-1 flex items-center gap-2">
-                            <i className="fas fa-map-marker-alt"></i> {project.location}
+                            <i aria-hidden="true" className="fas fa-map-marker-alt"></i> {project.location}
                         </p>
                     </div>
                     <div className="flex gap-3">
@@ -38,7 +38,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                             {project.status?.replace('_', ' ').toUpperCase()}
                         </div>
                         <Link href={route('projects.edit', project.id)} className="px-5 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center">
-                            <i className="fas fa-edit mr-2"></i> Edit
+                            <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                         </Link>
                     </div>
                 </div>
@@ -70,7 +70,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                                         title={`${userName} (${role})`}
                                     >
                                         {(userName || '?').charAt(0).toUpperCase()}
-                                        <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap z-10 border border-white/10">
+                                        <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap z-10 border border-white/10">
                                             {userName} · {role}
                                         </div>
                                     </div>
@@ -81,7 +81,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                                 className="w-8 h-8 rounded-full bg-gray-800 border-2 border-black flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-gray-700 transition"
                                 title="Add team member"
                             >
-                                <i className="fas fa-plus"></i>
+                                <i aria-hidden="true" className="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
@@ -110,12 +110,12 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                                 {photos.map(photo => (
                                     <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-gray-800 relative group">
                                         <img src={`/storage/${photo.file_path}`} alt={photo.title} className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition flex items-center justify-center">
                                             <span className="text-white text-sm font-medium">{photo.title}</span>
                                         </div>
                                     </div>
                                 ))}
-                                {photos.length === 0 && <p className="text-gray-500 text-sm col-span-3">No photos uploaded yet.</p>}
+                                {photos.length === 0 && <p className="text-gray-400 text-sm col-span-3">No photos uploaded yet.</p>}
                             </div>
                         </section>
                     </div>
@@ -133,12 +133,12 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                                     <div key={expense.id} className="flex justify-between items-center">
                                         <div>
                                             <p className="text-gray-200 text-sm font-medium">{expense.title}</p>
-                                            <p className="text-gray-500 text-xs">{new Date(expense.created_at).toLocaleDateString()}</p>
+                                            <p className="text-gray-400 text-xs">{new Date(expense.created_at).toLocaleDateString()}</p>
                                         </div>
                                         <span className="text-white font-bold">{formatCurrency(expense.amount, expense.currency || project.currency)}</span>
                                     </div>
                                 ))}
-                                {expenses.length === 0 && <p className="text-gray-500 text-sm">No expenses recorded.</p>}
+                                {expenses.length === 0 && <p className="text-gray-400 text-sm">No expenses recorded.</p>}
                             </div>
                         </section>
 
@@ -152,15 +152,15 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                                 {documents.map(doc => (
                                     <div key={doc.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition cursor-pointer">
                                         <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500">
-                                            <i className="fas fa-file-pdf"></i>
+                                            <i aria-hidden="true" className="fas fa-file-pdf"></i>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-gray-200 text-sm font-medium truncate">{doc.title}</p>
-                                            <p className="text-gray-500 text-xs">{doc.document_type}</p>
+                                            <p className="text-gray-400 text-xs">{doc.document_type}</p>
                                         </div>
                                     </div>
                                 ))}
-                                {documents.length === 0 && <p className="text-gray-500 text-sm">No documents found.</p>}
+                                {documents.length === 0 && <p className="text-gray-400 text-sm">No documents found.</p>}
                             </div>
                         </section>
                     </div>

@@ -5,6 +5,7 @@ import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, PAYMENT_LABELS, PAYMENT_METHOD_VALUES } from '@/Config/expenses';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 
 ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
 
@@ -776,19 +777,19 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 text-xs">
                         {saveStatus === 'saving' && (
-                            <><i className="fas fa-spinner fa-spin text-yellow-400"></i><span className="text-yellow-400">Saving...</span></>
+                            <><i aria-hidden="true" className="fas fa-spinner fa-spin text-yellow-400"></i><span className="text-yellow-400">Saving...</span></>
                         )}
                         {saveStatus === 'saved' && !hasChanges && (
-                            <><i className="fas fa-check-circle text-green-400"></i><span className="text-green-400">All saved</span></>
+                            <><i aria-hidden="true" className="fas fa-check-circle text-green-400"></i><span className="text-green-400">All saved</span></>
                         )}
                         {hasChanges && (
-                            <><i className="fas fa-clock text-yellow-400"></i><span className="text-yellow-400">{unsavedCount} unsaved row(s)</span></>
+                            <><i aria-hidden="true" className="fas fa-clock text-yellow-400"></i><span className="text-yellow-400">{unsavedCount} unsaved row(s)</span></>
                         )}
                         {saveStatus === 'error' && (
-                            <><i className="fas fa-exclamation-circle text-red-400"></i><span className="text-red-400">Save failed</span></>
+                            <><i aria-hidden="true" className="fas fa-exclamation-circle text-red-400"></i><span className="text-red-400">Save failed</span></>
                         )}
                     </div>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-400">
                         {rowData.length} row(s) — Total: KES {totalAmount.toLocaleString()}
                     </span>
                 </div>
@@ -798,7 +799,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                             onClick={handleBatchSave}
                             className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#8B0000] text-white hover:bg-[#DC143C] transition-all"
                         >
-                            <i className="fas fa-save mr-2"></i>
+                            <i aria-hidden="true" className="fas fa-save mr-2"></i>
                             Save to Database
                         </button>
                     )}
@@ -812,7 +813,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         onClick={handlePasteClick}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all"
                     >
-                        <i className="fas fa-paste mr-1"></i>Paste
+                        <i aria-hidden="true" className="fas fa-paste mr-1"></i>Paste
                     </button>
 
                     <input
@@ -827,14 +828,14 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         disabled={importing}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all disabled:opacity-50"
                     >
-                        <i className="fas fa-file-import mr-1"></i>{importing ? 'Importing...' : 'Import'}
+                        <i aria-hidden="true" className="fas fa-file-import mr-1"></i>{importing ? 'Importing...' : 'Import'}
                     </button>
 
                     <button
                         onClick={handleExportXLSX}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all"
                     >
-                        <i className="fas fa-file-excel mr-1"></i>Export
+                        <i aria-hidden="true" className="fas fa-file-excel mr-1"></i>Export
                     </button>
 
                     <div className="w-px h-5 bg-white/10"></div>
@@ -845,6 +846,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
 
                             <select
                                 onChange={(e) => { if (e.target.value) handleBulkCategory(e.target.value); e.target.value = ''; }}
+                                aria-label="Set category for selected rows"
                                 className="px-2 py-1 rounded-lg text-xs bg-white/5 border border-white/10 text-gray-300"
                                 defaultValue=""
                             >
@@ -855,6 +857,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                             {projects.length > 0 && (
                                 <select
                                     onChange={(e) => handleBulkProject(e.target.value || null)}
+                                    aria-label="Set project for selected rows"
                                     className="px-2 py-1 rounded-lg text-xs bg-white/5 border border-white/10 text-gray-300"
                                     defaultValue=""
                                 >
@@ -867,7 +870,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                                 onClick={handleDeleteSelected}
                                 className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-900/30 border border-red-800/50 text-red-300 hover:bg-red-900/50 transition-all"
                             >
-                                <i className="fas fa-trash mr-1"></i>Delete
+                                <i aria-hidden="true" className="fas fa-trash mr-1"></i>Delete
                             </button>
                         </>
                     )}
@@ -876,12 +879,12 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         onClick={() => setShowAnalysis(!showAnalysis)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${showAnalysis ? 'bg-[#8B0000]/20 border-[#8B0000]/50 text-[#DC143C]' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
                     >
-                        <i className="fas fa-chart-bar mr-1"></i>Analysis
+                        <i aria-hidden="true" className="fas fa-chart-bar mr-1"></i>Analysis
                     </button>
                 </div>
 
-                <div className="text-xs text-gray-500">
-                    <i className="fas fa-paste mr-1"></i>
+                <div className="text-xs text-gray-400">
+                    <i aria-hidden="true" className="fas fa-paste mr-1"></i>
                     Paste from spreadsheet — columns auto-match
                 </div>
             </div>
@@ -903,7 +906,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         <div className="space-y-1 text-xs max-h-40 overflow-y-auto">
                             {categoryBreakdown.map(([cat, data]) => (
                                 <div key={cat} className="flex justify-between">
-                                    <span className="text-gray-300">{cat} <span className="text-gray-500">({data.count})</span></span>
+                                    <span className="text-gray-300">{cat} <span className="text-gray-400">({data.count})</span></span>
                                     <span className="text-white font-mono">{data.total.toLocaleString()}</span>
                                 </div>
                             ))}
@@ -914,7 +917,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         <div className="space-y-1 text-xs max-h-40 overflow-y-auto">
                             {paymentBreakdown.map(([method, data]) => (
                                 <div key={method} className="flex justify-between">
-                                    <span className="text-gray-300">{method} <span className="text-gray-500">({data.count})</span></span>
+                                    <span className="text-gray-300">{method} <span className="text-gray-400">({data.count})</span></span>
                                     <span className="text-white font-mono">{data.total.toLocaleString()}</span>
                                 </div>
                             ))}
@@ -962,22 +965,22 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
 
             {/* Paste Preview Modal */}
             {pastePreview && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setPastePreview(null)}>
-                    <div className="bg-gray-900 border border-white/10 rounded-2xl max-w-3xl w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+                <Dialog open onClose={() => setPastePreview(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <DialogPanel className="bg-gray-900 border border-white/10 rounded-2xl max-w-3xl w-full mx-4 shadow-2xl">
                         <div className="flex justify-between items-center p-4 border-b border-white/10">
-                            <h3 className="text-lg font-bold text-white">
-                                <i className="fas fa-clipboard-list mr-2 text-yellow-400"></i>
+                            <DialogTitle as="h3" className="text-lg font-bold text-white">
+                                <i aria-hidden="true" className="fas fa-clipboard-list mr-2 text-yellow-400"></i>
                                 Paste Preview — {pastePreview.rows.length} rows
-                            </h3>
-                            <button onClick={() => setPastePreview(null)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
-                                <i className="fas fa-times"></i>
+                            </DialogTitle>
+                            <button onClick={() => setPastePreview(null)} aria-label="Close" className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                                <i aria-hidden="true" className="fas fa-times"></i>
                             </button>
                         </div>
                         <div className="p-4">
                             {pastePreview.unmappedHeaders.length > 0 && (
                                 <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-800/30 rounded-lg">
                                     <p className="text-yellow-300 text-xs font-semibold mb-1">
-                                        <i className="fas fa-exclamation-triangle mr-1"></i>
+                                        <i aria-hidden="true" className="fas fa-exclamation-triangle mr-1"></i>
                                         {pastePreview.unmappedHeaders.length} unrecognized column(s):
                                     </p>
                                     <p className="text-yellow-200/70 text-xs">
@@ -1013,7 +1016,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                                 </table>
                             </div>
                             {pastePreview.rows.length > 20 && (
-                                <p className="text-gray-500 text-xs mt-2">...and {pastePreview.rows.length - 20} more rows</p>
+                                <p className="text-gray-400 text-xs mt-2">...and {pastePreview.rows.length - 20} more rows</p>
                             )}
                         </div>
                         <div className="flex justify-end gap-3 p-4 border-t border-white/10">
@@ -1021,24 +1024,24 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                                 Cancel
                             </button>
                             <button onClick={confirmPaste} className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#8B0000] text-white hover:bg-[#DC143C] transition-all">
-                                <i className="fas fa-check mr-2"></i>Import {pastePreview.rows.length} Rows
+                                <i aria-hidden="true" className="fas fa-check mr-2"></i>Import {pastePreview.rows.length} Rows
                             </button>
                         </div>
-                    </div>
-                </div>
+                    </DialogPanel>
+                </Dialog>
             )}
 
             {/* Receipt Verify Modal */}
             {receiptVerifyRow && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => { setReceiptVerifyRow(null); setReceiptData(null); }}>
-                    <div className="bg-gray-900 border border-white/10 rounded-2xl max-w-2xl w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+                <Dialog open onClose={() => { setReceiptVerifyRow(null); setReceiptData(null); }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <DialogPanel className="bg-gray-900 border border-white/10 rounded-2xl max-w-2xl w-full mx-4 shadow-2xl">
                         <div className="flex justify-between items-center p-4 border-b border-white/10">
-                            <h3 className="text-lg font-bold text-white">
-                                <i className="fas fa-receipt mr-2 text-[#DC143C]"></i>
+                            <DialogTitle as="h3" className="text-lg font-bold text-white">
+                                <i aria-hidden="true" className="fas fa-receipt mr-2 text-[#DC143C]"></i>
                                 Receipt — {receiptVerifyRow.title || 'New Expense'}
-                            </h3>
-                            <button onClick={() => { setReceiptVerifyRow(null); setReceiptData(null); }} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
-                                <i className="fas fa-times"></i>
+                            </DialogTitle>
+                            <button onClick={() => { setReceiptVerifyRow(null); setReceiptData(null); }} aria-label="Close" className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                                <i aria-hidden="true" className="fas fa-times"></i>
                             </button>
                         </div>
                         <div className="p-4 space-y-4">
@@ -1062,9 +1065,9 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                                         className="px-4 py-3 rounded-xl border-2 border-dashed border-white/20 text-gray-400 hover:border-[#DC143C] hover:text-[#DC143C] transition-all w-full text-center disabled:opacity-50"
                                     >
                                         {receiptAnalyzing ? (
-                                            <><i className="fas fa-spinner fa-spin mr-2"></i>Analyzing receipt...</>
+                                            <><i aria-hidden="true" className="fas fa-spinner fa-spin mr-2"></i>Analyzing receipt...</>
                                         ) : (
-                                            <><i className="fas fa-cloud-upload-alt mr-2"></i>Click to upload receipt (JPG, PNG, PDF)</>
+                                            <><i aria-hidden="true" className="fas fa-cloud-upload-alt mr-2"></i>Click to upload receipt (JPG, PNG, PDF)</>
                                         )}
                                     </button>
                                 </div>
@@ -1072,7 +1075,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                                 <div className="space-y-3">
                                     <div className="p-3 bg-green-900/20 border border-green-800/30 rounded-lg">
                                         <p className="text-green-300 text-xs font-semibold mb-1">
-                                            <i className="fas fa-check-circle mr-1"></i>
+                                            <i aria-hidden="true" className="fas fa-check-circle mr-1"></i>
                                             OCR extracted data — review and apply
                                         </p>
                                     </div>
@@ -1087,8 +1090,8 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                                             ['Payment', receiptData.extracted?.payment_method, 'payment_method'],
                                         ].map(([label, value, field]) => (
                                             <div key={field} className="bg-white/5 rounded-lg p-2">
-                                                <span className="text-gray-500 block">{label}</span>
-                                                <span className="text-white">{value || <span className="text-gray-600">—</span>}</span>
+                                                <span className="text-gray-400 block">{label}</span>
+                                                <span className="text-white">{value || <span className="text-gray-400">—</span>}</span>
                                                 {value && receiptVerifyRow[field] && receiptVerifyRow[field] !== String(value) && (
                                                     <span className="block text-yellow-400 text-[10px] mt-0.5">
                                                         Current: {receiptVerifyRow[field]}
@@ -1098,7 +1101,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                                         ))}
                                     </div>
                                     <div className="p-2 bg-white/5 rounded-lg">
-                                        <span className="text-gray-500 text-xs block mb-1">Raw OCR Text</span>
+                                        <span className="text-gray-400 text-xs block mb-1">Raw OCR Text</span>
                                         <p className="text-gray-300 text-xs max-h-24 overflow-y-auto font-mono whitespace-pre-wrap">{receiptData.raw}</p>
                                     </div>
                                 </div>
@@ -1107,15 +1110,15 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         {receiptData && (
                             <div className="flex justify-end gap-3 p-4 border-t border-white/10">
                                 <button onClick={() => setReceiptData(null)} className="px-4 py-2 rounded-xl text-sm font-semibold bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all">
-                                    <i className="fas fa-redo mr-2"></i>Re-scan
+                                    <i aria-hidden="true" className="fas fa-redo mr-2"></i>Re-scan
                                 </button>
                                 <button onClick={() => handleReceiptApply(receiptVerifyRow, receiptData.extracted)} className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#8B0000] text-white hover:bg-[#DC143C] transition-all">
-                                    <i className="fas fa-check mr-2"></i>Apply to Row
+                                    <i aria-hidden="true" className="fas fa-check mr-2"></i>Apply to Row
                                 </button>
                             </div>
                         )}
-                    </div>
-                </div>
+                    </DialogPanel>
+                </Dialog>
             )}
         </div>
     );

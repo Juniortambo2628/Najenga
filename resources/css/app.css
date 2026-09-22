@@ -16,6 +16,24 @@
         --color-danger: 220 53 69;
     }
 
+    /*
+     * Visible keyboard focus everywhere (WCAG 2.4.7 / 1.4.11). The brand maroon
+     * focus borders are ~1.7:1 against the dark UI, so they don't count; this
+     * outline is ~7:1 on black and wins over Tailwind's focus:outline-none.
+     */
+    :focus-visible {
+        outline: 2px solid #fb7185 !important;
+        outline-offset: 2px;
+    }
+
+    /* Skip link: hidden until focused */
+    .skip-link {
+        @apply sr-only;
+    }
+    .skip-link:focus {
+        @apply not-sr-only fixed top-3 left-3 z-[100] rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black;
+    }
+
     /* Fix native select dropdown option visibility on dark backgrounds */
     select {
         color-scheme: dark;
@@ -48,7 +66,7 @@
     input[type="url"],
     textarea,
     select {
-        @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 transition-all duration-200;
+        @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 transition-all duration-200;
         @apply focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50;
     }
 }
@@ -110,7 +128,7 @@
        ============================================ */
 
     .auth-input {
-        @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 transition-all duration-300 focus:outline-none focus:border-[rgb(139,0,0)] focus:ring-2 focus:ring-[rgb(139,0,0)]/30;
+        @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-400 transition-all duration-300 focus:outline-none focus:border-[rgb(139,0,0)] focus:ring-2 focus:ring-[rgb(139,0,0)]/30;
     }
 
     .auth-submit {
@@ -218,7 +236,7 @@
         color: #fff !important;
     }
     .dark-theme .rce-citem-body--bottom-status {
-        color: #666 !important;
+        color: #9ca3af !important;
     }
     .rce-mbox {
         background-color: #1a1a1a !important;
@@ -234,7 +252,7 @@
         color: inherit !important;
     }
     .rce-mbox-time {
-        color: rgba(255,255,255,0.4) !important;
+        color: rgba(255,255,255,0.7) !important;
     }
     .rce-input {
         background-color: #1a1a1a !important;

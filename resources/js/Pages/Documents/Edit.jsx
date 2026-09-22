@@ -33,31 +33,40 @@ export default function Edit({ document: doc, projects, folders }) {
         >
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <InputLabel value="Title" />
+                    <InputLabel htmlFor="documents-edit-title" value="Title" />
                     <TextInput
+                        id="documents-edit-title"
+                        aria-invalid={!!errors.title}
+                        aria-describedby={errors.title ? 'documents-edit-title-error' : undefined}
                         value={data.title}
                         onChange={(e) => setData('title', e.target.value)}
                         className="mt-1 block w-full"
                         placeholder="Enter document title"
                     />
-                    <InputError message={errors.title} className="mt-2" />
+                    <InputError id="documents-edit-title-error" message={errors.title} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel value="Description" />
+                    <InputLabel htmlFor="documents-edit-description" value="Description" />
                     <TextArea
+                        id="documents-edit-description"
+                        aria-invalid={!!errors.description}
+                        aria-describedby={errors.description ? 'documents-edit-description-error' : undefined}
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
                         rows={3}
                         placeholder="Enter description"
                     />
-                    <InputError message={errors.description} className="mt-2" />
+                    <InputError id="documents-edit-description-error" message={errors.description} className="mt-2" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <InputLabel value="Category" />
+                        <InputLabel htmlFor="documents-edit-category" value="Category" />
                         <SelectInput
+                            id="documents-edit-category"
+                            aria-invalid={!!errors.category}
+                            aria-describedby={errors.category ? 'documents-edit-category-error' : undefined}
                             value={data.category}
                             onChange={(e) => setData('category', e.target.value)}
                         >
@@ -68,23 +77,29 @@ export default function Edit({ document: doc, projects, folders }) {
                             <option value="ticket">Ticket</option>
                             <option value="other">Other</option>
                         </SelectInput>
-                        <InputError message={errors.category} className="mt-2" />
+                        <InputError id="documents-edit-category-error" message={errors.category} className="mt-2" />
                     </div>
                     <div>
-                        <InputLabel value="Document Date" />
+                        <InputLabel htmlFor="documents-edit-document-date" value="Document Date" />
                         <TextInput
+                            id="documents-edit-document-date"
+                            aria-invalid={!!errors.document_date}
+                            aria-describedby={errors.document_date ? 'documents-edit-document-date-error' : undefined}
                             type="date"
                             value={data.document_date}
                             onChange={(e) => setData('document_date', e.target.value)}
                             className="mt-1 block w-full"
                         />
-                        <InputError message={errors.document_date} className="mt-2" />
+                        <InputError id="documents-edit-document-date-error" message={errors.document_date} className="mt-2" />
                     </div>
                 </div>
 
                 <div>
-                    <InputLabel value="Folder" />
+                    <InputLabel htmlFor="documents-edit-folder-id" value="Folder" />
                     <SelectInput
+                        id="documents-edit-folder-id"
+                        aria-invalid={!!errors.folder_id}
+                        aria-describedby={errors.folder_id ? 'documents-edit-folder-id-error' : undefined}
                         value={data.folder_id}
                         onChange={(e) => setData('folder_id', e.target.value)}
                     >
@@ -95,7 +110,7 @@ export default function Edit({ document: doc, projects, folders }) {
                             </option>
                         ))}
                     </SelectInput>
-                    <InputError message={errors.folder_id} className="mt-2" />
+                    <InputError id="documents-edit-folder-id-error" message={errors.folder_id} className="mt-2" />
                 </div>
 
                 <FormActions

@@ -26,8 +26,9 @@ export default function Edit({ receipt }) {
         >
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Verification Status</label>
+                    <label htmlFor="receipts-edit-verification-status" className="block text-sm font-medium text-gray-300 mb-1">Verification Status</label>
                     <SelectInput
+                        id="receipts-edit-verification-status"
                         value={data.verification_status}
                         onChange={(e) => setData('verification_status', e.target.value)}
                     >
@@ -54,17 +55,17 @@ export default function Edit({ receipt }) {
                 <div className="border-t border-white/10 pt-4 mt-4">
                     <h3 className="text-sm font-medium text-gray-400 mb-2">Receipt Details</h3>
                     <dl className="grid grid-cols-2 gap-3 text-sm">
-                        <dt className="text-gray-500">Expense:</dt>
+                        <dt className="text-gray-400">Expense:</dt>
                         <dd className="text-gray-300">{receipt.expense?.title ?? 'N/A'}</dd>
-                        <dt className="text-gray-500">Amount:</dt>
+                        <dt className="text-gray-400">Amount:</dt>
                         <dd className="text-gray-300">KES {receipt.expense?.amount ?? '0.00'}</dd>
-                        <dt className="text-gray-500">OCR Confidence:</dt>
+                        <dt className="text-gray-400">OCR Confidence:</dt>
                         <dd className="text-gray-300">{receipt.ocr_confidence ? `${receipt.ocr_confidence}%` : 'N/A'}</dd>
-                        <dt className="text-gray-500">Extracted Merchant:</dt>
+                        <dt className="text-gray-400">Extracted Merchant:</dt>
                         <dd className="text-gray-300">{receipt.extracted_merchant ?? 'N/A'}</dd>
-                        <dt className="text-gray-500">Extracted Amount:</dt>
+                        <dt className="text-gray-400">Extracted Amount:</dt>
                         <dd className="text-gray-300">{receipt.extracted_amount ? `KES ${receipt.extracted_amount}` : 'N/A'}</dd>
-                        <dt className="text-gray-500">Extracted Date:</dt>
+                        <dt className="text-gray-400">Extracted Date:</dt>
                         <dd className="text-gray-300">{receipt.extracted_date ?? 'N/A'}</dd>
                     </dl>
                 </div>

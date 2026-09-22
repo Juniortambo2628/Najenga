@@ -6,7 +6,7 @@ import { formatCurrency } from '@/Config/currencies';
 function DetailRow({ label, value, mono = false }) {
     return (
         <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">{label}</span>
+            <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">{label}</span>
             <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
         </div>
     );
@@ -44,7 +44,7 @@ export default function Show({ receipt }) {
                                 href={route('receipts.edit', receipt.id)}
                                 className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
                             >
-                                <i className="fas fa-edit mr-2"></i> Edit
+                                <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                             </Link>
                         </div>
                     }
@@ -63,8 +63,8 @@ export default function Show({ receipt }) {
                                     />
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center gap-3 py-12 text-gray-500">
-                                    <i className="fas fa-file-image text-3xl text-gray-600"></i>
+                                <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
+                                    <i aria-hidden="true" className="fas fa-file-image text-3xl text-gray-400"></i>
                                     <p className="text-sm">No receipt image available</p>
                                 </div>
                             )}
@@ -88,15 +88,15 @@ export default function Show({ receipt }) {
                             <h3 className="text-lg font-bold text-white mb-4">File Info</h3>
                             <dl className="space-y-4 text-sm">
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Filename</dt>
+                                    <dt className="text-gray-400">Filename</dt>
                                     <dd className="text-gray-300 font-mono text-xs">{receipt.filename}</dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Type</dt>
+                                    <dt className="text-gray-400">Type</dt>
                                     <dd className="text-gray-300">{receipt.mime_type}</dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Created</dt>
+                                    <dt className="text-gray-400">Created</dt>
                                     <dd className="text-gray-300">{receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : '—'}</dd>
                                 </div>
                             </dl>
@@ -109,21 +109,21 @@ export default function Show({ receipt }) {
                                     href={route('receipts.edit', receipt.id)}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-edit text-[#DC143C]"></i> Edit Receipt
+                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Receipt
                                 </Link>
                                 {expense && (
                                     <Link
                                         href={route('expenses.show', expense.id)}
                                         className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                     >
-                                        <i className="fas fa-receipt text-[#DC143C]"></i> View Expense
+                                        <i aria-hidden="true" className="fas fa-receipt text-[#DC143C]"></i> View Expense
                                     </Link>
                                 )}
                                 <Link
                                     href={route('receipts.index')}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-list text-[#DC143C]"></i> Back to Receipts
+                                    <i aria-hidden="true" className="fas fa-list text-[#DC143C]"></i> Back to Receipts
                                 </Link>
                             </div>
                         </section>

@@ -10,6 +10,13 @@ function renderField(field, data, setData, errors) {
         setData(field.name, e.target.value);
     };
     const error = errors[field.name];
+    const id = `field-${field.name}`;
+    const hintId = field.hint ? `${id}-hint` : null;
+    const a11y = {
+        id,
+        'aria-invalid': !!error,
+        'aria-describedby': [error && `${id}-error`, hintId].filter(Boolean).join(' ') || undefined,
+    };
 
     const inputClass = `mt-1 block w-full ${field.className || ''}`.trim();
 
@@ -17,8 +24,9 @@ function renderField(field, data, setData, errors) {
         case 'textarea':
             return (
                 <div key={field.name}>
-                    <InputLabel value={field.label} />
+                    <InputLabel htmlFor={id} value={field.label} />
                     <TextArea
+                        {...a11y}
                         value={value}
                         onChange={onChange}
                         rows={field.rows || 3}
@@ -26,15 +34,16 @@ function renderField(field, data, setData, errors) {
                         placeholder={field.placeholder}
                         disabled={field.disabled}
                     />
-                    <InputError message={error} className="mt-2" />
+                    <InputError id={`${id}-error`} message={error} className="mt-2" />
                 </div>
             );
 
         case 'select':
             return (
                 <div key={field.name}>
-                    <InputLabel value={field.label} />
+                    <InputLabel htmlFor={id} value={field.label} />
                     <SelectInput
+                        {...a11y}
                         value={value}
                         onChange={onChange}
                         placeholder={field.placeholder || `Select ${field.label?.toLowerCase() || ''}`}
@@ -46,16 +55,17 @@ function renderField(field, data, setData, errors) {
                             return <option key={val} value={val}>{lbl}</option>;
                         })}
                     </SelectInput>
-                    <InputError message={error} className="mt-2" />
+                    <InputError id={`${id}-error`} message={error} className="mt-2" />
                 </div>
             );
 
         default:
             return (
                 <div key={field.name}>
-                    <InputLabel value={field.label} />
+                    <InputLabel htmlFor={id} value={field.label} />
                     <div className={field.suffix ? 'flex gap-2 mt-1' : ''}>
                         <TextInput
+                            {...a11y}
                             type={field.type}
                             value={value}
                             onChange={onChange}
@@ -70,8 +80,8 @@ function renderField(field, data, setData, errors) {
                             <span className="inline-flex items-center px-3 rounded-xl border border-white/10 bg-white/5 text-gray-400 text-sm">{field.suffix}</span>
                         )}
                     </div>
-                    {field.hint && <p className="text-xs text-gray-500 mt-1">{field.hint}</p>}
-                    <InputError message={error} className="mt-2" />
+                    {field.hint && <p id={hintId} className="text-xs text-gray-400 mt-1">{field.hint}</p>}
+                    <InputError id={`${id}-error`} message={error} className="mt-2" />
                 </div>
             );
     }

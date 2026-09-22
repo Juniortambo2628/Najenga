@@ -22,7 +22,7 @@ export default function Show({ timeline }) {
                             href={route('timeline.edit', timeline.id)}
                             className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
                         >
-                            <i className="fas fa-edit mr-2"></i>Edit
+                            <i aria-hidden="true" className="fas fa-edit mr-2"></i>Edit
                         </Link>
                     }
                 />
@@ -30,24 +30,24 @@ export default function Show({ timeline }) {
                 <div className="bg-black/50 border border-white/10 rounded-2xl p-6">
                     <dl className="space-y-4 text-sm">
                         <div className="flex justify-between">
-                            <dt className="text-gray-500">Project</dt>
+                            <dt className="text-gray-400">Project</dt>
                             <dd className="text-gray-300">{timeline.project?.name ?? 'N/A'}</dd>
                         </div>
                         <div className="flex justify-between">
-                            <dt className="text-gray-500">Status</dt>
+                            <dt className="text-gray-400">Status</dt>
                             <dd><StatusBadge status={timeline.status} /></dd>
                         </div>
                         <div className="flex justify-between">
-                            <dt className="text-gray-500">Start Date</dt>
+                            <dt className="text-gray-400">Start Date</dt>
                             <dd className="text-gray-300">{timeline.start_date}</dd>
                         </div>
                         <div className="flex justify-between">
-                            <dt className="text-gray-500">End Date</dt>
+                            <dt className="text-gray-400">End Date</dt>
                             <dd className="text-gray-300">{timeline.end_date ?? 'Ongoing'}</dd>
                         </div>
                         {timeline.description && (
                             <div>
-                                <dt className="text-gray-500 mb-1">Description</dt>
+                                <dt className="text-gray-400 mb-1">Description</dt>
                                 <dd className="text-gray-300 whitespace-pre-wrap">{timeline.description}</dd>
                             </div>
                         )}

@@ -1,6 +1,7 @@
 import {
     Dialog,
     DialogPanel,
+    DialogTitle,
     Transition,
     TransitionChild,
 } from '@headlessui/react';
@@ -87,21 +88,23 @@ export default function Modal({
                                             {subtitle && (
                                                 <p className="text-[11px] font-bold tracking-widest text-[#DC143C] uppercase mb-1.5">{subtitle}</p>
                                             )}
-                                            <h3 className="text-lg font-bold text-white leading-tight">{title}</h3>
+                                            <DialogTitle as="h3" className="text-lg font-bold text-white leading-tight">{title}</DialogTitle>
                                         </div>
                                     )}
-                                    <nav className="flex-1 px-4 pb-5 space-y-1">
+                                    <nav className="flex-1 px-4 pb-5 space-y-1" aria-label={title ? `${title} sections` : 'Sections'}>
                                         {tabs.map((tab, idx) => (
                                             <button
                                                 key={idx}
+                                                type="button"
                                                 onClick={() => setActiveTab(idx)}
+                                                aria-current={activeTab === idx ? 'true' : undefined}
                                                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                                                     activeTab === idx
                                                         ? 'bg-white/10 text-white'
                                                         : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
                                                 }`}
                                             >
-                                                {tab.icon && <i className={`fas ${tab.icon} w-5 text-center text-xs`}></i>}
+                                                {tab.icon && <i aria-hidden="true" className={`fas ${tab.icon} w-5 text-center text-xs`}></i>}
                                                 {tab.label}
                                             </button>
                                         ))}
@@ -115,9 +118,10 @@ export default function Modal({
                                         <div className="flex justify-end p-5 pb-0 flex-shrink-0">
                                             <button
                                                 onClick={close}
-                                                className="p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition"
+                                                aria-label="Close"
+                                                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
                                             >
-                                                <i className="fas fa-times text-sm"></i>
+                                                <i aria-hidden="true" className="fas fa-times text-sm"></i>
                                             </button>
                                         </div>
                                     )}
@@ -134,9 +138,10 @@ export default function Modal({
                                     {closeable && (
                                         <button
                                             onClick={close}
-                                            className="absolute top-4 right-4 z-10 p-2 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition"
+                                            aria-label="Close"
+                                            className="absolute top-4 right-4 z-10 p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
                                         >
-                                            <i className="fas fa-times text-sm"></i>
+                                            <i aria-hidden="true" className="fas fa-times text-sm"></i>
                                         </button>
                                     )}
                                     {children}

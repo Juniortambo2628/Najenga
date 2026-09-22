@@ -16,6 +16,7 @@ import useMultiSelect from '@/Hooks/useMultiSelect';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -206,7 +207,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     selectedCount={selectedCount}
                     actions={
                         <PrimaryButton onClick={() => { reset(); setIsAddModalOpen(true); }}>
-                            <i className="fas fa-plus mr-1"></i>Add Expense
+                            <i aria-hidden="true" className="fas fa-plus mr-1"></i>Add Expense
                         </PrimaryButton>
                     }
                 >
@@ -218,7 +219,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                             onDeselectAll={deselectAll}
                             actions={
                                 <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                    <i className="fas fa-trash"></i>
+                                    <i aria-hidden="true" className="fas fa-trash"></i>
                                 </button>
                             }
                         />
@@ -287,8 +288,9 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                             <input
                                                 type="checkbox"
                                                 checked={selectedCount === filteredExpenses.length && filteredExpenses.length > 0}
+                                                aria-label="Select all expenses"
                                                 onChange={() => selectedCount === filteredExpenses.length ? deselectAll() : selectAll(filteredExpenses.map(e => e.id))}
-                                                className="rounded border-white/20 bg-white/5 text-[#8B0000] focus:ring-[#8B0000]"
+                                                className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                             />
                                         </th>
                                         <th className="px-6 py-4">Expense Details</th>
@@ -303,7 +305,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                 <tbody className="divide-y divide-white/5">
                                     {filteredExpenses.length === 0 ? (
                                         <tr>
-                                            <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
+                                            <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
                                                 No expenses found matching your criteria.
                                             </td>
                                         </tr>
@@ -315,13 +317,14 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                         type="checkbox"
                                                         checked={isSelected(expense.id)}
                                                         onChange={() => toggleSelection(expense.id)}
-                                                        className="rounded border-white/20 bg-white/5 text-[#8B0000] focus:ring-[#8B0000]"
+                                                        aria-label={`Select ${expense.title || 'expense'}`}
+                                                        className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                                     />
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className="block text-white font-medium text-base">{expense.title}</span>
                                                     {expense.purpose && (
-                                                        <span className="block text-xs text-gray-500 mt-1">{expense.purpose}</span>
+                                                        <span className="block text-xs text-gray-400 mt-1">{expense.purpose}</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm">{expense.recipient || '—'}</td>
@@ -330,7 +333,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                         {expense.reference_number && (
                                                             <span className="block text-gray-300 font-mono">{expense.reference_number}</span>
                                                         )}
-                                                        <span className="text-gray-500">{expense.payment_method ? (expense.payment_method === 'mobile_money' ? 'M-Pesa' : expense.payment_method) : '—'}</span>
+                                                        <span className="text-gray-400">{expense.payment_method ? (expense.payment_method === 'mobile_money' ? 'M-Pesa' : expense.payment_method) : '—'}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right text-white font-mono font-medium">
@@ -338,7 +341,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                 </td>
                                                 <td className="px-6 py-4 text-center text-sm">
                                                     <span>{expense.expense_date}</span>
-                                                    {expense.time && <span className="block text-xs text-gray-500">{expense.time}</span>}
+                                                    {expense.time && <span className="block text-xs text-gray-400">{expense.time}</span>}
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
                                                     {expense.receipt_url ? (
@@ -347,18 +350,20 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                             className="text-[#DC143C] hover:text-[rgb(139,0,0)] transition text-sm"
                                                             title="View receipt"
                                                         >
-                                                            <i className="fas fa-file-image"></i>
+                                                            <i aria-hidden="true" className="fas fa-file-image"></i>
                                                         </button>
                                                     ) : (
-                                                        <span className="text-gray-600">—</span>
+                                                        <span className="text-gray-400">—</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
                                                     <button 
                                                         onClick={(e) => handleActionClick(e, expense)}
+                                                        aria-label={`Actions for ${expense.title || 'expense'}`}
+                                                        aria-haspopup="menu"
                                                         className="w-8 h-8 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition flex items-center justify-center mx-auto"
                                                     >
-                                                        <i className="fas fa-ellipsis-h"></i>
+                                                        <i aria-hidden="true" className="fas fa-ellipsis-h"></i>
                                                     </button>
                                                 </td>
                                             </tr>
@@ -404,14 +409,14 @@ export default function Expenses({ expenses = [], projects = [] }) {
 
             {/* Receipt Preview Modal */}
             {previewExpense && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setPreviewExpense(null)}>
-                    <div className="bg-gray-900 border border-white/10 rounded-2xl max-w-2xl w-full mx-4 overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                <Dialog open onClose={() => setPreviewExpense(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <DialogPanel className="bg-gray-900 border border-white/10 rounded-2xl max-w-2xl w-full mx-4 overflow-hidden shadow-2xl">
                         <div className="flex justify-between items-center p-4 border-b border-white/10">
-                            <h3 className="text-lg font-bold text-white">
+                            <DialogTitle as="h3" className="text-lg font-bold text-white">
                                 {previewExpense.reference_number || 'Receipt'} — {previewExpense.recipient || previewExpense.title}
-                            </h3>
-                            <button onClick={() => setPreviewExpense(null)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
-                                <i className="fas fa-times"></i>
+                            </DialogTitle>
+                            <button onClick={() => setPreviewExpense(null)} aria-label="Close preview" className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                                <i aria-hidden="true" className="fas fa-times"></i>
                             </button>
                         </div>
                         <div className="p-4 flex items-center justify-center bg-black/50 min-h-[400px]">
@@ -421,8 +426,8 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                 <img src={previewExpense.receipt_url} alt="Receipt" className="max-w-full max-h-[500px] object-contain rounded" />
                             )}
                         </div>
-                    </div>
-                </div>
+                    </DialogPanel>
+                </Dialog>
             )}
 
             {/* Expense Detail Modal (tabbed) */}

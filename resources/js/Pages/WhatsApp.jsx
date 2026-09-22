@@ -28,8 +28,8 @@ export default function WhatsApp({ config = {} }) {
         }
     };
 
-    const Status = ({ ok, label }) => (
-        <div className={`flex items-center gap-2 text-sm ${ok ? 'text-green-400' : 'text-red-400'}`}>
+    const Status = ({ id, ok, label }) => (
+        <div id={id} className={`flex items-center gap-2 text-sm ${ok ? 'text-green-400' : 'text-red-400'}`}>
             <span className={`w-2 h-2 rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'}`}></span>
             {label}
         </div>
@@ -52,7 +52,7 @@ export default function WhatsApp({ config = {} }) {
 
                 {config.test_mode && (
                     <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-100 flex items-start gap-3">
-                        <i className="fas fa-flask mt-0.5 text-yellow-300"></i>
+                        <i aria-hidden="true" className="fas fa-flask mt-0.5 text-yellow-300"></i>
                         <div className="space-y-1">
                             <p className="font-semibold text-yellow-200">Test mode — 5-recipient limit</p>
                             <p className="text-yellow-100/90">
@@ -71,18 +71,20 @@ export default function WhatsApp({ config = {} }) {
 
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-                            <i className="fab fa-whatsapp text-green-400 text-xl mr-2"></i>
+                        <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+                            <i aria-hidden="true" className="fab fa-whatsapp text-green-400 text-xl mr-2"></i>
                             Configuration
-                        </h3>
+                        </h2>
                         <div className="space-y-3 text-sm">
-                            <Status ok={config.configured} label={config.configured ? 'Configured' : 'Not configured — set META_WHATSAPP_* env vars'} />
-                            <Row k="App ID" v={config.app_id || '—'} />
-                            <Row k="App Secret" v={config.app_secret_masked || '—'} />
-                            <Row k="Access Token" v={config.access_token_masked || '—'} />
-                            <Row k="Phone Number ID" v={config.phone_number_id || '—'} />
-                            <Row k="Verify Token" v={config.verify_token_set ? 'set' : 'not set'} />
-                            <Row k="Webhook URL" v={config.webhook_url || '—'} mono />
+                            <Status id="whatsapp-config-status" ok={config.configured} label={config.configured ? 'Configured' : 'Not configured — set META_WHATSAPP_* env vars'} />
+                            <dl className="space-y-3">
+                                <Row k="App ID" v={config.app_id || '—'} />
+                                <Row k="App Secret" v={config.app_secret_masked || '—'} />
+                                <Row k="Access Token" v={config.access_token_masked || '—'} />
+                                <Row k="Phone Number ID" v={config.phone_number_id || '—'} />
+                                <Row k="Verify Token" v={config.verify_token_set ? 'set' : 'not set'} />
+                                <Row k="Webhook URL" v={config.webhook_url || '—'} mono />
+                            </dl>
                         </div>
 
                         <div className="mt-5 p-3 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-300 leading-relaxed">
@@ -98,45 +100,55 @@ export default function WhatsApp({ config = {} }) {
                     </div>
 
                     <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">
-                            <i className="fas fa-paper-plane text-blue-400 mr-2"></i>
+                        <h2 className="text-lg font-semibold text-white mb-4">
+                            <i aria-hidden="true" className="fas fa-paper-plane text-blue-400 mr-2"></i>
                             Test send
-                        </h3>
+                        </h2>
                         <form onSubmit={submit} className="space-y-3">
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Recipient phone (E.164, e.g. +2547...)</label>
+                                <label htmlFor="whatsapp-test-phone" className="block text-xs text-gray-400 mb-1">Recipient phone (E.164, e.g. +2547...)</label>
                                 <input
+                                    id="whatsapp-test-phone"
+                                    type="tel"
+                                    autoComplete="tel"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     required
                                     placeholder="+2547XXXXXXXX"
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-white/30"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Message</label>
+                                <label htmlFor="whatsapp-test-message" className="block text-xs text-gray-400 mb-1">Message</label>
                                 <textarea
+                                    id="whatsapp-test-message"
+                                    aria-describedby="whatsapp-test-window-hint"
                                     value={message}
                                     onChange={(e) => setMessage(e.target.value)}
                                     rows={4}
                                     required
-                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-white/30"
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={sending || !config.configured}
+                                aria-describedby={!config.configured ? 'whatsapp-config-status' : undefined}
                                 className="w-full py-2 rounded-lg bg-gradient-to-r from-[#8B0000] to-[#DC143C] text-white font-semibold disabled:opacity-50"
                             >
                                 {sending ? 'Sending…' : 'Send test message'}
                             </button>
-                            <p className="text-xs text-gray-500">
+                            <p id="whatsapp-test-window-hint" className="text-xs text-gray-400">
                                 Free-form messages only work inside a 24h window after the user last messaged you. Outside that window, use a message template.
                             </p>
                         </form>
 
                         {result && (
-                            <pre className={`mt-4 text-xs p-3 rounded-lg overflow-auto max-h-56 border ${result.ok ? 'border-green-500/30 bg-green-500/5 text-green-200' : 'border-red-500/30 bg-red-500/5 text-red-200'}`}>
+                            <pre
+                                tabIndex={0}
+                                role="region"
+                                aria-label={result.ok ? 'API response' : 'API error response'}
+                                className={`mt-4 text-xs p-3 rounded-lg overflow-auto max-h-56 border ${result.ok ? 'border-green-500/30 bg-green-500/5 text-green-200' : 'border-red-500/30 bg-red-500/5 text-red-200'}`}>
 {JSON.stringify(result.data, null, 2)}
                             </pre>
                         )}
@@ -150,8 +162,8 @@ export default function WhatsApp({ config = {} }) {
 function Row({ k, v, mono }) {
     return (
         <div className="flex justify-between gap-3">
-            <span className="text-gray-400">{k}</span>
-            <span className={`text-white text-right break-all ${mono ? 'font-mono text-xs' : ''}`}>{v}</span>
+            <dt className="text-gray-400">{k}</dt>
+            <dd className={`text-white text-right break-all ${mono ? 'font-mono text-xs' : ''}`}>{v}</dd>
         </div>
     );
 }

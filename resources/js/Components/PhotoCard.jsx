@@ -16,16 +16,21 @@ export default function PhotoCard({ photo, selected, onToggle, onContextMenu, on
             />
 
             {/* Selection indicator */}
-            <div className={`absolute top-2 left-2 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggle(e.metaKey || e.ctrlKey); }}
+                aria-pressed={!!selected}
+                aria-label={`Select ${photo.title || 'photo'}`}
+                className={`absolute top-2 left-2 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                 selected
                     ? 'bg-[#DC143C] border-[#DC143C]'
-                    : 'border-white/40 bg-black/30 opacity-0 group-hover:opacity-100'
+                    : 'border-white/40 bg-black/30 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
             }`}>
-                {selected && <i className="fas fa-check text-white text-[10px]"></i>}
-            </div>
+                {selected && <i aria-hidden="true" className="fas fa-check text-white text-[10px]"></i>}
+            </button>
 
             {/* Hover overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p className="text-white text-sm font-medium truncate">{photo.title}</p>
                     {photo.project_name && (
@@ -37,9 +42,10 @@ export default function PhotoCard({ photo, selected, onToggle, onContextMenu, on
             {/* Preview button */}
             <button
                 onClick={(e) => { e.stopPropagation(); onPreview(); }}
-                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                aria-label={`Preview ${photo.title || 'photo'}`}
+                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity hover:bg-black/70"
             >
-                <i className="fas fa-expand text-xs"></i>
+                <i aria-hidden="true" className="fas fa-expand text-xs"></i>
             </button>
         </div>
     );

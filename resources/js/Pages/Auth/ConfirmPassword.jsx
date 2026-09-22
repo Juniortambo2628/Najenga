@@ -31,7 +31,7 @@ export default function ConfirmPassword() {
             {/* Lock Icon */}
             <div className="flex justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
-                    <i className="fas fa-lock text-2xl text-white/60"></i>
+                    <i aria-hidden="true" className="fas fa-lock text-2xl text-white/60"></i>
                 </div>
             </div>
 

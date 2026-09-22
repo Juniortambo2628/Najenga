@@ -13,7 +13,7 @@ export default function GlassButton({ href, children, variant = 'primary', icon,
     if (href) {
         return (
             <Link href={href} className={classes}>
-                {icon && <i className={`fas fa-${icon}`}></i>}
+                {icon && <i aria-hidden="true" className={`fas fa-${icon}`}></i>}
                 {children}
             </Link>
         );
@@ -21,7 +21,7 @@ export default function GlassButton({ href, children, variant = 'primary', icon,
 
     return (
         <button className={classes}>
-            {icon && <i className={`fas fa-${icon}`}></i>}
+            {icon && <i aria-hidden="true" className={`fas fa-${icon}`}></i>}
             {children}
         </button>
     );

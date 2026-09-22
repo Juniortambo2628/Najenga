@@ -4,7 +4,7 @@ export default function EmptyState({ icon = 'fa-folder', title, message, action 
     return (
         <div className="bg-black/50 border border-white/10 rounded-2xl p-12 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
-                <i className={`fas ${icon} text-2xl text-gray-400`}></i>
+                <i aria-hidden="true" className={`fas ${icon} text-2xl text-gray-400`}></i>
             </div>
             <h3 className="text-white text-lg font-semibold mb-2">{title}</h3>
             <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">{message}</p>

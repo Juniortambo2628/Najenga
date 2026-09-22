@@ -7,13 +7,15 @@ export default function ViewModeToggle({ modes = [], current, onChange }) {
                 <button
                     key={mode.value}
                     onClick={() => onChange(mode.value)}
+                    aria-label={mode.title || mode.label || `${mode.value} view`}
+                    aria-pressed={current === mode.value}
                     className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
                         current === mode.value
                             ? 'bg-[#8B0000] text-white'
                             : 'text-gray-400 hover:text-white'
                     }`}
                 >
-                    <i className={`fas ${mode.icon}`}></i>
+                    <i aria-hidden="true" className={`fas ${mode.icon}`}></i>
                 </button>
             ))}
         </div>

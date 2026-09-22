@@ -61,10 +61,11 @@ export default function ShareProjectModal({ show, onClose, project, teamMembers 
                         <p className="text-gray-400 text-sm mb-4">Invite a team member to <span className="text-white font-semibold">{project.name}</span></p>
                     </div>
                     <div>
-                        <InputLabel value="Email Address" />
+                        <InputLabel htmlFor="shareprojectmodal-email-address" value="Email Address" />
                         <div className="relative">
-                            <i className="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                            <i aria-hidden="true" className="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                             <TextInput
+                                id="shareprojectmodal-email-address"
                                 type="email"
                                 required
                                 value={email}
@@ -75,8 +76,8 @@ export default function ShareProjectModal({ show, onClose, project, teamMembers 
                         </div>
                     </div>
                     <div>
-                        <InputLabel value="Role" />
-                        <SelectInput value={role} onChange={(e) => setRole(e.target.value)}>
+                        <InputLabel htmlFor="shareprojectmodal-role" value="Role" />
+                        <SelectInput id="shareprojectmodal-role" value={role} onChange={(e) => setRole(e.target.value)}>
                             <option value="viewer">Viewer — Read only access</option>
                             <option value="editor">Editor — Can make changes</option>
                         </SelectInput>
@@ -111,7 +112,7 @@ export default function ShareProjectModal({ show, onClose, project, teamMembers 
                                     </div>
                                     <div>
                                         <p className="text-white text-sm font-medium">{userName}</p>
-                                        <p className="text-gray-500 text-xs">{user.email}</p>
+                                        <p className="text-gray-400 text-xs">{user.email}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -120,10 +121,10 @@ export default function ShareProjectModal({ show, onClose, project, teamMembers 
                                     </span>
                                     <button
                                         onClick={() => handleRemoveMember(user.id)}
-                                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
                                         title="Remove member"
                                     >
-                                        <i className="fas fa-times text-xs"></i>
+                                        <i aria-hidden="true" className="fas fa-times text-xs"></i>
                                     </button>
                                 </div>
                             </div>

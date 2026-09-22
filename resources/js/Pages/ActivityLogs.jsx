@@ -33,7 +33,7 @@ export default function ActivityLogs({ logs }) {
                                 <tbody className="divide-y divide-white/5">
                                     {logs.data.length === 0 ? (
                                         <tr>
-                                            <td colSpan="4" className="px-6 py-12 text-center text-gray-500 italic">
+                                            <td colSpan="4" className="px-6 py-12 text-center text-gray-400 italic">
                                                 No activity logs found.
                                             </td>
                                         </tr>
@@ -55,7 +55,7 @@ export default function ActivityLogs({ logs }) {
                                                 <td className="px-6 py-4 text-sm text-gray-300">
                                                     {log.description}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500 font-mono">
+                                                <td className="px-6 py-4 text-sm text-gray-400 font-mono">
                                                     {log.ip_address}
                                                 </td>
                                             </tr>

@@ -5,7 +5,7 @@ import DashboardHero from '@/Components/DashboardHero';
 function DetailRow({ label, value, mono = false }) {
     return (
         <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">{label}</span>
+            <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">{label}</span>
             <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
         </div>
     );
@@ -43,7 +43,7 @@ export default function Show({ document }) {
                             href={route('documents.edit', document.id)}
                             className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
                         >
-                            <i className="fas fa-edit mr-2"></i> Edit
+                            <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                         </Link>
                     }
                 />
@@ -61,18 +61,18 @@ export default function Show({ document }) {
                                     ) : (
                                         <div className="flex flex-col items-center gap-3 py-12">
                                             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-                                                <i className="fas fa-file text-3xl text-white/40"></i>
+                                                <i aria-hidden="true" className="fas fa-file text-3xl text-white/40"></i>
                                             </div>
                                             <p className="text-gray-400 text-sm">Preview not available for this file type</p>
                                             <a href={document.file_url} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition text-sm">
-                                                <i className="fas fa-download mr-2"></i>Download
+                                                <i aria-hidden="true" className="fas fa-download mr-2"></i>Download
                                             </a>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center gap-3 py-12 text-gray-500">
-                                    <i className="fas fa-file text-3xl text-gray-600"></i>
+                                <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
+                                    <i aria-hidden="true" className="fas fa-file text-3xl text-gray-400"></i>
                                     <p className="text-sm">No file attached</p>
                                 </div>
                             )}
@@ -105,18 +105,18 @@ export default function Show({ document }) {
                                     href={route('documents.edit', document.id)}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-edit text-[#DC143C]"></i> Edit Document
+                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Document
                                 </Link>
                                 {document.file_url && (
                                     <a href={document.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300">
-                                        <i className="fas fa-external-link-alt text-[#DC143C]"></i> Open in New Tab
+                                        <i aria-hidden="true" className="fas fa-external-link-alt text-[#DC143C]"></i> Open in New Tab
                                     </a>
                                 )}
                                 <Link
                                     href={route('documents')}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-list text-[#DC143C]"></i> Back to Documents
+                                    <i aria-hidden="true" className="fas fa-list text-[#DC143C]"></i> Back to Documents
                                 </Link>
                             </div>
                         </section>

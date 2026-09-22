@@ -51,11 +51,11 @@ export default function Edit({ mustVerifyEmail, status, whatsapp }) {
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                                        <i className="fas fa-mobile-alt text-blue-400"></i>
+                                        <i aria-hidden="true" className="fas fa-mobile-alt text-blue-400"></i>
                                     </div>
                                     <div>
                                         <p className="text-white font-medium text-sm">Authenticator App</p>
-                                        <p className="text-gray-500 text-xs">Use an authenticator app to generate one-time codes</p>
+                                        <p className="text-gray-400 text-xs">Use an authenticator app to generate one-time codes</p>
                                     </div>
                                 </div>
                                 <span className="px-3 py-1 rounded-lg bg-yellow-500/10 text-yellow-400 text-xs font-medium border border-yellow-500/20">Not Enabled</span>
@@ -63,11 +63,11 @@ export default function Edit({ mustVerifyEmail, status, whatsapp }) {
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                                        <i className="fas fa-key text-green-400"></i>
+                                        <i aria-hidden="true" className="fas fa-key text-green-400"></i>
                                     </div>
                                     <div>
                                         <p className="text-white font-medium text-sm">Recovery Codes</p>
-                                        <p className="text-gray-500 text-xs">Store recovery codes in a safe place if you lose access</p>
+                                        <p className="text-gray-400 text-xs">Store recovery codes in a safe place if you lose access</p>
                                     </div>
                                 </div>
                                 <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Unavailable</span>
@@ -85,11 +85,11 @@ export default function Edit({ mustVerifyEmail, status, whatsapp }) {
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                                        <i className="fas fa-fingerprint text-purple-400"></i>
+                                        <i aria-hidden="true" className="fas fa-fingerprint text-purple-400"></i>
                                     </div>
                                     <div>
                                         <p className="text-white font-medium text-sm">Passkeys</p>
-                                        <p className="text-gray-500 text-xs">Use biometrics or security keys to sign in</p>
+                                        <p className="text-gray-400 text-xs">Use biometrics or security keys to sign in</p>
                                     </div>
                                 </div>
                                 <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Coming Soon</span>
@@ -97,11 +97,11 @@ export default function Edit({ mustVerifyEmail, status, whatsapp }) {
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                                        <i className="fas fa-envelope-open-text text-orange-400"></i>
+                                        <i aria-hidden="true" className="fas fa-envelope-open-text text-orange-400"></i>
                                     </div>
                                     <div>
                                         <p className="text-white font-medium text-sm">Sign in with Login Code</p>
-                                        <p className="text-gray-500 text-xs">Receive a one-time code via email to sign in</p>
+                                        <p className="text-gray-400 text-xs">Receive a one-time code via email to sign in</p>
                                     </div>
                                 </div>
                                 <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Coming Soon</span>
@@ -109,11 +109,11 @@ export default function Edit({ mustVerifyEmail, status, whatsapp }) {
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                                        <i className="fas fa-shield-alt text-cyan-400"></i>
+                                        <i aria-hidden="true" className="fas fa-shield-alt text-cyan-400"></i>
                                     </div>
                                     <div>
                                         <p className="text-white font-medium text-sm">Login Notifications</p>
-                                        <p className="text-gray-500 text-xs">Get notified when a new device signs into your account</p>
+                                        <p className="text-gray-400 text-xs">Get notified when a new device signs into your account</p>
                                     </div>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">

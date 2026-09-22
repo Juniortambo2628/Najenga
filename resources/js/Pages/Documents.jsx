@@ -20,6 +20,7 @@ import InputLabel from '@/Components/InputLabel';
 import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import DashboardHero from '@/Components/DashboardHero';
+import { menuPoint } from '@/Utils/a11y';
 
 // Configure PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -101,8 +102,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         e.preventDefault();
         if (!isSelected(doc.id)) selectAll([doc.id]);
         setContextMenu({
-            x: e.clientX,
-            y: e.clientY,
+            ...menuPoint(e),
             target: doc
         });
     };
@@ -172,8 +172,8 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     selectedCount={selectedCount}
                     bulkActions={
                         <>
-                            <button className="text-white hover:text-gray-200"><i className="fas fa-download"></i></button>
-                            <button className="text-white hover:text-gray-200" onClick={async () => {
+                            <button className="text-white hover:text-gray-200" aria-label="Download selected"><i aria-hidden="true" className="fas fa-download"></i></button>
+                            <button className="text-white hover:text-gray-200" aria-label="Delete selected" onClick={async () => {
                                 if (confirm(`Delete ${selectedCount} items?`)) {
                                     try {
                                         const ids = [...selectedItems];
@@ -185,8 +185,8 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                         toast.error('Failed to delete documents');
                                     }
                                 }
-                            }}><i className="fas fa-trash"></i></button>
-                            <button className="text-white hover:text-gray-200" onClick={clearSelection}><i className="fas fa-times"></i></button>
+                            }}><i aria-hidden="true" className="fas fa-trash"></i></button>
+                            <button className="text-white hover:text-gray-200" aria-label="Clear selection" onClick={clearSelection}><i aria-hidden="true" className="fas fa-times"></i></button>
                         </>
                     }
                     actions={
@@ -195,10 +195,10 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                 onClick={() => setIsNewFolderModalOpen(true)}
                                 className="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 rounded-xl hover:bg-white/10 transition text-sm font-medium"
                             >
-                                <i className="fas fa-folder-plus mr-1"></i> New Folder
+                                <i aria-hidden="true" className="fas fa-folder-plus mr-1"></i> New Folder
                             </button>
                             <PrimaryButton onClick={() => setIsUploadModalOpen(true)}>
-                                <i className="fas fa-upload"></i> Upload
+                                <i aria-hidden="true" className="fas fa-upload"></i> Upload
                             </PrimaryButton>
                         </>
                     }
@@ -234,18 +234,18 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             currentFolderId === null ? 'bg-[#8B0000]/20 text-[#DC143C] font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/5'
                         }`}
                     >
-                        <i className="fas fa-home text-xs"></i> All Documents
+                        <i aria-hidden="true" className="fas fa-home text-xs"></i> All Documents
                     </button>
                     {breadcrumbs.map((crumb) => (
                         <Fragment key={crumb.id}>
-                            <i className="fas fa-chevron-right text-gray-600 text-[10px]"></i>
+                            <i aria-hidden="true" className="fas fa-chevron-right text-gray-400 text-[10px]"></i>
                             <button
                                 onClick={() => setCurrentFolderId(crumb.id)}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
                                     currentFolderId === crumb.id ? 'bg-[#8B0000]/20 text-[#DC143C] font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/5'
                                 }`}
                             >
-                                <i className="fas fa-folder text-xs"></i> {crumb.name}
+                                <i aria-hidden="true" className="fas fa-folder text-xs"></i> {crumb.name}
                             </button>
                         </Fragment>
                     ))}
@@ -281,18 +281,19 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     <div className="flex items-center gap-4">
                                         <div className="w-6 h-6 mr-2"></div>
                                         <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg group-hover:scale-105 transition">
-                                            <i className="fas fa-folder text-white text-xl"></i>
+                                            <i aria-hidden="true" className="fas fa-folder text-white text-xl"></i>
                                         </div>
                                         <div>
                                             <h4 className="text-white font-medium group-hover:text-amber-400 transition">{folder.name}</h4>
-                                            <p className="text-gray-500 text-xs">Folder</p>
+                                            <p className="text-gray-400 text-xs">Folder</p>
                                         </div>
                                     </div>
                                     <button
+                                        aria-label={`Delete folder ${folder.name}`}
                                         onClick={(e) => { e.stopPropagation(); if (confirm(`Delete folder "${folder.name}"? Documents inside will be moved to root.`)) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
-                                        className="p-2 rounded-lg text-gray-600 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                                        className="p-2 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                                     >
-                                        <i className="fas fa-trash text-xs"></i>
+                                        <i aria-hidden="true" className="fas fa-trash text-xs"></i>
                                     </button>
                                 </div>
                             ))}
@@ -308,16 +309,20 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     onDoubleClick={() => setPreviewDoc(doc)}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div 
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); toggleSelection(doc.id, e.ctrlKey || e.metaKey); }}
+                                            aria-pressed={isSelected(doc.id)}
+                                            aria-label={`Select ${doc.title}`}
                                             className={`w-6 h-6 rounded border flex items-center justify-center mr-2 transition
-                                                ${isSelected(doc.id) ? 'bg-[#DC143C] border-[#DC143C]' : 'border-gray-600 bg-transparent'}
+                                                ${isSelected(doc.id) ? 'bg-[#DC143C] border-[#DC143C]' : 'border-gray-400 bg-transparent'}
                                             `}
                                         >
-                                            {isSelected(doc.id) && <i className="fas fa-check text-white text-xs"></i>}
-                                        </div>
+                                            {isSelected(doc.id) && <i aria-hidden="true" className="fas fa-check text-white text-xs"></i>}
+                                        </button>
 
                                         <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center shadow-lg group-hover:scale-105 transition">
-                                            <i className={`fas ${
+                                            <i aria-hidden="true" className={`fas ${
                                                 doc.document_type === 'invoice' ? 'fa-file-invoice-dollar' :
                                                 doc.document_type === 'plan' ? 'fa-ruler-combined' :
                                                 'fa-file-alt'
@@ -332,9 +337,9 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-6">
-                                        <span className="text-gray-500 text-sm hidden md:block">{doc.document_date}</span>
-                                        <button className="p-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition">
-                                            <i className="fas fa-download"></i>
+                                        <span className="text-gray-400 text-sm hidden md:block">{doc.document_date}</span>
+                                        <button aria-label={`Download ${doc.title}`} className="p-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition">
+                                            <i aria-hidden="true" className="fas fa-download"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -352,19 +357,20 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             >
                                 <div className="flex-1 overflow-hidden bg-white/5 relative flex flex-col items-center justify-center gap-3 group-hover:scale-105 transition duration-500">
                                     <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-xl">
-                                        <i className="fas fa-folder-open text-4xl text-white"></i>
+                                        <i aria-hidden="true" className="fas fa-folder-open text-4xl text-white"></i>
                                     </div>
-                                    <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Folder</span>
+                                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Folder</span>
                                 </div>
                                 <div className="p-4 bg-black/20 border-t border-white/5 flex items-center justify-between">
                                     <h4 className="text-white font-semibold truncate group-hover:text-amber-400 transition" title={folder.name}>
                                         {folder.name}
                                     </h4>
                                     <button
+                                        aria-label={`Delete folder ${folder.name}`}
                                         onClick={(e) => { e.stopPropagation(); if (confirm(`Delete folder "${folder.name}"?`)) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
-                                        className="p-1.5 rounded-lg text-gray-600 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                                        className="p-1.5 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                                     >
-                                        <i className="fas fa-trash text-xs"></i>
+                                        <i aria-hidden="true" className="fas fa-trash text-xs"></i>
                                     </button>
                                 </div>
                             </div>
@@ -401,15 +407,15 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                                     className="w-full h-full flex items-start justify-center overflow-hidden"
                                                     loading={
                                                         <div className="flex h-full items-center justify-center">
-                                                            <i className="fas fa-spinner fa-spin text-gray-400"></i>
+                                                            <i aria-hidden="true" className="fas fa-spinner fa-spin text-gray-400"></i>
                                                         </div>
                                                     }
                                                     error={
                                                         <div className="flex flex-col items-center justify-center h-full gap-3">
                                                              <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl bg-gradient-to-br from-red-500 to-red-700">
-                                                                 <i className="fas fa-file-pdf text-3xl text-white"></i>
+                                                                 <i aria-hidden="true" className="fas fa-file-pdf text-3xl text-white"></i>
                                                              </div>
-                                                             <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">PDF</span>
+                                                             <span className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">PDF</span>
                                                         </div>
                                                     }
                                                 >
@@ -426,31 +432,36 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl bg-gradient-to-br
                                                      ${isExcel ? 'from-green-500 to-green-700' : isDoc ? 'from-blue-500 to-blue-700' : 'from-gray-500 to-gray-700'}
                                                  `}>
-                                                     <i className={`fas ${
+                                                     <i aria-hidden="true" className={`fas ${
                                                          isExcel ? 'fa-file-excel' : isDoc ? 'fa-file-word' : 'fa-file-alt'
                                                      } text-3xl text-white`}></i>
                                                  </div>
-                                                 <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">
+                                                 <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">
                                                      {doc.file_path.split('.').pop()}
                                                  </span>
                                             </div>
                                         )}
 
                                         {/* Selection Checkbox */}
-                                        <div className={`absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition shadow-lg
-                                            ${isSelected(doc.id) ? 'bg-[#DC143C] border-[#DC143C]' : 'bg-black/40 border-white/50 opacity-0 group-hover:opacity-100'}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); toggleSelection(doc.id, e.ctrlKey || e.metaKey); }}
+                                            aria-pressed={isSelected(doc.id)}
+                                            aria-label={`Select ${doc.title}`}
+                                            className={`absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center transition shadow-lg
+                                            ${isSelected(doc.id) ? 'bg-[#DC143C] border-[#DC143C]' : 'bg-black/40 border-white/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'}
                                         `}>
-                                            {isSelected(doc.id) && <i className="fas fa-check text-white text-xs"></i>}
-                                        </div>
+                                            {isSelected(doc.id) && <i aria-hidden="true" className="fas fa-check text-white text-xs"></i>}
+                                        </button>
 
                                         {/* Quick Actions Overlay */}
-                                        <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform bg-gradient-to-t from-black via-black/80 to-transparent flex justify-center gap-4">
+                                        <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 group-focus-within:translate-y-0 transition-transform bg-gradient-to-t from-black via-black/80 to-transparent flex justify-center gap-4">
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); setPreviewDoc(doc); }}
                                                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#8B0000] text-white transition flex items-center justify-center"
                                                 title="Preview"
                                             >
-                                                <i className="fas fa-eye"></i>
+                                                <i aria-hidden="true" className="fas fa-eye"></i>
                                             </button>
                                             <button 
                                                 onClick={(e) => { 
@@ -463,7 +474,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#8B0000] text-white transition flex items-center justify-center"
                                                 title="Download"
                                             >
-                                                <i className="fas fa-download"></i>
+                                                <i aria-hidden="true" className="fas fa-download"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -474,8 +485,8 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                             {doc.title}
                                         </h4>
                                         <div className="flex justify-between items-center mt-1">
-                                            <p className="text-gray-500 text-xs truncate max-w-[60%]">{doc.project_name}</p>
-                                            <p className="text-gray-600 text-[10px]">{doc.document_date}</p>
+                                            <p className="text-gray-400 text-xs truncate max-w-[60%]">{doc.project_name}</p>
+                                            <p className="text-gray-400 text-[10px]">{doc.document_date}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -537,7 +548,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             return (
                                 <div className="text-center p-8">
                                     <div className="w-20 h-20 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
-                                        <i className="fas fa-file text-4xl text-gray-500"></i>
+                                        <i aria-hidden="true" className="fas fa-file text-4xl text-gray-400"></i>
                                     </div>
                                     <p className="text-gray-400 mb-4 font-medium">Preview not available for this file type.</p>
                                     <a 
@@ -545,7 +556,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                         download 
                                         className="inline-flex items-center gap-2 px-6 py-2 bg-[#8B0000] text-white rounded-lg hover:bg-[#DC143C] transition font-bold"
                                     >
-                                        <i className="fas fa-download"></i>
+                                        <i aria-hidden="true" className="fas fa-download"></i>
                                         Download to View
                                     </a>
                                 </div>
@@ -559,8 +570,8 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             <h3 className="text-lg font-bold text-white mb-4">Details</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-gray-500 text-xs uppercase tracking-wider block mb-1">Title</label>
-                                    <input 
+                                    <label htmlFor="documents-title" className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Title</label>
+                                    <input id="documents-title" 
                                         type="text" 
                                         value={previewDoc?.title || ''}
                                         onChange={(e) => setPreviewDoc(prev => ({...prev, title: e.target.value}))}
@@ -575,11 +586,11 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <span className="text-gray-500 text-xs uppercase tracking-wider block mb-1">Type</span>
+                                        <span className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Type</span>
                                         <span className="text-gray-300 text-xs font-mono bg-white/5 px-2 py-1 rounded inline-block">{previewDoc?.document_type}</span>
                                     </div>
                                     <div>
-                                        <span className="text-gray-500 text-xs uppercase tracking-wider block mb-1">Date</span>
+                                        <span className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Date</span>
                                         <span className="text-gray-300 text-xs">{previewDoc?.document_date}</span>
                                     </div>
                                 </div>
@@ -601,14 +612,15 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                 <div className="p-6">
                     <h3 className="text-lg font-bold text-white flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center">
-                            <i className="fas fa-folder-plus text-white text-sm"></i>
+                            <i aria-hidden="true" className="fas fa-folder-plus text-white text-sm"></i>
                         </div>
                         Create New Folder
                     </h3>
                     <div className="space-y-4">
                         <div>
-                            <InputLabel value="Folder Name" />
+                            <InputLabel htmlFor="documents-folder-name" value="Folder Name" />
                             <TextInput
+                                id="documents-folder-name"
                                 value={newFolderName}
                                 onChange={(e) => setNewFolderName(e.target.value)}
                                 placeholder="e.g. Contracts, Invoices, Plans..."
