@@ -188,11 +188,18 @@ class MediaClassifier
             'recipient' => null,
         ];
 
-        // Amount: KES 110,500.00 / KES 110500 / Ksh 40,000
-        if (preg_match_all('/(?:KES|Ksh|USD|UGX)\s*([\d]{1,3}(?:[,\s]\d{3})*(?:\.\d{1,2})?|[\d]+(?:\.\d{1,2})?)/i', $text, $matches)) {
-            $numeric = array_map(fn ($v) => (float) str_replace([',', ' '], '', $v), $matches[1]);
-            $extracted['amount'] = max($numeric);
+        // Amount extraction:
+        //  1. currency-prefixed (KES/Ksh/USD/UGX) followed by any digit run
+        //  2. thousands-separated numbers anywhere (comma required, so we don't
+        //     capture account or phone numbers). Take the max of everything.
+        $amounts = [];
+        if (preg_match_all('/(?:KES|Ksh|USD|UGX)\s*([\d,]+(?:\.\d{1,2})?)/i', $text, $m)) {
+            foreach ($m[1] as $v) $amounts[] = (float) str_replace(',', '', $v);
         }
+        if (preg_match_all('/\b(\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?)\b/', $text, $m)) {
+            foreach ($m[1] as $v) $amounts[] = (float) str_replace(',', '', $v);
+        }
+        if ($amounts) $extracted['amount'] = max($amounts);
 
         // Reference (MPESA style: alnum 10+, all upper or mixed) or bank Ref: XXXX
         if (preg_match('/(?:Bank\s*Ref|MPESA\s*REF|Ref(?:erence)?)[:\s]+([A-Z0-9]{6,20})/i', $text, $m)) {
