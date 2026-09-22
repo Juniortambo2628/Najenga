@@ -8,17 +8,13 @@ use App\Models\Expense;
 use App\Models\WhatsAppContact;
 use App\Models\WhatsAppLog;
 use App\Models\WhatsAppWebhookEvent;
-use App\Services\ReceiptProcessingService;
+use App\Jobs\ProcessWhatsAppMedia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppController extends Controller
 {
-    public function __construct(
-        protected ReceiptProcessingService $receiptService,
-    ) {
-    }
 
     /**
      * Handle GET request for Meta webhook verification.
@@ -26,16 +22,26 @@ class WhatsAppController extends Controller
      */
     public function verifyWebhook(Request $request)
     {
-        $mode = $request->query('hub.mode');
-        $token = $request->query('hub.verify_token');
-        $challenge = $request->query('hub.challenge');
+        // Meta sends the query params as `hub.mode`, `hub.verify_token`,
+        // `hub.challenge`. PHP silently rewrites `.` to `_` in $_GET keys, and
+        // Laravel's $request->query('a.b') is a nested-array accessor, not a
+        // literal key lookup. Go through the ParameterBag with the underscored
+        // key (with a fall-through in case a future runtime keeps the dots).
+        $mode = $request->query->get('hub_mode', $request->query('hub.mode'));
+        $token = $request->query->get('hub_verify_token', $request->query('hub.verify_token'));
+        $challenge = $request->query->get('hub_challenge', $request->query('hub.challenge'));
 
-        if ($mode === 'subscribe' && $token === config('services.meta.whatsapp_verify_token')) {
+        if ($mode === 'subscribe' && hash_equals((string) config('services.meta.whatsapp_verify_token'), (string) $token)) {
             Log::info('WhatsApp webhook verified successfully');
             return response($challenge, 200)->header('Content-Type', 'text/plain');
         }
 
-        Log::warning('WhatsApp webhook verification failed', ['mode' => $mode, 'token' => $token]);
+        Log::warning('WhatsApp webhook verification failed', [
+            'mode' => $mode,
+            'token_present' => $token !== null,
+            'token_len' => is_string($token) ? strlen($token) : null,
+            'expected_len' => strlen((string) config('services.meta.whatsapp_verify_token')),
+        ]);
         return response('Forbidden', 403);
     }
 
@@ -127,10 +133,36 @@ class WhatsAppController extends Controller
             'timestamp' => isset($message['timestamp']) ? date('Y-m-d H:i:s', (int) $message['timestamp']) : now(),
         ]);
 
-        // Handle image messages (receipts)
-        if ($type === 'image' && isset($message['image']['id'])) {
-            $this->processReceipt($message['image']['id'], $user);
+        // Route every inbound message through the classifier job.
+        ProcessWhatsAppMedia::dispatch($this->buildJobPayload($message, $type), $user->id);
+    }
+
+    private function buildJobPayload(array $message, ?string $type): array
+    {
+        $payload = ['media_type' => $type ?: 'text'];
+
+        switch ($type) {
+            case 'text':
+                $payload['text'] = $message['text']['body'] ?? '';
+                break;
+            case 'image':
+                $payload['media_id'] = $message['image']['id'] ?? null;
+                $payload['mime'] = $message['image']['mime_type'] ?? 'image/jpeg';
+                $payload['caption'] = $message['image']['caption'] ?? '';
+                break;
+            case 'video':
+                $payload['media_id'] = $message['video']['id'] ?? null;
+                $payload['mime'] = $message['video']['mime_type'] ?? 'video/mp4';
+                $payload['caption'] = $message['video']['caption'] ?? '';
+                break;
+            case 'document':
+                $payload['media_id'] = $message['document']['id'] ?? null;
+                $payload['mime'] = $message['document']['mime_type'] ?? null;
+                $payload['caption'] = $message['document']['caption'] ?? '';
+                break;
         }
+
+        return $payload;
     }
 
     /**
@@ -167,64 +199,6 @@ class WhatsAppController extends Controller
         }
 
         return $user;
-    }
-
-    /**
-     * Process a receipt image from WhatsApp.
-     */
-    private function processReceipt(string $mediaId, User $user): void
-    {
-        try {
-            // Download media from Meta Graph API
-            $accessToken = config('services.meta.whatsapp_access_token');
-            $mediaUrl = "https://graph.facebook.com/v18.0/{$mediaId}";
-
-            $response = Http::withToken($accessToken)->get($mediaUrl);
-
-            if ($response->failed()) {
-                Log::error('Failed to fetch WhatsApp media: ' . $response->body());
-                return;
-            }
-
-            $mediaData = $response->json();
-            $downloadUrl = $mediaData['url'] ?? null;
-
-            if (!$downloadUrl) {
-                Log::error('No download URL in WhatsApp media response');
-                return;
-            }
-
-            // Download the actual image
-            $imageResponse = Http::withToken($accessToken)->get($downloadUrl);
-
-            if ($imageResponse->failed()) {
-                Log::error('Failed to download WhatsApp image');
-                return;
-            }
-
-            // Use ReceiptProcessingService for consistent OCR processing
-            $expense = $this->receiptService->processReceiptFromUrl($downloadUrl, $user);
-
-            if ($expense) {
-                $this->sendWhatsAppMessage(
-                    $user->phone,
-                    "Receipt processed successfully! Amount: {$expense->currency} " . number_format($expense->amount, 2) .
-                    "\nTitle: {$expense->title}" .
-                    "\nStatus: {$expense->status}"
-                );
-            } else {
-                $this->sendWhatsAppMessage(
-                    $user->phone,
-                    "Receipt received but could not be processed. Please try again or upload manually."
-                );
-            }
-        } catch (\Exception $e) {
-            Log::error('WhatsApp receipt processing error: ' . $e->getMessage());
-            $this->sendWhatsAppMessage(
-                $user->phone,
-                "Sorry, there was an error processing your receipt. Please try again later."
-            );
-        }
     }
 
     /**

@@ -32,6 +32,9 @@ class Expense extends Model implements HasMedia
         'receipt_id',
         'expense_date',
         'status',
+        'payment_source',
+        'confidence',
+        'source_channel',
     ];
 
     protected function casts(): array

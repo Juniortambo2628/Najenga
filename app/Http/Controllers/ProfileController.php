@@ -18,9 +18,16 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
+            'whatsapp' => [
+                'wa_id' => $user->whatsapp_wa_id,
+                'verified_at' => $user->whatsapp_verified_at?->toIso8601String(),
+                'configured' => (bool) config('services.meta.whatsapp_access_token')
+                    && (bool) config('services.meta.whatsapp_phone_number_id'),
+            ],
         ]);
     }
 
