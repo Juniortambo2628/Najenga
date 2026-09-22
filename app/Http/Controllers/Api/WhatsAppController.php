@@ -8,18 +8,13 @@ use App\Models\Expense;
 use App\Models\WhatsAppContact;
 use App\Models\WhatsAppLog;
 use App\Models\WhatsAppWebhookEvent;
-use App\Jobs\ProcessWhatsAppReceipt;
-use App\Services\ReceiptProcessingService;
+use App\Jobs\ProcessWhatsAppMedia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppController extends Controller
 {
-    public function __construct(
-        protected ReceiptProcessingService $receiptService,
-    ) {
-    }
 
     /**
      * Handle GET request for Meta webhook verification.
@@ -128,10 +123,36 @@ class WhatsAppController extends Controller
             'timestamp' => isset($message['timestamp']) ? date('Y-m-d H:i:s', (int) $message['timestamp']) : now(),
         ]);
 
-        // Handle image messages (receipts)
-        if ($type === 'image' && isset($message['image']['id'])) {
-            $this->processReceipt($message['image']['id'], $user);
+        // Route every inbound message through the classifier job.
+        ProcessWhatsAppMedia::dispatch($this->buildJobPayload($message, $type), $user->id);
+    }
+
+    private function buildJobPayload(array $message, ?string $type): array
+    {
+        $payload = ['media_type' => $type ?: 'text'];
+
+        switch ($type) {
+            case 'text':
+                $payload['text'] = $message['text']['body'] ?? '';
+                break;
+            case 'image':
+                $payload['media_id'] = $message['image']['id'] ?? null;
+                $payload['mime'] = $message['image']['mime_type'] ?? 'image/jpeg';
+                $payload['caption'] = $message['image']['caption'] ?? '';
+                break;
+            case 'video':
+                $payload['media_id'] = $message['video']['id'] ?? null;
+                $payload['mime'] = $message['video']['mime_type'] ?? 'video/mp4';
+                $payload['caption'] = $message['video']['caption'] ?? '';
+                break;
+            case 'document':
+                $payload['media_id'] = $message['document']['id'] ?? null;
+                $payload['mime'] = $message['document']['mime_type'] ?? null;
+                $payload['caption'] = $message['document']['caption'] ?? '';
+                break;
         }
+
+        return $payload;
     }
 
     /**
@@ -168,15 +189,6 @@ class WhatsAppController extends Controller
         }
 
         return $user;
-    }
-
-    /**
-     * Queue a receipt image from WhatsApp for background OCR processing.
-     * The webhook must return 200 within seconds or Meta will retry.
-     */
-    private function processReceipt(string $mediaId, User $user): void
-    {
-        ProcessWhatsAppReceipt::dispatch($mediaId, $user->id);
     }
 
     /**

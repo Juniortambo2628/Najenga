@@ -50,6 +50,25 @@ export default function WhatsApp({ config = {} }) {
                     ]}
                 />
 
+                {config.test_mode && (
+                    <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-100 flex items-start gap-3">
+                        <i className="fas fa-flask mt-0.5 text-yellow-300"></i>
+                        <div className="space-y-1">
+                            <p className="font-semibold text-yellow-200">Test mode — 5-recipient limit</p>
+                            <p className="text-yellow-100/90">
+                                This Meta app hasn't been business-verified. Messages can only be sent to numbers you
+                                add to Meta's test recipient list (max 5). Anyone else's WhatsApp will get nothing.
+                                To lift this limit, register a business and complete Meta business verification.
+                            </p>
+                            {config.admin_wa_id ? (
+                                <p className="text-yellow-100/80">Admin notifications go to <span className="font-mono">+{config.admin_wa_id}</span>.</p>
+                            ) : (
+                                <p className="text-yellow-100/80">Set <span className="font-mono">NAJENGA_ADMIN_WA_ID</span> in .env to receive admin alerts.</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-6">
                     <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
                         <h3 className="text-lg font-semibold text-white mb-4 flex items-center">

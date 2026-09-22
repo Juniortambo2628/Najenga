@@ -24,6 +24,8 @@ class WhatsAppSettingsController extends Controller
                 'webhook_url' => url('/api/whatsapp/webhook'),
                 'configured' => (bool) config('services.meta.whatsapp_access_token')
                     && (bool) config('services.meta.whatsapp_phone_number_id'),
+                'admin_wa_id' => config('services.meta.admin_wa_id'),
+                'test_mode' => (bool) config('services.meta.test_mode', true),
             ],
         ]);
     }
