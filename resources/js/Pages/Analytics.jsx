@@ -55,7 +55,7 @@ function DonutChart({ data, labelKey, valueKey }) {
     return (
         <div className="flex items-center gap-6">
             <div className="relative w-32 h-32 flex-shrink-0">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                <svg aria-hidden="true" viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                     {data.map((item, i) => {
                         const pct = total > 0 ? (item[valueKey] / total) * 100 : 0;
                         const offset = cumulative;
@@ -77,7 +77,7 @@ function DonutChart({ data, labelKey, valueKey }) {
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
                         <div className="text-white font-bold text-lg">{data.length}</div>
-                        <div className="text-gray-500 text-[10px] uppercase">items</div>
+                        <div className="text-gray-400 text-[10px] uppercase">items</div>
                     </div>
                 </div>
             </div>
@@ -105,14 +105,14 @@ function TrendChart({ data }) {
                 const h = Math.max((month.total / maxVal) * maxH, 4);
                 return (
                     <div key={i} className="flex-1 flex flex-col items-center justify-end group relative" style={{ height: maxH }}>
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 pointer-events-none">
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition whitespace-nowrap z-10 pointer-events-none">
                             {formatCurrency(month.total)}
                         </div>
                         <div
                             className="w-full bg-gradient-to-t from-[rgb(139,0,0)] to-[rgb(220,20,60)] rounded-t transition-all duration-500 hover:opacity-80"
                             style={{ height: h }}
                         />
-                        <span className="text-[10px] text-gray-500 mt-1.5 truncate w-full text-center">{month.short}</span>
+                        <span className="text-[10px] text-gray-400 mt-1.5 truncate w-full text-center">{month.short}</span>
                     </div>
                 );
             })}
@@ -125,12 +125,12 @@ function InsightCard({ insight }) {
         <div className={`border rounded-xl p-4 ${INSIGHT_COLORS[insight.severity] || INSIGHT_COLORS.info}`}>
             <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                    <i className={`fas ${insight.icon} text-sm ${insight.severity === 'warning' ? 'text-yellow-400' : insight.severity === 'success' ? 'text-green-400' : 'text-blue-400'}`}></i>
+                    <i aria-hidden="true" className={`fas ${insight.icon} text-sm ${insight.severity === 'warning' ? 'text-yellow-400' : insight.severity === 'success' ? 'text-green-400' : 'text-blue-400'}`}></i>
                 </div>
                 <div className="min-w-0">
                     <h4 className="text-gray-400 text-xs uppercase tracking-wider mb-0.5">{insight.title}</h4>
                     <p className="text-white font-bold">{insight.value}</p>
-                    <p className="text-gray-500 text-xs mt-0.5 truncate">{insight.detail}</p>
+                    <p className="text-gray-400 text-xs mt-0.5 truncate">{insight.detail}</p>
                 </div>
             </div>
         </div>
@@ -156,14 +156,14 @@ function ProjectBudgetBar({ project }) {
                     style={{ width: `${pct}%` }}
                 />
             </div>
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-gray-400">
                 <span>{formatCurrency(project.total_expenses)} spent</span>
                 <span>{formatCurrency(project.budget)} budget</span>
             </div>
-            <div className="flex gap-3 mt-2 text-xs text-gray-500">
-                <span><i className="fas fa-receipt mr-1"></i>{project.expense_count}</span>
-                <span><i className="fas fa-images mr-1"></i>{project.photo_count}</span>
-                <span><i className="fas fa-file-alt mr-1"></i>{project.document_count}</span>
+            <div className="flex gap-3 mt-2 text-xs text-gray-400">
+                <span><i aria-hidden="true" className="fas fa-receipt mr-1"></i>{project.expense_count}</span>
+                <span><i aria-hidden="true" className="fas fa-images mr-1"></i>{project.photo_count}</span>
+                <span><i aria-hidden="true" className="fas fa-file-alt mr-1"></i>{project.document_count}</span>
             </div>
         </div>
     );
@@ -253,7 +253,7 @@ export default function Analytics({
                 {insights.length > 0 && (
                     <div className="mb-8">
                         <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                            <i className="fas fa-lightbulb text-yellow-400"></i> Key Insights
+                            <i aria-hidden="true" className="fas fa-lightbulb text-yellow-400"></i> Key Insights
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {insights.map((insight, i) => (
@@ -289,7 +289,7 @@ export default function Analytics({
                     <Card>
                         <h3 className="text-lg font-semibold text-white mb-4">Payment Methods</h3>
                         {expensesByPaymentMethod.length === 0 ? (
-                            <div className="text-center py-6 text-gray-500 text-sm">No data</div>
+                            <div className="text-center py-6 text-gray-400 text-sm">No data</div>
                         ) : (
                             <BarChart data={expensesByPaymentMethod} labelKey="method" valueKey="total" />
                         )}
@@ -298,7 +298,7 @@ export default function Analytics({
                     <Card>
                         <h3 className="text-lg font-semibold text-white mb-4">Expense Status</h3>
                         {expenseStatusBreakdown.length === 0 ? (
-                            <div className="text-center py-6 text-gray-500 text-sm">No data</div>
+                            <div className="text-center py-6 text-gray-400 text-sm">No data</div>
                         ) : (
                             <BarChart data={expenseStatusBreakdown.map((s) => ({ ...s, label: s.status }))} labelKey="label" valueKey="count" />
                         )}
@@ -307,7 +307,7 @@ export default function Analytics({
                     <Card>
                         <h3 className="text-lg font-semibold text-white mb-4">Top Recipients</h3>
                         {topRecipients.length === 0 ? (
-                            <div className="text-center py-6 text-gray-500 text-sm">No data</div>
+                            <div className="text-center py-6 text-gray-400 text-sm">No data</div>
                         ) : (
                             <BarChart data={topRecipients} labelKey="recipient" valueKey="total" />
                         )}
@@ -318,7 +318,7 @@ export default function Analytics({
                 {projectSummaries.length > 0 && (
                     <div className="mb-8">
                         <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                            <i className="fas fa-project-diagram text-[#DC143C]"></i> Project Budget Usage
+                            <i aria-hidden="true" className="fas fa-project-diagram text-[#DC143C]"></i> Project Budget Usage
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {projectSummaries.map((project) => (
@@ -333,7 +333,7 @@ export default function Analytics({
                     <Card>
                         <h3 className="text-lg font-semibold text-white mb-4">Photos by Category</h3>
                         {photosByCategory.length === 0 ? (
-                            <div className="text-center py-6 text-gray-500 text-sm">No photos</div>
+                            <div className="text-center py-6 text-gray-400 text-sm">No photos</div>
                         ) : (
                             <BarChart data={photosByCategory} labelKey="category" valueKey="count" />
                         )}
@@ -342,7 +342,7 @@ export default function Analytics({
                     <Card>
                         <h3 className="text-lg font-semibold text-white mb-4">Documents by Type</h3>
                         {documentsByType.length === 0 ? (
-                            <div className="text-center py-6 text-gray-500 text-sm">No documents</div>
+                            <div className="text-center py-6 text-gray-400 text-sm">No documents</div>
                         ) : (
                             <BarChart data={documentsByType} labelKey="type" valueKey="count" />
                         )}
@@ -351,7 +351,7 @@ export default function Analytics({
                     <Card>
                         <h3 className="text-lg font-semibold text-white mb-4">Milestone Progress</h3>
                         {milestoneStatusBreakdown.length === 0 ? (
-                            <div className="text-center py-6 text-gray-500 text-sm">No milestones</div>
+                            <div className="text-center py-6 text-gray-400 text-sm">No milestones</div>
                         ) : (
                             <BarChart data={milestoneStatusBreakdown.map((s) => ({ ...s, label: s.status.replace('_', ' ') }))} labelKey="label" valueKey="count" />
                         )}

@@ -148,40 +148,52 @@ export default function Projects({ projects = [] }) {
             content: (
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <InputLabel value="Project Name *" />
+                        <InputLabel htmlFor="projects-name" value="Project Name *" />
                         <TextInput
+                            id="projects-name"
+                            aria-invalid={!!errors.name}
+                            aria-describedby={errors.name ? 'projects-name-error' : undefined}
                             required
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             placeholder="Enter project name"
                         />
-                        <InputError message={errors.name} />
+                        <InputError id="projects-name-error" message={errors.name} />
                     </div>
                     <div>
-                        <InputLabel value="Description" />
+                        <InputLabel htmlFor="projects-description" value="Description" />
                         <textarea
+                            id="projects-description"
+                            aria-invalid={!!errors.description}
+                            aria-describedby={errors.description ? 'projects-description-error' : undefined}
                             value={data.description}
                             onChange={(e) => setData('description', e.target.value)}
                             placeholder="Enter project description"
                             rows={4}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 transition-all duration-200 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50 resize-none"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 transition-all duration-200 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50 resize-none"
                         />
-                        <InputError message={errors.description} />
+                        <InputError id="projects-description-error" message={errors.description} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <InputLabel value="Location" />
+                            <InputLabel htmlFor="projects-location" value="Location" />
                             <TextInput
+                                id="projects-location"
+                                aria-invalid={!!errors.location}
+                                aria-describedby={errors.location ? 'projects-location-error' : undefined}
                                 value={data.location}
                                 onChange={(e) => setData('location', e.target.value)}
                                 placeholder="Enter project location"
                             />
-                            <InputError message={errors.location} />
+                            <InputError id="projects-location-error" message={errors.location} />
                         </div>
                         <div>
-                            <InputLabel value="Budget" />
+                            <InputLabel htmlFor="projects-budget" value="Budget" />
                             <div className="flex gap-2">
                                 <TextInput
+                                    id="projects-budget"
+                                    aria-invalid={!!errors.budget}
+                                    aria-describedby={errors.budget ? 'projects-budget-error' : undefined}
                                     type="number"
                                     value={data.budget}
                                     onChange={(e) => setData('budget', e.target.value)}
@@ -191,6 +203,7 @@ export default function Projects({ projects = [] }) {
                                 <select
                                     value={data.currency}
                                     onChange={(e) => setData('currency', e.target.value)}
+                                    aria-label="Budget currency"
                                     className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-sm text-white focus:border-[#8B0000] focus:ring-[#8B0000]"
                                 >
                                     {CURRENCY_OPTIONS.map(opt => (
@@ -198,7 +211,7 @@ export default function Projects({ projects = [] }) {
                                     ))}
                                 </select>
                             </div>
-                            <InputError message={errors.budget} />
+                            <InputError id="projects-budget-error" message={errors.budget} />
                             <InputError message={errors.currency} />
                         </div>
                     </div>
@@ -220,8 +233,11 @@ export default function Projects({ projects = [] }) {
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <InputLabel value="Status" />
+                            <InputLabel htmlFor="projects-status" value="Status" />
                             <SelectInput
+                                id="projects-status"
+                                aria-invalid={!!errors.status}
+                                aria-describedby={errors.status ? 'projects-status-error' : undefined}
                                 value={data.status}
                                 onChange={(e) => setData('status', e.target.value)}
                             >
@@ -231,27 +247,33 @@ export default function Projects({ projects = [] }) {
                                 <option value="completed">Completed</option>
                                 <option value="cancelled">Cancelled</option>
                             </SelectInput>
-                            <InputError message={errors.status} />
+                            <InputError id="projects-status-error" message={errors.status} />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <InputLabel value="Start Date" />
+                            <InputLabel htmlFor="projects-start-date" value="Start Date" />
                             <TextInput
+                                id="projects-start-date"
+                                aria-invalid={!!errors.start_date}
+                                aria-describedby={errors.start_date ? 'projects-start-date-error' : undefined}
                                 type="date"
                                 value={data.start_date}
                                 onChange={(e) => setData('start_date', e.target.value)}
                             />
-                            <InputError message={errors.start_date} />
+                            <InputError id="projects-start-date-error" message={errors.start_date} />
                         </div>
                         <div>
-                            <InputLabel value="End Date" />
+                            <InputLabel htmlFor="projects-end-date" value="End Date" />
                             <TextInput
+                                id="projects-end-date"
+                                aria-invalid={!!errors.end_date}
+                                aria-describedby={errors.end_date ? 'projects-end-date-error' : undefined}
                                 type="date"
                                 value={data.end_date}
                                 onChange={(e) => setData('end_date', e.target.value)}
                             />
-                            <InputError message={errors.end_date} />
+                            <InputError id="projects-end-date-error" message={errors.end_date} />
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
@@ -294,15 +316,15 @@ export default function Projects({ projects = [] }) {
                                 onDeselectAll={deselectAll}
                                 actions={
                                     <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                        <i className="fas fa-trash"></i>
+                                        <i aria-hidden="true" className="fas fa-trash"></i>
                                     </button>
                                 }
                             />
                             <button onClick={handleExport} className="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 rounded-xl hover:bg-white/10 transition text-sm font-medium">
-                                <i className="fas fa-download mr-2"></i> Export
+                                <i aria-hidden="true" className="fas fa-download mr-2"></i> Export
                             </button>
                             <PrimaryButton onClick={openCreateModal}>
-                                <i className="fas fa-plus"></i> New Project
+                                <i aria-hidden="true" className="fas fa-plus"></i> New Project
                             </PrimaryButton>
                         </>
                     }
@@ -362,7 +384,8 @@ export default function Projects({ projects = [] }) {
                                                 type="checkbox"
                                                 checked={isSelected(project.id)}
                                                 onChange={() => toggleSelection(project.id)}
-                                                className="rounded border-white/20 bg-white/5 text-[#8B0000] focus:ring-[#8B0000]"
+                                                aria-label={`Select ${project.name}`}
+                                                className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                             />
                                             <StatusBadge status={project.status} />
                                         </div>
@@ -372,14 +395,14 @@ export default function Projects({ projects = [] }) {
                                                 className="text-gray-400 hover:text-white transition p-2"
                                                 title="Edit Project"
                                             >
-                                                <i className="fas fa-edit"></i>
+                                                <i aria-hidden="true" className="fas fa-edit"></i>
                                             </button>
                                             <button
                                                 onClick={() => setSharingProject(project)}
                                                 className="text-gray-400 hover:text-white transition p-2"
                                                 title="Share Project"
                                             >
-                                                <i className="fas fa-share-alt"></i>
+                                                <i aria-hidden="true" className="fas fa-share-alt"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -387,8 +410,8 @@ export default function Projects({ projects = [] }) {
                                     <p className="text-gray-400 text-sm mb-4 line-clamp-2">{project.description}</p>
                                      {viewMode === 'grid' && (
                                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-300 mb-4">
-                                            <div><i className="fas fa-map-marker-alt w-5 text-gray-500"></i> {project.location}</div>
-                                            <div><i className="fas fa-money-bill-wave w-5 text-gray-500"></i> {formatCurrency(project.budget, project.currency)}</div>
+                                            <div><i aria-hidden="true" className="fas fa-map-marker-alt w-5 text-gray-400"></i> {project.location}</div>
+                                            <div><i aria-hidden="true" className="fas fa-money-bill-wave w-5 text-gray-400"></i> {formatCurrency(project.budget, project.currency)}</div>
                                         </div>
                                     )}
                                 </div>
@@ -396,22 +419,22 @@ export default function Projects({ projects = [] }) {
                                 {viewMode === 'list' ? (
                                     <div className="flex items-center gap-8 text-right">
                                         <div>
-                                            <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Budget</p>
+                                            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Budget</p>
                                             <p className="text-white font-bold">{formatCurrency(project.budget, project.currency)}</p>
                                         </div>
                                         <div>
-                                            <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Location</p>
+                                            <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Location</p>
                                             <p className="text-white">{project.location}</p>
                                         </div>
-                                        <button className="text-[#DC143C] hover:text-white transition">
-                                            <i className="fas fa-arrow-right"></i>
-                                        </button>
+                                        <Link href={route('projects.show', project.id)} aria-label={`Open ${project.name}`} className="text-[#DC143C] hover:text-white transition">
+                                            <i aria-hidden="true" className="fas fa-arrow-right"></i>
+                                        </Link>
                                     </div>
                                 ) : (
                                     <div className="pt-4 border-t border-white/5 flex justify-between items-center">
-                                        <span className="text-xs text-gray-500">Last updated recently</span>
+                                        <span className="text-xs text-gray-400">Last updated recently</span>
                                         <Link href={route('projects.show', project.id)} className="text-[#DC143C] font-semibold text-sm hover:text-[#8B0000] transition flex items-center">
-                                            View Details <i className="fas fa-arrow-right ml-1"></i>
+                                            View Details <i aria-hidden="true" className="fas fa-arrow-right ml-1"></i>
                                         </Link>
                                     </div>
                                 )}

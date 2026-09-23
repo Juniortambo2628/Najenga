@@ -99,7 +99,7 @@ export default function Terms({ effectiveDate, contactEmail }) {
                         </p>
                     </Section>
 
-                    <footer className="mt-16 pt-6 border-t border-white/10 text-xs text-gray-500 flex flex-wrap gap-4">
+                    <footer className="mt-16 pt-6 border-t border-white/10 text-xs text-gray-400 flex flex-wrap gap-4">
                         <Link href="/" className="hover:text-white">Home</Link>
                         <Link href="/privacy" className="hover:text-white">Privacy</Link>
                         <Link href="/terms" className="hover:text-white">Terms</Link>

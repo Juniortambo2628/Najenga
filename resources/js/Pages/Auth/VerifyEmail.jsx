@@ -26,7 +26,7 @@ export default function VerifyEmail({ status }) {
             {/* Mail Icon */}
             <div className="flex justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
-                    <i className="fas fa-envelope text-2xl text-white/60"></i>
+                    <i aria-hidden="true" className="fas fa-envelope text-2xl text-white/60"></i>
                 </div>
             </div>
 
@@ -57,7 +57,7 @@ export default function VerifyEmail({ status }) {
                 <Link href={route('login')} className="text-gray-400 text-sm hover:text-white transition">
                     Back to Login
                 </Link>
-                <span className="text-gray-600">|</span>
+                <span className="text-gray-400">|</span>
                 <Link
                     href={route('logout')}
                     method="post"

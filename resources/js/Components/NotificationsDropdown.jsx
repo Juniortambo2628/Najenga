@@ -32,8 +32,15 @@ export default function NotificationsDropdown() {
                 setIsOpen(false);
             }
         }
+        function handleEscape(event) {
+            if (event.key === 'Escape') setIsOpen(false);
+        }
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", handleEscape);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleEscape);
+        };
     }, []);
 
     const markAsRead = async (id) => {
@@ -60,9 +67,11 @@ export default function NotificationsDropdown() {
         <div className="relative" ref={dropdownRef}>
             <button 
                 onClick={() => setIsOpen(!isOpen)} 
+                aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+                aria-expanded={isOpen}
                 className="relative p-2 text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
             >
-                <i className="fas fa-bell text-xl"></i>
+                <i aria-hidden="true" className="fas fa-bell text-xl"></i>
                 {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-gray-900"></span>
                 )}
@@ -81,8 +90,8 @@ export default function NotificationsDropdown() {
 
                     <div className="max-h-80 overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-gray-500">
-                                <i className="far fa-bell-slash text-2xl mb-2"></i>
+                            <div className="p-8 text-center text-gray-400">
+                                <i aria-hidden="true" className="far fa-bell-slash text-2xl mb-2"></i>
                                 <p className="text-sm">No new notifications</p>
                             </div>
                         ) : (
@@ -92,19 +101,20 @@ export default function NotificationsDropdown() {
                                         {notification.data.user_avatar ? (
                                             <img src={notification.data.user_avatar} alt="" className="w-full h-full object-cover" />
                                         ) : (
-                                            <i className={`fas ${notification.data.type === 'comment' ? 'fa-comment' : 'fa-thumbtack'}`}></i>
+                                            <i aria-hidden="true" className={`fas ${notification.data.type === 'comment' ? 'fa-comment' : 'fa-thumbtack'}`}></i>
                                         )}
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-sm text-gray-200 leading-snug">{notification.data.body}</p>
-                                        <span className="text-xs text-gray-500 mt-1 block">{new Date(notification.created_at).toLocaleTimeString()}</span>
+                                        <span className="text-xs text-gray-400 mt-1 block">{new Date(notification.created_at).toLocaleTimeString()}</span>
                                     </div>
                                     <button 
                                         onClick={() => markAsRead(notification.id)}
-                                        className="absolute top-2 right-2 text-gray-600 hover:text-white opacity-0 group-hover:opacity-100 transition"
+                                        className="absolute top-2 right-2 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition"
                                         title="Mark as read"
+                                        aria-label="Mark as read"
                                     >
-                                        <i className="fas fa-check"></i>
+                                        <i aria-hidden="true" className="fas fa-check"></i>
                                     </button>
                                 </div>
                             ))

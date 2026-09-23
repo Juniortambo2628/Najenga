@@ -11,7 +11,7 @@ import { useDropzone } from 'react-dropzone';
 function DetailRow({ label, value, mono = false }) {
     return (
         <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">{label}</span>
+            <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">{label}</span>
             <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
         </div>
     );
@@ -72,10 +72,10 @@ function ReceiptSection({ expense, onUpdate }) {
                 </div>
                 <div className="flex justify-end gap-2">
                     <button onClick={handleRemove} className="px-4 py-2 text-xs text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition">
-                        <i className="fas fa-trash mr-1"></i>Remove
+                        <i aria-hidden="true" className="fas fa-trash mr-1"></i>Remove
                     </button>
                     <label className="px-4 py-2 text-xs text-white bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition cursor-pointer">
-                        <i className="fas fa-exchange-alt mr-1"></i>Replace
+                        <i aria-hidden="true" className="fas fa-exchange-alt mr-1"></i>Replace
                         <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { if (e.target.files?.[0]) onDrop([e.target.files[0]]); e.target.value = ''; }} />
                     </label>
                 </div>
@@ -91,12 +91,12 @@ function ReceiptSection({ expense, onUpdate }) {
             <input {...getInputProps()} />
             <div className="flex flex-col items-center gap-3">
                 <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center">
-                    <i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'} text-2xl text-white/40`}></i>
+                    <i aria-hidden="true" className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'} text-2xl text-white/40`}></i>
                 </div>
                 <p className="text-white font-medium">
                     {uploading ? 'Uploading...' : isDragActive ? 'Drop receipt here...' : 'Drag & drop a receipt, or click to select'}
                 </p>
-                <p className="text-gray-500 text-xs">JPG, PNG, WebP, or PDF — max 10MB</p>
+                <p className="text-gray-400 text-xs">JPG, PNG, WebP, or PDF — max 10MB</p>
             </div>
         </div>
     );
@@ -135,7 +135,7 @@ export default function Show({ expense }) {
                                 href={route('expenses.edit', expense.id)}
                                 className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
                             >
-                                <i className="fas fa-edit mr-2"></i> Edit
+                                <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                             </Link>
                         </div>
                     }
@@ -157,7 +157,7 @@ export default function Show({ expense }) {
                             </div>
                             {expense.description && (
                                 <div className="mt-5 pt-5 border-t border-white/10">
-                                    <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">Description</span>
+                                    <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">Description</span>
                                     <p className="mt-2 text-sm text-gray-300 whitespace-pre-wrap">{expense.description}</p>
                                 </div>
                             )}
@@ -174,15 +174,15 @@ export default function Show({ expense }) {
                             <h3 className="text-lg font-bold text-white mb-4">Summary</h3>
                             <dl className="space-y-4 text-sm">
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Created</dt>
+                                    <dt className="text-gray-400">Created</dt>
                                     <dd className="text-gray-300">{expense.created_at ? new Date(expense.created_at).toLocaleDateString() : '—'}</dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Updated</dt>
+                                    <dt className="text-gray-400">Updated</dt>
                                     <dd className="text-gray-300">{expense.updated_at ? new Date(expense.updated_at).toLocaleDateString() : '—'}</dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">ID</dt>
+                                    <dt className="text-gray-400">ID</dt>
                                     <dd className="text-gray-300 font-mono text-xs">#{expense.id}</dd>
                                 </div>
                             </dl>
@@ -195,20 +195,20 @@ export default function Show({ expense }) {
                                     href={route('expenses.edit', expense.id)}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-edit text-[#DC143C]"></i> Edit Expense
+                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Expense
                                 </Link>
                                 <Link
                                     href={route('expenses')}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-list text-[#DC143C]"></i> Back to Expenses
+                                    <i aria-hidden="true" className="fas fa-list text-[#DC143C]"></i> Back to Expenses
                                 </Link>
                                 {expense.project_id && (
                                     <Link
                                         href={route('projects.show', expense.project_id)}
                                         className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                     >
-                                        <i className="fas fa-folder text-[#DC143C]"></i> View Project
+                                        <i aria-hidden="true" className="fas fa-folder text-[#DC143C]"></i> View Project
                                     </Link>
                                 )}
                             </div>

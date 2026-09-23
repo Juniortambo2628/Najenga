@@ -9,7 +9,7 @@ import { formatCurrency } from '@/Config/currencies';
 const QuickAction = ({ href, icon, label }) => (
     <Link href={href} className="quick-action-btn">
         <div className="quick-action-icon">
-            <i className={`fas fa-${icon}`}></i>
+            <i aria-hidden="true" className={`fas fa-${icon}`}></i>
         </div>
         <span className="text-sm">{label}</span>
     </Link>
@@ -69,7 +69,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                     <div className={`${cardClass} mb-8`}>
                         <div className="px-6 py-4 border-b border-white/[0.06]">
                             <h5 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <i className="fas fa-bolt text-yellow-400"></i>
+                                <i aria-hidden="true" className="fas fa-bolt text-yellow-400"></i>
                                 Quick Actions
                             </h5>
                         </div>
@@ -91,7 +91,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         <div className={cardClass}>
                             <div className="px-6 py-4 border-b border-white/[0.06] flex justify-between items-center">
                                 <h5 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <i className="fas fa-receipt"></i>
+                                    <i aria-hidden="true" className="fas fa-receipt"></i>
                                     Recent Expenses
                                 </h5>
                             </div>
@@ -120,7 +120,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         <div className={cardClass}>
                             <div className="px-6 py-4 border-b border-white/[0.06] flex justify-between items-center">
                                 <h5 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <i className="fas fa-project-diagram"></i>
+                                    <i aria-hidden="true" className="fas fa-project-diagram"></i>
                                     Your Projects
                                 </h5>
                                 <Link href="/projects" className="btn-primary text-sm">

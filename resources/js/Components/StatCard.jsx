@@ -9,7 +9,7 @@ export default function StatCard({ icon, label, value, trend }) {
                     <p className="text-white text-2xl font-bold">{value}</p>
                     {trend !== undefined && trend !== null && (
                         <div className="flex items-center gap-1 mt-2">
-                            <i
+                            <i aria-hidden="true"
                                 className={`fas ${
                                     trend >= 0 ? 'fa-arrow-up text-green-400' : 'fa-arrow-down text-red-400'
                                 } text-xs`}
@@ -25,7 +25,7 @@ export default function StatCard({ icon, label, value, trend }) {
                     )}
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-[#8B0000]/15 flex items-center justify-center">
-                    <i className={`fas ${icon} text-[#DC143C] text-lg`}></i>
+                    <i aria-hidden="true" className={`fas ${icon} text-[#DC143C] text-lg`}></i>
                 </div>
             </div>
         </div>

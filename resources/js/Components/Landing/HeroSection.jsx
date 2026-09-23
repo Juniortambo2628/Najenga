@@ -74,7 +74,7 @@ export default function HeroSection({ auth }) {
                                 </Link>
                                 <Link href="/register" className="glass-nav-btn">
                                     Get Started
-                                    <i className="fas fa-arrow-right text-xs ml-1"></i>
+                                    <i aria-hidden="true" className="fas fa-arrow-right text-xs ml-1"></i>
                                 </Link>
                             </>
                         )}
@@ -151,7 +151,7 @@ export default function HeroSection({ auth }) {
                         {HERO_STATS.map((stat, idx) => (
                             <div key={idx} className="px-8 py-5 text-center">
                                 <div className="flex items-center justify-center gap-2 mb-1">
-                                    <i className={`fas ${stat.icon} text-[#DC143C]`}></i>
+                                    <i aria-hidden="true" className={`fas ${stat.icon} text-[#DC143C]`}></i>
                                     <span className="text-3xl font-bold text-white">{stat.value}</span>
                                 </div>
                                 <div className="text-sm text-white/60 mt-1">{stat.label}</div>

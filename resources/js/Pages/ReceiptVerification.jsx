@@ -294,17 +294,18 @@ export default function ReceiptVerification() {
                     {/* Left: Upload + Queue */}
                     <div className="space-y-4">
                         {/* Upload Zone */}
-                        <div className="bg-black/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm min-h-[200px] flex flex-col items-center justify-center relative overflow-hidden">
+                        <div className="bg-black/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm min-h-[200px] flex flex-col items-center justify-center relative overflow-hidden focus-within:ring-2 focus-within:ring-rose-400">
                             <div className="text-center text-gray-400">
-                                <i className="fas fa-cloud-upload-alt text-5xl mb-3 text-gray-600"></i>
+                                <i aria-hidden="true" className="fas fa-cloud-upload-alt text-5xl mb-3 text-gray-400"></i>
                                 <p className="text-sm">Click or drag to upload receipts</p>
-                                <p className="text-xs text-gray-600 mt-1">Supports JPG, PNG, PDF (max 100MB each)</p>
+                                <p className="text-xs text-gray-400 mt-1">Supports JPG, PNG, PDF (max 100MB each)</p>
                             </div>
                             <input
                                 type="file"
                                 accept="image/*,.pdf"
                                 multiple
                                 onChange={handleFileChange}
+                                aria-label="Upload receipts"
                                 className="absolute inset-0 opacity-0 cursor-pointer"
                             />
                         </div>
@@ -319,9 +320,9 @@ export default function ReceiptVerification() {
                                         className="flex-1 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-bold text-sm hover:opacity-90 transition disabled:opacity-50"
                                     >
                                         {processing ? (
-                                            <><i className="fas fa-spinner fa-spin mr-1"></i> Analyzing...</>
+                                            <><i aria-hidden="true" className="fas fa-spinner fa-spin mr-1"></i> Analyzing...</>
                                         ) : (
-                                            <><i className="fas fa-bolt mr-1"></i> Analyze All ({pendingCount})</>
+                                            <><i aria-hidden="true" className="fas fa-bolt mr-1"></i> Analyze All ({pendingCount})</>
                                         )}
                                     </button>
                                 )}
@@ -331,7 +332,7 @@ export default function ReceiptVerification() {
                                         disabled={processing}
                                         className="flex-1 py-2 bg-green-600 text-white rounded-xl font-bold text-sm hover:bg-green-700 transition disabled:opacity-50"
                                     >
-                                        <i className="fas fa-save mr-1"></i> Save All ({readyCount})
+                                        <i aria-hidden="true" className="fas fa-save mr-1"></i> Save All ({readyCount})
                                     </button>
                                 )}
                             </div>
@@ -350,25 +351,31 @@ export default function ReceiptVerification() {
                                     }`}
                                 >
                                     <img src={entry.preview} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white truncate text-xs">{entry.file.name}</p>
-                                        <p className={`text-xs ${
+                                    <button
+                                        type="button"
+                                        disabled={entry.status === 'pending'}
+                                        aria-current={currentIndex === idx ? 'true' : undefined}
+                                        className="flex-1 min-w-0 text-left disabled:cursor-default"
+                                    >
+                                        <span className="block text-white truncate text-xs">{entry.file.name}</span>
+                                        <span className={`block text-xs ${
                                             entry.status === 'saved' ? 'text-green-400' :
                                             entry.status === 'ready' ? 'text-blue-400' :
                                             entry.status === 'error' ? 'text-red-400' :
-                                            'text-gray-500'
+                                            'text-gray-400'
                                         }`}>
                                             {entry.status === 'pending' && 'Waiting...'}
                                             {entry.status === 'ready' && `Ready - ${entry.formData?.recipient || 'No recipient'}`}
                                             {entry.status === 'saved' && 'Saved'}
                                             {entry.status === 'error' && 'Failed'}
-                                        </p>
-                                    </div>
+                                        </span>
+                                    </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); removeFromFileQueue(entry.id); }}
-                                        className="text-gray-500 hover:text-red-400 text-xs"
+                                        aria-label={`Remove ${entry.file?.name || 'file'} from queue`}
+                                        className="text-gray-400 hover:text-red-400 text-xs"
                                     >
-                                        <i className="fas fa-times"></i>
+                                        <i aria-hidden="true" className="fas fa-times"></i>
                                     </button>
                                 </div>
                             ))}
@@ -394,9 +401,9 @@ export default function ReceiptVerification() {
                                         className="w-full py-3 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-bold text-sm hover:opacity-90 transition disabled:opacity-50"
                                     >
                                         {processing ? (
-                                            <><i className="fas fa-spinner fa-spin mr-2"></i> Analyzing...</>
+                                            <><i aria-hidden="true" className="fas fa-spinner fa-spin mr-2"></i> Analyzing...</>
                                         ) : (
-                                            <><i className="fas fa-bolt mr-2"></i> Analyze This Receipt</>
+                                            <><i aria-hidden="true" className="fas fa-bolt mr-2"></i> Analyze This Receipt</>
                                         )}
                                     </button>
                                 )}
@@ -410,8 +417,8 @@ export default function ReceiptVerification() {
                             </>
                         ) : (
                             <div className="bg-black/50 border border-white/10 rounded-2xl p-8 backdrop-blur-sm flex items-center justify-center min-h-[400px]">
-                                <div className="text-center text-gray-500">
-                                    <i className="fas fa-image text-4xl mb-3"></i>
+                                <div className="text-center text-gray-400">
+                                    <i aria-hidden="true" className="fas fa-image text-4xl mb-3"></i>
                                     <p>Select a receipt to preview</p>
                                 </div>
                             </div>
@@ -423,77 +430,92 @@ export default function ReceiptVerification() {
                         <h2 className="text-lg font-bold text-white mb-4 border-b border-white/10 pb-3">Extracted Details</h2>
 
                         {currentIndex < 0 || !queue[currentIndex] || queue[currentIndex].status === 'pending' ? (
-                            <div className="text-center text-gray-500 py-8">
-                                <i className="fas fa-list-alt text-3xl mb-2"></i>
+                            <div className="text-center text-gray-400 py-8">
+                                <i aria-hidden="true" className="fas fa-list-alt text-3xl mb-2"></i>
                                 <p className="text-sm">Upload and analyze a receipt to see details</p>
                             </div>
                         ) : queue[currentIndex].status === 'error' ? (
                             <div className="text-center text-red-400 py-8">
-                                <i className="fas fa-exclamation-triangle text-3xl mb-2"></i>
+                                <i aria-hidden="true" className="fas fa-exclamation-triangle text-3xl mb-2"></i>
                                 <p className="text-sm">Failed to analyze this receipt</p>
                                 {errors.analysis && <p className="text-xs mt-2">{errors.analysis}</p>}
                             </div>
                         ) : queue[currentIndex].status === 'saved' ? (
                             <div className="text-center text-green-400 py-8">
-                                <i className="fas fa-check-circle text-3xl mb-2"></i>
+                                <i aria-hidden="true" className="fas fa-check-circle text-3xl mb-2"></i>
                                 <p className="text-sm">Expense saved successfully</p>
                             </div>
                         ) : (
                             <form onSubmit={handleSave} className="space-y-3">
                                 {/* Recipient */}
                                 <div>
-                                    <InputLabel value="Recipient" />
+                                    <InputLabel htmlFor="receiptverification-recipient" value="Recipient" />
                                     <TextInput
+                                        id="receiptverification-recipient"
+                                        aria-invalid={!!errors.recipient}
+                                        aria-describedby={errors.recipient ? 'receiptverification-recipient-error' : undefined}
                                         value={formData.recipient}
                                         onChange={(e) => updateCurrentField('recipient', e.target.value)}
                                         placeholder="KISUMU CONCRETE PRODUCTS PLC"
                                         className="mt-1 block w-full"
                                     />
-                                    <InputError message={errors.recipient} className="mt-1" />
+                                    <InputError id="receiptverification-recipient-error" message={errors.recipient} className="mt-1" />
                                 </div>
 
                                 {/* Purpose / Merchant */}
                                 <div>
-                                    <InputLabel value="Purpose / Merchant" />
+                                    <InputLabel htmlFor="receiptverification-title" value="Purpose / Merchant" />
                                     <TextInput
+                                        id="receiptverification-title"
+                                        aria-invalid={!!errors.title}
+                                        aria-describedby={errors.title ? 'receiptverification-title-error' : undefined}
                                         value={formData.title}
                                         onChange={(e) => updateCurrentField('title', e.target.value)}
                                         placeholder="ACCURATE BRIGHTONE ENGINEERS, etc."
                                         className="mt-1 block w-full"
                                     />
-                                    <InputError message={errors.title} className="mt-1" />
+                                    <InputError id="receiptverification-title-error" message={errors.title} className="mt-1" />
                                 </div>
 
                                 {/* Date + Time */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <InputLabel value="Date" />
+                                        <InputLabel htmlFor="receiptverification-expense-date" value="Date" />
                                         <TextInput
+                                            id="receiptverification-expense-date"
+                                            aria-invalid={!!errors.expense_date}
+                                            aria-describedby={errors.expense_date ? 'receiptverification-expense-date-error' : undefined}
                                             type="date"
                                             value={formData.expense_date}
                                             onChange={(e) => updateCurrentField('expense_date', e.target.value)}
                                             className="mt-1 block w-full"
                                         />
-                                        <InputError message={errors.expense_date} className="mt-1" />
+                                        <InputError id="receiptverification-expense-date-error" message={errors.expense_date} className="mt-1" />
                                     </div>
                                     <div>
-                                        <InputLabel value="Time" />
+                                        <InputLabel htmlFor="receiptverification-time" value="Time" />
                                         <TextInput
+                                            id="receiptverification-time"
+                                            aria-invalid={!!errors.time}
+                                            aria-describedby={errors.time ? 'receiptverification-time-error' : undefined}
                                             type="text"
                                             value={formData.time}
                                             onChange={(e) => updateCurrentField('time', e.target.value)}
                                             placeholder="03:41 PM"
                                             className="mt-1 block w-full"
                                         />
-                                        <InputError message={errors.time} className="mt-1" />
+                                        <InputError id="receiptverification-time-error" message={errors.time} className="mt-1" />
                                     </div>
                                 </div>
 
                                 {/* Amount + Reference */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <InputLabel value="Amount" />
+                                        <InputLabel htmlFor="receiptverification-amount" value="Amount" />
                                         <TextInput
+                                            id="receiptverification-amount"
+                                            aria-invalid={!!errors.amount}
+                                            aria-describedby={errors.amount ? 'receiptverification-amount-error' : undefined}
                                             type="number"
                                             step="0.01"
                                             value={formData.amount}
@@ -501,25 +523,31 @@ export default function ReceiptVerification() {
                                             placeholder="0.00"
                                             className="mt-1 block w-full"
                                         />
-                                        <InputError message={errors.amount} className="mt-1" />
+                                        <InputError id="receiptverification-amount-error" message={errors.amount} className="mt-1" />
                                     </div>
                                     <div>
-                                        <InputLabel value="Reference" />
+                                        <InputLabel htmlFor="receiptverification-reference-number" value="Reference" />
                                         <TextInput
+                                            id="receiptverification-reference-number"
+                                            aria-invalid={!!errors.reference_number}
+                                            aria-describedby={errors.reference_number ? 'receiptverification-reference-number-error' : undefined}
                                             value={formData.reference_number}
                                             onChange={(e) => updateCurrentField('reference_number', e.target.value)}
                                             placeholder="UGGSG3I38V"
                                             className="mt-1 block w-full"
                                         />
-                                        <InputError message={errors.reference_number} className="mt-1" />
+                                        <InputError id="receiptverification-reference-number-error" message={errors.reference_number} className="mt-1" />
                                     </div>
                                 </div>
 
                                 {/* Payment Method + Category */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <InputLabel value="Payment Method" />
+                                        <InputLabel htmlFor="receiptverification-payment-method" value="Payment Method" />
                                         <SelectInput
+                                            id="receiptverification-payment-method"
+                                            aria-invalid={!!errors.payment_method}
+                                            aria-describedby={errors.payment_method ? 'receiptverification-payment-method-error' : undefined}
                                             value={formData.payment_method}
                                             onChange={(e) => updateCurrentField('payment_method', e.target.value)}
                                             className="mt-1 block w-full"
@@ -531,11 +559,14 @@ export default function ReceiptVerification() {
                                             <option value="check">Cheque</option>
                                             <option value="other">Other</option>
                                         </SelectInput>
-                                        <InputError message={errors.payment_method} className="mt-1" />
+                                        <InputError id="receiptverification-payment-method-error" message={errors.payment_method} className="mt-1" />
                                     </div>
                                     <div>
-                                        <InputLabel value="Category" />
+                                        <InputLabel htmlFor="receiptverification-category" value="Category" />
                                         <SelectInput
+                                            id="receiptverification-category"
+                                            aria-invalid={!!errors.category}
+                                            aria-describedby={errors.category ? 'receiptverification-category-error' : undefined}
                                             value={formData.category}
                                             onChange={(e) => updateCurrentField('category', e.target.value)}
                                             className="mt-1 block w-full"
@@ -544,7 +575,7 @@ export default function ReceiptVerification() {
                                                 <option key={cat} value={cat}>{cat}</option>
                                             ))}
                                         </SelectInput>
-                                        <InputError message={errors.category} className="mt-1" />
+                                        <InputError id="receiptverification-category-error" message={errors.category} className="mt-1" />
                                     </div>
                                 </div>
 
@@ -552,7 +583,7 @@ export default function ReceiptVerification() {
                                 {queue[currentIndex]?.matchedExpense && (
                                     <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
                                         <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
-                                            <i className="fas fa-link"></i>
+                                            <i aria-hidden="true" className="fas fa-link"></i>
                                             <span>Matched to existing expense</span>
                                         </div>
                                         <p className="text-xs text-gray-400 mt-1">
@@ -563,14 +594,17 @@ export default function ReceiptVerification() {
 
                                 {/* Purpose */}
                                 <div>
-                                    <InputLabel value="Purpose of Payment" />
+                                    <InputLabel htmlFor="receiptverification-purpose" value="Purpose of Payment" />
                                     <TextInput
+                                        id="receiptverification-purpose"
+                                        aria-invalid={!!errors.purpose}
+                                        aria-describedby={errors.purpose ? 'receiptverification-purpose-error' : undefined}
                                         value={formData.purpose}
                                         onChange={(e) => updateCurrentField('purpose', e.target.value)}
                                         placeholder="Construction materials, salary payment, etc."
                                         className="mt-1 block w-full"
                                     />
-                                    <InputError message={errors.purpose} className="mt-1" />
+                                    <InputError id="receiptverification-purpose-error" message={errors.purpose} className="mt-1" />
                                 </div>
 
                                 <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
@@ -581,14 +615,14 @@ export default function ReceiptVerification() {
                                         Cancel
                                     </SecondaryButton>
                                     <PrimaryButton type="submit" disabled={processing}>
-                                        <i className="fas fa-check mr-1"></i>
+                                        <i aria-hidden="true" className="fas fa-check mr-1"></i>
                                         {processing ? 'Saving...' : 'Save Expense'}
                                     </PrimaryButton>
                                 </div>
 
                                 {errors.save && (
                                     <div className="p-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-xs">
-                                        <i className="fas fa-exclamation-circle mr-1"></i>{errors.save}
+                                        <i aria-hidden="true" className="fas fa-exclamation-circle mr-1"></i>{errors.save}
                                     </div>
                                 )}
                             </form>

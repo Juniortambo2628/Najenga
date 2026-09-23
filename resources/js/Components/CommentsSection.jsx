@@ -212,19 +212,19 @@ export default function CommentsSection({ type, id, projectId }) {
                         </div>
                         <div>
                             <span className="text-sm font-bold text-gray-200">{comment.user?.name || 'User'}</span>
-                            <span className="ml-2 text-[10px] text-gray-500 uppercase tracking-wider">
+                            <span className="ml-2 text-[10px] text-gray-400 uppercase tracking-wider">
                                 {formatDistanceToNow(new Date(comment.created_at))} ago
                             </span>
                         </div>
                     </div>
                     {!isEditing && (
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                             {!isReply && (
                                 <button 
                                     onClick={() => { setReplyTo(comment); setNewComment(''); }}
                                     className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
                                 >
-                                    <i className="fas fa-reply scale-75"></i> Reply
+                                    <i aria-hidden="true" className="fas fa-reply scale-75"></i> Reply
                                 </button>
                             )}
                             {isAuthor && (
@@ -269,7 +269,7 @@ export default function CommentsSection({ type, id, projectId }) {
                             <button 
                                 type="button" 
                                 onClick={() => setEditingComment(null)}
-                                className="text-xs text-gray-500 hover:text-white"
+                                className="text-xs text-gray-400 hover:text-white"
                             >
                                 Cancel
                             </button>
@@ -301,10 +301,10 @@ export default function CommentsSection({ type, id, projectId }) {
         <div className="flex flex-col h-full bg-[#111] rounded-2xl border border-white/10 overflow-hidden">
             <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/40">
                 <h4 className="text-white font-bold flex items-center gap-2">
-                    <i className="fas fa-comments text-[#8B0000]"></i>
+                    <i aria-hidden="true" className="fas fa-comments text-[#8B0000]"></i>
                     Activity Feed
                 </h4>
-                <span className="text-xs text-gray-500 bg-white/5 px-2 py-1 rounded-full border border-white/5">
+                <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-full border border-white/5">
                     {comments.length} items
                 </span>
             </div>
@@ -313,7 +313,7 @@ export default function CommentsSection({ type, id, projectId }) {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {comments.length === 0 && !loading && (
                     <div className="flex flex-col items-center justify-center h-40 opacity-30 grayscale">
-                        <i className="fas fa-comment-slash text-4xl mb-2"></i>
+                        <i aria-hidden="true" className="fas fa-comment-slash text-4xl mb-2"></i>
                         <p className="text-sm font-medium">No activity yet</p>
                     </div>
                 )}
@@ -329,8 +329,8 @@ export default function CommentsSection({ type, id, projectId }) {
                         <span className="text-xs text-amber-500">
                             Replying to <span className="font-bold">@{replyTo.user?.name}</span>
                         </span>
-                        <button onClick={() => setReplyTo(null)} className="text-amber-500 hover:text-amber-400">
-                            <i className="fas fa-times scale-75"></i>
+                        <button onClick={() => setReplyTo(null)} aria-label="Cancel reply" className="text-amber-500 hover:text-amber-400">
+                            <i aria-hidden="true" className="fas fa-times scale-75"></i>
                         </button>
                     </div>
                 )}
@@ -369,14 +369,15 @@ export default function CommentsSection({ type, id, projectId }) {
                     <button 
                         type="submit" 
                         disabled={loading || !newComment.trim()}
+                        aria-label="Post comment"
                         className="absolute right-2 bottom-2 text-gray-400 hover:text-white bg-[#8B0000] hover:bg-[#DC143C] w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-30 disabled:hover:bg-[#8B0000] transition-all z-10"
                     >
-                        <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-paper-plane'} scale-90`}></i>
+                        <i aria-hidden="true" className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-paper-plane'} scale-90`}></i>
                     </button>
                 </form>
 
                 {projectId && projectUsers.length > 0 && (
-                    <p className="text-[10px] text-gray-600 mt-2 text-center">
+                    <p className="text-[10px] text-gray-400 mt-2 text-center">
                         Type <span className="text-[#DC143C] font-mono">@</span> to mention {projectUsers.length} team member{projectUsers.length !== 1 ? 's' : ''}
                     </p>
                 )}

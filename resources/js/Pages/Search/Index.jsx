@@ -29,8 +29,9 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
                 <form onSubmit={handleSubmit} className="mb-6">
                     <div className="flex gap-3 items-end">
                         <div className="flex-1">
-                            <InputLabel value="Search query" />
+                            <InputLabel htmlFor="search-search-query" value="Search query" />
                             <TextInput
+                                id="search-search-query"
                                 value={q}
                                 onChange={(e) => setQ(e.target.value)}
                                 placeholder="Type to search..."
@@ -44,7 +45,7 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
 
                 {query && (
                     <div className="flex items-center gap-2 mb-6 flex-wrap">
-                        <span className="text-xs text-gray-500 uppercase tracking-widest mr-2">Filter</span>
+                        <span className="text-xs text-gray-400 uppercase tracking-widest mr-2">Filter</span>
                         <button
                             onClick={() => handleTypeFilter(null)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${!type ? 'bg-[#8B0000] text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
@@ -96,7 +97,7 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
                                     {r.thumb_url ? (
                                         <img src={r.thumb_url} alt={r.title} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="text-gray-600 text-3xl">[{r.type}]</div>
+                                        <div className="text-gray-400 text-3xl">[{r.type}]</div>
                                     )}
                                     <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold bg-black/60 text-white border border-white/10">
                                         {TYPE_LABELS[r.type] || r.type}
@@ -104,8 +105,8 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
                                </div>
                                 <div className="p-4">
                                     <h3 className="text-white font-semibold truncate mb-1">{r.title}</h3>
-                                    {r.subtitle && <p className="text-gray-500 text-sm truncate mb-2">{r.subtitle}</p>}
-                                    <div className="flex items-center justify-between text-xs text-gray-600">
+                                    {r.subtitle && <p className="text-gray-400 text-sm truncate mb-2">{r.subtitle}</p>}
+                                    <div className="flex items-center justify-between text-xs text-gray-400">
                                         <span>{r.date}</span>
                                         {r.amount != null && <span className="text-emerald-400 font-mono">KES {Number(r.amount).toLocaleString()}</span>}
                                    </div>

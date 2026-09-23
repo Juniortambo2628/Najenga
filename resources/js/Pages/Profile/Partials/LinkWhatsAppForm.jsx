@@ -64,7 +64,7 @@ export default function LinkWhatsAppForm({ whatsapp = {} }) {
         <div>
             <header className="mb-6">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <i className="fab fa-whatsapp text-green-400"></i>
+                    <i aria-hidden="true" className="fab fa-whatsapp text-green-400"></i>
                     WhatsApp Number
                 </h2>
                 <p className="text-sm text-gray-400 mt-1">
@@ -99,11 +99,13 @@ export default function LinkWhatsAppForm({ whatsapp = {} }) {
                     <form onSubmit={sendCode} className="flex flex-col sm:flex-row gap-2">
                         <input
                             type="tel"
+                            autoComplete="tel"
+                            aria-label="WhatsApp phone number"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder="+2547XXXXXXXX"
                             required
-                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-white/30"
+                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-white/30"
                         />
                         <button
                             type="submit"
@@ -118,13 +120,15 @@ export default function LinkWhatsAppForm({ whatsapp = {} }) {
                         <form onSubmit={verify} className="flex flex-col sm:flex-row gap-2">
                             <input
                                 inputMode="numeric"
+                                autoComplete="one-time-code"
+                                aria-label="6-digit verification code"
                                 pattern="\d{6}"
                                 maxLength={6}
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                                 placeholder="6-digit code"
                                 required
-                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 tracking-widest text-center font-mono focus:outline-none focus:border-white/30"
+                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-400 tracking-widest text-center font-mono focus:outline-none focus:border-white/30"
                             />
                             <button
                                 type="submit"

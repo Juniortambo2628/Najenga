@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
 function DetailRow({ label, value, mono = false }) {
     return (
         <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">{label}</span>
+            <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">{label}</span>
             <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
         </div>
     );
@@ -32,7 +32,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
             <div className="space-y-6">
                 <div className="flex justify-end">
                     <PrimaryButton onClick={onStartEdit} className="text-xs">
-                        <i className="fas fa-edit mr-1"></i>Edit
+                        <i aria-hidden="true" className="fas fa-edit mr-1"></i>Edit
                     </PrimaryButton>
                 </div>
                 <div className="grid grid-cols-2 gap-5">
@@ -55,7 +55,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                 </div>
                 {expense?.description && (
                     <div>
-                        <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">Description</span>
+                        <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">Description</span>
                         <p className="mt-1 text-sm text-gray-300 whitespace-pre-wrap">{expense.description}</p>
                     </div>
                 )}
@@ -138,7 +138,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
             </div>
             <div>
                 <InputLabel htmlFor="ed-description" value="Description" />
-                <textarea id="ed-description" value={formData.description} onChange={handleChange('description')} rows={3} className="mt-1 block w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50 resize-none" />
+                <textarea id="ed-description" value={formData.description} onChange={handleChange('description')} rows={3} className="mt-1 block w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50 resize-none" />
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                 <SecondaryButton type="button" onClick={onCancel}>Cancel</SecondaryButton>
@@ -207,13 +207,13 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
                         )}
                     </div>
                     <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500">Current receipt attached to this expense</span>
+                        <span className="text-xs text-gray-400">Current receipt attached to this expense</span>
                         <div className="flex gap-2">
                             <SecondaryButton onClick={handleRemove} className="text-xs">
-                                <i className="fas fa-trash mr-1"></i>Remove
+                                <i aria-hidden="true" className="fas fa-trash mr-1"></i>Remove
                             </SecondaryButton>
                             <PrimaryButton onClick={() => document.getElementById('receipt-replace-input')?.click()} className="text-xs" disabled={uploading}>
-                                <i className="fas fa-exchange-alt mr-1"></i>Replace
+                                <i aria-hidden="true" className="fas fa-exchange-alt mr-1"></i>Replace
                             </PrimaryButton>
                             <input id="receipt-replace-input" type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { if (e.target.files?.[0]) onDrop([e.target.files[0]]); e.target.value = ''; }} />
                         </div>
@@ -227,12 +227,12 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
                     <input {...getInputProps()} />
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center">
-                            <i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'} text-2xl text-white/40`}></i>
+                            <i aria-hidden="true" className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'} text-2xl text-white/40`}></i>
                         </div>
                         <p className="text-white font-medium">
                             {uploading ? 'Uploading...' : isDragActive ? 'Drop receipt here...' : 'Drag & drop a receipt, or click to select'}
                         </p>
-                        <p className="text-gray-500 text-xs">JPG, PNG, WebP, or PDF — max 10MB</p>
+                        <p className="text-gray-400 text-xs">JPG, PNG, WebP, or PDF — max 10MB</p>
                     </div>
                 </div>
             )}
@@ -263,8 +263,8 @@ function ActivityTab({ expense }) {
 
     if (logs.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <i className="fas fa-history text-3xl mb-3 text-gray-600"></i>
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                <i aria-hidden="true" className="fas fa-history text-3xl mb-3 text-gray-400"></i>
                 <p className="text-sm">No activity recorded for this expense.</p>
             </div>
         );
@@ -275,11 +275,11 @@ function ActivityTab({ expense }) {
             {logs.map((log, i) => (
                 <div key={log.id || i} className="flex gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5">
                     <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <i className="fas fa-pen text-[10px] text-gray-400"></i>
+                        <i aria-hidden="true" className="fas fa-pen text-[10px] text-gray-400"></i>
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm text-gray-300">{log.description || log.event || 'Activity'}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                             {log.created_at ? new Date(log.created_at).toLocaleString() : ''}
                             {log.user?.name ? ` — ${log.user.name}` : ''}
                         </p>

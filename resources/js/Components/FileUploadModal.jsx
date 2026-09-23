@@ -195,35 +195,36 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                         className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/5 transition"
                         onClick={() => setMinimized(false)}
                     >
-                        <div className="flex items-center gap-3">
+                        <button type="button" className="flex items-center gap-3 text-left" aria-label="Show upload details">
                             {uploading ? (
                                 <div className="w-8 h-8 rounded-full bg-[#8B0000]/20 flex items-center justify-center">
-                                    <i className="fas fa-cloud-upload-alt text-[#DC143C] text-sm animate-pulse"></i>
+                                    <i aria-hidden="true" className="fas fa-cloud-upload-alt text-[#DC143C] text-sm animate-pulse"></i>
                                 </div>
                             ) : uploadStatus === 'success' ? (
                                 <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                                    <i className="fas fa-check text-green-400 text-sm"></i>
+                                    <i aria-hidden="true" className="fas fa-check text-green-400 text-sm"></i>
                                 </div>
                             ) : (
                                 <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
-                                    <i className="fas fa-exclamation text-red-400 text-sm"></i>
+                                    <i aria-hidden="true" className="fas fa-exclamation text-red-400 text-sm"></i>
                                 </div>
                             )}
-                            <div>
-                                <p className="text-white text-sm font-medium">
+                            <span>
+                                <span className="block text-white text-sm font-medium">
                                     {uploading ? 'Uploading...' : uploadStatus === 'success' ? 'Upload Complete' : 'Upload Failed'}
-                                </p>
-                                <p className="text-gray-500 text-xs">
+                                </span>
+                                <span className="block text-gray-400 text-xs">
                                     {uploading ? `${progress}%` : `${uploadedCount}/${totalFileCount} files`}
-                                </p>
-                            </div>
-                        </div>
+                                </span>
+                            </span>
+                        </button>
                         {!uploading && (
                             <button
                                 onClick={(e) => { e.stopPropagation(); resetAndClose(); }}
-                                className="text-gray-500 hover:text-white transition p-1"
+                                aria-label="Close"
+                                className="text-gray-400 hover:text-white transition p-1"
                             >
-                                <i className="fas fa-times text-sm"></i>
+                                <i aria-hidden="true" className="fas fa-times text-sm"></i>
                             </button>
                         )}
                     </div>
@@ -244,7 +245,7 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                     {uploadStatus === 'success' && (
                         <div className="px-4 pb-3">
                             <p className="text-green-400 text-xs">
-                                <i className="fas fa-check-circle mr-1"></i>
+                                <i aria-hidden="true" className="fas fa-check-circle mr-1"></i>
                                 {uploadedCount} file{uploadedCount !== 1 ? 's' : ''} uploaded successfully
                             </p>
                         </div>
@@ -252,7 +253,7 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                     {uploadStatus === 'error' && (
                         <div className="px-4 pb-3">
                             <p className="text-red-400 text-xs">
-                                <i className="fas fa-exclamation-circle mr-1"></i>
+                                <i aria-hidden="true" className="fas fa-exclamation-circle mr-1"></i>
                                 {failedCount} file{failedCount !== 1 ? 's' : ''} failed
                             </p>
                             <button
@@ -288,9 +289,9 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-white/50 mb-2">
                             {compressing ? (
-                                <i className="fas fa-compress-arrows-alt text-3xl animate-pulse text-yellow-400"></i>
+                                <i aria-hidden="true" className="fas fa-compress-arrows-alt text-3xl animate-pulse text-yellow-400"></i>
                             ) : (
-                                <i className="fas fa-cloud-upload-alt text-3xl"></i>
+                                <i aria-hidden="true" className="fas fa-cloud-upload-alt text-3xl"></i>
                             )}
                         </div>
                         <p className="text-white font-medium text-lg">
@@ -298,7 +299,7 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                              isDragActive ? "Drop files here..." :
                              "Drag & drop files here, or click to select"}
                         </p>
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-400 text-sm">
                             Up to 100 files at once. Images over 500KB are auto-compressed.
                         </p>
                     </div>
@@ -306,7 +307,7 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
 
                 {compressionInfo && (
                     <div className="mt-3 p-2 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-xs text-center">
-                        <i className="fas fa-check-circle mr-1"></i>{compressionInfo}
+                        <i aria-hidden="true" className="fas fa-check-circle mr-1"></i>{compressionInfo}
                     </div>
                 )}
 
@@ -328,14 +329,15 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                                         {file.type?.startsWith('image/') ? (
                                             <img src={file.preview} className="w-full h-full object-cover" alt="preview" />
                                         ) : (
-                                            <i className="fas fa-file-alt text-3xl text-gray-400"></i>
+                                            <i aria-hidden="true" className="fas fa-file-alt text-3xl text-gray-400"></i>
                                         )}
                                     </div>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); removeFile(file); }}
-                                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
+                                        aria-label={`Remove ${file.originalName || file.name}`}
+                                        className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition shadow-lg"
                                     >
-                                        <i className="fas fa-times"></i>
+                                        <i aria-hidden="true" className="fas fa-times"></i>
                                     </button>
                                     <div className="absolute bottom-0 left-0 right-0 bg-black/80 px-1.5 py-0.5">
                                         <p className="text-[9px] text-white truncate">{file.originalName || file.name}</p>
@@ -348,7 +350,7 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
 
                 {uploadStatus === 'error' && !uploading && (
                     <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-center text-sm font-medium">
-                        <i className="fas fa-exclamation-circle mr-2"></i> Some files failed. Please try again.
+                        <i aria-hidden="true" className="fas fa-exclamation-circle mr-2"></i> Some files failed. Please try again.
                     </div>
                 )}
             </div>

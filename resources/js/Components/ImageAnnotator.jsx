@@ -43,8 +43,8 @@ function AnnotationPopup() {
         <div className="absolute top-4 right-4 bg-white/95 backdrop-blur shadow-2xl rounded-xl p-4 w-72 border border-gray-100/20 z-50 animate-in fade-in slide-in-from-top-4 duration-200">
             <div className="flex justify-between items-center mb-3">
                 <h3 className="font-bold text-sm text-gray-900">Annotation Details</h3>
-                <button onClick={() => anno.cancelSelected ? anno.cancelSelected() : anno.setSelected(undefined)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i className="fas fa-times"></i>
+                <button onClick={() => anno.cancelSelected ? anno.cancelSelected() : anno.setSelected(undefined)} aria-label="Close" className="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i aria-hidden="true" className="fas fa-times"></i>
                 </button>
             </div>
             
@@ -52,6 +52,7 @@ function AnnotationPopup() {
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[#8B0000] focus:border-transparent outline-none resize-none mb-4 transition-all placeholder:text-gray-400"
                 rows={3}
                 placeholder="Add a label or comment..."
+                aria-label="Annotation label or comment"
                 value={body}
                 onChange={e => setBody(e.target.value)}
                 autoFocus
@@ -62,7 +63,7 @@ function AnnotationPopup() {
                     onClick={() => anno.removeAnnotation(selected[0])}
                     className="text-xs font-semibold text-red-500 hover:text-red-700 flex items-center gap-1 px-2 py-1.5 rounded hover:bg-red-50 transition-colors"
                 >
-                    <i className="fas fa-trash-alt"></i> Delete
+                    <i aria-hidden="true" className="fas fa-trash-alt"></i> Delete
                 </button>
                 <button 
                     onClick={onSave}
@@ -93,7 +94,7 @@ function AnnotationToolbar() {
                 className={`p-2 rounded transition-colors ${tool === 'rectangle' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
                 title="Rectangle Tool"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 </svg>
             </button>
@@ -102,7 +103,7 @@ function AnnotationToolbar() {
                 className={`p-2 rounded transition-colors ${tool === 'polygon' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
                 title="Polygon Tool"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2l-8.66 5v10l8.66 5 8.66-5v-10z"></path>
                 </svg>
             </button>
@@ -400,7 +401,7 @@ export default function ImageAnnotator({ resource, type }) {
                 className={`absolute inset-0 flex items-center justify-center text-white z-40 bg-black/60 pointer-events-none transition-opacity duration-300 ${imageLoaded ? 'opacity-0' : 'opacity-100'}`}
             >
                 <div className="flex flex-col items-center gap-4">
-                    <i className="fas fa-spinner fa-spin text-3xl"></i>
+                    <i aria-hidden="true" className="fas fa-spinner fa-spin text-3xl"></i>
                     <span className="text-sm font-medium">Initializing Annotator...</span>
                 </div>
             </div>

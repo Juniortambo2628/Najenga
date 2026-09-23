@@ -25,7 +25,7 @@ export default function ContextToolbar({
                     {projects.length > 0 && (
                         <div className="flex items-center gap-2 min-w-0">
                             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-                                <i className="fas fa-project-diagram text-[#DC143C] text-xs"></i>
+                                <i aria-hidden="true" className="fas fa-project-diagram text-[#DC143C] text-xs"></i>
                                 {currentProject ? (
                                     <span className="text-sm font-semibold text-white truncate max-w-[160px]">
                                         {currentProject.name}
@@ -38,6 +38,7 @@ export default function ContextToolbar({
                                 <select
                                     value={currentProjectId || ''}
                                     onChange={(e) => onProjectChange(e.target.value || null)}
+                                    aria-label="Switch project"
                                     className="px-2 py-1.5 rounded-lg text-xs bg-white/5 border border-white/10 text-gray-300 focus:outline-none focus:border-[#8B0000] cursor-pointer"
                                 >
                                     <option value="">All Projects</option>
@@ -54,7 +55,7 @@ export default function ContextToolbar({
                         <div className="min-w-0">
                             <h2 className="text-sm font-bold text-white truncate">{pageTitle}</h2>
                             {pageSubtitle && (
-                                <p className="text-xs text-gray-500 truncate">{pageSubtitle}</p>
+                                <p className="text-xs text-gray-400 truncate">{pageSubtitle}</p>
                             )}
                         </div>
                     )}
