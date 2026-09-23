@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\Mime\MimeTypes;
 
 class ProcessWhatsAppMedia implements ShouldQueue
 {
@@ -50,8 +51,13 @@ class ProcessWhatsAppMedia implements ShouldQueue
         $ocrText = '';
         $localPath = null;
 
-        if (in_array($mediaType, ['image', 'document'], true) && ! empty($this->payload['media_id'])) {
-            [$localPath, $ocrText] = $this->downloadAndOcr($this->payload['media_id'], $mediaType, $ocr);
+        if (in_array($mediaType, ['image', 'video', 'document'], true) && ! empty($this->payload['media_id'])) {
+            $localPath = $this->downloadMedia($this->payload['media_id'], $mediaType);
+
+            // Videos are filed as-is; only stills and documents carry text worth reading.
+            if ($localPath && $mediaType !== 'video') {
+                $ocrText = $this->ocr($localPath, $ocr);
+            }
         }
 
         $decision = $classifier->classify([
@@ -76,7 +82,8 @@ class ProcessWhatsAppMedia implements ShouldQueue
     private function defaultProjectId(User $user): ?int
     {
         // Any active project the user owns; otherwise null.
-        return $user->projects()->where('status', 'active')->value('id')
+        // Qualified: the pivot join makes a bare `id` ambiguous.
+        return $user->projects()->where('projects.status', 'active')->value('projects.id')
             ?? \App\Models\Project::where('client_id', $user->id)->where('status', 'active')->value('id');
     }
 
@@ -157,44 +164,69 @@ class ProcessWhatsAppMedia implements ShouldQueue
         }
     }
 
-    private function downloadAndOcr(string $mediaId, string $mediaType, OcrService $ocr): array
+    /**
+     * Fetch a media object from the Graph API and store it on the public disk.
+     * Returns the disk-relative path, or null when the download fails.
+     */
+    private function downloadMedia(string $mediaId, string $mediaType): ?string
     {
         $accessToken = config('services.meta.whatsapp_access_token');
+
+        // Step 1: resolve the media id to a short-lived download URL.
         $meta = Http::withToken($accessToken)->get("https://graph.facebook.com/v18.0/{$mediaId}");
-        if ($meta->failed()) return [null, ''];
+        $downloadUrl = $meta->successful() ? $meta->json('url') : null;
+        if (! $downloadUrl) {
+            Log::warning('WhatsApp media lookup failed', ['media_id' => $mediaId, 'status' => $meta->status()]);
+            return null;
+        }
 
-        $downloadUrl = $meta->json('url');
-        if (! $downloadUrl) return [null, ''];
-
+        // Step 2: the URL needs the same bearer token to download.
         $binary = Http::withToken($accessToken)->get($downloadUrl);
-        if ($binary->failed()) return [null, ''];
+        if ($binary->failed() || $binary->body() === '') {
+            Log::warning('WhatsApp media download failed', ['media_id' => $mediaId, 'status' => $binary->status()]);
+            return null;
+        }
 
-        $ext = $this->guessExtension($this->payload['mime'] ?? null, $mediaType);
+        $mime = $this->payload['mime'] ?? $meta->json('mime_type');
+        $ext = $this->guessExtension($mime, $mediaType);
         $name = 'whatsapp/' . now()->format('Y/m/d') . '/' . Str::random(24) . '.' . $ext;
         Storage::disk('public')->put($name, $binary->body());
-        $fullPath = Storage::disk('public')->path($name);
 
-        $ocrText = '';
+        return $name;
+    }
+
+    private function ocr(string $storagePath, OcrService $ocr): string
+    {
         try {
-            $result = $ocr->extractText($fullPath);
+            $result = $ocr->extractText(Storage::disk('public')->path($storagePath));
             if ($result['success'] ?? false) {
-                $ocrText = (string) ($result['text'] ?? '');
+                return (string) ($result['text'] ?? '');
             }
         } catch (\Throwable $e) {
             Log::warning('OCR failed on WhatsApp media: ' . $e->getMessage());
         }
 
-        return [$name, $ocrText];
+        return '';
     }
 
     private function guessExtension(?string $mime, string $mediaType): string
     {
-        return match ($mime) {
+        // Meta can append parameters, e.g. "audio/ogg; codecs=opus".
+        $mime = $mime ? strtolower(trim(explode(';', $mime)[0])) : null;
+
+        $ext = match ($mime) {
             'image/jpeg' => 'jpg',
             'image/png' => 'png',
             'application/pdf' => 'pdf',
             'video/mp4' => 'mp4',
-            default => $mediaType === 'video' ? 'mp4' : ($mediaType === 'document' ? 'bin' : 'jpg'),
+            null => null,
+            default => MimeTypes::getDefault()->getExtensions($mime)[0] ?? null,
+        };
+
+        return $ext ?? match ($mediaType) {
+            'video' => 'mp4',
+            'document' => 'bin',
+            default => 'jpg',
         };
     }
 
@@ -209,6 +241,7 @@ class ProcessWhatsAppMedia implements ShouldQueue
                 'filename' => basename($storagePath),
                 'original_name' => basename($storagePath),
                 'file_path' => $storagePath,
+                'file_size' => Storage::disk('public')->size($storagePath),
                 'mime_type' => $this->payload['mime'] ?? ($mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
                 'photo_date' => now()->toDateString(),
             ]);
@@ -258,17 +291,26 @@ class ProcessWhatsAppMedia implements ShouldQueue
         $accessToken = config('services.meta.whatsapp_access_token');
         if (! $phoneNumberId || ! $accessToken) return;
 
-        WhatsAppLog::create([
-            'phone_number' => $to,
-            'message' => $text,
-            'direction' => 'outbound',
-            'status' => 'queued',
-            'timestamp' => now(),
-        ]);
+        // A failed notification must not throw: the job would retry and file
+        // the same expense again.
+        try {
+            $response = Http::withToken($accessToken)->post(
+                "https://graph.facebook.com/v18.0/{$phoneNumberId}/messages",
+                ['messaging_product' => 'whatsapp', 'to' => $to, 'type' => 'text', 'text' => ['body' => $text]]
+            );
 
-        Http::withToken($accessToken)->post(
-            "https://graph.facebook.com/v18.0/{$phoneNumberId}/messages",
-            ['messaging_product' => 'whatsapp', 'to' => $to, 'type' => 'text', 'text' => ['body' => $text]]
-        );
+            // Keep the wamid so status callbacks can update this row.
+            WhatsAppLog::create([
+                'phone_number' => $to,
+                'message' => $text,
+                'direction' => 'outbound',
+                'status' => $response->successful() ? 'sent' : 'failed',
+                'error_message' => $response->successful() ? null : Str::limit((string) ($response->json('error.message') ?? $response->body()), 1000),
+                'message_id' => $response->json('messages.0.id'),
+                'timestamp' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('WhatsApp outbound message failed: ' . $e->getMessage(), ['to' => $to]);
+        }
     }
 }

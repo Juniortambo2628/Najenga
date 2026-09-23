@@ -9,7 +9,9 @@ class WhatsAppLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'phone_number', 'message', 'direction', 'status', 'message_id', 'timestamp'];
+    protected $table = 'whatsapp_logs';
+
+    protected $fillable = ['user_id', 'phone_number', 'message', 'direction', 'status', 'error_message', 'message_id', 'timestamp'];
     public $timestamps = false;
 
     protected function casts(): array

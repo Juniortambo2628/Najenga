@@ -9,6 +9,8 @@ class WhatsAppContact extends Model
 {
     use HasFactory;
 
+    protected $table = 'whatsapp_contacts';
+
     protected $fillable = ['user_id', 'phone_number', 'name'];
 
     public function user()
