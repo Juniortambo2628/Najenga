@@ -107,7 +107,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                                                     <small className="text-gray-400">{expense.project_name}</small>
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="text-sm font-mono">{formatCurrency(expense.amount)}</span>
+                                                    <span className="text-sm font-mono text-white">{formatCurrency(expense.amount)}</span>
                                                 </div>
                                             </div>
                                         ))}
