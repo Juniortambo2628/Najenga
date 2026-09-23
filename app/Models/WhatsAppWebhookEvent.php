@@ -9,6 +9,8 @@ class WhatsAppWebhookEvent extends Model
 {
     use HasFactory;
 
+    protected $table = 'whatsapp_webhook_events';
+
     protected $fillable = ['payload', 'signature', 'processed', 'error_message'];
     public $timestamps = false;
 

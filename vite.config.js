@@ -34,8 +34,10 @@ export default defineConfig({
                     if (id.includes('react-chat-elements') || id.includes('react-mentions')) return 'chat';
                     if (id.includes('date-fns')) return 'datefns';
                     if (id.includes('browser-image-compression')) return 'imgcompress';
-                    if (id.includes('react-dom') || id.includes('scheduler') || /[\\/]react[\\/]/.test(id)) return 'react-core';
-                    if (id.includes('@inertiajs')) return 'inertia';
+                    // React, react-dom, scheduler, Inertia and the other shared libs stay in
+                    // one chunk. Splitting React into its own chunk created a circular import
+                    // (react-core <-> vendor <-> inertia), so vendor could evaluate before
+                    // React was initialised and crash on `React.memo` at load time.
                     return 'vendor';
                 },
             },
