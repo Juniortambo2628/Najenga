@@ -4,17 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Expense;
 use App\Models\WhatsAppContact;
 use App\Models\WhatsAppLog;
 use App\Models\WhatsAppWebhookEvent;
 use App\Jobs\ProcessWhatsAppMedia;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WhatsAppController extends Controller
 {
+    /** Order of Meta's delivery states; a status only ever moves forward. */
+    private const STATUS_RANK = ['sent' => 1, 'delivered' => 2, 'read' => 3, 'failed' => 4];
 
     /**
      * Handle GET request for Meta webhook verification.
@@ -46,65 +48,62 @@ class WhatsAppController extends Controller
     }
 
     /**
-     * Handle incoming WhatsApp messages from Meta Cloud API.
+     * Handle incoming WhatsApp messages and status callbacks from Meta Cloud API.
      */
     public function handleWebhook(Request $request)
     {
-        // Log the raw webhook event
-        WhatsAppWebhookEvent::create([
-            'payload' => $request->all(),
+        // Authenticate before touching the database so unsigned traffic can't
+        // fill the events table.
+        if (! $this->verifySignature($request)) {
+            Log::warning('WhatsApp webhook signature verification failed');
+            return response('Invalid signature', 401);
+        }
+
+        $payload = $request->all();
+
+        $event = WhatsAppWebhookEvent::create([
+            'payload' => $payload,
             'signature' => $request->header('x-hub-signature-256'),
         ]);
 
-        // Verify signature if app secret is configured
-        if (config('services.meta.whatsapp_app_secret')) {
-            if (!$this->verifySignature($request)) {
-                Log::warning('WhatsApp webhook signature verification failed');
-                return response('Invalid signature', 401);
-            }
-        }
-
-        // Meta sends a GET for verification and POST for messages
-        if ($request->method() !== 'POST') {
-            return response('OK', 200);
-        }
-
         try {
-            $payload = $request->all();
+            if (($payload['object'] ?? '') === 'whatsapp_business_account') {
+                // Meta may batch several entries and changes into one delivery.
+                foreach ($payload['entry'] ?? [] as $entry) {
+                    foreach ($entry['changes'] ?? [] as $change) {
+                        if (($change['field'] ?? 'messages') !== 'messages') {
+                            continue;
+                        }
 
-            // Validate this is a WhatsApp message event
-            if (($payload['object'] ?? '') !== 'whatsapp_business_account') {
-                return response('OK', 200);
+                        $value = $change['value'] ?? [];
+
+                        foreach ($value['statuses'] ?? [] as $status) {
+                            $this->processStatus($status);
+                        }
+
+                        foreach ($value['messages'] ?? [] as $message) {
+                            $this->processMessage($message);
+                        }
+                    }
+                }
             }
 
-            $entry = $payload['entry'][0] ?? null;
-            $changes = $entry['changes'][0] ?? null;
-            $value = $changes['value'] ?? null;
-
-            if (!$value) {
-                return response('OK', 200);
-            }
-
-            $messages = $value['messages'] ?? [];
-            $contacts = $value['contacts'] ?? [];
-
-            foreach ($messages as $message) {
-                $this->processMessage($message, $contacts, $value['metadata'] ?? []);
-            }
-
-            return response('OK', 200);
-        } catch (\Exception $e) {
+            $event->update(['processed' => true]);
+        } catch (\Throwable $e) {
             Log::error('WhatsApp webhook processing error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+                'event_id' => $event->id,
+                'trace' => $e->getTraceAsString(),
             ]);
-            return response('OK', 200); // Return 200 to prevent Meta retries for app errors
+            $event->update(['error_message' => Str::limit($e->getMessage(), 1000)]);
         }
+
+        return response('OK', 200); // Return 200 to prevent Meta retries for app errors
     }
 
     /**
      * Process a single incoming WhatsApp message.
      */
-    private function processMessage(array $message, array $contacts, array $metadata): void
+    private function processMessage(array $message): void
     {
         $from = $message['from'] ?? null;
         $messageId = $message['id'] ?? null;
@@ -122,19 +121,62 @@ class WhatsAppController extends Controller
             return;
         }
 
-        // Log the inbound message
-        WhatsAppLog::create([
-            'user_id' => $user->id,
-            'phone_number' => $from,
-            'message' => $message['text']['body'] ?? ($type === 'image' ? '[Image]' : '[' . ucfirst($type) . ']'),
-            'direction' => 'inbound',
-            'status' => 'received',
-            'message_id' => $messageId,
-            'timestamp' => isset($message['timestamp']) ? date('Y-m-d H:i:s', (int) $message['timestamp']) : now(),
-        ]);
+        // The unique index on message_id makes redelivered messages a no-op.
+        try {
+            WhatsAppLog::create([
+                'user_id' => $user->id,
+                'phone_number' => $from,
+                'message' => $message['text']['body'] ?? ($type === 'image' ? '[Image]' : '[' . ucfirst((string) $type) . ']'),
+                'direction' => 'inbound',
+                'status' => 'received',
+                'message_id' => $messageId,
+                'timestamp' => isset($message['timestamp']) ? date('Y-m-d H:i:s', (int) $message['timestamp']) : now(),
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            Log::info('Duplicate WhatsApp message delivery ignored', ['message_id' => $messageId]);
+            return;
+        }
 
         // Route every inbound message through the classifier job.
         ProcessWhatsAppMedia::dispatch($this->buildJobPayload($message, $type), $user->id);
+    }
+
+    /**
+     * Apply a delivery status callback (sent, delivered, read, failed) to the
+     * outbound message it refers to.
+     */
+    private function processStatus(array $status): void
+    {
+        $messageId = $status['id'] ?? null;
+        $state = $status['status'] ?? null;
+
+        if (!$messageId || !isset(self::STATUS_RANK[$state])) {
+            return;
+        }
+
+        $log = WhatsAppLog::where('message_id', $messageId)
+            ->where('direction', 'outbound')
+            ->first();
+
+        if (!$log) {
+            return;
+        }
+
+        if ($state === 'failed') {
+            $error = $status['errors'][0] ?? [];
+            $log->update([
+                'status' => 'failed',
+                'error_message' => Str::limit(trim(($error['code'] ?? '') . ' ' . ($error['title'] ?? $error['message'] ?? '')), 1000) ?: null,
+            ]);
+            Log::warning('WhatsApp outbound message failed', ['message_id' => $messageId, 'errors' => $status['errors'] ?? []]);
+            return;
+        }
+
+        // Callbacks can arrive out of order, so never move a message backwards
+        // (e.g. a late "delivered" after "read").
+        if (self::STATUS_RANK[$state] > (self::STATUS_RANK[$log->status] ?? 0)) {
+            $log->update(['status' => $state]);
+        }
     }
 
     private function buildJobPayload(array $message, ?string $type): array
@@ -202,62 +244,30 @@ class WhatsAppController extends Controller
     }
 
     /**
-     * Send a WhatsApp message via Meta Cloud API.
-     */
-    private function sendWhatsAppMessage(string $to, string $text): void
-    {
-        try {
-            $phoneNumberId = config('services.meta.whatsapp_phone_number_id');
-            $accessToken = config('services.meta.whatsapp_access_token');
-
-            if (!$phoneNumberId || !$accessToken) {
-                Log::warning('WhatsApp credentials not configured');
-                return;
-            }
-
-            // Normalize phone number
-            $to = preg_replace('/[^\d]/', '', $to);
-            if (substr($to, 0, 1) !== '+') {
-                $to = '+' . $to;
-            }
-
-            Http::withToken($accessToken)
-                ->post("https://graph.facebook.com/v18.0/{$phoneNumberId}/messages", [
-                    'messaging_product' => 'whatsapp',
-                    'to' => $to,
-                    'type' => 'text',
-                    'text' => ['body' => $text],
-                ]);
-
-            // Log outbound message
-            WhatsAppLog::create([
-                'phone_number' => $to,
-                'message' => $text,
-                'direction' => 'outbound',
-                'status' => 'sent',
-                'timestamp' => now(),
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to send WhatsApp message: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * Verify the x-hub-signature-256 header from Meta.
      */
     private function verifySignature(Request $request): bool
     {
+        $secret = (string) config('services.meta.whatsapp_app_secret');
+
+        if ($secret === '') {
+            // Without the app secret nothing proves the request came from Meta,
+            // so only local and test environments may run unsigned.
+            if (app()->environment('production')) {
+                Log::error('META_WHATSAPP_APP_SECRET is not set; rejecting WhatsApp webhook');
+                return false;
+            }
+
+            return true;
+        }
+
         $signature = $request->header('x-hub-signature-256');
 
-        if (!$signature) {
+        if (!is_string($signature) || $signature === '') {
             return false;
         }
 
-        $expectedHash = 'sha256=' . hash_hmac(
-            'sha256',
-            $request->getContent(),
-            config('services.meta.whatsapp_app_secret')
-        );
+        $expectedHash = 'sha256=' . hash_hmac('sha256', $request->getContent(), $secret);
 
         return hash_equals($expectedHash, $signature);
     }

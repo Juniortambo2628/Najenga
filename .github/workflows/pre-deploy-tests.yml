@@ -30,9 +30,10 @@ jobs:
 
       - name: PHP Lint (all source files)
         run: |
-          find app/ -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax errors"
-          find routes/ -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax errors"
-          find database/ -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax errors"
+          # grep -v exits 1 when every file is clean, so only fail when it prints something
+          if find app/ routes/ database/ -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax errors"; then
+            exit 1
+          fi
           echo "PHP lint passed"
 
   backend-tests:
@@ -71,15 +72,29 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist
 
+      # Inertia pages render app.blade.php, whose @vite() needs public/build/manifest.json
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Build frontend assets
+        run: npm ci && npm run build
+
       - name: Prepare environment
         run: |
           cp .env.example .env.testing
+          sed -i 's/APP_ENV=.*/APP_ENV=testing/' .env.testing
           sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env.testing
           sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env.testing
           sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env.testing
           sed -i 's/DB_DATABASE=.*/DB_DATABASE=najenga_test/' .env.testing
           sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env.testing
           sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=password/' .env.testing
+          sed -i 's/SESSION_DRIVER=.*/SESSION_DRIVER=array/' .env.testing
+          sed -i 's/CACHE_STORE=.*/CACHE_STORE=array/' .env.testing
+          sed -i 's/QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env.testing
           php artisan key:generate --env=testing
 
       - name: Run migrations
@@ -101,6 +116,9 @@ jobs:
           DB_DATABASE: najenga_test
           DB_USERNAME: root
           DB_PASSWORD: password
+          SESSION_DRIVER: array
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
 
   code-quality:
     runs-on: ubuntu-latest
