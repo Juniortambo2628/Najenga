@@ -4,11 +4,13 @@ window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.axios.defaults.withCredentials = true;
 
-// Read the freshest CSRF token per request from the XSRF-TOKEN cookie Laravel
-// keeps in sync. Falling back to the meta tag from the initial page load only
-// covers the first request — after Laravel rotates the token (e.g. after login
-// or a long-idle session), the stale meta value returns 419 Page Expired on
-// POSTs like logout.
+// Laravel keeps the current CSRF token in the XSRF-TOKEN cookie, encrypted.
+// It decrypts X-XSRF-TOKEN before comparing, but NOT X-CSRF-TOKEN — that
+// header must carry the plain token from the <meta> tag. Sending the
+// encrypted cookie value in X-CSRF-TOKEN is a guaranteed mismatch and
+// returns 419 on every POST. So: seed X-CSRF-TOKEN once from the meta tag,
+// and per-request set only X-XSRF-TOKEN from the freshest cookie so long-
+// idle sessions and post-login rotations still submit cleanly.
 function readXsrfCookie() {
     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : null;
@@ -23,7 +25,6 @@ window.axios.interceptors.request.use((config) => {
     const fresh = readXsrfCookie();
     if (fresh) {
         config.headers['X-XSRF-TOKEN'] = fresh;
-        config.headers['X-CSRF-TOKEN'] = fresh;
     }
     return config;
 });
