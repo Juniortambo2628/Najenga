@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\WhatsAppLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class WhatsAppSettingsController extends Controller
@@ -54,10 +56,42 @@ class WhatsAppSettingsController extends Controller
 
             if ($response->failed()) {
                 Log::warning('WhatsApp test send failed', ['status' => $response->status(), 'body' => $response->body()]);
-                return response()->json(['ok' => false, 'error' => $response->json('error.message') ?? 'Send failed', 'raw' => $response->json()], 502);
+                return response()->json([
+                    'ok' => false,
+                    'error' => $response->json('error.message') ?? 'Send failed',
+                    'raw' => $response->json(),
+                ], 502);
             }
 
-            return response()->json(['ok' => true, 'response' => $response->json()]);
+            // Log the outbound row so the delivery-status webhook can update
+            // it, and so it shows up on the WhatsApp activity page.
+            $wamid = $response->json('messages.0.id');
+            if ($wamid) {
+                WhatsAppLog::create([
+                    'phone_number' => $to,
+                    'message' => $data['message'],
+                    'direction' => 'outbound',
+                    'status' => 'sent',
+                    'message_id' => $wamid,
+                    'timestamp' => now(),
+                ]);
+            }
+
+            // Meta's API returning "ok" only means the message was accepted
+            // for delivery, not that WhatsApp actually delivered it. In test
+            // mode Meta silently drops messages to numbers not on the app's
+            // test recipient list. Be honest about that.
+            $testMode = (bool) config('services.meta.test_mode', true);
+            $note = $testMode
+                ? 'Accepted by Meta. In test mode, WhatsApp only delivers to numbers on your Meta app\'s test recipient list. Check the WhatsApp activity page for the actual delivery status.'
+                : 'Accepted by Meta. Watch the WhatsApp activity page for delivery status callbacks.';
+
+            return response()->json([
+                'ok' => true,
+                'note' => $note,
+                'wamid' => $wamid,
+                'response' => $response->json(),
+            ]);
         } catch (\Throwable $e) {
             Log::error('WhatsApp test send exception: ' . $e->getMessage());
             return response()->json(['ok' => false, 'error' => $e->getMessage()], 500);

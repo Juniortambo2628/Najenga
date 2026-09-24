@@ -18,7 +18,9 @@ export default function Settings({ config = {} }) {
         try {
             const { data } = await axios.post('/whatsapp/settings/test-send', { phone, message });
             setResult({ ok: true, data });
-            toast.success('Test message sent');
+            // Meta accepting the request is not the same as WhatsApp delivering
+            // the message — say "queued at Meta" so we don't lie in test mode.
+            toast.success('Queued at Meta — check the activity page for delivery status');
         } catch (err) {
             const payload = err.response?.data ?? { error: err.message };
             setResult({ ok: false, data: payload });
@@ -145,13 +147,24 @@ export default function Settings({ config = {} }) {
                         </form>
 
                         {result && (
-                            <pre
-                                tabIndex={0}
-                                role="region"
-                                aria-label={result.ok ? 'API response' : 'API error response'}
-                                className={`mt-4 text-xs p-3 rounded-lg overflow-auto max-h-56 border ${result.ok ? 'border-green-500/30 bg-green-500/5 text-green-200' : 'border-red-500/30 bg-red-500/5 text-red-200'}`}>
+                            <div className="mt-4 space-y-2">
+                                {result.ok && result.data?.note && (
+                                    <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-100">
+                                        <p className="font-semibold text-yellow-200 mb-1">Delivery is not guaranteed</p>
+                                        <p>{result.data.note}</p>
+                                        {result.data.wamid && (
+                                            <p className="mt-2 font-mono break-all">wamid: {result.data.wamid}</p>
+                                        )}
+                                    </div>
+                                )}
+                                <pre
+                                    tabIndex={0}
+                                    role="region"
+                                    aria-label={result.ok ? 'API response' : 'API error response'}
+                                    className={`text-xs p-3 rounded-lg overflow-auto max-h-56 border ${result.ok ? 'border-green-500/30 bg-green-500/5 text-green-200' : 'border-red-500/30 bg-red-500/5 text-red-200'}`}>
 {JSON.stringify(result.data, null, 2)}
-                            </pre>
+                                </pre>
+                            </div>
                         )}
                     </div>
                 </div>
