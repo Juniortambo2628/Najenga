@@ -198,6 +198,15 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                                             <p className="text-sm text-gray-200 mt-1 whitespace-pre-wrap break-words">
                                                 {m.preview}
                                             </p>
+                                            {m.filed && (
+                                                <Link
+                                                    href={m.filed.url}
+                                                    className="mt-1 inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
+                                                >
+                                                    <i aria-hidden="true" className={`fas ${m.filed.kind === 'photo' ? 'fa-image' : 'fa-receipt'} text-[10px]`}></i>
+                                                    → {m.filed.label}
+                                                </Link>
+                                            )}
                                             {m.error_message && (
                                                 <p className="text-xs text-red-300 mt-1">
                                                     <i aria-hidden="true" className="fas fa-exclamation-triangle mr-1"></i>

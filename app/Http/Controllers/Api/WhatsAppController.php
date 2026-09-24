@@ -181,7 +181,12 @@ class WhatsAppController extends Controller
 
     private function buildJobPayload(array $message, ?string $type): array
     {
-        $payload = ['media_type' => $type ?: 'text'];
+        $payload = [
+            'media_type' => $type ?: 'text',
+            // The job uses this to attach filed_type/filed_id to the same
+            // WhatsAppLog row we just wrote for this inbound message.
+            'wamid' => $message['id'] ?? null,
+        ];
 
         switch ($type) {
             case 'text':

@@ -41,7 +41,7 @@ class WhatsAppWebhookTest extends TestCase
             'message' => 'Hello',
         ]);
         Queue::assertPushed(ProcessWhatsAppMedia::class, fn ($job) => $job->userId === $this->user->id
-            && $job->payload === ['media_type' => 'text', 'text' => 'Hello']);
+            && $job->payload === ['media_type' => 'text', 'wamid' => 'wamid.A', 'text' => 'Hello']);
         $this->assertTrue((bool) WhatsAppWebhookEvent::first()->processed);
     }
 
@@ -178,6 +178,7 @@ class WhatsAppWebhookTest extends TestCase
         $this->assertDatabaseHas('whatsapp_logs', ['message_id' => 'wamid.IMG', 'message' => '[Image]']);
         Queue::assertPushed(ProcessWhatsAppMedia::class, fn ($job) => $job->payload === [
             'media_type' => 'image',
+            'wamid' => 'wamid.IMG',
             'media_id' => 'MEDIA123',
             'mime' => 'image/png',
             'caption' => 'site day 3',

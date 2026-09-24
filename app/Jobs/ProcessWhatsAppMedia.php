@@ -74,9 +74,27 @@ class ProcessWhatsAppMedia implements ShouldQueue
             'auto_file' => $decision['auto_file'],
         ]);
 
-        $summary = $this->route($decision, $user, $projectId, $localPath, $matcher, $text, $ocrText);
+        $result = $this->route($decision, $user, $projectId, $localPath, $matcher, $text, $ocrText);
+        $summary = $result['summary'];
+        if (! empty($result['filed']) && ! empty($this->payload['wamid'])) {
+            $this->linkFiledToLog($this->payload['wamid'], $result['filed']);
+        }
         $this->notifyAdmin($user, $decision, $summary);
         $this->replyToClient($user, $decision, $summary);
+    }
+
+    /**
+     * Attach a polymorphic pointer from the inbound log row to the record
+     * we just filed, so the activity feed can show "→ Expense #47" inline.
+     */
+    private function linkFiledToLog(string $wamid, object $filed): void
+    {
+        WhatsAppLog::where('message_id', $wamid)
+            ->where('direction', 'inbound')
+            ->update([
+                'filed_type' => $filed->getMorphClass(),
+                'filed_id' => $filed->getKey(),
+            ]);
     }
 
     private function defaultProjectId(User $user): ?int
@@ -87,7 +105,10 @@ class ProcessWhatsAppMedia implements ShouldQueue
             ?? \App\Models\Project::where('client_id', $user->id)->where('status', 'active')->value('id');
     }
 
-    private function route(array $decision, User $user, ?int $projectId, ?string $localPath, PaymentMatcher $matcher, string $text, string $ocrText): string
+    /**
+     * @return array{summary: string, filed: ?object}
+     */
+    private function route(array $decision, User $user, ?int $projectId, ?string $localPath, PaymentMatcher $matcher, string $text, string $ocrText): array
     {
         $class = $decision['class'];
         $extracted = $decision['extracted'] ?? [];
@@ -96,7 +117,10 @@ class ProcessWhatsAppMedia implements ShouldQueue
             case 'progress_video':
             case 'progress_photo':
                 $photo = $localPath ? $this->createPhoto($user, $projectId, $localPath, $class === 'progress_video' ? 'video' : 'image') : null;
-                return $photo ? "Filed to Photos gallery (#{$photo->id})" : 'Photo received (no file stored)';
+                return [
+                    'summary' => $photo ? "Filed to Photos gallery (#{$photo->id})" : 'Photo received (no file stored)',
+                    'filed' => $photo,
+                ];
 
             case 'payment_sms':
             case 'receipt_paper':
@@ -119,7 +143,10 @@ class ProcessWhatsAppMedia implements ShouldQueue
                 ]);
                 $expense->save();
                 $verb = $match ? 'Merged into' : 'Created';
-                return "{$verb} expense #{$expense->id} — KES " . number_format((float) $expense->amount, 2);
+                return [
+                    'summary' => "{$verb} expense #{$expense->id} — KES " . number_format((float) $expense->amount, 2),
+                    'filed' => $expense,
+                ];
 
             case 'invoice':
                 $expense = new Expense([
@@ -138,7 +165,10 @@ class ProcessWhatsAppMedia implements ShouldQueue
                     'source_channel' => 'whatsapp',
                 ]);
                 $expense->save();
-                return "Invoice queued as pending expense #{$expense->id}";
+                return [
+                    'summary' => "Invoice queued as pending expense #{$expense->id}",
+                    'filed' => $expense,
+                ];
 
             case 'cost_request':
                 $expense = new Expense([
@@ -156,11 +186,14 @@ class ProcessWhatsAppMedia implements ShouldQueue
                     'source_channel' => 'whatsapp',
                 ]);
                 $expense->save();
-                return "Cost request logged as pending expense #{$expense->id}";
+                return [
+                    'summary' => "Cost request logged as pending expense #{$expense->id}",
+                    'filed' => $expense,
+                ];
 
             case 'chit_chat':
             default:
-                return 'Logged (no action)';
+                return ['summary' => 'Logged (no action)', 'filed' => null];
         }
     }
 
@@ -243,6 +276,7 @@ class ProcessWhatsAppMedia implements ShouldQueue
                 'file_path' => $storagePath,
                 'file_size' => Storage::disk('public')->size($storagePath),
                 'mime_type' => $this->payload['mime'] ?? ($mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
+                'source_channel' => 'whatsapp',
                 'photo_date' => now()->toDateString(),
             ]);
         } catch (\Throwable $e) {
