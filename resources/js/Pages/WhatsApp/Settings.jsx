@@ -5,7 +5,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-export default function WhatsApp({ config = {} }) {
+export default function Settings({ config = {} }) {
     const [phone, setPhone] = useState('');
     const [message, setMessage] = useState('Hello from Najenga!');
     const [sending, setSending] = useState(false);
@@ -16,7 +16,7 @@ export default function WhatsApp({ config = {} }) {
         setSending(true);
         setResult(null);
         try {
-            const { data } = await axios.post('/whatsapp/test-send', { phone, message });
+            const { data } = await axios.post('/whatsapp/settings/test-send', { phone, message });
             setResult({ ok: true, data });
             toast.success('Test message sent');
         } catch (err) {
@@ -46,7 +46,8 @@ export default function WhatsApp({ config = {} }) {
                     breadcrumbs={[
                         { label: 'Home', href: '/home' },
                         { label: 'Dashboard', href: '/dashboard' },
-                        { label: 'WhatsApp' },
+                        { label: 'WhatsApp', href: '/whatsapp' },
+                        { label: 'Settings' },
                     ]}
                 />
 

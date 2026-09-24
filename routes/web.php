@@ -157,9 +157,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Other pages
     Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity.logs');
+    // The main /whatsapp page is a user-visible activity feed of what came
+    // in and out via WhatsApp; each user sees their own, admins see everyone.
+    Route::get('/whatsapp', [\App\Http\Controllers\Api\WhatsAppActivityController::class, 'index'])->name('whatsapp');
     Route::middleware('admin')->group(function () {
-        Route::get('/whatsapp', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'index'])->name('whatsapp');
-        Route::post('/whatsapp/test-send', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'testSend'])->name('whatsapp.test-send');
+        Route::get('/whatsapp/settings', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'index'])->name('whatsapp.settings');
+        Route::post('/whatsapp/settings/test-send', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'testSend'])->name('whatsapp.test-send');
     });
     Route::get('/messages', fn() => \Inertia\Inertia::render('Messages'))->name('messages');
     Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');

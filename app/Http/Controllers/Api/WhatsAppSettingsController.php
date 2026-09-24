@@ -14,7 +14,7 @@ class WhatsAppSettingsController extends Controller
     {
         $mask = fn (?string $v) => $v ? substr($v, 0, 4) . str_repeat('*', max(0, strlen($v) - 8)) . substr($v, -4) : null;
 
-        return Inertia::render('WhatsApp', [
+        return Inertia::render('WhatsApp/Settings', [
             'config' => [
                 'app_id' => config('services.meta.whatsapp_app_id'),
                 'app_secret_masked' => $mask(config('services.meta.whatsapp_app_secret')),
