@@ -11,9 +11,12 @@ return new class extends Migration
         if (Schema::hasTable('login_codes')) {
             return;
         }
+        // FK constraint dropped intentionally: production's users.id is INT
+        // UNSIGNED and foreignId('user_id')->constrained() (BIGINT UNSIGNED)
+        // is refused as incompatible. Cascade delete is at the app layer.
         Schema::create('login_codes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
             $table->string('code_hash');
             $table->timestamp('expires_at');
             $table->timestamp('used_at')->nullable();
