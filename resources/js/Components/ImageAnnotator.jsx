@@ -117,21 +117,29 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
     const isSyncing = useRef(false);
     const imgRef = useRef(null);
 
-    // Check if image is already loaded (cached) to trigger onLoad
+    // Check if image is already loaded (cached) to trigger onLoad. An image
+    // that 404s also flips `complete` to true but with natural{Width,Height}
+    // = 0, so require real dimensions before we call onLoad — otherwise the
+    // annotator initializes against a phantom image and every overlay draws
+    // at Infinity.
     useEffect(() => {
-        if (imgRef.current && imgRef.current.complete) {
+        const img = imgRef.current;
+        if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
             onLoad();
         }
     }, [onLoad]);
 
-    // Helper to get geometry in percent
+    // Helper to get geometry in percent. Guards against a not-yet-loaded or
+    // 404'd image (natural{Width,Height} = 0) which would otherwise divide
+    // by zero and hand Infinity to <rect>/<circle>, producing the noisy
+    // "Expected length, Infinity" SVG errors and invisible overlays.
     const getGeometry = (annotation) => {
         const img = imgRef.current;
         if (!img) return { x: 0, y: 0, width: 0, height: 0 };
-        
+
         const selector = annotation.target.selector;
         const value = selector.value || '';
-        
+
         if (value.includes('percent:')) {
             const match = value.match(/percent:([\d.]+),([\d.]+),([\d.]+),([\d.]+)/);
             if (match) return {
@@ -144,15 +152,18 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
              // Assume pixels (xywh=x,y,w,h or xywh=pixel:x,y,w,h)
              const match = value.match(/xywh=(?:pixel:)?([\d.]+),([\d.]+),([\d.]+),([\d.]+)/);
              if (match) {
+                 const nw = img.naturalWidth;
+                 const nh = img.naturalHeight;
+                 if (!nw || !nh) return { x: 0, y: 0, width: 0, height: 0 };
                  const x = parseFloat(match[1]);
                  const y = parseFloat(match[2]);
                  const w = parseFloat(match[3]);
                  const h = parseFloat(match[4]);
                  return {
-                     x: (x / img.naturalWidth) * 100,
-                     y: (y / img.naturalHeight) * 100,
-                     width: (w / img.naturalWidth) * 100,
-                     height: (h / img.naturalHeight) * 100
+                     x: (x / nw) * 100,
+                     y: (y / nh) * 100,
+                     width: (w / nw) * 100,
+                     height: (h / nh) * 100
                  };
              }
         }
@@ -293,7 +304,14 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
                 src={imageUrl}
                 alt={resource.title || 'Annotatable Image'}
                 className="w-full h-full object-contain"
-                onLoad={onLoad}
+                onLoad={(e) => {
+                    // A 404 also fires onLoad in some browsers via the
+                    // error-image placeholder path; ignore unless we have
+                    // real pixels to annotate over.
+                    if (e.currentTarget.naturalWidth > 0 && e.currentTarget.naturalHeight > 0) {
+                        onLoad();
+                    }
+                }}
             />
         </AnnotoriousImageAnnotator>
     );    
