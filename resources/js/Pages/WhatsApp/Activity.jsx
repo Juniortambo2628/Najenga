@@ -79,6 +79,17 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
         setFilter({ q });
     };
 
+    const onDelete = (m) => {
+        const suffix = m.filed
+            ? ` This will also delete the linked ${m.filed.kind}.`
+            : '';
+        if (!window.confirm(`Delete this ${m.direction} message?${suffix}`)) return;
+        router.delete(route('whatsapp.activity.destroy', m.id), {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    };
+
     const totals = useMemo(() => [
         { label: 'Inbound', value: counts?.inbound ?? 0, tone: 'text-blue-300' },
         { label: 'Outbound', value: counts?.outbound ?? 0, tone: 'text-emerald-300' },
@@ -182,7 +193,7 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                         ) : (
                             <ul className="divide-y divide-white/5">
                                 {items.map((m) => (
-                                    <li key={`${m.direction}-${m.id}`} className="py-3 flex gap-3">
+                                    <li key={`${m.direction}-${m.id}`} className="py-3 flex gap-3 group">
                                         <DirectionArrow direction={m.direction} />
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
@@ -219,6 +230,15 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                                                 </p>
                                             )}
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => onDelete(m)}
+                                            className="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-red-300 text-xs px-2"
+                                            aria-label={`Delete ${m.direction} message from ${m.phone_number}`}
+                                            title={m.filed ? `Deletes this row and its ${m.filed.kind}` : 'Delete this row'}
+                                        >
+                                            <i aria-hidden="true" className="fas fa-trash"></i>
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
