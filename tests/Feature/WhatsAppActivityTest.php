@@ -112,4 +112,44 @@ class WhatsAppActivityTest extends TestCase
         $this->assertCount(1, $filed['photos']);
         $this->assertSame('WhatsApp photo — today', $filed['photos'][0]['title']);
     }
+
+    public function test_photos_are_filtered_by_source_channel_not_title(): void
+    {
+        $me = User::factory()->create();
+        $project = Project::factory()->create(['client_id' => $me->id, 'manager_id' => $me->id]);
+        // Title looks like the old WhatsApp path but source_channel is different.
+        Photo::create([
+            'user_id' => $me->id, 'project_id' => $project->id,
+            'title' => 'WhatsApp lookalike', 'source_channel' => 'upload',
+            'filename' => 'x.jpg', 'original_name' => 'x.jpg', 'file_path' => 'x.jpg',
+            'file_size' => 100, 'mime_type' => 'image/jpeg', 'photo_date' => now()->toDateString(),
+        ]);
+
+        $filed = $this->props('/whatsapp', $me)['filed'];
+        $this->assertCount(0, $filed['photos']);
+    }
+
+    public function test_timeline_row_carries_its_filed_link(): void
+    {
+        $me = User::factory()->create();
+        $project = Project::factory()->create(['client_id' => $me->id, 'manager_id' => $me->id]);
+        $expense = Expense::create([
+            'user_id' => $me->id, 'project_id' => $project->id, 'title' => 'Filed',
+            'amount' => 1200, 'currency' => 'KES', 'expense_date' => now(),
+            'category' => null, 'payment_method' => 'mobile_money',
+            'source_channel' => 'whatsapp', 'status' => 'confirmed',
+        ]);
+        WhatsAppLog::create([
+            'user_id' => $me->id, 'phone_number' => '254700000004',
+            'message' => 'M-Pesa receipt', 'direction' => 'inbound', 'status' => 'received',
+            'filed_type' => Expense::class, 'filed_id' => $expense->id,
+            'timestamp' => now(),
+        ]);
+
+        $items = $this->props('/whatsapp', $me)['items'];
+        $this->assertCount(1, $items);
+        $this->assertNotNull($items[0]['filed']);
+        $this->assertSame('expense', $items[0]['filed']['kind']);
+        $this->assertSame($expense->id, $items[0]['filed']['id']);
+    }
 }

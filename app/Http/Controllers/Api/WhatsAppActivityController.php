@@ -34,6 +34,7 @@ class WhatsAppActivityController extends Controller
         $q = trim($request->string('q')->toString());
 
         $logs = WhatsAppLog::query()
+            ->with('filed')
             ->when(! $isAdmin, fn ($qq) => $qq->where('user_id', $user?->id))
             ->when(in_array($direction, ['inbound', 'outbound'], true),
                 fn ($qq) => $qq->where('direction', $direction))
@@ -72,6 +73,7 @@ class WhatsAppActivityController extends Controller
                 'message_id' => $l->message_id,
                 'error_message' => $l->error_message,
                 'timestamp' => $l->timestamp?->toIso8601String(),
+                'filed' => $this->serializeFiled($l),
             ];
         })->values();
 
@@ -95,11 +97,9 @@ class WhatsAppActivityController extends Controller
                 'url' => route('expenses.show', $e->id),
             ]);
 
-        // Photos filed via WhatsApp — the createPhoto path titles them
-        // "WhatsApp photo — dd Mon yyyy". No column, so we key on the prefix.
         $filedPhotos = Photo::query()
+            ->where('source_channel', 'whatsapp')
             ->when(! $isAdmin, fn ($qq) => $qq->where('user_id', $user?->id))
-            ->where('title', 'like', 'WhatsApp %')
             ->with('project:id,name')
             ->orderByDesc('id')
             ->limit(self::FILED_PER_LIST)
@@ -139,5 +139,34 @@ class WhatsAppActivityController extends Controller
             'counts' => $counts,
             'settingsUrl' => $isAdmin ? route('whatsapp.settings') : null,
         ]);
+    }
+
+    /**
+     * Turn the polymorphic filed relation into a small array the timeline can
+     * render as "→ Created Expense #47". Returns null when the log has no
+     * linked record (legacy inbound rows, or outbound replies).
+     */
+    private function serializeFiled(WhatsAppLog $log): ?array
+    {
+        $model = $log->filed;
+        if (! $model) {
+            return null;
+        }
+
+        return match (true) {
+            $model instanceof Expense => [
+                'kind' => 'expense',
+                'id' => $model->id,
+                'label' => 'Expense #'.$model->id.' — '.($model->currency ?? 'KES').' '.number_format((float) $model->amount, 2),
+                'url' => route('expenses.show', $model->id),
+            ],
+            $model instanceof Photo => [
+                'kind' => 'photo',
+                'id' => $model->id,
+                'label' => 'Photo #'.$model->id.($model->title ? ' — '.$model->title : ''),
+                'url' => route('photos.show', $model->id),
+            ],
+            default => null,
+        };
     }
 }
