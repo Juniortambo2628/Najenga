@@ -7,7 +7,9 @@ use App\Models\Expense;
 use App\Models\Photo;
 use App\Models\User;
 use App\Models\WhatsAppLog;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -139,6 +141,26 @@ class WhatsAppActivityController extends Controller
             'counts' => $counts,
             'settingsUrl' => $isAdmin ? route('whatsapp.settings') : null,
         ]);
+    }
+
+    /**
+     * Delete an activity row. When the row has a linked filed record
+     * (Expense / Photo) the record is deleted too, so a mis-classified
+     * inbound message can be wiped in one action. The user must own the
+     * log or be an admin.
+     */
+    public function destroy(Request $request, WhatsAppLog $log): RedirectResponse
+    {
+        $user = $request->user();
+        $isAdmin = $user?->role === 'admin';
+        abort_unless($isAdmin || $log->user_id === $user?->id, 403);
+
+        DB::transaction(function () use ($log) {
+            $log->filed?->delete();
+            $log->delete();
+        });
+
+        return back()->with('status', 'Activity row deleted.');
     }
 
     /**

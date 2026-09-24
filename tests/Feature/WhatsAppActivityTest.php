@@ -129,6 +129,74 @@ class WhatsAppActivityTest extends TestCase
         $this->assertCount(0, $filed['photos']);
     }
 
+    public function test_owner_can_delete_a_log_and_its_filed_record(): void
+    {
+        $me = User::factory()->create();
+        $project = Project::factory()->create(['client_id' => $me->id, 'manager_id' => $me->id]);
+        $expense = Expense::create([
+            'user_id' => $me->id, 'project_id' => $project->id, 'title' => 'F',
+            'amount' => 1, 'currency' => 'KES', 'expense_date' => now(),
+            'payment_method' => 'mobile_money', 'source_channel' => 'whatsapp',
+            'status' => 'confirmed',
+        ]);
+        $log = WhatsAppLog::create([
+            'user_id' => $me->id, 'phone_number' => '2', 'message' => 'x',
+            'direction' => 'inbound', 'status' => 'received',
+            'filed_type' => Expense::class, 'filed_id' => $expense->id,
+            'timestamp' => now(),
+        ]);
+
+        $this->actingAs($me)
+            ->delete(route('whatsapp.activity.destroy', $log->id))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('whatsapp_logs', ['id' => $log->id]);
+        $this->assertDatabaseMissing('expenses', ['id' => $expense->id]);
+    }
+
+    public function test_non_owner_cannot_delete(): void
+    {
+        [$owner, $stranger] = User::factory()->count(2)->create();
+        $log = WhatsAppLog::create([
+            'user_id' => $owner->id, 'phone_number' => '3', 'message' => 'y',
+            'direction' => 'inbound', 'status' => 'received', 'timestamp' => now(),
+        ]);
+
+        $this->actingAs($stranger)
+            ->delete(route('whatsapp.activity.destroy', $log->id))
+            ->assertForbidden();
+        $this->assertDatabaseHas('whatsapp_logs', ['id' => $log->id]);
+    }
+
+    public function test_admin_can_delete_anyones_log(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $other = User::factory()->create();
+        $log = WhatsAppLog::create([
+            'user_id' => $other->id, 'phone_number' => '4', 'message' => 'z',
+            'direction' => 'inbound', 'status' => 'received', 'timestamp' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('whatsapp.activity.destroy', $log->id))
+            ->assertRedirect();
+        $this->assertDatabaseMissing('whatsapp_logs', ['id' => $log->id]);
+    }
+
+    public function test_deleting_a_log_without_filed_record_is_fine(): void
+    {
+        $me = User::factory()->create();
+        $log = WhatsAppLog::create([
+            'user_id' => $me->id, 'phone_number' => '5', 'message' => 'chit',
+            'direction' => 'inbound', 'status' => 'received', 'timestamp' => now(),
+        ]);
+
+        $this->actingAs($me)
+            ->delete(route('whatsapp.activity.destroy', $log->id))
+            ->assertRedirect();
+        $this->assertDatabaseMissing('whatsapp_logs', ['id' => $log->id]);
+    }
+
     public function test_timeline_row_carries_its_filed_link(): void
     {
         $me = User::factory()->create();
