@@ -161,6 +161,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // in and out via WhatsApp; each user sees their own, admins see everyone.
     Route::get('/whatsapp', [\App\Http\Controllers\Api\WhatsAppActivityController::class, 'index'])->name('whatsapp');
     Route::delete('/whatsapp/activity/{log}', [\App\Http\Controllers\Api\WhatsAppActivityController::class, 'destroy'])->name('whatsapp.activity.destroy');
+    Route::post('/whatsapp/activity/{log}/reclassify', [\App\Http\Controllers\Api\WhatsAppActivityController::class, 'reclassify'])->name('whatsapp.activity.reclassify');
     Route::middleware('admin')->group(function () {
         Route::get('/whatsapp/settings', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'index'])->name('whatsapp.settings');
         Route::post('/whatsapp/settings/test-send', [\App\Http\Controllers\Api\WhatsAppSettingsController::class, 'testSend'])->name('whatsapp.test-send');

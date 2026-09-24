@@ -197,6 +197,102 @@ class WhatsAppActivityTest extends TestCase
         $this->assertDatabaseMissing('whatsapp_logs', ['id' => $log->id]);
     }
 
+    public function test_reclassify_updates_expense_fields(): void
+    {
+        $me = User::factory()->create();
+        $project = Project::factory()->create(['client_id' => $me->id, 'manager_id' => $me->id]);
+        $expense = Expense::create([
+            'user_id' => $me->id, 'project_id' => $project->id, 'title' => 'x',
+            'amount' => 100, 'currency' => 'KES', 'expense_date' => now(),
+            'payment_method' => 'mobile_money', 'payment_source' => 'paper_receipt',
+            'source_channel' => 'whatsapp', 'status' => 'confirmed',
+        ]);
+        $log = WhatsAppLog::create([
+            'user_id' => $me->id, 'phone_number' => '6', 'message' => 'ricky',
+            'direction' => 'inbound', 'status' => 'received',
+            'filed_type' => Expense::class, 'filed_id' => $expense->id,
+            'timestamp' => now(),
+        ]);
+
+        $this->actingAs($me)
+            ->post(route('whatsapp.activity.reclassify', $log->id), ['class' => 'invoice'])
+            ->assertRedirect();
+
+        $fresh = $expense->fresh();
+        $this->assertSame('invoice', $fresh->payment_source);
+        $this->assertSame('draft', $fresh->status);
+        $this->assertSame('other', $fresh->payment_method);
+    }
+
+    public function test_reclassify_rejects_cross_type_moves(): void
+    {
+        $me = User::factory()->create();
+        $project = Project::factory()->create(['client_id' => $me->id, 'manager_id' => $me->id]);
+        $photo = Photo::create([
+            'user_id' => $me->id, 'project_id' => $project->id,
+            'title' => 'WhatsApp photo — today', 'source_channel' => 'whatsapp',
+            'filename' => 'p.jpg', 'original_name' => 'p.jpg', 'file_path' => 'p.jpg',
+            'file_size' => 1, 'mime_type' => 'image/jpeg', 'photo_date' => now()->toDateString(),
+        ]);
+        $log = WhatsAppLog::create([
+            'user_id' => $me->id, 'phone_number' => '7', 'message' => 'pic',
+            'direction' => 'inbound', 'status' => 'received',
+            'filed_type' => Photo::class, 'filed_id' => $photo->id,
+            'timestamp' => now(),
+        ]);
+
+        $this->actingAs($me)
+            ->from(route('whatsapp'))
+            ->post(route('whatsapp.activity.reclassify', $log->id), ['class' => 'invoice'])
+            ->assertSessionHasErrors('class');
+    }
+
+    public function test_reclassify_photo_updates_title_word(): void
+    {
+        $me = User::factory()->create();
+        $project = Project::factory()->create(['client_id' => $me->id, 'manager_id' => $me->id]);
+        $photo = Photo::create([
+            'user_id' => $me->id, 'project_id' => $project->id,
+            'title' => 'WhatsApp photo — 24 Sep 2026', 'source_channel' => 'whatsapp',
+            'filename' => 'p.jpg', 'original_name' => 'p.jpg', 'file_path' => 'p.jpg',
+            'file_size' => 1, 'mime_type' => 'image/jpeg', 'photo_date' => now()->toDateString(),
+        ]);
+        $log = WhatsAppLog::create([
+            'user_id' => $me->id, 'phone_number' => '8', 'message' => 'pic',
+            'direction' => 'inbound', 'status' => 'received',
+            'filed_type' => Photo::class, 'filed_id' => $photo->id,
+            'timestamp' => now(),
+        ]);
+
+        $this->actingAs($me)
+            ->post(route('whatsapp.activity.reclassify', $log->id), ['class' => 'progress_video'])
+            ->assertRedirect();
+
+        $this->assertSame('WhatsApp video — 24 Sep 2026', $photo->fresh()->title);
+    }
+
+    public function test_reclassify_rejects_a_stranger(): void
+    {
+        [$owner, $stranger] = User::factory()->count(2)->create();
+        $project = Project::factory()->create(['client_id' => $owner->id, 'manager_id' => $owner->id]);
+        $expense = Expense::create([
+            'user_id' => $owner->id, 'project_id' => $project->id, 'title' => 'x',
+            'amount' => 1, 'currency' => 'KES', 'expense_date' => now(),
+            'payment_method' => 'mobile_money', 'source_channel' => 'whatsapp',
+            'status' => 'confirmed',
+        ]);
+        $log = WhatsAppLog::create([
+            'user_id' => $owner->id, 'phone_number' => '9', 'message' => 'x',
+            'direction' => 'inbound', 'status' => 'received',
+            'filed_type' => Expense::class, 'filed_id' => $expense->id,
+            'timestamp' => now(),
+        ]);
+
+        $this->actingAs($stranger)
+            ->post(route('whatsapp.activity.reclassify', $log->id), ['class' => 'invoice'])
+            ->assertForbidden();
+    }
+
     public function test_timeline_row_carries_its_filed_link(): void
     {
         $me = User::factory()->create();
