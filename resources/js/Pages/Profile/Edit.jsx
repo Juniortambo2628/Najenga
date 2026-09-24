@@ -6,8 +6,9 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import LinkWhatsAppForm from './Partials/LinkWhatsAppForm';
 import TwoFactorAuthenticationForm from './Partials/TwoFactorAuthenticationForm';
+import PasskeysForm from './Partials/PasskeysForm';
 
-export default function Edit({ mustVerifyEmail, status, whatsapp, twoFactor }) {
+export default function Edit({ mustVerifyEmail, status, whatsapp, twoFactor, passkeys }) {
     return (
         <AuthenticatedLayout>
             <Head title="Settings" />
@@ -57,19 +58,8 @@ export default function Edit({ mustVerifyEmail, status, whatsapp, twoFactor }) {
                             <h2 className="text-lg font-bold text-white">Security Preferences</h2>
                             <p className="text-sm text-gray-400 mt-1">Configure additional security settings for your account.</p>
                         </header>
+                        <PasskeysForm passkeys={passkeys} />
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                                        <i aria-hidden="true" className="fas fa-fingerprint text-purple-400"></i>
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-medium text-sm">Passkeys</p>
-                                        <p className="text-gray-400 text-xs">Use biometrics or security keys to sign in</p>
-                                    </div>
-                                </div>
-                                <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Coming Soon</span>
-                            </div>
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
