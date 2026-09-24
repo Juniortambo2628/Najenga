@@ -91,7 +91,7 @@ class WhatsAppActivityTest extends TestCase
         ]);
         Photo::create([
             'user_id' => $me->id, 'project_id' => $project->id,
-            'title' => 'WhatsApp photo — today',
+            'title' => 'WhatsApp photo — today', 'source_channel' => 'whatsapp',
             'filename' => 'a.jpg', 'original_name' => 'a.jpg', 'file_path' => 'a.jpg',
             'file_size' => 100, 'mime_type' => 'image/jpeg', 'photo_date' => now()->toDateString(),
         ]);
