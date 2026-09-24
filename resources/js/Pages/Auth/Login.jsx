@@ -108,11 +108,15 @@ export default function Login({ status, canResetPassword }) {
                 </motion.button>
             </form>
 
-            <p className="text-center text-gray-400 text-sm mt-4">
-                <Link href={route('login.code')} className="hover:text-white underline">
-                    Sign in with an email code instead
+            <div className="flex items-center justify-center gap-3 text-center text-gray-400 text-sm mt-4">
+                <Link href={route('login.passkey')} className="hover:text-white underline">
+                    Use a passkey
                 </Link>
-            </p>
+                <span className="text-white/20">·</span>
+                <Link href={route('login.code')} className="hover:text-white underline">
+                    Email me a code
+                </Link>
+            </div>
 
             <p className="text-center text-gray-400 text-sm mt-6">
                 Don't have an account?{' '}

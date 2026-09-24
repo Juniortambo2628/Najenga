@@ -38,6 +38,16 @@ class ProfileController extends Controller
             ];
         }
 
+        $passkeys = \App\Models\Passkey::where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'last_used_at', 'created_at'])
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'last_used_at' => $p->last_used_at?->toIso8601String(),
+                'created_at' => $p->created_at?->toIso8601String(),
+            ]);
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
@@ -48,6 +58,7 @@ class ProfileController extends Controller
                     && (bool) config('services.meta.whatsapp_phone_number_id'),
             ],
             'twoFactor' => $twoFactor,
+            'passkeys' => $passkeys,
         ]);
     }
 
