@@ -1,4 +1,7 @@
+import { useState } from 'react';
+
 export default function PhotoCard({ photo, selected, onToggle, onContextMenu, onPreview }) {
+    const [broken, setBroken] = useState(false);
     return (
         <div
             className={`relative aspect-square rounded-xl overflow-hidden bg-gray-800 group cursor-pointer transition-all duration-200 ${
@@ -8,12 +11,24 @@ export default function PhotoCard({ photo, selected, onToggle, onContextMenu, on
             onContextMenu={onContextMenu}
             onDoubleClick={onPreview}
         >
-            <img
-                src={photo.thumb_url || `/storage/${photo.file_path}`}
-                alt={photo.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-            />
+            {broken ? (
+                <div
+                    className="w-full h-full flex flex-col items-center justify-center text-center gap-2 text-gray-500 bg-gray-900/60"
+                    role="img"
+                    aria-label={`Missing file for ${photo.title || 'photo'}`}
+                >
+                    <i aria-hidden="true" className="fas fa-image-slash text-3xl"></i>
+                    <p className="text-xs px-2 leading-tight">File missing on server</p>
+                </div>
+            ) : (
+                <img
+                    src={photo.thumb_url || `/storage/${photo.file_path}`}
+                    alt={photo.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                    onError={() => setBroken(true)}
+                />
+            )}
 
             {/* Selection indicator */}
             <button
