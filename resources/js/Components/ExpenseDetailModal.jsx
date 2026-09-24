@@ -321,18 +321,24 @@ export default function ExpenseDetailModal({ show, onClose, expense, projects = 
     }, [show, expense]);
 
     const handleSave = async () => {
+        if (!expense?.id) {
+            toast.error('Cannot update: expense is missing an id.');
+            return;
+        }
         setSaving(true);
         setErrors({});
         try {
-            await axios.patch(`/expenses/${expense.id}`, { ...formData, amount: Number(formData.amount) });
+            await axios.patch(route('expenses.update', expense.id), { ...formData, amount: Number(formData.amount) });
             toast.success('Expense updated');
             setEditing(false);
             if (onUpdate) onUpdate();
         } catch (err) {
             if (err.response?.status === 422) {
                 setErrors(err.response.data.errors || {});
+                toast.error('Please fix the highlighted fields.');
             } else {
-                toast.error('Failed to update expense');
+                const msg = err.response?.data?.message || 'Failed to update expense';
+                toast.error(msg);
             }
         }
         setSaving(false);

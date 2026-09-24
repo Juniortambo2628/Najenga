@@ -382,8 +382,10 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         projects={projects}
                         onSubmit={(formData) => {
                             if (isEditModalOpen) {
-                                editForm.setData(formData);
-                                editForm.patch(`/expenses/${selectedExpense.id}`, {
+                                if (!selectedExpense?.id) {
+                                    return;
+                                }
+                                editForm.transform(() => formData).patch(route('expenses.update', selectedExpense.id), {
                                     onSuccess: () => { setIsEditModalOpen(false); setSelectedExpense(null); editForm.reset(); }
                                 });
                             } else {
