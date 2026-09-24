@@ -5,7 +5,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-export default function Settings({ config = {} }) {
+export default function Settings({ config = {}, diagnostics = [] }) {
     const [phone, setPhone] = useState('');
     const [message, setMessage] = useState('Hello from Najenga!');
     const [sending, setSending] = useState(false);
@@ -167,6 +167,84 @@ export default function Settings({ config = {} }) {
                             </div>
                         )}
                     </div>
+                </div>
+
+                <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold text-white mb-1 flex items-center">
+                        <i aria-hidden="true" className="fas fa-satellite-dish text-purple-300 mr-2"></i>
+                        Recent webhook deliveries
+                    </h2>
+                    <p className="text-sm text-gray-400 mb-4">
+                        The last 10 raw callbacks Meta POSTed to <code className="font-mono">/api/whatsapp/webhook</code>.
+                        If this list is empty, nothing is reaching us — check the Meta app's webhook URL and that the WABA
+                        is subscribed to <code className="font-mono">messages</code>.
+                        {!config.app_secret_set && (
+                            <span className="block mt-1 text-yellow-300">
+                                <i aria-hidden="true" className="fas fa-triangle-exclamation mr-1"></i>
+                                <code className="font-mono">META_WHATSAPP_APP_SECRET</code> is not set — in production the webhook
+                                will reject every request as unsigned.
+                            </span>
+                        )}
+                    </p>
+
+                    {diagnostics.length === 0 ? (
+                        <p className="text-sm text-gray-500 italic">No webhook events recorded yet.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="text-left text-gray-400 border-b border-white/10">
+                                    <tr>
+                                        <th className="py-2 pr-3">#</th>
+                                        <th className="py-2 pr-3">Received</th>
+                                        <th className="py-2 pr-3">Processed</th>
+                                        <th className="py-2 pr-3">From</th>
+                                        <th className="py-2 pr-3">Status callbacks</th>
+                                        <th className="py-2 pr-3">Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-gray-200">
+                                    {diagnostics.map((e) => (
+                                        <tr key={e.id} className="border-b border-white/5 align-top">
+                                            <td className="py-2 pr-3 font-mono text-xs text-gray-400">{e.id}</td>
+                                            <td className="py-2 pr-3 text-xs text-gray-300">
+                                                {e.received_at ? new Date(e.received_at).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="py-2 pr-3">
+                                                {e.processed ? (
+                                                    <span className="text-green-400 text-xs">✓ ok</span>
+                                                ) : (
+                                                    <span className="text-yellow-300 text-xs">pending / failed</span>
+                                                )}
+                                            </td>
+                                            <td className="py-2 pr-3">
+                                                {(e.senders || []).length === 0 ? (
+                                                    <span className="text-gray-500 text-xs">no messages</span>
+                                                ) : (
+                                                    <ul className="space-y-1">
+                                                        {e.senders.map((s, i) => (
+                                                            <li key={i} className="text-xs">
+                                                                <span className="font-mono">+{s.from}</span>
+                                                                <span className="text-gray-500"> · {s.type}</span>
+                                                                {s.matched_user ? (
+                                                                    <span className="ml-2 text-green-400">→ {s.matched_user}</span>
+                                                                ) : (
+                                                                    <span className="ml-2 text-yellow-300">no matching user</span>
+                                                                )}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </td>
+                                            <td className="py-2 pr-3 text-xs text-gray-400">{e.statuses || 0}</td>
+                                            <td className="py-2 pr-3 text-xs text-red-300 max-w-xs truncate">
+                                                {e.error_message || ''}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
         </AuthenticatedLayout>

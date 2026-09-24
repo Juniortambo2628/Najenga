@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\WhatsAppLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -43,9 +44,23 @@ class WhatsAppLinkController extends Controller
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         Cache::put($this->codeKey($user->id), ['code' => $code, 'phone' => $normalized, 'attempts' => 0], self::CODE_TTL_SECONDS);
 
-        $sent = $this->sendWhatsAppMessage($normalized, "Your Najenga verification code is {$code}. It expires in 10 minutes.");
-        if (! $sent) {
+        $wamid = $this->sendWhatsAppMessage($normalized, "Your Najenga verification code is {$code}. It expires in 10 minutes.");
+        if (! $wamid) {
             return response()->json(['ok' => false, 'error' => 'Could not send WhatsApp message. Check WhatsApp settings.'], 502);
+        }
+
+        // Log the outbound so it shows on the /whatsapp activity page and the
+        // delivery-status webhook can update its status.
+        if (is_string($wamid)) {
+            WhatsAppLog::create([
+                'user_id' => $user->id,
+                'phone_number' => $normalized,
+                'message' => 'Verification code sent',
+                'direction' => 'outbound',
+                'status' => 'sent',
+                'message_id' => $wamid,
+                'timestamp' => now(),
+            ]);
         }
 
         return response()->json(['ok' => true, 'phone_masked' => $this->mask($normalized), 'expires_in' => self::CODE_TTL_SECONDS]);
@@ -114,7 +129,10 @@ class WhatsAppLinkController extends Controller
         return substr($digits, 0, 3) . str_repeat('*', max(0, strlen($digits) - 5)) . substr($digits, -2);
     }
 
-    private function sendWhatsAppMessage(string $to, string $text): bool
+    /**
+     * @return string|false wamid on success, false on failure.
+     */
+    private function sendWhatsAppMessage(string $to, string $text): string|false
     {
         $phoneNumberId = config('services.meta.whatsapp_phone_number_id');
         $accessToken = config('services.meta.whatsapp_access_token');
@@ -132,7 +150,7 @@ class WhatsAppLinkController extends Controller
                 Log::warning('WhatsApp verification message failed', ['status' => $response->status(), 'body' => $response->body()]);
                 return false;
             }
-            return true;
+            return (string) ($response->json('messages.0.id') ?? '') ?: 'sent';
         } catch (\Throwable $e) {
             Log::error('WhatsApp verification message exception: ' . $e->getMessage());
             return false;

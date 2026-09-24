@@ -151,7 +151,7 @@ class WhatsAppWebhookTest extends TestCase
         $this->assertDatabaseCount('whatsapp_logs', 0);
     }
 
-    public function test_message_from_unknown_number_is_ignored(): void
+    public function test_message_from_unknown_number_is_logged_without_dispatching(): void
     {
         $payload = $this->messagePayload('wamid.A');
         $payload['entry'][0]['changes'][0]['value']['messages'][0]['from'] = '254799999999';
@@ -159,7 +159,16 @@ class WhatsAppWebhookTest extends TestCase
         $this->postWebhook($payload)->assertOk();
 
         Queue::assertNothingPushed();
-        $this->assertDatabaseCount('whatsapp_logs', 0);
+        // We log unmatched inbound rows with user_id=null so admins can see
+        // that Meta reached us and spot phone-format mismatches on the
+        // /whatsapp page.
+        $this->assertDatabaseCount('whatsapp_logs', 1);
+        $this->assertDatabaseHas('whatsapp_logs', [
+            'phone_number' => '254799999999',
+            'user_id' => null,
+            'direction' => 'inbound',
+            'message_id' => 'wamid.A',
+        ]);
     }
 
     public function test_media_messages_carry_media_id_to_the_job(): void
