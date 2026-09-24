@@ -144,6 +144,50 @@ class WhatsAppActivityController extends Controller
     }
 
     /**
+     * Re-classify a mis-called row. When the classifier picked the wrong
+     * bucket, the user chooses the correct class and we update the linked
+     * expense/photo in place. Cross-type moves (Photo <-> Expense) can't
+     * be done from just the stored data, so those are refused with a
+     * message.
+     */
+    public function reclassify(Request $request, WhatsAppLog $log): RedirectResponse
+    {
+        $user = $request->user();
+        $isAdmin = $user?->role === 'admin';
+        abort_unless($isAdmin || $log->user_id === $user?->id, 403);
+
+        $data = $request->validate([
+            'class' => ['required', 'string', 'in:payment_sms,receipt_paper,invoice,cost_request,progress_photo,progress_video'],
+        ]);
+
+        $filed = $log->filed;
+        if (! $filed) {
+            return back()->withErrors(['class' => 'This row has no filed record to re-classify.']);
+        }
+
+        $target = $this->kindFor($data['class']);
+        $current = $filed instanceof Expense ? 'expense' : ($filed instanceof Photo ? 'photo' : 'other');
+
+        if ($target !== $current) {
+            return back()->withErrors([
+                'class' => "That class produces a {$target}, but this row is filed as an {$current}. Delete this row and re-send it to the bot instead.",
+            ]);
+        }
+
+        if ($filed instanceof Expense) {
+            $filed->forceFill($this->expenseFieldsFor($data['class']))->save();
+        } elseif ($filed instanceof Photo) {
+            // Only visible difference is the title's "photo" vs "video" word.
+            $newWord = $data['class'] === 'progress_video' ? 'video' : 'photo';
+            $filed->forceFill([
+                'title' => preg_replace('/^WhatsApp (photo|video)/', "WhatsApp {$newWord}", (string) $filed->title, 1),
+            ])->save();
+        }
+
+        return back()->with('status', 'Row re-classified.');
+    }
+
+    /**
      * Delete an activity row. When the row has a linked filed record
      * (Expense / Photo) the record is deleted too, so a mis-classified
      * inbound message can be wiped in one action. The user must own the
@@ -168,6 +212,48 @@ class WhatsAppActivityController extends Controller
      * render as "→ Created Expense #47". Returns null when the log has no
      * linked record (legacy inbound rows, or outbound replies).
      */
+    /** What kind of filed record a class produces. */
+    private function kindFor(string $class): string
+    {
+        return match ($class) {
+            'progress_photo', 'progress_video' => 'photo',
+            default => 'expense',
+        };
+    }
+
+    /**
+     * Payment source / status / method for an expense re-classify. Mirrors
+     * the assignments in ProcessWhatsAppMedia::route() so a mis-called row
+     * lands where the classifier would have put it if it had been right.
+     *
+     * @return array<string, mixed>
+     */
+    private function expenseFieldsFor(string $class): array
+    {
+        return match ($class) {
+            'payment_sms' => [
+                'payment_method' => 'mobile_money',
+                'payment_source' => 'mpesa_or_bank_sms',
+                'status' => 'confirmed',
+            ],
+            'receipt_paper' => [
+                'payment_method' => 'mobile_money',
+                'payment_source' => 'paper_receipt',
+                'status' => 'confirmed',
+            ],
+            'invoice' => [
+                'payment_method' => 'other',
+                'payment_source' => 'invoice',
+                'status' => 'draft',
+            ],
+            'cost_request' => [
+                'payment_method' => 'other',
+                'payment_source' => 'cost_request',
+                'status' => 'draft',
+            ],
+        };
+    }
+
     private function serializeFiled(WhatsAppLog $log): ?array
     {
         $model = $log->filed;

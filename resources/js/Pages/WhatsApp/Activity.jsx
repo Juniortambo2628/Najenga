@@ -90,6 +90,15 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
         });
     };
 
+    const onReclassify = (m, cls) => {
+        if (!cls) return;
+        router.post(
+            route('whatsapp.activity.reclassify', m.id),
+            { class: cls },
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
     const totals = useMemo(() => [
         { label: 'Inbound', value: counts?.inbound ?? 0, tone: 'text-blue-300' },
         { label: 'Outbound', value: counts?.outbound ?? 0, tone: 'text-emerald-300' },
@@ -230,15 +239,41 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                                                 </p>
                                             )}
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => onDelete(m)}
-                                            className="opacity-0 group-hover:opacity-100 focus:opacity-100 text-gray-400 hover:text-red-300 text-xs px-2"
-                                            aria-label={`Delete ${m.direction} message from ${m.phone_number}`}
-                                            title={m.filed ? `Deletes this row and its ${m.filed.kind}` : 'Delete this row'}
-                                        >
-                                            <i aria-hidden="true" className="fas fa-trash"></i>
-                                        </button>
+                                        <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-start gap-1 shrink-0">
+                                            {m.filed && (
+                                                <select
+                                                    aria-label={`Re-classify this ${m.filed.kind}`}
+                                                    defaultValue=""
+                                                    onChange={(e) => { onReclassify(m, e.target.value); e.target.value = ''; }}
+                                                    className="text-[10px] bg-black/40 border border-white/10 rounded px-1 py-0.5 text-white"
+                                                    title={`Move this ${m.filed.kind} to a different WhatsApp class`}
+                                                >
+                                                    <option value="" disabled>Re-classify…</option>
+                                                    {m.filed.kind === 'expense' ? (
+                                                        <>
+                                                            <option value="payment_sms">Payment SMS</option>
+                                                            <option value="receipt_paper">Paper receipt</option>
+                                                            <option value="invoice">Invoice</option>
+                                                            <option value="cost_request">Cost request</option>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <option value="progress_photo">Progress photo</option>
+                                                            <option value="progress_video">Progress video</option>
+                                                        </>
+                                                    )}
+                                                </select>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => onDelete(m)}
+                                                className="text-gray-400 hover:text-red-300 text-xs px-2"
+                                                aria-label={`Delete ${m.direction} message from ${m.phone_number}`}
+                                                title={m.filed ? `Deletes this row and its ${m.filed.kind}` : 'Delete this row'}
+                                            >
+                                                <i aria-hidden="true" className="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
