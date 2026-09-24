@@ -39,6 +39,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -52,7 +54,32 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'whatsapp_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted',
+            'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Whether the user has completed two-factor setup.
+     */
+    public function hasEnabledTwoFactorAuthentication(): bool
+    {
+        return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
+    }
+
+    /**
+     * Return the recovery codes as an array, one per line.
+     *
+     * @return array<int, string>
+     */
+    public function recoveryCodesArray(): array
+    {
+        if (! $this->two_factor_recovery_codes) {
+            return [];
+        }
+
+        return json_decode($this->two_factor_recovery_codes, true) ?: [];
     }
 
     /**

@@ -5,8 +5,9 @@ import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import LinkWhatsAppForm from './Partials/LinkWhatsAppForm';
+import TwoFactorAuthenticationForm from './Partials/TwoFactorAuthenticationForm';
 
-export default function Edit({ mustVerifyEmail, status, whatsapp }) {
+export default function Edit({ mustVerifyEmail, status, whatsapp, twoFactor }) {
     return (
         <AuthenticatedLayout>
             <Head title="Settings" />
@@ -47,32 +48,7 @@ export default function Edit({ mustVerifyEmail, status, whatsapp }) {
                             <h2 className="text-lg font-bold text-white">Two-Factor Authentication</h2>
                             <p className="text-sm text-gray-400 mt-1">Add additional security to your account using two-factor authentication.</p>
                         </header>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                                        <i aria-hidden="true" className="fas fa-mobile-alt text-blue-400"></i>
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-medium text-sm">Authenticator App</p>
-                                        <p className="text-gray-400 text-xs">Use an authenticator app to generate one-time codes</p>
-                                    </div>
-                                </div>
-                                <span className="px-3 py-1 rounded-lg bg-yellow-500/10 text-yellow-400 text-xs font-medium border border-yellow-500/20">Not Enabled</span>
-                            </div>
-                            <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
-                                        <i aria-hidden="true" className="fas fa-key text-green-400"></i>
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-medium text-sm">Recovery Codes</p>
-                                        <p className="text-gray-400 text-xs">Store recovery codes in a safe place if you lose access</p>
-                                    </div>
-                                </div>
-                                <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Unavailable</span>
-                            </div>
-                        </div>
+                        <TwoFactorAuthenticationForm twoFactor={twoFactor} />
                     </section>
 
                     {/* Security Preferences */}

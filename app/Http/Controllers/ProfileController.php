@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\TwoFactorAuthenticator;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,9 +17,27 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request, TwoFactorAuthenticator $totp): Response
     {
         $user = $request->user();
+
+        $twoFactor = [
+            'enabled' => $user->hasEnabledTwoFactorAuthentication(),
+            'recovery_codes' => $user->hasEnabledTwoFactorAuthentication()
+                ? $user->recoveryCodesArray()
+                : [],
+        ];
+
+        // Setup handshake in progress: show the QR + confirmation input.
+        if ($pending = $request->session()->get('two_factor_pending_secret')) {
+            $otpauth = $totp->otpauthUrl($user, $pending);
+            $twoFactor['pending'] = [
+                'secret' => $pending,
+                'otpauth_url' => $otpauth,
+                'qr_svg' => $totp->qrCodeSvg($otpauth),
+            ];
+        }
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
@@ -28,6 +47,7 @@ class ProfileController extends Controller
                 'configured' => (bool) config('services.meta.whatsapp_access_token')
                     && (bool) config('services.meta.whatsapp_phone_number_id'),
             ],
+            'twoFactor' => $twoFactor,
         ]);
     }
 
