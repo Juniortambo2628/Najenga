@@ -80,7 +80,7 @@ export default function Edit({ mustVerifyEmail, status, whatsapp, twoFactor }) {
                                         <p className="text-gray-400 text-xs">Receive a one-time code via email to sign in</p>
                                     </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Coming Soon</span>
+                                <span className="px-3 py-1 rounded-lg bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">Available</span>
                             </div>
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
