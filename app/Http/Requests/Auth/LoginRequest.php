@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -41,6 +43,26 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        // Users with 2FA enabled don't get logged in on the password step —
+        // AuthenticatedSessionController stashes their id and redirects to
+        // the 2FA challenge. Everyone else goes straight through Auth::attempt.
+        $user = User::where('email', $this->string('email'))->first();
+
+        if ($user && $user->hasEnabledTwoFactorAuthentication()) {
+            if (! Hash::check((string) $this->string('password'), $user->password)) {
+                RateLimiter::hit($this->throttleKey());
+
+                throw ValidationException::withMessages([
+                    'email' => trans('auth.failed'),
+                ]);
+            }
+
+            RateLimiter::clear($this->throttleKey());
+            $this->attributes->set('two_factor_user', $user);
+
+            return;
+        }
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
@@ -50,6 +72,16 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+    }
+
+    public function requiresTwoFactor(): bool
+    {
+        return $this->attributes->has('two_factor_user');
+    }
+
+    public function twoFactorUser(): User
+    {
+        return $this->attributes->get('two_factor_user');
     }
 
     /**
