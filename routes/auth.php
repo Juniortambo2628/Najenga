@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\LoginCodeController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RecoveryCodesController;
@@ -30,6 +31,15 @@ Route::middleware('guest')->group(function () {
 
     Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store'])
         ->middleware('throttle:6,1');
+
+    Route::get('login/code', [LoginCodeController::class, 'create'])
+        ->name('login.code');
+
+    Route::post('login/code', [LoginCodeController::class, 'request'])
+        ->name('login.code.request');
+
+    Route::post('login/code/verify', [LoginCodeController::class, 'verify'])
+        ->name('login.code.verify');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
