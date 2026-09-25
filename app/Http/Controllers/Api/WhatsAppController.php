@@ -113,20 +113,24 @@ class WhatsAppController extends Controller
             return;
         }
 
-        // Find user by phone number
+        // Find user by phone number. When no user matches we still log the
+        // inbound row (user_id=null) so admins can see the message landed and
+        // spot phone-format mismatches on the /whatsapp page — otherwise a
+        // number that isn't linked yet just silently vanishes.
         $user = $this->findUserByPhone($from);
 
         if (!$user) {
             Log::info('WhatsApp message from unknown number: ' . $from);
-            return;
         }
 
         // The unique index on message_id makes redelivered messages a no-op.
         try {
             WhatsAppLog::create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'phone_number' => $from,
-                'message' => $message['text']['body'] ?? ($type === 'image' ? '[Image]' : '[' . ucfirst((string) $type) . ']'),
+                'message' => $message['text']['body']
+                    ?? ($type === 'image' ? '[Image]' : '[' . ucfirst((string) $type) . ']')
+                    . ($user ? '' : ' (unmatched sender)'),
                 'direction' => 'inbound',
                 'status' => 'received',
                 'message_id' => $messageId,
@@ -137,7 +141,11 @@ class WhatsAppController extends Controller
             return;
         }
 
-        // Route every inbound message through the classifier job.
+        if (!$user) {
+            return;
+        }
+
+        // Route every inbound message from a known user through the classifier job.
         ProcessWhatsAppMedia::dispatch($this->buildJobPayload($message, $type), $user->id);
     }
 

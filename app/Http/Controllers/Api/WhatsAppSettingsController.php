@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\WhatsAppContact;
 use App\Models\WhatsAppLog;
+use App\Models\WhatsAppWebhookEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -28,8 +31,102 @@ class WhatsAppSettingsController extends Controller
                     && (bool) config('services.meta.whatsapp_phone_number_id'),
                 'admin_wa_id' => config('services.meta.admin_wa_id'),
                 'test_mode' => (bool) config('services.meta.test_mode', true),
+                'app_secret_set' => (bool) config('services.meta.whatsapp_app_secret'),
             ],
+            'diagnostics' => $this->recentWebhookEvents(),
         ]);
+    }
+
+    /**
+     * Last few raw webhook deliveries with the from-numbers extracted so an
+     * admin can tell the difference between "webhook never arrived" and
+     * "webhook arrived but no user matched the from-number".
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function recentWebhookEvents(): array
+    {
+        return WhatsAppWebhookEvent::query()
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get(['id', 'processed', 'error_message', 'payload', 'timestamp'])
+            ->map(function (WhatsAppWebhookEvent $e) {
+                $payload = is_array($e->payload) ? $e->payload : (json_decode((string) $e->payload, true) ?: []);
+                $senders = $this->extractSenders($payload);
+                foreach ($senders as &$s) {
+                    $s['matched_user'] = $this->userLabelForPhone($s['from']);
+                }
+                unset($s);
+
+                return [
+                    'id' => $e->id,
+                    'processed' => (bool) $e->processed,
+                    'error_message' => $e->error_message,
+                    'received_at' => $e->timestamp?->toIso8601String(),
+                    'senders' => $senders,
+                    'statuses' => $this->extractStatusCount($payload),
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<int, array{from: string, type: string, wamid: ?string}>
+     */
+    private function extractSenders(array $payload): array
+    {
+        $out = [];
+        foreach ($payload['entry'] ?? [] as $entry) {
+            foreach ($entry['changes'] ?? [] as $change) {
+                foreach ($change['value']['messages'] ?? [] as $m) {
+                    $out[] = [
+                        'from' => (string) ($m['from'] ?? '?'),
+                        'type' => (string) ($m['type'] ?? '?'),
+                        'wamid' => $m['id'] ?? null,
+                    ];
+                }
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function extractStatusCount(array $payload): int
+    {
+        $n = 0;
+        foreach ($payload['entry'] ?? [] as $entry) {
+            foreach ($entry['changes'] ?? [] as $change) {
+                $n += count($change['value']['statuses'] ?? []);
+            }
+        }
+        return $n;
+    }
+
+    private function userLabelForPhone(string $phone): ?string
+    {
+        $normalized = preg_replace('/[^\d+]/', '', $phone);
+        $digits = ltrim((string) $normalized, '+');
+
+        $user = User::query()
+            ->where('whatsapp_wa_id', $digits)
+            ->orWhere('phone', $normalized)
+            ->orWhere('phone', $digits)
+            ->first(['id', 'first_name', 'last_name', 'email']);
+
+        if (! $user) {
+            $contact = WhatsAppContact::query()
+                ->where('phone_number', $normalized)
+                ->orWhere('phone_number', $digits)
+                ->first();
+            $user = $contact?->user;
+        }
+
+        return $user
+            ? (trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: $user->email)
+            : null;
     }
 
     public function testSend(Request $request)
