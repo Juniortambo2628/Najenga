@@ -354,7 +354,7 @@ export default function Projects({ projects = [] }) {
                 ) : (
                     <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
                         {filteredProjects.map((project) => (
-                            <div key={project.id} className={`group bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] hover:border-[#8B0000]/30 rounded-2xl p-5 transition-all hover:shadow-xl hover:shadow-[#8B0000]/10 ${viewMode === 'list' ? 'flex items-center justify-between gap-6' : ''} ${isSelected(project.id) ? 'ring-1 ring-[#8B0000]/50' : ''}`}>
+                            <div key={project.id} className={`group panel p-5 hover:border-[#8B0000]/30 transition-all hover:shadow-xl hover:shadow-[#8B0000]/10 ${viewMode === 'list' ? 'flex items-center justify-between gap-6' : ''} ${isSelected(project.id) ? 'ring-1 ring-[#8B0000]/50' : ''}`}>
                                 <div className={viewMode === 'list' ? 'flex-1' : ''}>
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-2">

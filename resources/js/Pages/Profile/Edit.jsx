@@ -23,7 +23,7 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                 <div className="space-y-6">
                     {/* Profile Information */}
-                    <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                    <section className="panel p-6">
                         <UpdateProfileInformationForm
                             mustVerifyEmail={mustVerifyEmail}
                             status={status}
@@ -31,12 +31,12 @@ export default function Edit({ mustVerifyEmail, status }) {
                     </section>
 
                     {/* Update Password */}
-                    <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                    <section className="panel p-6">
                         <UpdatePasswordForm />
                     </section>
 
                     {/* Two-Factor Authentication */}
-                    <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                    <section className="panel p-6">
                         <header className="mb-6">
                             <h2 className="text-lg font-bold text-white">Two-Factor Authentication</h2>
                             <p className="text-sm text-gray-400 mt-1">Add additional security to your account using two-factor authentication.</p>
@@ -70,7 +70,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     </section>
 
                     {/* Security Preferences */}
-                    <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                    <section className="panel p-6">
                         <header className="mb-6">
                             <h2 className="text-lg font-bold text-white">Security Preferences</h2>
                             <p className="text-sm text-gray-400 mt-1">Configure additional security settings for your account.</p>
@@ -119,7 +119,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     </section>
 
                     {/* Delete Account */}
-                    <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-red-500/10 rounded-2xl p-6">
+                    <section className="panel border-red-500/10 p-6">
                         <DeleteUserForm />
                     </section>
                 </div>

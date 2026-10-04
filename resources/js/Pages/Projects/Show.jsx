@@ -45,19 +45,19 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                    <div className="panel p-6">
                         <p className="text-gray-400 text-sm mb-1">Budget</p>
                         <p className="text-2xl font-bold text-white">{formatCurrency(project.budget, project.currency)}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                    <div className="panel p-6">
                         <p className="text-gray-400 text-sm mb-1">Expenses</p>
                         <p className="text-2xl font-bold text-white">{formatCurrency(totalExpenses, project.currency)}</p>
                     </div>
-                   <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                   <div className="panel p-6">
                         <p className="text-gray-400 text-sm mb-1">Start Date</p>
                         <p className="text-xl font-semibold text-white">{project.start_date || 'TBD'}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                    <div className="panel p-6">
                         <p className="text-gray-400 text-sm mb-1">Team ({teamMembers.length})</p>
                         <div className="flex -space-x-3 mt-1">
                             {teamMembers.map((user) => {
@@ -93,7 +93,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                     {/* Left Column (Main Info) */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Description */}
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">About Project</h3>
                             <p className="text-gray-300 leading-relaxed">
                                 {project.description || 'No description provided.'}
@@ -123,7 +123,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                     {/* Right Column (Sidebar) */}
                     <div className="space-y-8">
                         {/* Recent Expenses */}
-                         <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                         <section className="panel p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold text-white">Recent Expenses</h3>
                                 <Link href="/expenses" className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>
@@ -143,7 +143,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                         </section>
 
                         {/* Documents */}
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                              <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold text-white">Documents</h3>
                                 <Link href="/documents" className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>

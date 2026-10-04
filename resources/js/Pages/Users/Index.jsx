@@ -262,7 +262,7 @@ export default function Index({ users }) {
                 }
             />
 
-            <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="panel overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>

@@ -24,7 +24,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
         expenseTrend = 0,
     } = stats;
 
-    const cardClass = "bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl";
+    const cardClass = "panel";
 
     return (
         <AuthenticatedLayout>

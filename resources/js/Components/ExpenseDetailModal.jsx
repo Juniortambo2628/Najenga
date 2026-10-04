@@ -11,15 +11,7 @@ import { formatCurrency } from '@/Config/currencies';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-
-function DetailRow({ label, value, mono = false }) {
-    return (
-        <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">{label}</span>
-            <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
-        </div>
-    );
-}
+import DetailRow from '@/Components/DetailRow';
 
 function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors, projects, onSave, onCancel, saving, onStartEdit }) {
     const handleChange = (field) => (e) => {

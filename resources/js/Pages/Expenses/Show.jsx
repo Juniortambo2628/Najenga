@@ -8,15 +8,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import { rootBreadcrumbs } from '@/Config/navigation';
-
-function DetailRow({ label, value, mono = false }) {
-    return (
-        <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">{label}</span>
-            <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
-        </div>
-    );
-}
+import DetailRow from '@/Components/DetailRow';
 
 function ReceiptSection({ expense, onUpdate }) {
     const [uploading, setUploading] = useState(false);
@@ -143,7 +135,7 @@ export default function Show({ expense }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Details</h3>
                             <div className="grid grid-cols-2 gap-5">
                                 <DetailRow label="Amount" value={formatCurrency(expense.amount, expense.currency)} mono />
@@ -163,14 +155,14 @@ export default function Show({ expense }) {
                             )}
                         </section>
 
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Receipt</h3>
                             <ReceiptSection expense={expense} onUpdate={() => router.reload({ only: ['expense'] })} />
                         </section>
                     </div>
 
                     <div className="space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Summary</h3>
                             <dl className="space-y-4 text-sm">
                                 <div className="flex justify-between">
@@ -188,7 +180,7 @@ export default function Show({ expense }) {
                             </dl>
                         </section>
 
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
                             <div className="space-y-3">
                                 <Link
