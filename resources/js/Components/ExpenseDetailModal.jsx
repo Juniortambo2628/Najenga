@@ -195,7 +195,7 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
                         {previewUrl.endsWith('.pdf') ? (
                             <iframe src={previewUrl} className="w-full h-[400px]" title="Receipt" />
                         ) : (
-                            <img src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
+                            <img loading="lazy" decoding="async"  src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
                         )}
                     </div>
                     <div className="flex justify-between items-center">

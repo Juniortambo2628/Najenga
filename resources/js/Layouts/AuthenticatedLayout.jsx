@@ -99,7 +99,7 @@ export default function AuthenticatedLayout({ children }) {
                     {/* Sidebar Brand */}
                     <Link href="/" className="h-14 flex items-center justify-center border-b border-white/10 flex-shrink-0 hover:bg-white/5 transition px-3">
                         <img 
-                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png" 
+                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp" 
                             alt="Najenga" 
                             className="h-10 w-10 object-contain flex-shrink-0"
                         />
@@ -174,7 +174,7 @@ export default function AuthenticatedLayout({ children }) {
                                                 className="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-white/5 transition"
                                             >
                                                 {r.thumb_url ? (
-                                                    <img src={r.thumb_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                                                    <img loading="lazy" decoding="async"  src={r.thumb_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
                                                 ) : (
                                                     <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
                                                         <i className={`fas ${r.type === 'document' ? 'fa-file-alt' : r.type === 'photo' ? 'fa-image' : 'fa-receipt'} text-gray-400 text-xs`}></i>

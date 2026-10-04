@@ -48,7 +48,7 @@ export default function Show({ receipt }) {
                             <h3 className="text-lg font-bold text-white mb-4">Receipt Image</h3>
                             {receipt.file_path ? (
                                 <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center min-h-[300px]">
-                                    <img
+                                    <img loading="lazy" decoding="async" 
                                         src={`/storage/${receipt.file_path}`}
                                         alt={receipt.original_name}
                                         className="max-w-full max-h-[500px] object-contain"

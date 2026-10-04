@@ -109,7 +109,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {photos.map(photo => (
                                     <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-gray-800 relative group">
-                                        <img src={`/storage/${photo.file_path}`} alt={photo.title} className="w-full h-full object-cover" />
+                                        <img loading="lazy" decoding="async"  src={`/storage/${photo.file_path}`} alt={photo.title} className="w-full h-full object-cover" />
                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                             <span className="text-white text-sm font-medium">{photo.title}</span>
                                         </div>

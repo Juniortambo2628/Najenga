@@ -383,7 +383,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                 <div key={photo.id} className="bg-gray-900/50 border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition group">
                                     <div className="aspect-square bg-white/5 flex items-center justify-center overflow-hidden">
                                         {photo.file_path ? (
-                                            <img
+                                            <img loading="lazy" decoding="async" 
                                                 src={`/storage/${photo.file_path.split('/').map((s) => encodeURIComponent(s)).join('/')}`}
                                                 alt={photo.title}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition duration-500"

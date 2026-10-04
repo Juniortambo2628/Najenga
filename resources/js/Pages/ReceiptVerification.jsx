@@ -349,7 +349,7 @@ export default function ReceiptVerification() {
                                             : 'bg-black/30 border-white/5 hover:bg-white/5'
                                     }`}
                                 >
-                                    <img src={entry.preview} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                                    <img loading="lazy" decoding="async"  src={entry.preview} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <p className="text-white truncate text-xs">{entry.file.name}</p>
                                         <p className={`text-xs ${
@@ -383,7 +383,7 @@ export default function ReceiptVerification() {
                                     {queue[currentIndex].file?.type === 'application/pdf' ? (
                                         <iframe src={queue[currentIndex].preview} className="w-full h-[400px] rounded-lg" title="Receipt PDF" />
                                     ) : (
-                                        <img src={queue[currentIndex].preview} alt="Receipt Preview" className="w-full max-h-[400px] object-contain rounded-lg" />
+                                        <img loading="lazy" decoding="async"  src={queue[currentIndex].preview} alt="Receipt Preview" className="w-full max-h-[400px] object-contain rounded-lg" />
                                     )}
                                 </div>
 

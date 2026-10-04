@@ -44,7 +44,7 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
                 {/* Background Image */}
                 <div className="absolute inset-0">
                     <img
-                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.jpg"
+                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.webp"
                         alt="Construction site"
                         className="w-full h-full object-cover"
                     />
@@ -60,7 +60,7 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
                     >
                         <Link href="/" className="flex items-center gap-3 mb-12">
                             <img
-                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png"
+                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                                 alt="Najenga"
                                 className="h-14"
                             />
@@ -112,8 +112,8 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-8">
                         <Link href="/" className="inline-flex items-center gap-3">
-                            <img
-                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png"
+                            <img loading="lazy" decoding="async" 
+                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                                 alt="Najenga"
                                 className="h-12"
                             />

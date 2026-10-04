@@ -49,7 +49,7 @@ export default function Show({ document }) {
                                     {isPdf ? (
                                         <iframe src={document.file_url} className="w-full h-[500px]" title={document.title} />
                                     ) : isImage ? (
-                                        <img src={document.file_url} alt={document.title} className="max-w-full max-h-[500px] object-contain" />
+                                        <img loading="lazy" decoding="async"  src={document.file_url} alt={document.title} className="max-w-full max-h-[500px] object-contain" />
                                     ) : (
                                         <div className="flex flex-col items-center gap-3 py-12">
                                             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">

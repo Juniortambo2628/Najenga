@@ -80,7 +80,7 @@ export default function ClientHome({ auth, projects = [], recentPhotos = [] }) {
                         >
                             {recentPhotos.map((photo) => (
                                 <SwiperSlide key={photo.id} className="w-[640px] h-[360px] rounded-2xl overflow-hidden relative group shadow-2xl border border-white/10 bg-black">
-                                    <img 
+                                    <img loading="lazy" decoding="async"  
                                         src={`/storage/${photo.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`} 
                                         alt={photo.title}
                                         className="w-full h-full object-cover"

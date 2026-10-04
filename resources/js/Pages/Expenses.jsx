@@ -418,7 +418,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                             {previewExpense.receipt_url?.endsWith('.pdf') ? (
                                 <iframe src={previewExpense.receipt_url} className="w-full h-[500px] rounded" title="Receipt" />
                             ) : (
-                                <img src={previewExpense.receipt_url} alt="Receipt" className="max-w-full max-h-[500px] object-contain rounded" />
+                                <img loading="lazy" decoding="async"  src={previewExpense.receipt_url} alt="Receipt" className="max-w-full max-h-[500px] object-contain rounded" />
                             )}
                         </div>
                     </div>

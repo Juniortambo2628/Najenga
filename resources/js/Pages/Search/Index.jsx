@@ -94,7 +94,7 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
                             >
                                 <div className="aspect-video bg-white/5 relative overflow-hidden flex items-center justify-center">
                                     {r.thumb_url ? (
-                                        <img src={r.thumb_url} alt={r.title} className="w-full h-full object-cover" />
+                                        <img loading="lazy" decoding="async"  src={r.thumb_url} alt={r.title} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="text-gray-600 text-3xl">[{r.type}]</div>
                                     )}

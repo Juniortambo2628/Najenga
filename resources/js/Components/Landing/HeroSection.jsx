@@ -29,7 +29,7 @@ export default function HeroSection({ auth }) {
             <div className="absolute inset-0 overflow-hidden">
                 <motion.div className="absolute inset-0 -inset-x-[5%] -inset-y-[10%]" style={{ y: bgY }}>
                     <img
-                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.jpg"
+                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.webp"
                         alt="Construction site"
                         className="w-full h-full object-cover"
                     />
@@ -48,7 +48,7 @@ export default function HeroSection({ auth }) {
                 <div className="container mx-auto px-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3">
                         <motion.img
-                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png"
+                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                             alt="Najenga"
                             className="h-16"
                             animate={{ scale: scrolled ? 0.85 : 1 }}

@@ -389,7 +389,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     {/* Thumbnail Area */}
                                     <div className="flex-1 overflow-hidden bg-white/5 relative flex items-center justify-center">
                                          {isImage ? (
-                                            <img
+                                            <img loading="lazy" decoding="async" 
                                                 src={doc.thumb_url || `/storage/${doc.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`}
                                                 className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
                                                 alt={doc.title}

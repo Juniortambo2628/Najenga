@@ -326,7 +326,7 @@ export default function FileUploadModal({ isOpen, onClose, uploadUrl, acceptedFi
                                 <div key={index} className="relative group bg-white/5 rounded-xl overflow-hidden border border-white/10">
                                     <div className="aspect-square flex items-center justify-center bg-black/50">
                                         {file.type?.startsWith('image/') ? (
-                                            <img src={file.preview} className="w-full h-full object-cover" alt="preview" />
+                                            <img loading="lazy" decoding="async"  src={file.preview} className="w-full h-full object-cover" alt="preview" />
                                         ) : (
                                             <i className="fas fa-file-alt text-3xl text-gray-400"></i>
                                         )}

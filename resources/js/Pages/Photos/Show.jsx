@@ -40,7 +40,7 @@ export default function Show({ photo }) {
                             <h3 className="text-lg font-bold text-white mb-4">Photo</h3>
                             {photo.photo_url ? (
                                 <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center">
-                                    <img
+                                    <img loading="lazy" decoding="async" 
                                         src={photo.preview_url || photo.photo_url}
                                         alt={photo.title}
                                         className="max-w-full max-h-[600px] object-contain"
