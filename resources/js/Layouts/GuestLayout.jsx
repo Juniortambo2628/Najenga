@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+import FlashToast from '@/Components/FlashToast';
 
 const STEPS = {
     register: [
@@ -39,6 +41,9 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
 
     return (
         <div className="flex min-h-screen">
+            <Toaster position="top-right" />
+            <FlashToast />
+
             {/* Left Panel - Image + Branding */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
                 {/* Background Image */}

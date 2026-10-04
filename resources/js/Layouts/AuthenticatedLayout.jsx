@@ -2,6 +2,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import { Toaster } from 'react-hot-toast';
+import FlashToast from '@/Components/FlashToast';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 import { navItemsFor } from '@/Config/navigation';
 
@@ -79,7 +80,8 @@ export default function AuthenticatedLayout({ children }) {
         <>
             <PageHeadingContext.Provider value={headingContext}>
             <Toaster position="top-right" />
-            
+            <FlashToast />
+
             <div className="min-h-screen bg-black flex">
                 {/* Sidebar Overlay for Mobile */}
                 {sidebarOpen && (
