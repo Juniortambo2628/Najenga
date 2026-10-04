@@ -11,6 +11,7 @@ class ReceiptProcessingService
 {
     public function __construct(
         protected OcrService $ocr,
+        protected ReceiptParser $parser,
     ) {
     }
 
@@ -31,7 +32,7 @@ class ReceiptProcessingService
             }
 
             $text = $result['text'] ?? '';
-            $data = \App\Http\Controllers\Api\ReceiptController::parseReceiptText($text);
+            $data = $this->parser->parse($text);
 
             return $this->createExpenseFromData($user, $data, $path);
         } catch (\Exception $e) {
