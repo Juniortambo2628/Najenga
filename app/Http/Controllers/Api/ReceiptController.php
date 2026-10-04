@@ -297,6 +297,8 @@ class ReceiptController extends Controller
 
     public function show(\App\Models\Receipt $receipt)
     {
+        $this->authorize('view', $receipt);
+
         return \Inertia\Inertia::render('Receipts/Show', [
             'receipt' => $receipt->load('expense'),
         ]);
@@ -304,6 +306,8 @@ class ReceiptController extends Controller
 
     public function edit(\App\Models\Receipt $receipt)
     {
+        $this->authorize('view', $receipt);
+
         return \Inertia\Inertia::render('Receipts/Edit', [
             'receipt' => $receipt->load('expense'),
         ]);

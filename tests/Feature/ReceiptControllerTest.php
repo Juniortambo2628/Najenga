@@ -59,6 +59,49 @@ class ReceiptControllerTest extends TestCase
             ->assertOk();
     }
 
+    public function test_user_cannot_view_another_users_receipt(): void
+    {
+        $other = User::factory()->create();
+        $expense = Expense::factory()->create(['user_id' => $other->id]);
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id]);
+
+        // show() had no authorize() call, so any signed-in user could read any
+        // receipt. ReceiptPolicy::view existed but was never invoked.
+        $this->actingAs($this->user)
+            ->get("/receipts/{$receipt->id}")
+            ->assertForbidden();
+    }
+
+    public function test_user_can_edit_own_receipt(): void
+    {
+        $expense = Expense::factory()->create(['user_id' => $this->user->id]);
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id]);
+
+        $this->actingAs($this->user)
+            ->get("/receipts/{$receipt->id}/edit")
+            ->assertOk();
+    }
+
+    public function test_user_cannot_edit_another_users_receipt(): void
+    {
+        $other = User::factory()->create();
+        $expense = Expense::factory()->create(['user_id' => $other->id]);
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id]);
+
+        $this->actingAs($this->user)
+            ->get("/receipts/{$receipt->id}/edit")
+            ->assertForbidden();
+    }
+
+    public function test_unauthenticated_user_cannot_open_a_single_receipt(): void
+    {
+        $expense = Expense::factory()->create();
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id]);
+
+        $this->get("/receipts/{$receipt->id}")->assertRedirect('/login');
+        $this->get("/receipts/{$receipt->id}/edit")->assertRedirect('/login');
+    }
+
     public function test_user_can_update_receipt_verification_status(): void
     {
         $expense = Expense::factory()->create(['user_id' => $this->user->id]);
