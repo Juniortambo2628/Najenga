@@ -15,8 +15,8 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Card from '@/Components/Card';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useBulkDelete from '@/Hooks/useBulkDelete';
 import { formatCurrency } from '@/Config/currencies';
-import toast from 'react-hot-toast';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
 const TABS = [
@@ -217,24 +217,16 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         }
     }
 
-    async function handleBulkDelete() {
-        if (!confirm(`Delete ${selectedCount} item${selectedCount !== 1 ? 's' : ''}?`)) return;
-        const ids = [...selectedItems];
-        let failed = 0;
-        for (const id of ids) {
+    const handleBulkDelete = useBulkDelete({
+        selected: selectedItems,
+        noun: 'item',
+        path: (id) => {
             const item = allItems.find((i) => i.id === id && i.type === 'milestone');
-            if (!item) continue;
-            try {
-                await new Promise((resolve, reject) => {
-                    router.delete(`/timelines/${item.id}`, { preserveScroll: true, onSuccess: resolve, onError: reject });
-                });
-            } catch { failed++; }
-        }
-        clearSelection();
-        if (failed > 0) toast.error(`Failed to delete ${failed} item${failed !== 1 ? 's' : ''}`);
-        else toast.success(`${ids.length} item${ids.length !== 1 ? 's' : ''} deleted`);
-        router.reload({ only: ['timelines'] });
-    }
+            return item ? `/timelines/${item.id}` : null;
+        },
+        onDone: clearSelection,
+        reload: ['timelines'],
+    });
 
     return (
         <AuthenticatedLayout>

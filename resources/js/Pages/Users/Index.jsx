@@ -13,6 +13,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useBulkDelete from '@/Hooks/useBulkDelete';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Index({ users }) {
@@ -68,31 +69,13 @@ export default function Index({ users }) {
         }
     };
 
-    const handleBulkDelete = async () => {
-        if (!confirm(`Delete ${selectedCount} user${selectedCount !== 1 ? 's' : ''}?`)) return;
-        const ids = [...selectedItems];
-        let failed = 0;
-        for (const id of ids) {
-            try {
-                await new Promise((resolve, reject) => {
-                    router.delete(`/users/${id}`, {
-                        preserveScroll: true,
-                        onSuccess: resolve,
-                        onError: reject,
-                    });
-                });
-            } catch {
-                failed++;
-            }
-        }
-        clearSelection();
-        if (failed > 0) {
-            toast.error(`Failed to delete ${failed} user${failed !== 1 ? 's' : ''}`);
-        } else {
-            toast.success(`${ids.length} user${ids.length !== 1 ? 's' : ''} deleted`);
-        }
-        router.reload({ only: ['users'] });
-    };
+    const handleBulkDelete = useBulkDelete({
+        selected: selectedItems,
+        noun: 'user',
+        path: (id) => `/users/${id}`,
+        onDone: clearSelection,
+        reload: ['users'],
+    });
 
     const createModalTabs = [
         {

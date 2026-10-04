@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage, Link, useForm, router } from '@inertiajs/react';
+import { Head, usePage, Link, useForm } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import ContextToolbar from '@/Components/ContextToolbar';
@@ -16,6 +16,7 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useBulkDelete from '@/Hooks/useBulkDelete';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import { CURRENCY_OPTIONS, formatCurrency } from '@/Config/currencies';
 import DashboardHero from '@/Components/DashboardHero';
@@ -115,31 +116,13 @@ export default function Projects({ projects = [] }) {
         );
     };
 
-    const handleBulkDelete = async () => {
-        if (!confirm(`Delete ${selectedCount} project${selectedCount !== 1 ? 's' : ''}?`)) return;
-        const ids = [...selectedItems];
-        let failed = 0;
-        for (const id of ids) {
-            try {
-                await new Promise((resolve, reject) => {
-                    router.delete(`/projects/${id}`, {
-                        preserveScroll: true,
-                        onSuccess: resolve,
-                        onError: reject,
-                    });
-                });
-            } catch {
-                failed++;
-            }
-        }
-        clearSelection();
-        if (failed > 0) {
-            toast.error(`Failed to delete ${failed} project${failed !== 1 ? 's' : ''}`);
-        } else {
-            toast.success(`${ids.length} project${ids.length !== 1 ? 's' : ''} deleted`);
-        }
-        router.reload({ only: ['projects'] });
-    };
+    const handleBulkDelete = useBulkDelete({
+        selected: selectedItems,
+        noun: 'project',
+        path: (id) => `/projects/${id}`,
+        onDone: clearSelection,
+        reload: ['projects'],
+    });
 
     // Create/Edit Modal Tabs
     const projectModalTabs = [
