@@ -5,7 +5,6 @@
  * an item with no `roles` is shown to everyone.
  */
 export const NAV_ITEMS = [
-    { name: 'Home', href: '/home', icon: 'fa-home' },
     { name: 'Dashboard', href: '/dashboard', icon: 'fa-tachometer-alt' },
     { name: 'Projects', href: '/projects', icon: 'fa-project-diagram' },
     { name: 'Expenses', href: '/expenses', icon: 'fa-receipt' },
@@ -25,14 +24,11 @@ export function navItemsFor(role) {
 }
 
 /**
- * The breadcrumb prefix repeated on every page: Home / Dashboard.
+ * The breadcrumb prefix repeated on every page: the dashboard.
  *
  * Usage:
  *   breadcrumbs={[...rootBreadcrumbs(), { label: 'Documents', href: '/documents' }, { label: doc.title }]}
  */
 export function rootBreadcrumbs() {
-    return [
-        { label: 'Home', href: '/home' },
-        { label: 'Dashboard', href: '/dashboard' },
-    ];
+    return [{ label: 'Dashboard', href: '/dashboard' }];
 }

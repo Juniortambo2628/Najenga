@@ -36,7 +36,6 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         title={`Welcome back, ${auth.user.first_name || auth.user.name}!`}
                         subtitle="Here's what's happening with your construction projects."
                         breadcrumbs={[
-                            { label: 'Home', href: '/home' },
                             { label: 'Dashboard' },
                         ]}
                     />

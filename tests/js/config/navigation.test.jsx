@@ -47,9 +47,8 @@ describe('navItemsFor', () => {
 });
 
 describe('rootBreadcrumbs', () => {
-    it('returns the Home / Dashboard prefix', () => {
+    it('returns the dashboard as the single root', () => {
         expect(rootBreadcrumbs()).toEqual([
-            { label: 'Home', href: '/home' },
             { label: 'Dashboard', href: '/dashboard' },
         ]);
     });
@@ -59,7 +58,7 @@ describe('rootBreadcrumbs', () => {
         const b = rootBreadcrumbs();
         expect(a).not.toBe(b);
         a.push({ label: 'x' });
-        expect(rootBreadcrumbs()).toHaveLength(2);
+        expect(rootBreadcrumbs()).toHaveLength(1);
     });
 });
 
@@ -70,15 +69,15 @@ describe('Breadcrumb', () => {
     });
 
     it('renders linked items as anchors and the last item as plain text', () => {
-        render(<Breadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Projects' }]} />);
-        expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/home');
+        render(<Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Projects' }]} />);
+        expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard');
         expect(screen.queryByRole('link', { name: 'Projects' })).toBeNull();
         expect(screen.getByText('Projects')).toBeInTheDocument();
     });
 
     it('separates items with a chevron', () => {
         const { container } = render(
-            <Breadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Projects' }]} />
+            <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Projects' }]} />
         );
         expect(container.querySelectorAll('.fa-chevron-right')).toHaveLength(1);
     });

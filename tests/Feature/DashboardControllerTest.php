@@ -7,6 +7,7 @@ use App\Models\Photo;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
@@ -64,5 +65,20 @@ class DashboardControllerTest extends TestCase
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk();
+    }
+
+    public function test_dashboard_recent_projects_are_scoped_to_the_signed_in_client(): void
+    {
+        Project::factory()->count(2)->create(['client_id' => $this->user->id]);
+        $otherUser = User::factory()->create(['role' => 'client']);
+        Project::factory()->count(5)->create(['client_id' => $otherUser->id]);
+
+        $this->actingAs($this->user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard')
+                ->has('recentProjects', 2)
+                ->where('stats.totalProjects', 2));
     }
 }

@@ -23,13 +23,13 @@ describe('DashboardHero', () => {
             <DashboardHero
                 title="Show"
                 breadcrumbs={[
-                    { label: 'Home', href: '/home' },
+                    { label: 'Dashboard', href: '/dashboard' },
                     { label: 'Receipts', href: '/receipts' },
                     { label: 'INV-1' },
                 ]}
             />
         );
-        expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/home');
+        expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard');
         expect(screen.getByRole('link', { name: 'Receipts' })).toHaveAttribute('href', '/receipts');
         expect(screen.getByText('INV-1')).toBeInTheDocument();
         expect(screen.queryByRole('link', { name: 'INV-1' })).toBeNull();

@@ -17,8 +17,6 @@ Route::get('/', function () {
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/home', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
     // Projects
     Route::get('/projects', [\App\Http\Controllers\Api\ProjectController::class, 'index'])->name('projects');
     Route::get('/projects/create', [\App\Http\Controllers\Api\ProjectController::class, 'create'])->name('projects.create');
