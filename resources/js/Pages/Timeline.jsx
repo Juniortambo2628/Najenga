@@ -17,6 +17,7 @@ import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import { formatCurrency } from '@/Config/currencies';
 import toast from 'react-hot-toast';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -244,8 +245,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     title="Timeline"
                     subtitle="Track all project activity across milestones, expenses, photos, and documents"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Timeline' },
                     ]}
                 />

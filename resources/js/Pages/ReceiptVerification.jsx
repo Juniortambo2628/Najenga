@@ -10,6 +10,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DashboardHero from '@/Components/DashboardHero';
 import { EXPENSE_CATEGORIES } from '@/Config/expenses';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 const CATEGORIES = EXPENSE_CATEGORIES;
 
@@ -276,8 +277,7 @@ export default function ReceiptVerification() {
                     title="Receipt Verification"
                     subtitle="Upload and verify receipts with OCR"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Receipt Verification' },
                     ]}
                 />

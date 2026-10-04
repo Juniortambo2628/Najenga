@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function ActivityLogs({ logs }) {
     return (
@@ -13,8 +14,7 @@ export default function ActivityLogs({ logs }) {
                         title="Activity Logs"
                         subtitle="Review system actions and changes"
                         breadcrumbs={[
-                            { label: 'Home', href: '/home' },
-                            { label: 'Dashboard', href: '/dashboard' },
+                            ...rootBreadcrumbs(),
                             { label: 'Activity Logs' },
                         ]}
                     />

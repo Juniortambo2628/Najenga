@@ -7,6 +7,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 function DetailRow({ label, value, mono = false }) {
     return (
@@ -121,8 +122,7 @@ export default function Show({ expense }) {
                     title={expense.title}
                     subtitle={expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details'}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Expenses', href: '/expenses' },
                         { label: expense.title },
                     ]}

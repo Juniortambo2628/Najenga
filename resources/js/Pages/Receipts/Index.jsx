@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Index({ receipts = [] }) {
     return (
@@ -12,8 +13,7 @@ export default function Index({ receipts = [] }) {
                     title="Receipts"
                     subtitle="View and manage uploaded receipts"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Receipts' },
                     ]}
                     actions={

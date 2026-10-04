@@ -19,6 +19,7 @@ import useMultiSelect from '@/Hooks/useMultiSelect';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import { CURRENCY_OPTIONS, formatCurrency } from '@/Config/currencies';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Projects({ projects = [] }) {
     const { auth } = usePage().props;
@@ -276,8 +277,7 @@ export default function Projects({ projects = [] }) {
                     title="Projects"
                     subtitle={`${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''}`}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Projects' },
                     ]}
                 />

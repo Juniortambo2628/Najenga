@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
 import { formatCurrency } from '@/Config/currencies';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 function DetailRow({ label, value, mono = false }) {
     return (
@@ -30,8 +31,7 @@ export default function Show({ receipt }) {
                     title={receipt.original_name || `Receipt #${receipt.id}`}
                     subtitle={expense ? `Expense: ${expense.title}` : 'Receipt details'}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Receipts', href: '/receipts' },
                         { label: receipt.original_name || `Receipt #${receipt.id}` },
                     ]}

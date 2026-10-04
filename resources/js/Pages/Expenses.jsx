@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState, useMemo, lazy, Suspense, useCallback } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
+import { rootBreadcrumbs } from '@/Config/navigation';
 const ExpenseSheet = lazy(() => import('@/Components/ExpenseSheet'));
 import ExpenseForm from '@/Components/ExpenseForm';
 import ExpenseDetailModal from '@/Components/ExpenseDetailModal';
@@ -194,8 +195,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     title="Expenses"
                     subtitle={`${filteredExpenses.length} expense${filteredExpenses.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Expenses' },
                     ]}
                 />

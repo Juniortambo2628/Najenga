@@ -13,6 +13,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Index({ users }) {
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -238,8 +239,7 @@ export default function Index({ users }) {
                 title="User Management"
                 subtitle="Manage platform users and their roles"
                 breadcrumbs={[
-                    { label: 'Home', href: '/home' },
-                    { label: 'Dashboard', href: '/dashboard' },
+                    ...rootBreadcrumbs(),
                     { label: 'Users' },
                 ]}
                 actions={

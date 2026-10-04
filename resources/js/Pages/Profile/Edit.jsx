@@ -4,6 +4,7 @@ import DashboardHero from '@/Components/DashboardHero';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Edit({ mustVerifyEmail, status }) {
     return (
@@ -15,8 +16,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     title="Settings"
                     subtitle="Manage your account settings and preferences"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Settings' },
                     ]}
                 />

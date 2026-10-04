@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 function DetailRow({ label, value, mono = false }) {
     return (
@@ -33,8 +34,7 @@ export default function Show({ document }) {
                     title={document.title}
                     subtitle={document.project?.name || 'Document details'}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Documents', href: '/documents' },
                         { label: document.title },
                     ]}

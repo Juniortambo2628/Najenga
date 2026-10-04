@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function WhatsApp() {
     return (
@@ -13,8 +14,7 @@ export default function WhatsApp() {
                         title="WhatsApp Integration"
                         subtitle="Manage WhatsApp notifications and settings"
                         breadcrumbs={[
-                            { label: 'Home', href: '/home' },
-                            { label: 'Dashboard', href: '/dashboard' },
+                            ...rootBreadcrumbs(),
                             { label: 'WhatsApp' },
                         ]}
                     />

@@ -7,6 +7,7 @@ import DashboardHero from '@/Components/DashboardHero';
 import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import { formatCurrency } from '@/Config/currencies';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 const PERIODS = [
     { value: '3months', label: '3 Months' },
@@ -209,8 +210,7 @@ export default function Analytics({
                     title="Advanced Analytics"
                     subtitle="Deep insights into your construction project data"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Analytics' },
                     ]}
                 />

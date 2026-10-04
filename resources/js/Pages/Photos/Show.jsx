@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Show({ photo }) {
     return (
@@ -12,8 +13,7 @@ export default function Show({ photo }) {
                     title={photo.title}
                     subtitle={photo.project?.name || 'Photo details'}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Photos', href: '/photos' },
                         { label: photo.title },
                     ]}

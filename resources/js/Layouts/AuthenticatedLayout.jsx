@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import { Toaster } from 'react-hot-toast';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
+import { navItemsFor } from '@/Config/navigation';
 
 export default function AuthenticatedLayout({ children }) {
     const user = usePage().props.auth.user;
@@ -72,21 +73,7 @@ export default function AuthenticatedLayout({ children }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const navItems = [
-        { name: 'Home', href: '/home', icon: 'fa-home' },
-        { name: 'Dashboard', href: '/dashboard', icon: 'fa-tachometer-alt' },
-        { name: 'Projects', href: '/projects', icon: 'fa-project-diagram' },
-        { name: 'Expenses', href: '/expenses', icon: 'fa-receipt' },
-        { name: 'Photos', href: '/photos', icon: 'fa-images' },
-        { name: 'Documents', href: '/documents', icon: 'fa-file-alt' },
-        { name: 'Timeline', href: '/timeline', icon: 'fa-calendar-alt' },
-        { name: 'Receipt Verification', href: '/receipt-verification', icon: 'fa-check-circle' },
-        { name: 'WhatsApp', href: '/whatsapp', icon: 'fa-whatsapp' },
-        { name: 'Messages', href: '/messages', icon: 'fa-comment-alt' },
-        { name: 'Analytics', href: '/analytics', icon: 'fa-chart-bar', roles: ['admin'] },
-        { name: 'Users', href: '/users', icon: 'fa-users-cog', roles: ['admin'] },
-        { name: 'Profile', href: '/profile', icon: 'fa-user' },
-    ].filter(item => !item.roles || item.roles.includes(user.role));
+    const navItems = navItemsFor(user.role);
 
     return (
         <>

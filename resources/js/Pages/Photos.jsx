@@ -16,6 +16,7 @@ import PhotoCard from '@/Components/PhotoCard';
 import SearchFilterBar from '@/Components/SearchFilterBar';
 import BulkActions from '@/Components/BulkActions';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -153,8 +154,7 @@ export default function Photos({ photos = [], projects = [] }) {
                     title="Photos"
                     subtitle={`${filteredPhotos.length} photo${filteredPhotos.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Photos' },
                     ]}
                 />
