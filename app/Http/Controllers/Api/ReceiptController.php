@@ -8,14 +8,18 @@ use App\Http\Requests\UpdateReceiptRequest;
 use App\Models\Expense;
 use App\Services\OcrService;
 use App\Services\ReceiptParser;
+use App\Services\ReceiptProcessingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class ReceiptController extends Controller
 {
-    public function __construct(protected OcrService $ocr, protected ReceiptParser $parser)
-    {
+    public function __construct(
+        protected OcrService $ocr,
+        protected ReceiptParser $parser,
+        protected ReceiptProcessingService $receipts,
+    ) {
     }
 
     public function index()
@@ -176,12 +180,16 @@ class ReceiptController extends Controller
                     ]);
                 });
 
-                $this->attachReceiptMedia(
+                $tempPath = $expenseData['temp_path'];
+                $ocr = $this->receipts->readReceipt($tempPath);
+
+                $this->receipts->attachReceiptMedia(
                     $expense,
-                    $expenseData['temp_path'],
+                    $tempPath,
                     $expenseData['reference_number'] ?? null,
                     $expenseData['recipient'] ?? null,
-                    $expenseData['ocr_source'] ?? 'local-tesseract'
+                    $expenseData['ocr_source'] ?? 'local-tesseract',
+                    $ocr,
                 );
 
                 $saved[] = ['index' => $index, 'expense' => $expense->fresh()];
@@ -226,12 +234,13 @@ class ReceiptController extends Controller
         }
 
         if ($matchedExpense) {
-            $this->attachReceiptMedia(
+            $this->receipts->attachReceiptMedia(
                 $matchedExpense,
                 $request->temp_path,
                 $request->reference_number,
                 $request->recipient,
-                $request->input('ocr_source', 'local-tesseract')
+                $request->input('ocr_source', 'local-tesseract'),
+                $this->receipts->readReceipt($request->temp_path),
             );
 
             return response()->json([
@@ -342,36 +351,15 @@ class ReceiptController extends Controller
             'project_id'       => $request->project_id,
         ]);
 
-        $this->attachReceiptMedia($expense, $request->temp_path, $request->reference_number, $request->recipient, $request->input('ocr_source', 'local-tesseract'));
+        $this->receipts->attachReceiptMedia(
+            $expense,
+            $request->temp_path,
+            $request->reference_number,
+            $request->recipient,
+            $request->input('ocr_source', 'local-tesseract'),
+            $this->receipts->readReceipt($request->temp_path),
+        );
 
         return $expense;
-    }
-
-    /**
-     * Attach a temp file as receipt media to an expense and clean up the temp file.
-     */
-    private function attachReceiptMedia(Expense $expense, string $tempPath, ?string $referenceNumber, ?string $recipient, string $ocrSource = 'local-tesseract'): void
-    {
-        if (!Storage::disk('local')->exists($tempPath)) {
-            return;
-        }
-
-        $refPart = $referenceNumber ? preg_replace('/[^A-Za-z0-9]/', '_', $referenceNumber) : 'receipt';
-        $recPart = $recipient ? preg_replace('/[^A-Za-z0-9]/', '_', $recipient) : 'unknown';
-        $ext = pathinfo($tempPath, PATHINFO_EXTENSION) ?: 'jpg';
-        $humanName = "{$refPart}_{$recPart}.{$ext}";
-
-        $expense
-            ->addMediaFromDisk($tempPath, 'local')
-            ->usingName($humanName)
-            ->usingFileName($humanName)
-            ->withCustomProperties([
-                'reference_number' => $referenceNumber,
-                'recipient'        => $recipient,
-                'ocr_source'       => $ocrSource,
-            ])
-            ->toMediaCollection('receipt');
-
-        Storage::disk('local')->delete($tempPath);
     }
 }

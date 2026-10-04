@@ -6,6 +6,7 @@ use App\Models\Expense;
 use App\Models\Receipt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ReceiptControllerTest extends TestCase
@@ -148,5 +149,68 @@ class ReceiptControllerTest extends TestCase
         $this->actingAs($this->user)
             ->getJson('/receipts/999999')
             ->assertStatus(404);
+    }
+
+    public function test_storing_a_receipt_records_a_receipts_row(): void
+    {
+        Storage::fake();
+        Storage::fake('public');
+
+        $ocr = $this->createMock(\App\Services\OcrService::class);
+        $ocr->method('extractText')->willReturn([
+            'success' => true,
+            'text' => 'KES 1500 paid to Jane Doe Ref: ABC123 12/03/2026',
+            'confidence' => 0.95,
+            'source' => 'test-fixture',
+        ]);
+        $this->app->instance(\App\Services\OcrService::class, $ocr);
+
+        $image = imagecreatetruecolor(40, 40);
+        ob_start();
+        imagejpeg($image);
+        $bytes = ob_get_clean();
+        imagedestroy($image);
+        Storage::disk('local')->put('temp_receipts/new.jpg', $bytes);
+
+        $this->actingAs($this->user)
+            ->postJson('/receipts/store', [
+                'title' => 'Site materials',
+                'amount' => 1500,
+                'expense_date' => '2026-03-12',
+                'recipient' => 'Jane Doe',
+                'reference_number' => 'ABC123',
+                'temp_path' => 'temp_receipts/new.jpg',
+                'ocr_source' => 'test-fixture',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        // Nothing wrote to receipts before: the table existed but was empty
+        // forever, so /receipts and Receipts/Show always rendered no data.
+        $this->assertDatabaseCount('receipts', 1);
+        $this->assertDatabaseHas('receipts', [
+            'filename' => 'ABC123_Jane_Doe.jpg',
+            'mime_type' => 'image/jpeg',
+            'ocr_provider' => 'test-fixture',
+            'verification_status' => 'pending',
+        ]);
+        Storage::disk('local')->assertMissing('temp_receipts/new.jpg');
+    }
+
+    public function test_storing_a_receipt_does_not_create_a_row_when_the_file_is_gone(): void
+    {
+        Storage::fake();
+        Storage::fake('public');
+
+        $this->actingAs($this->user)
+            ->postJson('/receipts/store', [
+                'title' => 'Site materials',
+                'amount' => 1500,
+                'expense_date' => '2026-03-12',
+                'temp_path' => 'temp_receipts/never-uploaded.jpg',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseCount('receipts', 0);
     }
 }
