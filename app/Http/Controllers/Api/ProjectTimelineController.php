@@ -191,6 +191,8 @@ class ProjectTimelineController extends Controller
 
     public function show(ProjectTimeline $timeline)
     {
+        $this->authorize('view', $timeline);
+
         return Inertia::render('Timeline/Show', [
             'timeline' => $timeline->load('project:id,name'),
         ]);

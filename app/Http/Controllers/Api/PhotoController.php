@@ -86,6 +86,8 @@ class PhotoController extends Controller
 
     public function show(Photo $photo)
     {
+        $this->authorize('view', $photo);
+
         return Inertia::render('Photos/Show', [
             'photo' => $photo->load('project:id,name')
                 ->append('photo_url', 'thumb_url', 'preview_url'),

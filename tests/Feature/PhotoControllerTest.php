@@ -113,4 +113,18 @@ class PhotoControllerTest extends TestCase
             ->get("/photos/{$photo->id}")
             ->assertOk();
     }
+
+    public function test_user_cannot_view_another_users_photo(): void
+    {
+        $photo = Photo::factory()->create([
+            'user_id' => $this->otherUser->id,
+            'project_id' => $this->project->id,
+        ]);
+
+        // show() had no authorize() call, so any signed-in user could open
+        // any photo by id.
+        $this->actingAs($this->user)
+            ->get("/photos/{$photo->id}")
+            ->assertForbidden();
+    }
 }

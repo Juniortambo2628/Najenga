@@ -17,6 +17,18 @@ trait BelongsToUserPolicy
     }
 
     /**
+     * Authorize view if user owns the model.
+     *
+     * Mirrors update() deliberately: DocumentController::index and
+     * PhotoController::index both scope to where('user_id', ...), so a direct
+     * URL may never reveal more than the list already does.
+     */
+    public function view($user, $model): bool
+    {
+        return $this->userOwns($user, $model);
+    }
+
+    /**
      * Authorize update if user owns the model.
      */
     public function update($user, $model): bool

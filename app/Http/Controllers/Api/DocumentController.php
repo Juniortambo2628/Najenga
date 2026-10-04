@@ -113,6 +113,8 @@ class DocumentController extends Controller
 
     public function show(Document $document)
     {
+        $this->authorize('view', $document);
+
         return Inertia::render('Documents/Show', [
             'document' => $document->load('project:id,name', 'folder:id,name')
                 ->append('file_url', 'thumb_url'),
