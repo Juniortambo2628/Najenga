@@ -22,8 +22,8 @@ import useMultiSelect from '@/Hooks/useMultiSelect';
 import DashboardHero from '@/Components/DashboardHero';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
-// Configure PDF worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configure PDF worker (served locally, no CDN round-trip)
+pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
 if (pdfjs.setVerbosityLevel) pdfjs.setVerbosityLevel(pdfjs.VerbosityLevel?.ERRORS ?? 1);
 
 export default function Documents({ documents = [], folders = [], projects = [] }) {
