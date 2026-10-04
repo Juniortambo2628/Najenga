@@ -1,11 +1,20 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import { Toaster } from 'react-hot-toast';
+import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 
-export default function AuthenticatedLayout({ children, pageTitle }) {
+export default function AuthenticatedLayout({ children }) {
     const user = usePage().props.auth.user;
     const url = usePage().url;
+    const component = usePage().component;
+
+    // Page heading is reported by DashboardHero. Keyed on url so a title from
+    // the previous page can never leak into the next one while it mounts.
+    const [reported, setReported] = useState({ url: '', title: '' });
+    const setHeading = useCallback((title) => setReported({ url, title }), [url]);
+    const headingContext = useMemo(() => ({ setHeading }), [setHeading]);
+    const heading = reported.url === url ? reported.title : fallbackHeading(component);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -81,6 +90,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
 
     return (
         <>
+            <PageHeadingContext.Provider value={headingContext}>
             <Toaster position="top-right" />
             
             <div className="min-h-screen bg-black flex">
@@ -148,7 +158,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                             >
                                 <i className="fas fa-bars text-lg"></i>
                             </button>
-                            <span className="text-white font-semibold hidden md:block">{pageTitle || 'Dashboard'}</span>
+                            <span className="text-white font-semibold hidden md:block">{heading}</span>
                         </div>
 
                         {/* Right Side - Search + User Menu */}
@@ -261,6 +271,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                     </main>
                 </div>
             </div>
+            </PageHeadingContext.Provider>
         </>
     );
 }

@@ -1,6 +1,14 @@
 import { Link } from '@inertiajs/react';
+import { useEffect } from 'react';
+import { usePageHeading } from '@/Layouts/PageHeadingContext';
 
 export default function DashboardHero({ title, subtitle, breadcrumbs = [], actions = null }) {
+    const { setHeading } = usePageHeading();
+
+    useEffect(() => {
+        setHeading(title);
+    }, [title, setHeading]);
+
     return (
         <div className="mb-6">
             {/* Breadcrumbs */}
