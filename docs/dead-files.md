@@ -51,6 +51,20 @@ Post-deletion verification: build + `npm run test:js` (71) + `php artisan test`
 (295) all pass; the four deleted public assets return **404** and the five
 kept assets return **200** against the live Apache instance.
 
+### Deleted by Phase 2.7H (commit c65340c)
+
+Decision 8 merged `/home` into `/dashboard` (dashboard wins), which
+made these dead outright rather than merely unreferenced. They were
+listed under *Explicitly NOT dead* above precisely because they were
+still live at audit time - they were not on the Phase 5 list and are
+therefore **not** part of the 1,897,365-byte tally.
+
+| File | Size | Why it was live | Disposal |
+|---|---|---|---|
+| `resources/js/Pages/ClientHome.jsx` | 9,577 B | rendered by `HomeController` at `/home` | **DELETED** |
+| `app/Http/Controllers/HomeController.php` | 1,088 B | only producer of `ClientHome` props; registered in `routes/web.php` | **DELETED** |
+| `tests/Feature/HomeControllerTest.php` | 1,305 B | covered `GET /home` | **DELETED** - its scoping intent moved to `DashboardControllerTest` |
+
 ## Dead CSS
 
 | Selector in `resources/css/app.css` | Uses in `*.jsx` / `*.blade.php` | Confidence |
@@ -65,8 +79,6 @@ Not dead (verified ≥1 use): `.glass-nav-btn`, `.glass-stat-bar`,
 
 | File | Why it is live |
 |---|---|
-| `resources/js/Pages/ClientHome.jsx` | rendered by `HomeController`, which is registered in `routes/web.php`. It dies only when `/home` is merged into `/dashboard` (decision 8, Phase **2.7H**) |
-| `app/Http/Controllers/HomeController.php` | referenced by `routes/web.php` and `tests/Feature/HomeControllerTest.php` |
 | `resources/js/Components/ResourceFormPage.jsx` | imported by `Pages/Documents/Edit.jsx` and `Components/ResourceForm.jsx` |
 | `resources/js/Components/Card.jsx` | 14 references |
 | `public/robots.txt` | never referenced in code by design - crawlers fetch `/robots.txt` directly |
@@ -83,7 +95,7 @@ possible consumer.
 
 ### Still pending for Phase 5
 
-- 16 `backgrounds/*.jpg` (37.0 MB) + logo `.png` (275 KB) — image originals
+- 16 `backgrounds/*.jpg` (37.0 MB) + logo `.png` (275 KB) - image originals
 - `public/test_ocr{,_v2}.php`
 - `.glass-card` and `.landing-section-title` CSS (0 uses in `*.jsx` /
   `*.blade.php`; both already earmarked under "dead components/CSS")
