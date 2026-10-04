@@ -113,6 +113,19 @@ export default function Photos({ photos = [], projects = [] }) {
 
     const closeContextMenu = () => setContextMenu(null);
 
+    const deleteSelectedPhotos = async (message) => {
+        if (!confirm(message)) return;
+        try {
+            const ids = [...selectedItems];
+            await axios.delete('/photos/batch', { data: { ids } });
+            clearSelection();
+            toast.success('Photos deleted successfully');
+            router.reload({ only: ['photos'] });
+        } catch (e) {
+            toast.error('Failed to delete photos');
+        }
+    };
+
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewPhoto(contextMenu?.target) },
         { label: 'Download', icon: 'fa-download', action: () => {
@@ -122,19 +135,9 @@ export default function Photos({ photos = [], projects = [] }) {
             link.click();
         }},
         { label: 'Share', icon: 'fa-share-alt', action: () => alert('Sharing not implemented yet') },
-        { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
-            if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
-                try {
-                    const ids = [...selectedItems];
-                    await axios.delete('/photos/batch', { data: { ids } });
-                    clearSelection();
-                    toast.success('Photos deleted successfully');
-                    router.reload({ only: ['photos'] });
-                } catch (e) {
-                    toast.error('Failed to delete photos');
-                }
-            }
-        }},
+        { label: 'Delete', icon: 'fa-trash', danger: true, action: () =>
+            deleteSelectedPhotos(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)
+        },
     ];
 
     return (
@@ -172,19 +175,7 @@ export default function Photos({ photos = [], projects = [] }) {
                             <button
                                 className="text-white hover:text-gray-200"
                                 title="Delete Selected"
-                                onClick={async () => {
-                                    if (confirm(`Delete ${selectedCount} items?`)) {
-                                        try {
-                                            const ids = [...selectedItems];
-                                            await axios.delete('/photos/batch', { data: { ids } });
-                                            clearSelection();
-                                            toast.success('Photos deleted successfully');
-                                            router.reload({ only: ['photos'] });
-                                        } catch (e) {
-                                            toast.error('Failed to delete photos');
-                                        }
-                                    }
-                                }}
+                                onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
                             >
                                 <i className="fas fa-trash"></i>
                             </button>
@@ -209,19 +200,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                     <button
                                         className="text-white hover:text-gray-200"
                                         title="Delete Selected"
-                                        onClick={async () => {
-                                            if (confirm(`Delete ${selectedCount} items?`)) {
-                                                try {
-                                                    const ids = [...selectedItems];
-                                                    await axios.delete('/photos/batch', { data: { ids } });
-                                                    clearSelection();
-                                                    toast.success('Photos deleted successfully');
-                                                    router.reload({ only: ['photos'] });
-                                                } catch (e) {
-                                                    toast.error('Failed to delete photos');
-                                                }
-                                            }
-                                        }}
+                                        onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
                                     >
                                         <i className="fas fa-trash"></i>
                                     </button>
