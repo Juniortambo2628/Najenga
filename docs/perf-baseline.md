@@ -74,4 +74,6 @@ Target: **0 third-party render-blocking stylesheets — met.**
    warning. Neither is on the Phase 1 list; candidate for a later code-split.
 2. `.env` has `APP_NAME=Laravel` while `.env.example` has `Najenga`, so every
    document title reads `… - Laravel`. Environment file, operator's call.
-3. Dead-file deletion decision — see `docs/dead-files.md` (~39.2 MB).
+3. ~~Dead-file deletion decision~~ — **done for source + legacy icons**
+   (1,897,365 B removed; `docs/dead-files.md`). ~37.4 MB of image originals
+   still deferred to Phase 5.
