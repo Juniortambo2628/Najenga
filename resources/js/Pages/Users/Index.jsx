@@ -17,7 +17,6 @@ import useBulkDelete from '@/Hooks/useBulkDelete';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Index({ users }) {
-    const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [form, setForm] = useState({
@@ -33,14 +32,6 @@ export default function Index({ users }) {
     const resetForm = () => {
         setForm({ first_name: '', last_name: '', email: '', role: 'client', password: '' });
         setErrors({});
-    };
-
-    const handleCreate = (e) => {
-        e.preventDefault();
-        router.post('/users', form, {
-            onSuccess: () => { setShowCreateModal(false); resetForm(); toast.success('User created'); },
-            onError: (err) => setErrors(err),
-        });
     };
 
     const handleEdit = (user) => {
@@ -76,74 +67,6 @@ export default function Index({ users }) {
         onDone: clearSelection,
         reload: ['users'],
     });
-
-    const createModalTabs = [
-        {
-            label: 'Account',
-            icon: 'fa-user',
-            content: (
-                <form onSubmit={handleCreate} className="space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <InputLabel value="First Name" />
-                            <TextInput value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-                            <InputError message={errors.first_name} />
-                        </div>
-                        <div>
-                            <InputLabel value="Last Name" />
-                            <TextInput value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-                            <InputError message={errors.last_name} />
-                        </div>
-                    </div>
-                    <div>
-                        <InputLabel value="Email" />
-                        <TextInput type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                        <InputError message={errors.email} />
-                    </div>
-                    <div>
-                        <InputLabel value="Password" />
-                        <TextInput type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                        <InputError message={errors.password} />
-                    </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); resetForm(); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit">Create User</PrimaryButton>
-                    </div>
-                </form>
-            ),
-        },
-        {
-            label: 'Permissions',
-            icon: 'fa-shield-alt',
-            content: (
-                <form onSubmit={handleCreate} className="space-y-5">
-                    <div>
-                        <InputLabel value="Role" />
-                        <SelectInput
-                            value={form.role}
-                            onChange={(e) => setForm({ ...form, role: e.target.value })}
-                        >
-                            <option value="client">Client</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                        </SelectInput>
-                    </div>
-                    <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                        <h4 className="text-sm font-medium text-gray-300 mb-2">Role Permissions</h4>
-                        <div className="space-y-2 text-xs text-gray-400">
-                            {form.role === 'admin' && <p>Full access to all features, user management, and settings.</p>}
-                            {form.role === 'manager' && <p>Can manage projects, expenses, documents, and team members.</p>}
-                            {form.role === 'client' && <p>Can view assigned projects, upload photos, and submit expenses.</p>}
-                        </div>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); resetForm(); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit">Create User</PrimaryButton>
-                    </div>
-                </form>
-            ),
-        },
-    ];
 
     const editModalTabs = [
         {
@@ -321,16 +244,6 @@ export default function Index({ users }) {
                     </table>
                 </div>
             </div>
-
-            {/* Create User Modal (Tabbed) */}
-            <Modal
-                show={showCreateModal}
-                onClose={() => { setShowCreateModal(false); resetForm(); }}
-                maxWidth="3xl"
-                tabs={createModalTabs}
-                title="New User"
-                subtitle="Create Account"
-            />
 
             {/* Edit User Modal (Tabbed) */}
             <Modal

@@ -142,7 +142,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
     const [filterProject, setFilterProject] = useState(null);
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
 
-    const { data, setData, post, patch, processing, errors, reset } = useForm({
+    const { data, setData, patch, processing, errors, reset } = useForm({
         title: '',
         description: '',
         project_id: '',
@@ -184,20 +184,16 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
 
     const currentItems = tabData[activeTab] || [];
 
-    function openModal(timeline = null) {
+    function openModal(timeline) {
         setEditingTimeline(timeline);
-        if (timeline) {
-            setData({
-                title: timeline.title || '',
-                description: timeline.description || '',
-                project_id: timeline.project_id || '',
-                start_date: timeline.start_date || '',
-                end_date: timeline.end_date || '',
-                status: timeline.status || 'pending',
-            });
-        } else {
-            reset();
-        }
+        setData({
+            title: timeline.title || '',
+            description: timeline.description || '',
+            project_id: timeline.project_id || '',
+            start_date: timeline.start_date || '',
+            end_date: timeline.end_date || '',
+            status: timeline.status || 'pending',
+        });
         setIsModalOpen(true);
     }
 
@@ -209,11 +205,8 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
 
     function handleSubmit(e) {
         e.preventDefault();
-        if (editingTimeline) {
-            patch(`/timelines/${editingTimeline.id}`, { onSuccess: () => closeModal() });
-        } else {
-            post('/timelines', { onSuccess: () => closeModal() });
-        }
+        if (!editingTimeline) return;
+        patch(`/timelines/${editingTimeline.id}`, { onSuccess: () => closeModal() });
     }
 
     function handleDelete(item) {
@@ -451,7 +444,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
             <Modal show={isModalOpen} onClose={closeModal} maxWidth="md">
                 <div className="p-8">
                     <h2 className="text-xl font-bold text-white mb-6">
-                        {editingTimeline ? 'Edit Milestone' : 'Add Milestone'}
+                        Edit Milestone
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
@@ -504,7 +497,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                         <div className="flex justify-end gap-3 pt-5 border-t border-white/10">
                             <SecondaryButton onClick={closeModal} type="button">Cancel</SecondaryButton>
                             <PrimaryButton type="submit" disabled={processing}>
-                                {processing ? 'Saving...' : editingTimeline ? 'Update Milestone' : 'Create Milestone'}
+                                {processing ? 'Saving...' : 'Update Milestone'}
                             </PrimaryButton>
                         </div>
                     </form>

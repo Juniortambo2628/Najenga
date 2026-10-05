@@ -19,22 +19,12 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 
 export default function Expenses({ expenses = [], projects = [] }) {
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [previewExpense, setPreviewExpense] = useState(null);
     
     // View Mode & Project Context
     const [viewMode, setViewMode] = useState('list');
     const [activeProjectId, setActiveProjectId] = useState(null);
 
-    const { data, setData, post, processing, reset, errors } = useForm({
-        title: '',
-        amount: '',
-        category: '',
-        project_id: '',
-        expense_date: new Date().toISOString().split('T')[0],
-        description: '',
-        payment_method: 'cash'
-    });
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [sortBy, setSortBy] = useState('date_desc');
@@ -369,26 +359,19 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     </div>
                 ) : null}
             </div>
-            <Modal show={isAddModalOpen || isEditModalOpen} onClose={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); setSelectedExpense(null); }} maxWidth="lg">
+            <Modal show={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setSelectedExpense(null); }} maxWidth="lg">
                 <div className="p-6">
-                    <h2 className="text-xl font-bold text-white mb-4">{isEditModalOpen ? 'Edit Expense' : 'Add Expense'}</h2>
+                    <h2 className="text-xl font-bold text-white mb-4">Edit Expense</h2>
                     <ExpenseForm
-                        expense={isEditModalOpen ? selectedExpense : null}
+                        expense={selectedExpense}
                         projects={projects}
                         onSubmit={(formData) => {
-                            if (isEditModalOpen) {
-                                editForm.setData(formData);
-                                editForm.patch(`/expenses/${selectedExpense.id}`, {
-                                    onSuccess: () => { setIsEditModalOpen(false); setSelectedExpense(null); editForm.reset(); }
-                                });
-                            } else {
-                                setData(formData);
-                                post('/expenses', {
-                                    onSuccess: () => { setIsAddModalOpen(false); reset(); }
-                                });
-                            }
+                            editForm.setData(formData);
+                            editForm.patch(`/expenses/${selectedExpense.id}`, {
+                                onSuccess: () => { setIsEditModalOpen(false); setSelectedExpense(null); editForm.reset(); }
+                            });
                         }}
-                        onCancel={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); setSelectedExpense(null); }}
+                        onCancel={() => { setIsEditModalOpen(false); setSelectedExpense(null); }}
                     />
                 </div>
             </Modal>

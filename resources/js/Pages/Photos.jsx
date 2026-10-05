@@ -5,7 +5,6 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
 import PreviewModal from '@/Components/PreviewModal';
 import CommentsSection from '@/Components/CommentsSection';
-import FileUploadModal from '@/Components/FileUploadModal';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import useMultiSelect from '@/Hooks/useMultiSelect';
@@ -21,9 +20,6 @@ import { rootBreadcrumbs } from '@/Config/navigation';
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeProjectId, setActiveProjectId] = useState(null);
-    
-    // Modal State
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     
     // Selection State
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
@@ -143,14 +139,6 @@ export default function Photos({ photos = [], projects = [] }) {
     return (
         <AuthenticatedLayout>
             <Head title="Photos" />
-
-            <FileUploadModal
-                isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                uploadUrl="/photos"
-                acceptedFileTypes={{ 'image/*': [] }}
-                title="Upload Photos"
-            />
 
             <div onClick={closeContextMenu}>
                 <DashboardHero

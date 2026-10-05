@@ -4,7 +4,6 @@ import { useState, useMemo, Fragment } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
 import PreviewModal from '@/Components/PreviewModal';
 import CommentsSection from '@/Components/CommentsSection';
-import FileUploadModal from '@/Components/FileUploadModal';
 import ImageAnnotator from '@/Components/ImageAnnotator';
 import { Document as PdfDocument, Page, pdfjs } from 'react-pdf';
 import { toast } from 'react-hot-toast';
@@ -32,9 +31,6 @@ export default function Documents({ documents = [], folders = [], projects = [] 
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [viewMode, setViewMode] = useState('grid'); // Default to grid
     
-    // Modal State
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-
     // Selection State
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
     
@@ -137,21 +133,6 @@ export default function Documents({ documents = [], folders = [], projects = [] 
     return (
         <AuthenticatedLayout>
             <Head title="Documents" />
-
-            <FileUploadModal
-                isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                uploadUrl="/documents"
-                acceptedFileTypes={{ 
-                    'application/pdf': [], 
-                    'application/msword': [], 
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [],
-                    'application/vnd.ms-excel': [],
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': []
-                }}
-                title="Upload Documents"
-                extraData={currentFolderId ? { folder_id: currentFolderId } : {}}
-            />
 
             <div onClick={closeContextMenu}>
                 <DashboardHero

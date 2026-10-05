@@ -35,7 +35,7 @@ export default function Projects({ projects = [] }) {
     const [editingProject, setEditingProject] = useState(null);
     const [sharingProject, setSharingProject] = useState(null);
 
-    const { data, setData, post, patch, processing, reset, errors } = useForm({
+    const { data, setData, patch, processing, reset, errors } = useForm({
         name: '',
         description: '',
         status: 'planning',
@@ -68,12 +68,6 @@ export default function Projects({ projects = [] }) {
     }, [projects, statusFilter, searchQuery, sortBy]);
 
     // Project Modal Handlers
-    const openCreateModal = () => {
-        reset();
-        setEditingProject(null);
-        setIsModalOpen(true);
-    };
-
     const openEditModal = (project) => {
         setEditingProject(project);
         setData({
@@ -91,15 +85,10 @@ export default function Projects({ projects = [] }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (editingProject) {
-            patch(`/projects/${editingProject.id}`, {
-                onSuccess: () => { setIsModalOpen(false); reset(); toast.success('Project updated'); }
-            });
-        } else {
-            post('/projects', {
-                onSuccess: () => { setIsModalOpen(false); reset(); toast.success('Project created'); }
-            });
-        }
+        if (!editingProject) return;
+        patch(`/projects/${editingProject.id}`, {
+            onSuccess: () => { setIsModalOpen(false); reset(); toast.success('Project updated'); }
+        });
     };
 
     const handleExport = () => {
@@ -191,7 +180,7 @@ export default function Projects({ projects = [] }) {
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project')}
+                            {processing ? 'Saving...' : 'Update Project'}
                         </PrimaryButton>
                     </div>
                 </form>
@@ -243,7 +232,7 @@ export default function Projects({ projects = [] }) {
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project')}
+                            {processing ? 'Saving...' : 'Update Project'}
                         </PrimaryButton>
                     </div>
                 </form>
@@ -412,14 +401,14 @@ export default function Projects({ projects = [] }) {
                 onSuccess={() => setSharingProject(null)}
             />
 
-            {/* Create/Edit Project Modal (Tabbed) */}
+            {/* Edit Project Modal (Tabbed) */}
             <Modal
                 show={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setEditingProject(null); reset(); }}
                 maxWidth="3xl"
                 tabs={projectModalTabs}
-                title={editingProject ? 'Edit Project' : 'New Project'}
-                subtitle={editingProject ? 'Update Project' : 'Create Project'}
+                title="Edit Project"
+                subtitle="Update Project"
             />
         </AuthenticatedLayout>
     );
