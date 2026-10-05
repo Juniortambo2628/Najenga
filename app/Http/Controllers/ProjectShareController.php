@@ -38,6 +38,8 @@ class ProjectShareController extends Controller
 
     public function index(Project $project)
     {
+        $this->authorize('view', $project);
+
         return response()->json($project->users);
     }
 }

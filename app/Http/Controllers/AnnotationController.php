@@ -40,6 +40,15 @@ class AnnotationController extends Controller
         $type = $this->getModelClass($request->annotatable_type);
         if (!$type) return response()->json(['error' => 'Invalid type'], 400);
 
+        // annotatable_id is client-supplied and activity on this schema has no
+        // FK, so resolve the parent before writing. findOrFail also stops a
+        // new annotation being left orphaned against an id that never existed.
+        $annotatable = $type::findOrFail($request->annotatable_id);
+
+        // Without this, any signed-in user could annotate someone else's
+        // photo, document or project by POSTing its id.
+        $this->authorize('view', $annotatable);
+
         $annotation = Annotation::create([
             'annotatable_id' => $request->annotatable_id,
             'annotatable_type' => $type,
@@ -52,9 +61,8 @@ class AnnotationController extends Controller
         ]);
 
         // Notify other project users
-        $resource = $type::find($request->annotatable_id);
-        $project = $resource instanceof \App\Models\Project ? $resource : ($resource->project ?? null);
-        
+        $project = $annotatable instanceof \App\Models\Project ? $annotatable : ($annotatable->project ?? null);
+
         if ($project) {
             $this->notifyProjectMembers(
                 $project,

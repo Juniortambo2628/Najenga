@@ -54,6 +54,11 @@ class CommentController extends Controller
 
         $resource = $modelClass::findOrFail($request->commentable_id);
 
+        // The parent id comes straight from the request, so without this any
+        // signed-in user could post a comment onto someone else's photo,
+        // document or project.
+        $this->authorize('view', $resource);
+
         $comment = $resource->comments()->create([
             'body' => $request->body,
             'user_id' => Auth::id(),
