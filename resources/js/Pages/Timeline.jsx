@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import DashboardHero from '@/Components/DashboardHero';
 import ContextToolbar from '@/Components/ContextToolbar';
@@ -54,7 +54,13 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
             <div className="flex-1 bg-gray-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition">
                 <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+                        {item.type === 'milestone' ? (
+                            <Link href={`/timeline/${item.id}`} className="text-xl font-semibold text-white hover:text-red-400 transition">
+                                {item.title}
+                            </Link>
+                        ) : (
+                            <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+                        )}
                         <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full bg-white/5 ${config.textColor}`}>
                             {item.type}
                         </span>
@@ -247,7 +253,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     currentProjectId={filterProject}
                     onProjectChange={(val) => setFilterProject(val)}
                     actions={
-                        <PrimaryButton onClick={() => openModal()}>
+                        <PrimaryButton as="link" href="/timeline/create">
                             <i className="fas fa-plus"></i> Add Milestone
                         </PrimaryButton>
                     }
@@ -302,7 +308,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-stream"
                             title="No activity yet"
                             message="Add milestones, expenses, photos, or documents to see them on the timeline"
-                            action={{ label: 'Add Milestone', onClick: () => openModal() }}
+                            action={{ label: 'Add Milestone', onClick: () => router.get('/timeline/create') }}
                         />
                     ) : (
                         <div className="relative">
@@ -327,7 +333,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-flag"
                             title="No milestones yet"
                             message="Add milestones to track your project progress"
-                            action={{ label: 'Add Milestone', onClick: () => openModal() }}
+                            action={{ label: 'Add Milestone', onClick: () => router.get('/timeline/create') }}
                         />
                     ) : (
                         <div className="relative">

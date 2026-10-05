@@ -205,7 +205,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     onProjectChange={setActiveProjectId}
                     selectedCount={selectedCount}
                     actions={
-                        <PrimaryButton onClick={() => { reset(); setIsAddModalOpen(true); }}>
+                        <PrimaryButton as="link" href="/expenses/create">
                             <i className="fas fa-plus mr-1"></i>Add Expense
                         </PrimaryButton>
                     }
@@ -261,7 +261,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         icon="fa-receipt" 
                         title="No expenses found" 
                         message={searchQuery || categoryFilter !== 'all' ? "Try adjusting your filters" : "Start tracking your project expenses"}
-                        action={!searchQuery && categoryFilter === 'all' ? { label: 'Add Expense', onClick: () => { reset(); setIsAddModalOpen(true); } } : null}
+                        action={!searchQuery && categoryFilter === 'all' ? { label: 'Add Expense', onClick: () => router.get('/expenses/create') } : null}
                     />
                 )}
 

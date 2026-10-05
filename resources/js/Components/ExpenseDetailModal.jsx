@@ -22,7 +22,12 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
     if (!editing) {
         return (
             <div className="space-y-6">
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-3">
+                    {expense?.id && (
+                        <SecondaryButton as="link" href={`/expenses/${expense.id}`} className="text-xs">
+                            <i className="fas fa-external-link-alt mr-1"></i>Open page
+                        </SecondaryButton>
+                    )}
                     <PrimaryButton onClick={onStartEdit} className="text-xs">
                         <i className="fas fa-edit mr-1"></i>Edit
                     </PrimaryButton>

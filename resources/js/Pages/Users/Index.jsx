@@ -238,7 +238,7 @@ export default function Index({ users }) {
                                 </button>
                             }
                         />
-                        <PrimaryButton onClick={() => { resetForm(); setShowCreateModal(true); }}>
+                        <PrimaryButton as="link" href="/users/create">
                             <i className="fas fa-plus mr-2"></i>Add User
                         </PrimaryButton>
                     </div>

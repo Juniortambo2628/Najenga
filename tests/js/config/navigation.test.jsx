@@ -30,6 +30,12 @@ describe('NAV_ITEMS', () => {
         expect(new Set(NAV_ITEMS.map((i) => i.name)).size).toBe(NAV_ITEMS.length);
         expect(new Set(NAV_ITEMS.map((i) => i.href)).size).toBe(NAV_ITEMS.length);
     });
+
+    it('links the activity log page, which has no other way in', () => {
+        // /activity-logs renders Pages/ActivityLogs.jsx but appears in no
+        // other component and no breadcrumb, so the sidebar is its only door.
+        expect(NAV_ITEMS.map((i) => i.href)).toContain('/activity-logs');
+    });
 });
 
 describe('navItemsFor', () => {

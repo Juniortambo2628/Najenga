@@ -134,7 +134,9 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                                         {recentProjects.map((project) => (
                                             <div key={project.id} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                                                 <div>
-                                                    <h6 className="text-white font-medium">{project.name}</h6>
+                                                    <Link href={`/projects/${project.id}`} className="text-white font-medium hover:text-red-400 transition">
+                                                        {project.name}
+                                                    </Link>
                                                     <small className="text-gray-400">{project.location}</small>
                                                 </div>
                                                 <StatusBadge status={project.status} />

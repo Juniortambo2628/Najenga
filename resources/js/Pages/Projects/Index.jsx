@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage, Link, useForm } from '@inertiajs/react';
+import { Head, usePage, Link, useForm, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import ContextToolbar from '@/Components/ContextToolbar';
@@ -284,9 +284,9 @@ export default function Projects({ projects = [] }) {
                             <button onClick={handleExport} className="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 rounded-xl hover:bg-white/10 transition text-sm font-medium">
                                 <i className="fas fa-download mr-2"></i> Export
                             </button>
-                            <PrimaryButton onClick={openCreateModal}>
-                                <i className="fas fa-plus"></i> New Project
-                            </PrimaryButton>
+                                <PrimaryButton as="link" href="/projects/create">
+                                    <i className="fas fa-plus"></i> New Project
+                                </PrimaryButton>
                         </>
                     }
                 >
@@ -332,7 +332,7 @@ export default function Projects({ projects = [] }) {
                         icon="fa-project-diagram"
                         title="No projects found"
                         message="Create your first project to get started."
-                        action={{ label: 'New Project', onClick: openCreateModal }}
+                        action={{ label: 'New Project', onClick: () => router.get('/projects/create') }}
                     />
                 ) : (
                     <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>

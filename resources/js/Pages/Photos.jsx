@@ -183,7 +183,7 @@ export default function Photos({ photos = [], projects = [] }) {
                         </>
                     }
                     actions={
-                        <PrimaryButton onClick={() => setIsUploadModalOpen(true)}>
+                        <PrimaryButton as="link" href="/photos/create">
                             <i className="fas fa-upload"></i> Upload Photo
                         </PrimaryButton>
                     }

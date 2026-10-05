@@ -16,6 +16,7 @@ export const NAV_ITEMS = [
     { name: 'Messages', href: '/messages', icon: 'fa-comment-alt' },
     { name: 'Analytics', href: '/analytics', icon: 'fa-chart-bar', roles: ['admin'] },
     { name: 'Users', href: '/users', icon: 'fa-users-cog', roles: ['admin'] },
+    { name: 'Activity Logs', href: '/activity-logs', icon: 'fa-history' },
     { name: 'Profile', href: '/profile', icon: 'fa-user' },
 ];
 
