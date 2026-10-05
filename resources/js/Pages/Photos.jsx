@@ -8,6 +8,10 @@ import CommentsSection from '@/Components/CommentsSection';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useActiveProject from '@/Hooks/useActiveProject';
+import useContextMenu from '@/Hooks/useContextMenu';
+import useFilteredItems from '@/Hooks/useFilteredItems';
+import useFileDownload from '@/Hooks/useFileDownload';
 import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -25,30 +29,18 @@ export default function Photos({ photos = [], projects = [] }) {
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
 
     // Context Menu State
-    const [contextMenu, setContextMenu] = useState(null);
+    const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
 
     // Preview State
     const [previewPhoto, setPreviewPhoto] = useState(null);
 
-    const activeProject = useMemo(
-        () => projects.find(p => String(p.id) === String(activeProjectId)),
-        [projects, activeProjectId]
-    );
+    const activeProject = useActiveProject(projects, activeProjectId);
 
-    const filteredPhotos = useMemo(() => {
-        let result = [...photos];
-        if (activeProjectId) {
-            result = result.filter(photo => String(photo.project_id) === String(activeProjectId));
-        }
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            result = result.filter(photo => 
-                photo.title.toLowerCase().includes(lowerQuery) ||
-                photo.project_name.toLowerCase().includes(lowerQuery)
-            );
-        }
-        return result;
-    }, [photos, activeProjectId, searchQuery]);
+    const filteredPhotos = useFilteredItems(photos, {
+        projectId: activeProjectId,
+        searchQuery,
+        searchFields: ['title', 'project_name'],
+    });
 
     // Timeline State
     const [viewMode, setViewMode] = useState('grid');
@@ -96,18 +88,13 @@ export default function Photos({ photos = [], projects = [] }) {
 
     // Handlers
     const handleContextMenu = (e, photo) => {
-        e.preventDefault();
         if (!isSelected(photo.id)) {
             toggleSelection(photo.id, false);
         }
-        setContextMenu({
-            x: e.clientX,
-            y: e.clientY,
-            target: photo
-        });
+        openContextMenu(e, photo);
     };
 
-    const closeContextMenu = () => setContextMenu(null);
+    const download = useFileDownload();
 
     const deleteSelectedPhotos = async (message) => {
         if (!confirm(message)) return;
@@ -124,12 +111,9 @@ export default function Photos({ photos = [], projects = [] }) {
 
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewPhoto(contextMenu?.target) },
-        { label: 'Download', icon: 'fa-download', action: () => {
-            const link = document.createElement('a');
-            link.href = `/storage/${contextMenu?.target.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`;
-            link.download = contextMenu?.target.original_name || 'download';
-            link.click();
-        }},
+        { label: 'Download', icon: 'fa-download', action: () =>
+            download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
+        },
         { label: 'Share', icon: 'fa-share-alt', action: () => alert('Sharing not implemented yet') },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: () =>
             deleteSelectedPhotos(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)

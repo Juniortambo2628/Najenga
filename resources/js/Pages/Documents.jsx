@@ -18,6 +18,10 @@ import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useActiveProject from '@/Hooks/useActiveProject';
+import useContextMenu from '@/Hooks/useContextMenu';
+import useFilteredItems from '@/Hooks/useFilteredItems';
+import useFileDownload from '@/Hooks/useFileDownload';
 import DashboardHero from '@/Components/DashboardHero';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
@@ -35,7 +39,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
     
     // Context Menu State
-    const [contextMenu, setContextMenu] = useState(null);
+    const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
 
     // Preview State
     const [previewDoc, setPreviewDoc] = useState(null);
@@ -45,10 +49,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
     const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
 
-    const activeProject = useMemo(
-        () => projects.find(p => String(p.id) === String(activeProjectId)),
-        [projects, activeProjectId]
-    );
+    const activeProject = useActiveProject(projects, activeProjectId);
 
     // Extract unique types
     const types = useMemo(() => {
@@ -77,43 +78,31 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         return crumbs;
     }, [folders, currentFolderId]);
 
-    const filteredDocuments = useMemo(() => {
+    const folderAndTypeFiltered = useMemo(() => {
         let result = documents.filter(doc => doc.folder_id === currentFolderId);
         if (typeFilter !== 'all') result = result.filter(doc => doc.document_type === typeFilter);
-        if (activeProjectId) {
-            result = result.filter(doc => String(doc.project_id) === String(activeProjectId));
-        }
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            result = result.filter(doc => 
-                doc.title.toLowerCase().includes(lowerQuery) ||
-                doc.project_name.toLowerCase().includes(lowerQuery)
-            );
-        }
         return result;
-    }, [documents, typeFilter, activeProjectId, searchQuery, currentFolderId]);
+    }, [documents, typeFilter, currentFolderId]);
+
+    const filteredDocuments = useFilteredItems(folderAndTypeFiltered, {
+        projectId: activeProjectId,
+        searchQuery,
+        searchFields: ['title', 'project_name'],
+    });
 
     // Handlers
     const handleContextMenu = (e, doc) => {
-        e.preventDefault();
         if (!isSelected(doc.id)) selectAll([doc.id]);
-        setContextMenu({
-            x: e.clientX,
-            y: e.clientY,
-            target: doc
-        });
+        openContextMenu(e, doc);
     };
 
-    const closeContextMenu = () => setContextMenu(null);
+    const download = useFileDownload();
 
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewDoc(contextMenu?.target) },
-        { label: 'Download', icon: 'fa-download', action: () => {
-             const link = document.createElement('a');
-             link.href = `/storage/${contextMenu?.target.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`;
-             link.download = contextMenu?.target.original_name || 'download';
-             link.click();
-        }},
+        { label: 'Download', icon: 'fa-download', action: () =>
+            download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
+        },
         { label: 'Share', icon: 'fa-share-alt', action: () => alert('Shared!') },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
             if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
@@ -436,10 +425,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                             <button 
                                                 onClick={(e) => { 
                                                     e.stopPropagation(); 
-                                                    const link = document.createElement('a');
-                                                    link.href = `/storage/${doc.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`;
-                                                    link.download = doc.original_name || 'download';
-                                                    link.click();
+                                                    download(doc.file_path, doc.original_name || 'download');
                                                 }}
                                                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#8B0000] text-white transition flex items-center justify-center"
                                                 title="Download"

@@ -14,6 +14,9 @@ import DashboardHero from '@/Components/DashboardHero';
 import Modal from '@/Components/Modal';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useActiveProject from '@/Hooks/useActiveProject';
+import useContextMenu from '@/Hooks/useContextMenu';
+import useFilteredItems from '@/Hooks/useFilteredItems';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -33,7 +36,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
     
     // Action State
-    const [contextMenu, setContextMenu] = useState(null);
+    const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState(null);
     const [detailExpense, setDetailExpense] = useState(null);
@@ -48,10 +51,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
         payment_method: 'cash'
     });
 
-    const activeProject = useMemo(
-        () => projects.find(p => String(p.id) === String(activeProjectId)),
-        [projects, activeProjectId]
-    );
+    const activeProject = useActiveProject(projects, activeProjectId);
 
     // Extract unique categories for filter
     const categories = useMemo(() => {
@@ -59,39 +59,25 @@ export default function Expenses({ expenses = [], projects = [] }) {
         return ['all', ...Array.from(unique)];
     }, [expenses]);
 
-    const filteredExpenses = useMemo(() => {
-        let result = [...expenses];
+    const categoryFiltered = useMemo(
+        () => (categoryFilter === 'all' ? expenses : expenses.filter(e => e.category === categoryFilter)),
+        [expenses, categoryFilter]
+    );
 
-        // Filter by active project
-        if (activeProjectId) {
-            result = result.filter(expense => String(expense.project_id) === String(activeProjectId));
-        }
+    const sortExpenses = useMemo(() => (a, b) => {
+        if (sortBy === 'date_desc') return new Date(b.expense_date) - new Date(a.expense_date);
+        if (sortBy === 'date_asc') return new Date(a.expense_date) - new Date(b.expense_date);
+        if (sortBy === 'amount_high') return b.amount - a.amount;
+        if (sortBy === 'amount_low') return a.amount - b.amount;
+        return 0;
+    }, [sortBy]);
 
-        // Filter by Category
-        if (categoryFilter !== 'all') {
-            result = result.filter(expense => expense.category === categoryFilter);
-        }
-
-        // Search
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            result = result.filter(expense => 
-                expense.title.toLowerCase().includes(lowerQuery) ||
-                expense.project_name?.toLowerCase().includes(lowerQuery)
-            );
-        }
-
-        // Sort
-        result.sort((a, b) => {
-            if (sortBy === 'date_desc') return new Date(b.expense_date) - new Date(a.expense_date);
-            if (sortBy === 'date_asc') return new Date(a.expense_date) - new Date(b.expense_date);
-            if (sortBy === 'amount_high') return b.amount - a.amount;
-            if (sortBy === 'amount_low') return a.amount - b.amount;
-            return 0;
-        });
-
-        return result;
-    }, [expenses, categoryFilter, searchQuery, sortBy, activeProjectId]);
+    const filteredExpenses = useFilteredItems(categoryFiltered, {
+        projectId: activeProjectId,
+        searchQuery,
+        sortFn: sortExpenses,
+        searchFields: ['title', 'project_name'],
+    });
 
     const handleExport = () => {
         exportToCSV(
@@ -112,18 +98,6 @@ export default function Expenses({ expenses = [], projects = [] }) {
     const totalAmount = useMemo(() => filteredExpenses.reduce((sum, e) => sum + Number(e.amount), 0), [filteredExpenses]);
 
     // Handlers
-    const handleActionClick = (e, expense) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setContextMenu({
-            x: e.clientX,
-            y: e.clientY,
-            target: expense
-        });
-    };
-
-    const closeContextMenu = () => setContextMenu(null);
-
     const handleEdit = (expense) => {
         setSelectedExpense(expense);
         editForm.setData({
@@ -345,7 +319,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
                                                     <button 
-                                                        onClick={(e) => handleActionClick(e, expense)}
+                                                        onClick={(e) => openContextMenu(e, expense)}
                                                         className="w-8 h-8 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition flex items-center justify-center mx-auto"
                                                     >
                                                         <i className="fas fa-ellipsis-h"></i>

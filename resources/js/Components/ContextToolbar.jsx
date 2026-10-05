@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import useActiveProject from '@/Hooks/useActiveProject';
 
 export default function ContextToolbar({
     projects = [],
@@ -11,10 +11,7 @@ export default function ContextToolbar({
     bulkActions = null,
     children,
 }) {
-    const currentProject = useMemo(
-        () => projects.find(p => String(p.id) === String(currentProjectId)),
-        [projects, currentProjectId]
-    );
+    const currentProject = useActiveProject(projects, currentProjectId);
 
     return (
         <div className="panel px-5 py-3 mb-6">

@@ -16,6 +16,7 @@ import Card from '@/Components/Card';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
+import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
@@ -163,13 +164,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         return items.sort((a, b) => (b.sortDate || '').localeCompare(a.sortDate || ''));
     }, [timelines, expenses, photos, documents]);
 
-    const filteredItems = useMemo(() => {
-        let items = allItems;
-        if (filterProject) {
-            items = items.filter((i) => String(i.project_id) === String(filterProject));
-        }
-        return items;
-    }, [allItems, filterProject]);
+    const filteredItems = useFilteredItems(allItems, { projectId: filterProject });
 
     const tabData = useMemo(() => {
         const filter = (arr) => filterProject ? arr.filter((i) => String(i.project_id) === String(filterProject)) : arr;
