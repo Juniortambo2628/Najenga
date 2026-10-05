@@ -7,6 +7,7 @@ use App\Http\Requests\StoreBatchExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
 use App\Models\Project;
+use App\Services\ActivityLogger;
 use App\Traits\HasProjectScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -55,12 +56,14 @@ class ExpenseController extends Controller
 
     public function store(StoreExpenseRequest $request)
     {
-        Expense::create([
+        $expense = Expense::create([
             ...$request->validated(),
             'user_id' => auth()->id(),
             'currency' => $request->input('currency', 'KES'),
             'status' => 'paid',
         ]);
+
+        ActivityLogger::log('expense.created', sprintf('Added expense "%s" (#%d)', $expense->title, $expense->id));
 
         return redirect()->back()->with('success', 'Expense added successfully');
     }
@@ -188,6 +191,8 @@ class ExpenseController extends Controller
     {
         $expense->update($request->validated());
 
+        ActivityLogger::log('expense.updated', sprintf('Updated expense "%s" (#%d)', $expense->title, $expense->id));
+
         return redirect()->back()->with('success', 'Expense updated successfully');
     }
 
@@ -196,6 +201,8 @@ class ExpenseController extends Controller
         $this->authorize('delete', $expense);
 
         Expense::withoutSyncingToSearch(fn () => $expense->delete());
+
+        ActivityLogger::log('expense.deleted', sprintf('Deleted expense "%s" (#%d)', $expense->title, $expense->id));
 
         return redirect()->back()->with('success', 'Expense deleted successfully');
     }

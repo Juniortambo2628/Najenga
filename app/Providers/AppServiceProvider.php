@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Vite;
@@ -33,6 +34,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(\App\Models\Annotation::class, \App\Policies\AnnotationPolicy::class);
         Gate::policy(\App\Models\ProjectTimeline::class, \App\Policies\TimelinePolicy::class);
         Gate::policy(\App\Models\Folder::class, \App\Policies\FolderPolicy::class);
+
+        // Listed rather than left to withEvents() auto-discovery: that keys off
+        // a single type-hinted parameter on handle(), and LogAuthentication
+        // serves four distinct events.
+        Event::listen(\Illuminate\Auth\Events\Login::class, \App\Listeners\LogAuthentication::class);
+        Event::listen(\Illuminate\Auth\Events\Logout::class, \App\Listeners\LogAuthentication::class);
+        Event::listen(\Illuminate\Auth\Events\Registered::class, \App\Listeners\LogAuthentication::class);
+        Event::listen(\Illuminate\Auth\Events\Failed::class, \App\Listeners\LogAuthentication::class);
 
         $this->app->singleton(\App\Services\ReceiptParser::class);
     }

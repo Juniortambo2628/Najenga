@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -29,6 +30,8 @@ class ProjectController extends Controller
         $validated['client_id'] = auth()->id();
 
         $project = Project::create($validated);
+
+        ActivityLogger::log('project.created', sprintf('Created project "%s" (#%d)', $project->name, $project->id));
 
         if ($request->wantsJson() && !$request->header('X-Inertia')) {
             return response()->json($project, 201);
@@ -65,6 +68,8 @@ class ProjectController extends Controller
     {
         $project->update($request->validated());
 
+        ActivityLogger::log('project.updated', sprintf('Updated project "%s" (#%d)', $project->name, $project->id));
+
         if ($request->wantsJson() && !$request->header('X-Inertia')) {
             return response()->json($project);
         }
@@ -77,6 +82,8 @@ class ProjectController extends Controller
         $this->authorize('delete', $project);
 
         $project->delete();
+
+        ActivityLogger::log('project.deleted', sprintf('Deleted project "%s" (#%d)', $project->name, $project->id));
 
         if ($request->wantsJson() && !$request->header('X-Inertia')) {
             return response()->json(null, 204);

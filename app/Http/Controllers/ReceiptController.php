@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreReceiptRequest;
 use App\Http\Requests\UpdateReceiptRequest;
 use App\Models\Expense;
+use App\Services\ActivityLogger;
 use App\Services\OcrService;
 use App\Services\ReceiptParser;
 use App\Services\ReceiptProcessingService;
@@ -242,6 +243,8 @@ class ReceiptController extends Controller
                 $this->receipts->readReceipt($request->temp_path),
             );
 
+            ActivityLogger::log('receipt.attached', sprintf('Attached a receipt to expense (#%d)', $matchedExpense->id));
+
             return response()->json([
                 'success' => true,
                 'expense' => $matchedExpense->fresh(),
@@ -250,6 +253,8 @@ class ReceiptController extends Controller
         }
 
         $expense = \App\Models\Expense::withoutSyncingToSearch(fn () => $this->createExpenseFromRequest($request));
+
+        ActivityLogger::log('receipt.created', sprintf('Created expense (#%d) from a receipt', $expense->id));
 
         return response()->json(['success' => true, 'expense' => $expense->fresh(), 'matched' => false]);
     }
@@ -331,6 +336,8 @@ class ReceiptController extends Controller
         $this->authorize('delete', $receipt);
 
         $receipt->delete();
+
+        ActivityLogger::log('receipt.deleted', sprintf('Deleted receipt %s', $receipt->original_name));
 
         return redirect()->back()->with('success', 'Receipt deleted successfully');
     }
