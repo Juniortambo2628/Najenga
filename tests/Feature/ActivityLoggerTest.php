@@ -108,6 +108,30 @@ class ActivityLoggerTest extends TestCase
                 ->where('logs.data.0.description', 'mine'));
     }
 
+    public function test_the_same_controller_serves_the_page_and_the_json_endpoint(): void
+    {
+        $user = User::factory()->create(['role' => 'client']);
+
+        ActivityLogger::logFor($user, 'project.created', 'one row');
+
+        // The Inertia page, no Accept header.
+        $this->actingAs($user)
+            ->get('/activity-logs')
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('ActivityLogs')
+                ->has('logs.data', 1));
+
+        // The expense modal's fetch, which axios sends as Accept: application/json.
+        $this->actingAs($user)
+            ->getJson('/api/activity-logs')
+            ->assertOk()
+            ->assertJsonStructure([
+                'data' => [['id', 'action', 'description', 'ip_address']],
+            ])
+            ->assertJsonPath('data.0.action', 'project.created');
+    }
+
     public function test_action_code_is_capped_at_the_column_width(): void
     {
         $user = User::factory()->create();

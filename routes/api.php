@@ -37,7 +37,7 @@ Route::get('/user', function (Request $request) {
 
 // Activity logs API (JSON, session auth)
 Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogApiController::class, 'index']);
+    Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index']);
 });
 
 // JSON endpoints the Inertia frontend fetches. `verified` mirrors the
