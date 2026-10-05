@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Services\OcrService;
 use App\Services\ReceiptProcessingService;
 use Illuminate\Http\Request;

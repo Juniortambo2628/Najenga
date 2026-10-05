@@ -24,11 +24,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Telegram Webhook (Public, no auth)
-Route::post('/telegram/webhook', [\App\Http\Controllers\Api\TelegramController::class, 'handleWebhook']);
+Route::post('/telegram/webhook', [\App\Http\Controllers\TelegramController::class, 'handleWebhook']);
 
 // Meta WhatsApp Cloud API Webhook (Public, no auth)
-Route::get('/whatsapp/webhook', [\App\Http\Controllers\Api\WhatsAppController::class, 'verifyWebhook']);
-Route::post('/whatsapp/webhook', [\App\Http\Controllers\Api\WhatsAppController::class, 'handleWebhook']);
+Route::get('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppController::class, 'verifyWebhook']);
+Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppController::class, 'handleWebhook']);
 
 // Authenticated user route (for Sanctum SPA if needed)
 Route::get('/user', function (Request $request) {
@@ -37,7 +37,7 @@ Route::get('/user', function (Request $request) {
 
 // Activity logs API (JSON, session auth)
 Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('/activity-logs', [\App\Http\Controllers\Api\ActivityLogApiController::class, 'index']);
+    Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogApiController::class, 'index']);
 });
 
 // JSON endpoints the Inertia frontend fetches. `verified` mirrors the
