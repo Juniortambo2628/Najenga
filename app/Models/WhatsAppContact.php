@@ -9,6 +9,10 @@ class WhatsAppContact extends Model
 {
     use HasFactory;
 
+    // Without this Eloquent derives whats_app_contacts, which no migration
+    // has ever created.
+    protected $table = 'whatsapp_contacts';
+
     protected $fillable = ['user_id', 'phone_number', 'name'];
 
     public function user()
