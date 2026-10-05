@@ -2,11 +2,19 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class ErrorPagesTest extends TestCase
 {
+    use RefreshDatabase;
+
+    private const MISSING = '/this-route-does-not-exist';
+
     public function test_unknown_route_renders_the_custom_404_page(): void
     {
         $response = $this->get('/definitely-not-a-route');
@@ -63,5 +71,59 @@ class ErrorPagesTest extends TestCase
             // The page must be self-contained so it still renders when the build is broken.
             $this->assertStringNotContainsString('/build/assets/', $html, "errors.{$status} must not depend on Vite.");
         }
+    }
+
+    public function test_an_inertia_visit_to_a_missing_route_gets_the_react_error_page(): void
+    {
+        $response = $this->get(self::MISSING, ['X-Inertia' => 'true']);
+
+        // assertInertia() reads viewData('page'), which only exists on the
+        // HTML rendering of the root template - an X-Inertia request gets
+        // JSON back, so assert on that body directly.
+        $response->assertStatus(404);
+        $response->assertHeader('X-Inertia', 'true');
+        $this->assertSame('Errors', $response->json('component'));
+        $this->assertSame(404, $response->json('props.status'));
+    }
+
+    public function test_the_error_page_carries_the_asset_version(): void
+    {
+        $response = $this->get(self::MISSING, ['X-Inertia' => 'true']);
+
+        // Without this the client would store version "", then have its
+        // next visit answered with a 409 reload.
+        $this->assertSame(
+            (string) (new HandleInertiaRequests)->version(Request::create(self::MISSING)),
+            $response->json('version')
+        );
+    }
+
+    public function test_a_forbidden_inertia_visit_reports_the_real_status(): void
+    {
+        $user = User::factory()->create(['role' => 'client']);
+
+        $headers = ['X-Inertia' => 'true'];
+        $version = (new HandleInertiaRequests)->version(Request::create('/users'));
+
+        if ($version !== null) {
+            // A real Inertia client always sends the version it holds;
+            // without it HandleVersion answers 409 before the page shows.
+            $headers['X-Inertia-Version'] = $version;
+        }
+
+        $response = $this->actingAs($user)->get('/users', $headers);
+
+        $response->assertStatus(403);
+        $response->assertHeader('X-Inertia', 'true');
+        $this->assertSame('Errors', $response->json('component'));
+        $this->assertSame(403, $response->json('props.status'));
+    }
+
+    public function test_json_requests_are_not_handed_the_react_error_page(): void
+    {
+        $response = $this->getJson(self::MISSING);
+
+        $response->assertStatus(404);
+        $response->assertJsonStructure(['message']);
     }
 }
