@@ -27,6 +27,13 @@ class DashboardControllerTest extends TestCase
         $this->get('/dashboard')->assertRedirect('/login');
     }
 
+    public function test_home_is_redirected_to_dashboard(): void
+    {
+        // Phase 2.7H merged /home into /dashboard; bookmarks must not 404.
+        $this->get('/home')
+            ->assertStatus(301)
+            ->assertRedirect('/dashboard');
+    }
     public function test_user_can_access_dashboard(): void
     {
         $this->actingAs($this->user)

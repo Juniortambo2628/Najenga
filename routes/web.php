@@ -16,6 +16,17 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
+// /home was merged into /dashboard in Phase 2.7H. Keep old bookmarks and
+// any external link alive instead of stranding them on a 404. Declared
+// outside the auth group so the redirect fires for signed-out visitors too,
+// and /dashboard then sends them on to /login as usual.
+//
+// Deliberately not Route::redirect(): that builds its Location through
+// UrlGenerator::toRoute($route, $params, absolute: false), which yields the
+// path-absolute "/dashboard". Resolved against a request under a subdirectory
+// that lands on the host root and 404s. url() keeps the install base.
+Route::get('/home', fn () => redirect()->to(url('/dashboard'), 301));
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Projects
     Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects');
