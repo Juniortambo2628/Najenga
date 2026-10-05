@@ -127,6 +127,26 @@ class ReceiptProcessingServiceTest extends TestCase
         $this->assertDatabaseCount('expenses', 0);
     }
 
+    public function test_process_receipt_from_contents_skips_the_download(): void
+    {
+        $expense = $this->serviceWithOcr(self::SAMPLE_TEXT)
+            ->processReceiptFromContents($this->jpegBytes(), $this->user);
+
+        $this->assertNotNull($expense, 'Bytes already in hand must become an expense.');
+        $this->assertSame(1500.0, (float) $expense->amount);
+        $this->assertNotNull($expense->fresh()->getFirstMedia('receipt'));
+        $this->assertSame([], Storage::disk('local')->files('receipts'));
+    }
+
+    public function test_returns_null_when_the_url_cannot_be_read(): void
+    {
+        $expense = $this->serviceWithOcr(self::SAMPLE_TEXT)
+            ->processReceiptFromUrl(sys_get_temp_dir() . '/definitely-not-here-' . uniqid(), $this->user);
+
+        $this->assertNull($expense);
+        $this->assertDatabaseCount('expenses', 0);
+    }
+
     public function test_attaching_a_receipt_mirrors_it_into_the_receipts_table(): void
     {
         $expense = Expense::factory()->create(['user_id' => $this->user->id]);

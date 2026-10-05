@@ -20,6 +20,31 @@ class ReceiptProcessingService
     {
         try {
             $contents = file_get_contents($url);
+        } catch (\Exception $e) {
+            Log::error('Receipt download error: ' . $e->getMessage());
+
+            return null;
+        }
+
+        if ($contents === false) {
+            Log::error('Receipt download failed: ' . $url);
+
+            return null;
+        }
+
+        return $this->processReceiptFromContents($contents, $user, $notifyCallback);
+    }
+
+    /**
+     * Turn bytes that are already in hand into an expense.
+     *
+     * Callers that had to authenticate to fetch the file - the WhatsApp
+     * media URL, for instance - pass the body here rather than the URL, so
+     * the bytes are not downloaded a second time.
+     */
+    public function processReceiptFromContents(string $contents, User $user, ?string $notifyCallback = null): ?Expense
+    {
+        try {
             $name = 'receipt_' . time() . '_' . rand(1000, 9999) . '.jpg';
             $path = 'receipts/' . $name;
             Storage::disk('local')->put($path, $contents);

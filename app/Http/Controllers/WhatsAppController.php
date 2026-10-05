@@ -201,8 +201,11 @@ class WhatsAppController extends Controller
                 return;
             }
 
-            // Use ReceiptProcessingService for consistent OCR processing
-            $expense = $this->receiptService->processReceiptFromUrl($downloadUrl, $user);
+            // Use ReceiptProcessingService for consistent OCR processing.
+            // The bytes are handed over rather than the URL: the media URL is
+            // only retrievable with the access token, and processReceiptFromUrl
+            // would have fetched the whole image again without it.
+            $expense = $this->receiptService->processReceiptFromContents($imageResponse->body(), $user);
 
             if ($expense) {
                 $this->sendWhatsAppMessage(
