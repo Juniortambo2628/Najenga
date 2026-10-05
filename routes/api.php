@@ -44,6 +44,4 @@ Route::middleware(['web', 'auth'])->group(function () {
 // middleware these routes carried while they lived in routes/web.php.
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
     Route::get('/search/live', [\App\Http\Controllers\SearchController::class, 'live'])->name('search.live');
-    Route::get('/timeline/data', [\App\Http\Controllers\Api\ProjectTimelineController::class, 'timelineData'])->name('timeline.data');
-    Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics.api');
 });

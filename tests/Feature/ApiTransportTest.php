@@ -46,9 +46,11 @@ class ApiTransportTest extends TestCase
             );
         }
 
-        // The three that were moved in the Option 4 consolidation.
+        // The session-authed JSON endpoints, excluding the Sanctum route and
+        // the public webhooks. /api/analytics and /api/timeline/data were
+        // removed in the same pass: both had zero callers.
         $this->assertSame(
-            ['api/analytics', 'api/search/live', 'api/timeline/data'],
+            ['api/search/live'],
             collect($apiStack)
                 ->pluck('uri')
                 ->filter(fn ($uri) => $uri !== 'api/user' && $uri !== 'api/activity-logs')
@@ -111,13 +113,5 @@ class ApiTransportTest extends TestCase
             ->getJson('/api/search/live?q=roof')
             ->assertOk()
             ->assertJsonStructure(['results']);
-
-        $this->actingAs($user)
-            ->getJson('/api/timeline/data')
-            ->assertOk();
-
-        $this->actingAs($user)
-            ->get('/api/analytics')
-            ->assertOk();
     }
 }
