@@ -126,4 +126,36 @@ class ErrorPagesTest extends TestCase
         $response->assertStatus(404);
         $response->assertJsonStructure(['message']);
     }
+
+    /**
+     * The render callback in bootstrap/app.php runs before Laravel converts
+     * a ValidationException, so if it claims one, every rejected form - the
+     * login typo above all - answers 500 and the field messages are lost.
+     */
+    public function test_a_rejected_form_gets_errors_not_the_error_page(): void
+    {
+        $response = $this->post('/login', [
+            'email' => 'nobody@example.com',
+            'password' => 'wrong-password',
+        ], [
+            'X-Inertia' => 'true',
+            'Accept' => 'text/html',
+        ]);
+
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors('email');
+    }
+
+    public function test_a_signed_out_inertia_visit_is_sent_to_login(): void
+    {
+        $headers = [
+            'X-Inertia' => 'true',
+            'Accept' => 'text/html',
+            'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(Request::create('/activity-logs')),
+        ];
+
+        $response = $this->get('/activity-logs', $headers);
+
+        $response->assertRedirect('/login');
+    }
 }

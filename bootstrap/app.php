@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -34,6 +37,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // JS build is broken, so they cannot move to React.
         $exceptions->render(function (Throwable $e, Request $request): ?Response {
             if (! $request->header('X-Inertia')) {
+                return null;
+            }
+
+            // This callback runs before Laravel's own conversions, so
+            // anything it claims becomes a 500 "Something went wrong" card.
+            // These three are not failures - they have answers Inertia can
+            // use (redirect back with errors, redirect to login, the
+            // response the controller already built) and swallowing them
+            // turned every rejected form and every signed-out visit into a
+            // dead end. Return null so the normal handling runs.
+            if ($e instanceof ValidationException
+                || $e instanceof AuthenticationException
+                || $e instanceof HttpResponseException) {
                 return null;
             }
 
