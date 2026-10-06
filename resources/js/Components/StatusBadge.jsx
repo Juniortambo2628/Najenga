@@ -6,6 +6,7 @@ const STATUS_STYLES = {
     planning: 'bg-yellow-500/10 text-yellow-400',
     pending: 'bg-yellow-500/10 text-yellow-400',
     on_hold: 'bg-orange-500/10 text-orange-400',
+    delayed: 'bg-orange-500/10 text-orange-400',
     cancelled: 'bg-red-500/10 text-red-400',
     rejected: 'bg-red-500/10 text-red-400',
     paid: 'bg-green-500/10 text-green-400',
