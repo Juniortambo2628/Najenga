@@ -6,10 +6,13 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
 use App\Services\ActivityLogger;
+use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
+    use RespondsWithModel;
+
     public function index()
     {
         return \Inertia\Inertia::render('Projects/Index', [
@@ -33,11 +36,7 @@ class ProjectController extends Controller
 
         ActivityLogger::log('project.created', sprintf('Created project "%s" (#%d)', $project->name, $project->id));
 
-        if ($request->wantsJson() && !$request->header('X-Inertia')) {
-            return response()->json($project, 201);
-        }
-
-        return redirect()->back()->with('success', 'Project created successfully');
+        return $this->respondOrRedirect($request, 'Project created successfully', response()->json($project, 201));
     }
 
     public function show(Project $project)
@@ -70,11 +69,7 @@ class ProjectController extends Controller
 
         ActivityLogger::log('project.updated', sprintf('Updated project "%s" (#%d)', $project->name, $project->id));
 
-        if ($request->wantsJson() && !$request->header('X-Inertia')) {
-            return response()->json($project);
-        }
-
-        return redirect()->back()->with('success', 'Project updated successfully');
+        return $this->respondOrRedirect($request, 'Project updated successfully', response()->json($project));
     }
 
     public function destroy(Request $request, Project $project)
@@ -85,11 +80,7 @@ class ProjectController extends Controller
 
         ActivityLogger::log('project.deleted', sprintf('Deleted project "%s" (#%d)', $project->name, $project->id));
 
-        if ($request->wantsJson() && !$request->header('X-Inertia')) {
-            return response()->json(null, 204);
-        }
-
-        return redirect()->back()->with('success', 'Project deleted successfully');
+        return $this->respondOrRedirect($request, 'Project deleted successfully', response()->json(null, 204));
     }
 
     public function users(Project $project)

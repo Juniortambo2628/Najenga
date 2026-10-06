@@ -64,7 +64,7 @@ class DocumentController extends Controller
         $projectId = $request->project_id ?? Project::where('client_id', $request->user()->id)->value('id');
 
         if (!$projectId) {
-            return response()->json(['message' => 'Please create a project first before uploading documents.'], 400);
+            return $this->respondErrorOrRedirect($request, 'Please create a project first before uploading documents.');
         }
 
         $uploadedDocuments = [];
@@ -100,14 +100,21 @@ class DocumentController extends Controller
         }
 
         if (empty($uploadedDocuments) && !empty($errors)) {
-            return response()->json(['message' => 'Upload failed', 'errors' => $errors], 500);
+            $message = 'Upload failed';
+
+            return $this->respondErrorOrRedirect($request, $message, response()->json(
+                ['message' => $message, 'errors' => $errors],
+                500,
+            ));
         }
 
-        return response()->json([
-            'message' => 'Documents uploaded successfully',
+        $message = 'Documents uploaded successfully';
+
+        return $this->respondOrRedirect($request, $message, response()->json([
+            'message' => $message,
             'documents' => $uploadedDocuments,
             'errors' => $errors ?: null,
-        ]);
+        ]));
     }
 
     public function show(Document $document)
@@ -137,7 +144,7 @@ class DocumentController extends Controller
     {
         $document->update($request->validated());
 
-        return $this->respondOrRedirect($request, '/documents', 'Document updated successfully');
+        return $this->respondOrRedirect($request, 'Document updated successfully');
     }
 
     public function destroy(Request $request, Document $document)
@@ -146,7 +153,7 @@ class DocumentController extends Controller
 
         Document::withoutSyncingToSearch(fn () => $document->delete());
 
-        return $this->respondOrRedirect($request, '/documents', 'Document deleted successfully');
+        return $this->respondOrRedirect($request, 'Document deleted successfully');
     }
 
     public function batchDestroy(Request $request)

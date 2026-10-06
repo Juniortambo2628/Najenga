@@ -9,13 +9,14 @@ use App\Models\Expense;
 use App\Models\Project;
 use App\Services\ActivityLogger;
 use App\Traits\HasProjectScope;
+use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class ExpenseController extends Controller
 {
-    use HasProjectScope;
+    use HasProjectScope, RespondsWithModel;
     public function index()
     {
         $user = auth()->user();
@@ -193,7 +194,7 @@ class ExpenseController extends Controller
 
         ActivityLogger::log('expense.updated', sprintf('Updated expense "%s" (#%d)', $expense->title, $expense->id));
 
-        return redirect()->back()->with('success', 'Expense updated successfully');
+        return $this->respondOrRedirect($request, 'Expense updated successfully');
     }
 
     public function destroy(Request $request, Expense $expense)

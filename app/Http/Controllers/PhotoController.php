@@ -8,12 +8,13 @@ use App\Models\Photo;
 use App\Models\Project;
 use App\Traits\HasProjectScope;
 use App\Traits\AttachesMediaFromRequest;
+use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PhotoController extends Controller
 {
-    use HasProjectScope, AttachesMediaFromRequest;
+    use HasProjectScope, AttachesMediaFromRequest, RespondsWithModel;
     public function index()
     {
         $userId = auth()->id();
@@ -48,7 +49,7 @@ class PhotoController extends Controller
         $projectId = $request->project_id ?? Project::where('client_id', $request->user()->id)->value('id');
 
         if (!$projectId) {
-            return response()->json(['message' => 'Please create a project first before uploading photos.'], 400);
+            return $this->respondErrorOrRedirect($request, 'Please create a project first before uploading photos.');
         }
 
         $uploadedPhotos = [];
@@ -80,7 +81,12 @@ class PhotoController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Photos uploaded successfully', 'photos' => $uploadedPhotos]);
+        $message = 'Photos uploaded successfully';
+
+        return $this->respondOrRedirect($request, $message, response()->json([
+            'message' => $message,
+            'photos' => $uploadedPhotos,
+        ]));
     }
 
     public function show(Photo $photo)
@@ -107,7 +113,7 @@ class PhotoController extends Controller
     {
         $photo->update($request->validated());
 
-        return redirect()->back()->with('success', 'Photo updated successfully');
+        return $this->respondOrRedirect($request, 'Photo updated successfully');
     }
 
     public function destroy(Request $request, Photo $photo)
@@ -116,11 +122,7 @@ class PhotoController extends Controller
 
         Photo::withoutSyncingToSearch(fn () => $photo->delete());
 
-        if ($request->wantsJson() && !$request->header('X-Inertia')) {
-            return response()->json(null, 204);
-        }
-
-        return redirect()->back()->with('success', 'Photo deleted successfully');
+        return $this->respondOrRedirect($request, 'Photo deleted successfully', response()->json(null, 204));
     }
 
     public function batchDestroy(Request $request)
