@@ -64,6 +64,7 @@ coverage/
 # Laravel specific
 #-----------------------------------------------
 /storage/pail
+/storage/media-library/*
 /storage/framework/cache/data/*
 /storage/framework/sessions/*
 /storage/framework/views/*
