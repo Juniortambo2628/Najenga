@@ -209,29 +209,11 @@ class ReceiptController extends Controller
 
     public function store(StoreReceiptRequest $request)
     {
-        $matchedExpense = null;
-
-        if ($request->reference_number) {
-            $query = Expense::where('reference_number', $request->reference_number)
-                ->where('user_id', Auth::id());
-
-            $candidates = $query->get();
-
-            if ($candidates->count() === 1) {
-                $matchedExpense = $candidates->first();
-            } elseif ($candidates->count() > 1 && $request->expense_date) {
-                $matchedExpense = $candidates->firstWhere('expense_date', $request->expense_date);
-                if (!$matchedExpense && $request->time) {
-                    $matchedExpense = $candidates->first(function ($e) use ($request) {
-                        return $e->expense_date === $request->expense_date
-                            && $e->time === $request->time;
-                    });
-                }
-                if (!$matchedExpense) {
-                    $matchedExpense = $candidates->first();
-                }
-            }
-        }
+        $matchedExpense = $this->pickMatchingExpense(
+            $this->matchingExpenses($request->reference_number),
+            $request->expense_date,
+            $request->time,
+        );
 
         if ($matchedExpense) {
             $this->receipts->attachReceiptMedia(
@@ -267,36 +249,63 @@ class ReceiptController extends Controller
             'time' => 'nullable|string',
         ]);
 
-        $query = Expense::where('reference_number', $request->reference_number)
-            ->where('user_id', Auth::id());
-
-        $candidates = $query->get();
+        $candidates = $this->matchingExpenses($request->reference_number);
 
         if ($candidates->isEmpty()) {
             return response()->json(['matched' => false]);
         }
 
-        $matched = null;
-
-        if ($candidates->count() === 1) {
-            $matched = $candidates->first();
-        } else {
-            $matched = $candidates->firstWhere('expense_date', $request->date);
-            if (!$matched && $request->time) {
-                $matched = $candidates->first(function ($e) use ($request) {
-                    return $e->expense_date === $request->date
-                        && $e->time === $request->time;
-                });
-            }
-            if (!$matched) {
-                $matched = $candidates->first();
-            }
-        }
+        $matched = $this->pickMatchingExpense($candidates, $request->date, $request->time)
+            ?? $candidates->first();
 
         return response()->json([
             'matched' => true,
             'expense' => $matched->load('media'),
         ]);
+    }
+
+    /**
+     * Expenses the current user owns that share this reference number.
+     */
+    private function matchingExpenses(?string $referenceNumber): \Illuminate\Database\Eloquent\Collection
+    {
+        if (!$referenceNumber) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        return Expense::where('reference_number', $referenceNumber)
+            ->where('user_id', Auth::id())
+            ->get();
+    }
+
+    /**
+     * Decide which of several candidates a receipt belongs to: a single
+     * candidate outright, or several disambiguated by date (then by time).
+     *
+     * Returns null when the candidates stay ambiguous, which is what makes
+     * ReceiptController::store() create a new expense instead of guessing.
+     */
+    private function pickMatchingExpense(
+        \Illuminate\Database\Eloquent\Collection $candidates,
+        ?string $date,
+        ?string $time,
+    ): ?Expense {
+        if ($candidates->count() === 1) {
+            return $candidates->first();
+        }
+
+        if ($candidates->count() > 1 && $date) {
+            $matched = $candidates->firstWhere('expense_date', $date);
+
+            if (!$matched && $time) {
+                $matched = $candidates->first(fn ($e) => $e->expense_date === $date
+                    && $e->time === $time);
+            }
+
+            return $matched ?? $candidates->first();
+        }
+
+        return null;
     }
 
     public function show(\App\Models\Receipt $receipt)
@@ -317,16 +326,11 @@ class ReceiptController extends Controller
         ]);
     }
 
-    public function update(Request $request, \App\Models\Receipt $receipt)
+    public function update(UpdateReceiptRequest $request, \App\Models\Receipt $receipt)
     {
         $this->authorize('update', $receipt);
 
-        $validated = $request->validate([
-            'verification_status' => 'required|in:pending,verified,rejected,auto_verified',
-            'needs_verification' => 'boolean',
-        ]);
-
-        $receipt->update($validated);
+        $receipt->update($request->validated());
 
         return redirect()->back()->with('success', 'Receipt updated successfully');
     }

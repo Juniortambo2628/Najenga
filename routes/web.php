@@ -39,7 +39,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/projects/{project}/users', [\App\Http\Controllers\ProjectController::class, 'users'])->name('projects.users');
 
     // Project Sharing
-    Route::get('/projects/{project}/share', [\App\Http\Controllers\ProjectShareController::class, 'index'])->name('projects.share.index');
     Route::post('/projects/{project}/share', [\App\Http\Controllers\ProjectShareController::class, 'store'])->name('projects.share.store');
     Route::delete('/projects/{project}/share/{user}', [\App\Http\Controllers\ProjectShareController::class, 'destroy'])->name('projects.share.destroy');
 

@@ -52,7 +52,7 @@ class ProjectShareControllerTest extends TestCase
     public function test_owner_can_view_share_list(): void
     {
         $this->actingAs($this->owner)
-            ->getJson("/projects/{$this->project->id}/share")
+            ->getJson("/projects/{$this->project->id}/users")
             ->assertOk();
     }
 
@@ -60,10 +60,11 @@ class ProjectShareControllerTest extends TestCase
     {
         $stranger = User::factory()->create(['role' => 'client']);
 
-        // index() had no authorize() while store() and destroy() both did,
-        // so anyone signed in could read who a project is shared with.
+        // The member list used to be reachable twice: share/index and
+        // projects/users. The share route is gone, so projects/users now
+        // carries the same policy check.
         $this->actingAs($stranger)
-            ->getJson("/projects/{$this->project->id}/share")
+            ->getJson("/projects/{$this->project->id}/users")
             ->assertForbidden();
     }
 
@@ -72,7 +73,7 @@ class ProjectShareControllerTest extends TestCase
         $this->project->users()->attach($this->collaborator->id, ['role' => 'viewer']);
 
         $this->actingAs($this->collaborator)
-            ->getJson("/projects/{$this->project->id}/share")
+            ->getJson("/projects/{$this->project->id}/users")
             ->assertOk();
     }
 

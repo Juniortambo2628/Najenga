@@ -22,10 +22,6 @@ class ProjectTimelineController extends Controller
         $userId = auth()->id();
         $projectId = $request->input('project_id');
 
-        $baseQuery = function ($query) use ($userId) {
-            $query->whereHas('project', fn ($q) => $q->where('client_id', $userId));
-        };
-
         $timelines = ProjectTimeline::whereHas('project', function ($q) use ($userId) {
             $q->where('client_id', $userId);
         });
@@ -72,7 +68,6 @@ class ProjectTimelineController extends Controller
                 'id' => $d->id,
                 'title' => $d->title,
                 'file_path' => $d->file_path,
-                'category' => $d->category,
                 'category' => $d->category,
                 'date' => $d->document_date?->format('Y-m-d'),
                 'project_id' => $d->project_id,

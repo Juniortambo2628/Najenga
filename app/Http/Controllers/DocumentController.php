@@ -8,13 +8,14 @@ use App\Models\Document;
 use App\Models\Project;
 use App\Traits\HasProjectScope;
 use App\Traits\AttachesMediaFromRequest;
+use App\Traits\BatchDeletes;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DocumentController extends Controller
 {
-    use HasProjectScope, AttachesMediaFromRequest, RespondsWithModel;
+    use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, RespondsWithModel;
     public function index()
     {
         $userId = auth()->id();
@@ -158,24 +159,7 @@ class DocumentController extends Controller
 
     public function batchDestroy(Request $request)
     {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer|exists:documents,id',
-        ]);
-
-        $user = auth()->user();
-        $ids = $request->input('ids');
-
-        $deleted = Document::withoutSyncingToSearch(fn () =>
-            Document::whereIn('id', $ids)
-                ->where('user_id', $user->id)
-                ->delete()
-        );
-
-        return response()->json([
-            'deleted' => $deleted,
-            'message' => "{$deleted} document" . ($deleted !== 1 ? "s" : "") . " deleted",
-        ]);
+        return $this->batchDelete($request, Document::class, 'document');
     }
 
     public function move(Request $request, Document $document)

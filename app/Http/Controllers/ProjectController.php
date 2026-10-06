@@ -85,6 +85,8 @@ class ProjectController extends Controller
 
     public function users(Project $project)
     {
+        $this->authorize('view', $project);
+
         $sharedUsers = $project->users()->get();
 
         $client = $project->client;

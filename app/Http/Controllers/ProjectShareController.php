@@ -35,11 +35,4 @@ class ProjectShareController extends Controller
         $project->users()->detach($user->id);
         return response()->json(['message' => 'User removed from project']);
     }
-
-    public function index(Project $project)
-    {
-        $this->authorize('view', $project);
-
-        return response()->json($project->users);
-    }
 }

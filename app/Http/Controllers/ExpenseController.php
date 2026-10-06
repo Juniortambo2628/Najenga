@@ -9,6 +9,7 @@ use App\Models\Expense;
 use App\Models\Project;
 use App\Services\ActivityLogger;
 use App\Traits\HasProjectScope;
+use App\Traits\BatchDeletes;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ use Inertia\Inertia;
 
 class ExpenseController extends Controller
 {
-    use HasProjectScope, RespondsWithModel;
+    use HasProjectScope, BatchDeletes, RespondsWithModel;
     public function index()
     {
         $user = auth()->user();
@@ -114,24 +115,7 @@ class ExpenseController extends Controller
 
     public function batchDestroy(Request $request)
     {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer|exists:expenses,id',
-        ]);
-
-        $user = auth()->user();
-        $ids = $request->input('ids');
-
-        $deleted = Expense::withoutSyncingToSearch(fn () =>
-            Expense::whereIn('id', $ids)
-                ->where('user_id', $user->id)
-                ->delete()
-        );
-
-        return response()->json([
-            'deleted' => $deleted,
-            'message' => "{$deleted} expense" . ($deleted !== 1 ? "s" : "") . " deleted",
-        ]);
+        return $this->batchDelete($request, Expense::class, 'expense');
     }
 
     public function show(Expense $expense)

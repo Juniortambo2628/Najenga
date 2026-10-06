@@ -8,13 +8,14 @@ use App\Models\Photo;
 use App\Models\Project;
 use App\Traits\HasProjectScope;
 use App\Traits\AttachesMediaFromRequest;
+use App\Traits\BatchDeletes;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PhotoController extends Controller
 {
-    use HasProjectScope, AttachesMediaFromRequest, RespondsWithModel;
+    use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, RespondsWithModel;
     public function index()
     {
         $userId = auth()->id();
@@ -127,23 +128,6 @@ class PhotoController extends Controller
 
     public function batchDestroy(Request $request)
     {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'integer|exists:photos,id',
-        ]);
-
-        $user = auth()->user();
-        $ids = $request->input('ids');
-
-        $deleted = Photo::withoutSyncingToSearch(fn () =>
-            Photo::whereIn('id', $ids)
-                ->where('user_id', $user->id)
-                ->delete()
-        );
-
-        return response()->json([
-            'deleted' => $deleted,
-            'message' => "{$deleted} photo" . ($deleted !== 1 ? "s" : "") . " deleted",
-        ]);
+        return $this->batchDelete($request, Photo::class, 'photo');
     }
 }
