@@ -142,4 +142,34 @@ class ActivityLoggerTest extends TestCase
 
         $this->assertSame(100, mb_strlen($log->action), 'action is a varchar(100)');
     }
+
+    public function test_an_expense_mutation_records_its_subject(): void
+    {
+        $user = User::factory()->create(['role' => 'client']);
+        $expense = Expense::factory()->create(['user_id' => $user->id]);
+
+        $this->actingAs($user)->delete("/expenses/{$expense->id}");
+
+        $log = ActivityLog::orderByDesc('id')->first();
+
+        $this->assertSame(Expense::class, $log->subject_type);
+        $this->assertEquals($expense->id, $log->subject_id);
+    }
+
+    public function test_the_expense_tab_asks_for_one_expense_and_gets_only_its_rows(): void
+    {
+        $user = User::factory()->create(['role' => 'client']);
+        $mine = Expense::factory()->create(['user_id' => $user->id]);
+        $other = Expense::factory()->create(['user_id' => $user->id]);
+
+        ActivityLogger::logFor($user, 'expense.created', 'first', $mine);
+        ActivityLogger::logFor($user, 'expense.updated', 'second', $other);
+        ActivityLogger::logFor($user, 'project.created', 'no subject');
+
+        $this->actingAs($user)
+            ->getJson('/api/activity-logs?subject_type='.urlencode(Expense::class)."&subject_id={$mine->id}")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.description', 'first');
+    }
 }

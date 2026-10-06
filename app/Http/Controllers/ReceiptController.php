@@ -225,7 +225,7 @@ class ReceiptController extends Controller
                 $this->receipts->readReceipt($request->temp_path),
             );
 
-            ActivityLogger::log('receipt.attached', sprintf('Attached a receipt to expense (#%d)', $matchedExpense->id));
+            ActivityLogger::log('receipt.attached', sprintf('Attached a receipt to expense (#%d)', $matchedExpense->id), $matchedExpense);
 
             return response()->json([
                 'success' => true,
@@ -236,7 +236,7 @@ class ReceiptController extends Controller
 
         $expense = \App\Models\Expense::withoutSyncingToSearch(fn () => $this->createExpenseFromRequest($request));
 
-        ActivityLogger::log('receipt.created', sprintf('Created expense (#%d) from a receipt', $expense->id));
+            ActivityLogger::log('receipt.created', sprintf('Created expense (#%d) from a receipt', $expense->id), $expense);
 
         return response()->json(['success' => true, 'expense' => $expense->fresh(), 'matched' => false]);
     }

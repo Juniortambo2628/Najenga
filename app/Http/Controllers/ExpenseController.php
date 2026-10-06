@@ -65,7 +65,7 @@ class ExpenseController extends Controller
             'status' => 'paid',
         ]);
 
-        ActivityLogger::log('expense.created', sprintf('Added expense "%s" (#%d)', $expense->title, $expense->id));
+        ActivityLogger::log('expense.created', sprintf('Added expense "%s" (#%d)', $expense->title, $expense->id), $expense);
 
         return redirect()->back()->with('success', 'Expense added successfully');
     }
@@ -176,7 +176,7 @@ class ExpenseController extends Controller
     {
         $expense->update($request->validated());
 
-        ActivityLogger::log('expense.updated', sprintf('Updated expense "%s" (#%d)', $expense->title, $expense->id));
+        ActivityLogger::log('expense.updated', sprintf('Updated expense "%s" (#%d)', $expense->title, $expense->id), $expense);
 
         return $this->respondOrRedirect($request, 'Expense updated successfully');
     }
@@ -187,7 +187,7 @@ class ExpenseController extends Controller
 
         Expense::withoutSyncingToSearch(fn () => $expense->delete());
 
-        ActivityLogger::log('expense.deleted', sprintf('Deleted expense "%s" (#%d)', $expense->title, $expense->id));
+        ActivityLogger::log('expense.deleted', sprintf('Deleted expense "%s" (#%d)', $expense->title, $expense->id), $expense);
 
         return redirect()->back()->with('success', 'Expense deleted successfully');
     }
