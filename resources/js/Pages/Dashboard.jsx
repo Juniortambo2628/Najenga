@@ -74,12 +74,12 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                                <QuickAction href="/expenses" icon="plus" label="Add Expense" />
-                                <QuickAction href="/photos" icon="camera" label="Upload Photo" />
-                                <QuickAction href="/projects" icon="project-diagram" label="New Project" />
-                                <QuickAction href="/documents" icon="file-upload" label="Upload Document" />
-                                <QuickAction href="/timeline" icon="calendar-plus" label="Add Timeline" />
-                                <QuickAction href="/analytics" icon="chart-bar" label="View Analytics" />
+                                <QuickAction href={route('expenses')} icon="plus" label="Add Expense" />
+                                <QuickAction href={route('photos')} icon="camera" label="Upload Photo" />
+                                <QuickAction href={route('projects')} icon="project-diagram" label="New Project" />
+                                <QuickAction href={route('documents')} icon="file-upload" label="Upload Document" />
+                                <QuickAction href={route('timeline')} icon="calendar-plus" label="Add Timeline" />
+                                <QuickAction href={route('analytics')} icon="chart-bar" label="View Analytics" />
                             </div>
                         </div>
                     </div>
@@ -122,7 +122,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                                     <i className="fas fa-project-diagram"></i>
                                     Your Projects
                                 </h5>
-                                <Link href="/projects" className="btn-primary text-sm">
+                                <Link href={route('projects')} className="btn-primary text-sm">
                                     Manage
                                 </Link>
                             </div>

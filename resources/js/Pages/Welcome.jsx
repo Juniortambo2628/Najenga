@@ -136,7 +136,7 @@ export default function Welcome({ auth }) {
                 title="Features"
                 description="Everything you need to manage your construction projects efficiently. AI-powered tools, real-time tracking, and seamless collaboration."
                 buttonText="Get Started"
-                buttonHref="/register"
+                buttonHref={route('register')}
                 cards={FEATURES}
             />
 
@@ -157,7 +157,7 @@ export default function Welcome({ auth }) {
                 title="Clients"
                 description="Trusted by construction professionals across Kenya. See what our clients have to say about their experience with Najenga."
                 buttonText="Join Them"
-                buttonHref="/register"
+                buttonHref={route('register')}
                 cards={TESTIMONIALS}
             />
 
@@ -188,10 +188,10 @@ export default function Welcome({ auth }) {
                     </ScrollReveal>
                     <ScrollReveal delay={0.3}>
                         <div className="flex flex-wrap justify-center gap-4 mb-8">
-                            <a href="/register" className="landing-cta-brand">
+                            <a href={route('register')} className="landing-cta-brand">
                                 Get Started
                             </a>
-                            <a href="/login" className="landing-cta-secondary">
+                            <a href={route('login')} className="landing-cta-secondary">
                                 Login
                             </a>
                         </div>
@@ -238,8 +238,8 @@ export default function Welcome({ auth }) {
                             <div>
                                 <h6 className="text-white font-bold mb-4">Support</h6>
                                 <ul className="space-y-2 text-gray-400">
-                                    <li><Link href="/login" className="hover:text-white transition">Login</Link></li>
-                                    <li><Link href="/register" className="hover:text-white transition">Register</Link></li>
+                                    <li><Link href={route('login')} className="hover:text-white transition">Login</Link></li>
+                                    <li><Link href={route('register')} className="hover:text-white transition">Register</Link></li>
                                 </ul>
                             </div>
                         </div>

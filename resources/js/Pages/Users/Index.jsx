@@ -161,7 +161,7 @@ export default function Index({ users }) {
                                 </button>
                             }
                         />
-                        <PrimaryButton as="link" href="/users/create">
+                        <PrimaryButton as="link" href={route('users.create')}>
                             <i className="fas fa-plus mr-2"></i>Add User
                         </PrimaryButton>
                     </div>

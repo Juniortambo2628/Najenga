@@ -18,7 +18,7 @@ export default function Index({ receipts = [] }) {
                     ]}
                     actions={
                         <Link
-                            href={route('receipt-verification')}
+                            href={route('receipt.verification')}
                             className="px-6 py-3 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2"
                         >
                             <i className="fas fa-receipt"></i>

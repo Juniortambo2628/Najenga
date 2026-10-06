@@ -24,7 +24,7 @@ export default function Show({ receipt }) {
                     subtitle={expense ? `Expense: ${expense.title}` : 'Receipt details'}
                     breadcrumbs={[
                         ...rootBreadcrumbs(),
-                        { label: 'Receipts', href: '/receipts' },
+                        { label: 'Receipts', href: route('receipts.index') },
                         { label: receipt.original_name || `Receipt #${receipt.id}` },
                     ]}
                     actions={

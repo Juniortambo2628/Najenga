@@ -14,7 +14,7 @@ export default function Show({ timeline }) {
                     subtitle="Milestone details"
                     breadcrumbs={[
                         ...rootBreadcrumbs(),
-                        { label: 'Timeline', href: '/timeline' },
+                        { label: 'Timeline', href: route('timeline') },
                         { label: timeline.title },
                     ]}
                     actions={

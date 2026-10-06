@@ -104,7 +104,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                         <section>
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold text-white">Recent Photos</h3>
-                                <Link href="/photos" className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>
+                                <Link href={route('photos')} className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {photos.map(photo => (
@@ -126,7 +126,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                          <section className="panel p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold text-white">Recent Expenses</h3>
-                                <Link href="/expenses" className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>
+                                <Link href={route('expenses')} className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>
                             </div>
                             <div className="space-y-4">
                                 {expenses.map(expense => (
@@ -146,7 +146,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                         <section className="panel p-6">
                              <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-lg font-bold text-white">Documents</h3>
-                                <Link href="/documents" className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>
+                                <Link href={route('documents')} className="text-sm text-[#DC143C] hover:text-[#8B0000]">View All</Link>
                             </div>
                              <div className="space-y-3">
                                 {documents.map(doc => (

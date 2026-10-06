@@ -155,7 +155,7 @@ export default function Photos({ photos = [], projects = [] }) {
                         </>
                     }
                     actions={
-                        <PrimaryButton as="link" href="/photos/create">
+                        <PrimaryButton as="link" href={route('photos.create')}>
                             <i className="fas fa-upload"></i> Upload Photo
                         </PrimaryButton>
                     }

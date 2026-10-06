@@ -1,0 +1,141 @@
+// Names Ziggy resolves for this app, mirrored from `php artisan route:list`.
+// The browser gets them from @routes in app.blade.php; tests get them here.
+// Tests\Feature\RouteNamesUsedByJsTest guards both sides: every route('..')
+// in resources/js must exist, and every name here must exist too.
+export const TEST_ROUTES = {
+    'activity.logs': '/activity-logs',
+    'analytics': '/analytics',
+    'annotations.destroy': '/annotations/{annotation}',
+    'annotations.index': '/annotations',
+    'annotations.store': '/annotations',
+    'annotations.update': '/annotations/{annotation}',
+    'comments.destroy': '/comments/{comment}',
+    'comments.index': '/comments',
+    'comments.store': '/comments',
+    'comments.update': '/comments/{comment}',
+    'conversations': '/conversations',
+    'conversations.destroy': '/conversations/{conversation}',
+    'conversations.leave': '/conversations/{conversation}/leave',
+    'conversations.messages': '/conversations/{conversation}/messages',
+    'conversations.messages.destroy': '/conversations/{conversation}/messages/{message}',
+    'conversations.messages.store': '/conversations/{conversation}/messages',
+    'conversations.messages.update': '/conversations/{conversation}/messages/{message}',
+    'conversations.store': '/conversations',
+    'dashboard': '/dashboard',
+    'documents': '/documents',
+    'documents.batchDestroy': '/documents/batch',
+    'documents.create': '/documents/create',
+    'documents.destroy': '/documents/{document}',
+    'documents.edit': '/documents/{document}/edit',
+    'documents.move': '/documents/{document}/move',
+    'documents.show': '/documents/{document}',
+    'documents.store': '/documents',
+    'documents.update': '/documents/{document}',
+    'expenses': '/expenses',
+    'expenses.batch': '/expenses/batch',
+    'expenses.batchDestroy': '/expenses/batch',
+    'expenses.create': '/expenses/create',
+    'expenses.destroy': '/expenses/{expense}',
+    'expenses.edit': '/expenses/{expense}/edit',
+    'expenses.receipt.remove': '/expenses/{expense}/receipt',
+    'expenses.receipt.upload': '/expenses/{expense}/receipt',
+    'expenses.show': '/expenses/{expense}',
+    'expenses.store': '/expenses',
+    'expenses.update': '/expenses/{expense}',
+    'folders.destroy': '/folders/{folder}',
+    'folders.store': '/folders',
+    'folders.update': '/folders/{folder}',
+    'home': '/',
+    'login': '/login',
+    'logout': '/logout',
+    'messages': '/messages',
+    'notifications.index': '/notifications',
+    'notifications.markAllAsRead': '/notifications/read-all',
+    'notifications.markAsRead': '/notifications/{id}/read',
+    'password.confirm': '/confirm-password',
+    'password.email': '/forgot-password',
+    'password.request': '/forgot-password',
+    'password.reset': '/reset-password/{token}',
+    'password.store': '/reset-password',
+    'password.update': '/password',
+    'photos': '/photos',
+    'photos.batchDestroy': '/photos/batch',
+    'photos.create': '/photos/create',
+    'photos.destroy': '/photos/{photo}',
+    'photos.edit': '/photos/{photo}/edit',
+    'photos.show': '/photos/{photo}',
+    'photos.store': '/photos',
+    'photos.update': '/photos/{photo}',
+    'profile.destroy': '/profile',
+    'profile.edit': '/profile',
+    'profile.update': '/profile',
+    'projects': '/projects',
+    'projects.create': '/projects/create',
+    'projects.destroy': '/projects/{project}',
+    'projects.edit': '/projects/{project}/edit',
+    'projects.share.destroy': '/projects/{project}/share/{user}',
+    'projects.share.store': '/projects/{project}/share',
+    'projects.show': '/projects/{project}',
+    'projects.store': '/projects',
+    'projects.update': '/projects/{project}',
+    'projects.users': '/projects/{project}/users',
+    'receipt.verification': '/receipt-verification',
+    'receipts.analyze': '/receipts/analyze',
+    'receipts.analyze-bulk': '/receipts/analyze-bulk',
+    'receipts.destroy': '/receipts/{receipt}',
+    'receipts.edit': '/receipts/{receipt}/edit',
+    'receipts.index': '/receipts',
+    'receipts.match': '/receipts/match',
+    'receipts.show': '/receipts/{receipt}',
+    'receipts.store': '/receipts/store',
+    'receipts.store-bulk': '/receipts/store-bulk',
+    'receipts.update': '/receipts/{receipt}',
+    'register': '/register',
+    'sanctum.csrf-cookie': '/sanctum/csrf-cookie',
+    'search': '/search',
+    'search.live': '/api/search/live',
+    'storage.local': '/storage/{path}',
+    'storage.local.upload': '/storage/{path}',
+    'timeline': '/timeline',
+    'timeline.create': '/timeline/create',
+    'timeline.edit': '/timeline/{timeline}/edit',
+    'timeline.show': '/timeline/{timeline}',
+    'timelines.destroy': '/timelines/{timeline}',
+    'timelines.store': '/timelines',
+    'timelines.update': '/timelines/{timeline}',
+    'users.create': '/users/create',
+    'users.destroy': '/users/{user}',
+    'users.edit': '/users/{user}/edit',
+    'users.index': '/users',
+    'users.show': '/users/{user}',
+    'users.store': '/users',
+    'users.update': '/users/{user}',
+    'verification.notice': '/verify-email',
+    'verification.send': '/email/verification-notification',
+    'verification.verify': '/verify-email/{id}/{hash}',
+    'whatsapp': '/whatsapp',
+};
+
+/**
+ * Stand-in for Ziggy's route(): throws on an unknown name exactly like the
+ * real one does ("Ziggy error: route '..' is not in the route list.").
+ */
+export function route(name, params) {
+    if (!(name in TEST_ROUTES)) {
+        throw new Error("Ziggy error: route '" + name + "' is not in the route list.");
+    }
+
+    return TEST_ROUTES[name].replace(/\{(\w+)\??\}/g, (_, key) => {
+        const value = Array.isArray(params)
+            ? params.shift()
+            : (params && typeof params === 'object' ? (params[key] ?? params.id) : params);
+
+        if (value === undefined || value === null || value === '') {
+            throw new Error("Ziggy error: '" + key + "' parameter is required for route '" + name + "'.");
+        }
+
+        return value;
+    });
+}
+
+globalThis.route = route;

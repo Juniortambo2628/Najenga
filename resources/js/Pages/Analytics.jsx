@@ -190,7 +190,7 @@ export default function Analytics({
     const handleContextChange = (newPeriod, newProject) => {
         setPeriod(newPeriod);
         setProjectFilter(newProject);
-        router.get('/analytics', { period: newPeriod, project_id: newProject }, { preserveState: true, replace: true });
+        router.get(route('analytics'), { period: newPeriod, project_id: newProject }, { preserveState: true, replace: true });
     };
 
     const totalExpenses = stats.totalExpenses || 0;

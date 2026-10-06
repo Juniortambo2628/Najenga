@@ -47,7 +47,7 @@ export default function Errors({ status = 500 }) {
                     <div className="mt-8 flex flex-wrap justify-center gap-3">
                         <button
                             type="button"
-                            onClick={() => router.get('/')}
+                            onClick={() => router.get(route('home'))}
                             className="rounded-full bg-gradient-to-br from-[#8B0000] to-[#DC143C] px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
                         >
                             Back to home

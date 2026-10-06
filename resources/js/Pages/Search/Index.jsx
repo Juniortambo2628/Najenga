@@ -12,11 +12,11 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
-        router.get('/search', { q, type });
+        router.get(route('search'), { q, type });
     }, [q, type]);
 
     const handleTypeFilter = useCallback((newType) => {
-        router.get('/search', { q, type: newType });
+        router.get(route('search'), { q, type: newType });
     }, [q]);
 
     return (

@@ -14,7 +14,7 @@ export default function Show({ photo }) {
                     subtitle={photo.project?.name || 'Photo details'}
                     breadcrumbs={[
                         ...rootBreadcrumbs(),
-                        { label: 'Photos', href: '/photos' },
+                        { label: 'Photos', href: route('photos') },
                         { label: photo.title },
                     ]}
                     actions={

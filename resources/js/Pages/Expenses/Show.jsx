@@ -115,7 +115,7 @@ export default function Show({ expense }) {
                     subtitle={expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details'}
                     breadcrumbs={[
                         ...rootBreadcrumbs(),
-                        { label: 'Expenses', href: '/expenses' },
+                        { label: 'Expenses', href: route('expenses') },
                         { label: expense.title },
                     ]}
                     actions={

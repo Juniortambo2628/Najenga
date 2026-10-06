@@ -167,7 +167,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             >
                                 <i className="fas fa-folder-plus mr-1"></i> New Folder
                             </button>
-                            <PrimaryButton as="link" href="/documents/create">
+                            <PrimaryButton as="link" href={route('documents.create')}>
                                 <i className="fas fa-upload"></i> Upload
                             </PrimaryButton>
                         </>
@@ -227,7 +227,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                         icon="fa-file-alt" 
                         title="No documents yet" 
                         message="Upload documents to keep them organized"
-                        action={{ label: 'Upload Document', onClick: () => router.get('/documents/create') }}
+                        action={{ label: 'Upload Document', onClick: () => router.get(route('documents.create')) }}
                     />
                 )}
 
@@ -584,7 +584,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     if (e.key === 'Enter' && newFolderName.trim()) {
                                         const projectId = documents[0]?.project_id;
                                         if (projectId) {
-                                            router.post('/folders', {
+                                            router.post(route('folders.store'), {
                                                 name: newFolderName.trim(),
                                                 project_id: projectId,
                                                 parent_id: currentFolderId,
@@ -606,7 +606,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                 if (!newFolderName.trim()) return;
                                 const projectId = documents[0]?.project_id;
                                 if (projectId) {
-                                    router.post('/folders', {
+                                    router.post(route('folders.store'), {
                                         name: newFolderName.trim(),
                                         project_id: projectId,
                                         parent_id: currentFolderId,

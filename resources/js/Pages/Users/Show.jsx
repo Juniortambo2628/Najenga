@@ -14,7 +14,7 @@ export default function Show({ user }) {
                     subtitle="User profile"
                     breadcrumbs={[
                         ...rootBreadcrumbs(),
-                        { label: 'Users', href: '/users' },
+                        { label: 'Users', href: route('users.index') },
                         { label: `${user.first_name} ${user.last_name}` },
                     ]}
                     actions={

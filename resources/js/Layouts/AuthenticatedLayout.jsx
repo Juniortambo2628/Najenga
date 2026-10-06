@@ -52,7 +52,7 @@ export default function AuthenticatedLayout({ children }) {
     const handleSearchSubmit = useCallback((e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            router.get('/search', { q: searchQuery.trim() });
+            router.get(route('search'), { q: searchQuery.trim() });
             setSearchOpen(false);
         }
     }, [searchQuery]);
@@ -99,7 +99,7 @@ export default function AuthenticatedLayout({ children }) {
                     ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}>
                     {/* Sidebar Brand */}
-                    <Link href="/" className="h-14 flex items-center justify-center border-b border-white/10 flex-shrink-0 hover:bg-white/5 transition px-3">
+                    <Link href={route('home')} className="h-14 flex items-center justify-center border-b border-white/10 flex-shrink-0 hover:bg-white/5 transition px-3">
                         <img 
                             src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp" 
                             alt="Najenga" 
@@ -231,7 +231,7 @@ export default function AuthenticatedLayout({ children }) {
                                                 <p className="text-white font-medium">{user.first_name || user.name} {user.last_name || ''}</p>
                                                 <p className="text-gray-400 text-sm truncate">{user.email}</p>
                                             </div>
-                                            <Link href="/" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
+                                            <Link href={route('home')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
                                                 <i className="fas fa-home w-5"></i>Home
                                             </Link>
                                             <Link href={route('profile.edit')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">

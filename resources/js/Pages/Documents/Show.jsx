@@ -27,7 +27,7 @@ export default function Show({ document }) {
                     subtitle={document.project?.name || 'Document details'}
                     breadcrumbs={[
                         ...rootBreadcrumbs(),
-                        { label: 'Documents', href: '/documents' },
+                        { label: 'Documents', href: route('documents') },
                         { label: document.title },
                     ]}
                     actions={

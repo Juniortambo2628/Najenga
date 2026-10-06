@@ -241,7 +241,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     currentProjectId={filterProject}
                     onProjectChange={(val) => setFilterProject(val)}
                     actions={
-                        <PrimaryButton as="link" href="/timeline/create">
+                        <PrimaryButton as="link" href={route('timeline.create')}>
                             <i className="fas fa-plus"></i> Add Milestone
                         </PrimaryButton>
                     }
@@ -296,7 +296,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-stream"
                             title="No activity yet"
                             message="Add milestones, expenses, photos, or documents to see them on the timeline"
-                            action={{ label: 'Add Milestone', onClick: () => router.get('/timeline/create') }}
+                            action={{ label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) }}
                         />
                     ) : (
                         <div className="relative">
@@ -321,7 +321,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-flag"
                             title="No milestones yet"
                             message="Add milestones to track your project progress"
-                            action={{ label: 'Add Milestone', onClick: () => router.get('/timeline/create') }}
+                            action={{ label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) }}
                         />
                     ) : (
                         <div className="relative">

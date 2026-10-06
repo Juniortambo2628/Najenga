@@ -63,7 +63,7 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: 'easeOut' }}
                     >
-                        <Link href="/" className="flex items-center gap-3 mb-12">
+                        <Link href={route('home')} className="flex items-center gap-3 mb-12">
                             <img
                                 src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                                 alt="Najenga"
@@ -116,7 +116,7 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
                 >
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-8">
-                        <Link href="/" className="inline-flex items-center gap-3">
+                        <Link href={route('home')} className="inline-flex items-center gap-3">
                             <img loading="lazy" decoding="async" 
                                 src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                                 alt="Najenga"

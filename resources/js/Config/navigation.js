@@ -5,19 +5,19 @@
  * an item with no `roles` is shown to everyone.
  */
 export const NAV_ITEMS = [
-    { name: 'Dashboard', href: '/dashboard', icon: 'fa-tachometer-alt' },
-    { name: 'Projects', href: '/projects', icon: 'fa-project-diagram' },
-    { name: 'Expenses', href: '/expenses', icon: 'fa-receipt' },
-    { name: 'Photos', href: '/photos', icon: 'fa-images' },
-    { name: 'Documents', href: '/documents', icon: 'fa-file-alt' },
-    { name: 'Timeline', href: '/timeline', icon: 'fa-calendar-alt' },
-    { name: 'Receipt Verification', href: '/receipt-verification', icon: 'fa-check-circle' },
-    { name: 'WhatsApp', href: '/whatsapp', icon: 'fa-whatsapp' },
-    { name: 'Messages', href: '/messages', icon: 'fa-comment-alt' },
-    { name: 'Analytics', href: '/analytics', icon: 'fa-chart-bar', roles: ['admin'] },
-    { name: 'Users', href: '/users', icon: 'fa-users-cog', roles: ['admin'] },
-    { name: 'Activity Logs', href: '/activity-logs', icon: 'fa-history' },
-    { name: 'Profile', href: '/profile', icon: 'fa-user' },
+    { name: 'Dashboard', href: route('dashboard'), icon: 'fa-tachometer-alt' },
+    { name: 'Projects', href: route('projects'), icon: 'fa-project-diagram' },
+    { name: 'Expenses', href: route('expenses'), icon: 'fa-receipt' },
+    { name: 'Photos', href: route('photos'), icon: 'fa-images' },
+    { name: 'Documents', href: route('documents'), icon: 'fa-file-alt' },
+    { name: 'Timeline', href: route('timeline'), icon: 'fa-calendar-alt' },
+    { name: 'Receipt Verification', href: route('receipt.verification'), icon: 'fa-check-circle' },
+    { name: 'WhatsApp', href: route('whatsapp'), icon: 'fa-whatsapp' },
+    { name: 'Messages', href: route('messages'), icon: 'fa-comment-alt' },
+    { name: 'Analytics', href: route('analytics'), icon: 'fa-chart-bar', roles: ['admin'] },
+    { name: 'Users', href: route('users.index'), icon: 'fa-users-cog', roles: ['admin'] },
+    { name: 'Activity Logs', href: route('activity.logs'), icon: 'fa-history' },
+    { name: 'Profile', href: route('profile.edit'), icon: 'fa-user' },
 ];
 
 export function navItemsFor(role) {
@@ -28,8 +28,8 @@ export function navItemsFor(role) {
  * The breadcrumb prefix repeated on every page: the dashboard.
  *
  * Usage:
- *   breadcrumbs={[...rootBreadcrumbs(), { label: 'Documents', href: '/documents' }, { label: doc.title }]}
+ *   breadcrumbs={[...rootBreadcrumbs(), { label: 'Documents', href: route('documents') }, { label: doc.title }]}
  */
 export function rootBreadcrumbs() {
-    return [{ label: 'Dashboard', href: '/dashboard' }];
+    return [{ label: 'Dashboard', href: route('dashboard') }];
 }
