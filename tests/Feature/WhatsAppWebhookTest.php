@@ -135,4 +135,34 @@ class WhatsAppWebhookTest extends TestCase
 
         $this->assertDatabaseCount('expenses', 0);
     }
+
+    public function test_a_user_without_a_phone_number_does_not_crash_the_webhook(): void
+    {
+        User::factory()->create(['whatsapp_wa_id' => '254700000000', 'phone' => null]);
+
+        config([
+            'services.meta.whatsapp_phone_number_id' => 'PN_ID',
+            'services.meta.whatsapp_access_token' => 'TOKEN',
+        ]);
+
+        $ocr = $this->createMock(OcrService::class);
+        $ocr->method('extractText')->willReturn([
+            'success'    => true,
+            'text'       => 'KES 1500 paid to Jane Doe Ref: ABC123 12/03/2026',
+            'confidence' => 0.9,
+            'source'     => 'test-fixture',
+        ]);
+        $this->app->instance(OcrService::class, $ocr);
+
+        Http::fake([
+            'graph.facebook.com/*' => Http::response(['url' => 'https://cdn.example/receipt.jpg']),
+            'cdn.example/*' => Http::response($this->jpegBytes(), 200),
+        ]);
+
+        $this->postJson('/api/whatsapp/webhook', $this->payload())
+            ->assertOk();
+
+        $this->assertDatabaseCount('expenses', 1);
+        $this->assertDatabaseMissing('whatsapp_logs', ['direction' => 'outbound']);
+    }
 }

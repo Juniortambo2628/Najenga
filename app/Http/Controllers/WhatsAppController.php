@@ -232,7 +232,7 @@ class WhatsAppController extends Controller
     /**
      * Send a WhatsApp message via Meta Cloud API.
      */
-    private function sendWhatsAppMessage(string $to, string $text): void
+    private function sendWhatsAppMessage(?string $to, string $text): void
     {
         try {
             $phoneNumberId = config('services.meta.whatsapp_phone_number_id');
@@ -243,11 +243,17 @@ class WhatsAppController extends Controller
                 return;
             }
 
-            // Normalize phone number
-            $to = preg_replace('/[^\d]/', '', $to);
-            if (substr($to, 0, 1) !== '+') {
-                $to = '+' . $to;
+            // Normalize phone number. A null/empty phone (users matched via
+            // whatsapp_wa_id have no requirement to fill in phone) must skip
+            // the send: the previous `string $to` signature turned that into
+            // an uncaught TypeError that 500'd the webhook.
+            $digits = preg_replace('/[^\d]/', '', (string) $to);
+            if ($digits === '') {
+                Log::info('WhatsApp message skipped: recipient has no usable phone number');
+                return;
             }
+
+            $to = '+' . $digits;
 
             Http::withToken($accessToken)
                 ->post("https://graph.facebook.com/v18.0/{$phoneNumberId}/messages", [
