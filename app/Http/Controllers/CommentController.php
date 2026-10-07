@@ -27,6 +27,11 @@ class CommentController extends Controller
             return response()->json(['error' => 'Invalid resource type'], 400);
         }
 
+        $resource = $modelClass::find($request->commentable_id);
+        if ($resource) {
+            $this->authorize('view', $resource);
+        }
+
         $comments = Comment::where('commentable_id', $request->commentable_id)
             ->where('commentable_type', $modelClass)
             ->whereNull('parent_id')

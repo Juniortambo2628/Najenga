@@ -19,6 +19,11 @@ class AnnotationController extends Controller
         $type = $this->getModelClass($request->annotatable_type);
         if (!$type) return response()->json(['error' => 'Invalid type'], 400);
 
+        $annotatable = $type::find($request->annotatable_id);
+        if ($annotatable) {
+            $this->authorize('view', $annotatable);
+        }
+
         return Annotation::where('annotatable_id', $request->annotatable_id)
             ->where('annotatable_type', $type)
             ->with('user')

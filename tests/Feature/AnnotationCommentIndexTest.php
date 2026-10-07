@@ -96,6 +96,52 @@ class AnnotationCommentIndexTest extends TestCase
             ->assertStatus(400);
     }
 
+    public function test_user_cannot_list_annotations_on_another_users_photo(): void
+    {
+        Annotation::factory()->count(2)->create([
+            'annotatable_type' => Photo::class,
+            'annotatable_id' => $this->photo->id,
+            'user_id' => $this->user->id,
+        ]);
+
+        $outsider = User::factory()->create(['role' => 'client']);
+
+        $this->actingAs($outsider)
+            ->getJson('/annotations?annotatable_id=' . $this->photo->id . '&annotatable_type=photo')
+            ->assertForbidden();
+    }
+
+    public function test_user_cannot_list_comments_on_another_users_photo(): void
+    {
+        Comment::factory()->count(2)->create([
+            'commentable_type' => Photo::class,
+            'commentable_id' => $this->photo->id,
+            'user_id' => $this->user->id,
+        ]);
+
+        $outsider = User::factory()->create(['role' => 'client']);
+
+        $this->actingAs($outsider)
+            ->getJson('/comments?commentable_id=' . $this->photo->id . '&commentable_type=photo')
+            ->assertForbidden();
+    }
+
+    public function test_annotations_index_for_a_missing_parent_returns_an_empty_list(): void
+    {
+        $this->actingAs($this->user)
+            ->getJson('/annotations?annotatable_id=999999&annotatable_type=photo')
+            ->assertOk()
+            ->assertJsonCount(0);
+    }
+
+    public function test_comments_index_for_a_missing_parent_returns_an_empty_list(): void
+    {
+        $this->actingAs($this->user)
+            ->getJson('/comments?commentable_id=999999&commentable_type=photo')
+            ->assertOk()
+            ->assertJsonCount(0);
+    }
+
     public function test_comment_with_nonexistent_type_returns_400(): void
     {
         $this->actingAs($this->user)
