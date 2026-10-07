@@ -68,6 +68,7 @@ export const TEST_ROUTES = {
     'photos.update': '/photos/{photo}',
     'profile.destroy': '/profile',
     'profile.edit': '/profile',
+    'profile.login-notifications': '/profile/login-notifications',
     'profile.update': '/profile',
     'projects': '/projects',
     'projects.create': '/projects/create',

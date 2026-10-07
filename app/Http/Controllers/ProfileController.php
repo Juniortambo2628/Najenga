@@ -41,6 +41,22 @@ class ProfileController extends Controller
     }
 
     /**
+     * Toggle login notifications for the authenticated user.
+     */
+    public function toggleLoginNotifications(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'enabled' => 'required|boolean',
+        ]);
+
+        $request->user()->forceFill([
+            'login_notifications_enabled' => $validated['enabled'],
+        ])->save();
+
+        return back()->with('success', 'Login notification preference updated.');
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse

@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import DashboardHero from '@/Components/DashboardHero';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
@@ -7,6 +8,20 @@ import UpdateProfileInformationForm from './Partials/UpdateProfileInformationFor
 import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Edit({ mustVerifyEmail, status }) {
+    const user = usePage().props.auth.user;
+    const [loginNotificationsEnabled, setLoginNotificationsEnabled] = useState(
+        Boolean(user.login_notifications_enabled)
+    );
+
+    const toggleLoginNotifications = (enabled) => {
+        setLoginNotificationsEnabled(enabled);
+        router.patch(
+            route('profile.login-notifications'),
+            { enabled },
+            { preserveScroll: true }
+        );
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Settings" />
@@ -111,7 +126,12 @@ export default function Edit({ mustVerifyEmail, status }) {
                                     </div>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={loginNotificationsEnabled}
+                                        onChange={(e) => toggleLoginNotifications(e.target.checked)}
+                                    />
                                     <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#DC143C]"></div>
                                 </label>
                             </div>

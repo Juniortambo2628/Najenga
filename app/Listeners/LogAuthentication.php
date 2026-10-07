@@ -2,11 +2,13 @@
 
 namespace App\Listeners;
 
+use App\Notifications\NewLoginNotification;
 use App\Services\ActivityLogger;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Registered once in bootstrap/app.php for all four auth events.
@@ -42,5 +44,26 @@ class LogAuthentication
         }
 
         ActivityLogger::logFor($event->user, 'auth.login', 'Signed in');
+        $this->notifyNewContext($event->user);
+    }
+
+    private function notifyNewContext($user): void
+    {
+        $context = [
+            'ip' => request()->ip(),
+            'user_agent' => substr((string) request()->userAgent(), 0, 255),
+        ];
+
+        $isKnownContext = $user->last_login_context === $context;
+
+        DB::table('users')->where('id', $user->id)->update([
+            'last_login_context' => json_encode($context),
+        ]);
+
+        if ($isKnownContext || !$user->login_notifications_enabled || !$user->email) {
+            return;
+        }
+
+        $user->notify(new NewLoginNotification($context));
     }
 }
