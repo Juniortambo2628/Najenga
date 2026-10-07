@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
 use App\Models\Document;
+use App\Models\Folder;
 use App\Models\Project;
 use App\Traits\HasProjectScope;
 use App\Traits\AttachesMediaFromRequest;
@@ -164,8 +165,20 @@ class DocumentController extends Controller
 
     public function move(Request $request, Document $document)
     {
-        $request->validate(['folder_id' => 'nullable|exists:folders,id']);
-        $document->update(['folder_id' => $request->folder_id]);
+        $this->authorize('update', $document);
+
+        $validated = $request->validate(['folder_id' => 'nullable|exists:folders,id']);
+        $folderId = $validated['folder_id'] ?? null;
+
+        if ($folderId) {
+            $folder = Folder::find($folderId);
+
+            if ($folder && (int) $folder->project_id !== (int) $document->project_id) {
+                return redirect()->back()->withErrors(['folder_id' => 'Folder belongs to a different project.']);
+            }
+        }
+
+        $document->update(['folder_id' => $folderId]);
         return redirect()->back()->with('success', 'Document moved successfully');
     }
 }
