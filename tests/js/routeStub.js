@@ -47,6 +47,8 @@ export const TEST_ROUTES = {
     'folders.update': '/folders/{folder}',
     'home': '/',
     'login': '/login',
+    'login-code.request': '/login-code',
+    'login-code.verify': '/login-code/verify',
     'logout': '/logout',
     'messages': '/messages',
     'notifications.index': '/notifications',
