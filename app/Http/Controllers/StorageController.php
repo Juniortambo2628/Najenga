@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class StorageController extends Controller
@@ -16,19 +17,30 @@ class StorageController extends Controller
      */
     public function show($path)
     {
-        $exists = Storage::disk('public')->exists($path);
+        abort_unless(auth()->check(), 403);
 
-        if (!$exists) {
+        if (!Storage::disk('public')->exists($path)) {
             abort(404);
         }
 
-        $parts = explode('/', $path);
-        $userId = $parts[1] ?? null;
+        if (auth()->user()->role === 'admin') {
+            return Storage::disk('public')->response($path);
+        }
 
-        if ($userId && (int) $userId !== auth()->id()) {
-            if (auth()->user()->role !== 'admin') {
-                abort(403, 'Unauthorized access to this file.');
-            }
+        $mediaId = (int) (explode('/', $path)[0] ?? 0);
+        $media = Media::query()
+            ->where('disk', 'public')
+            ->where('id', $mediaId)
+            ->first();
+
+        if (!$media || $media->getPathRelativeToRoot() !== $path) {
+            abort(403, 'Unauthorized access to this file.');
+        }
+
+        $model = $media->model;
+
+        if (!$model || !auth()->user()->can('view', $model)) {
+            abort(403, 'Unauthorized access to this file.');
         }
 
         return Storage::disk('public')->response($path);

@@ -149,10 +149,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Full-text search (MeiliSearch)
     Route::get('/search', [\App\Http\Controllers\SearchController::class, 'index'])->name('search');
-
-    // Storage
-    Route::get('/storage/{path}', [\App\Http\Controllers\StorageController::class, 'show'])->where('path', '.*')->name('storage.show');
 });
+
+// Outside the auth group on purpose: signed-out requests must reach the
+// controller and get a 403 asset response, not an HTML login redirect.
+Route::get('/storage/{path}', [\App\Http\Controllers\StorageController::class, 'show'])->where('path', '.*')->name('storage.show');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
