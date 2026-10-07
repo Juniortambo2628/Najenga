@@ -213,6 +213,55 @@ Phase 4  fix: guard FK migrations for InnoDB
 Phase 5  (individual commits, one per approved item)
 ```
 
+## Phases 6–9 — completion of half-built features (approved 2026-10-07)
+
+Decisions locked: 2FA via **laravel/fortify** (+ google2fa/simple-qrcode/bacon-qr-code);
+**implement** passkeys now (webauthn-lib, must parse the 2 imported prod credentials);
+**implement** Share + Download Selected; **wire navigation** to the 9 unreachable pages;
+wire orphan endpoints; remove dead Welcome footer links. ~30 commits, same protocol
+(commit message file + gate after every step: 364 PHP / 85 JS / build).
+
+### Phase 6 — Security hardening
+| ID | Step |
+|---|---|
+| 6.1 | `User::$hidden` += `two_factor_secret`, `two_factor_recovery_codes` + test |
+| 6.2 | `authorize()` on Store{Document,Photo,Expense,BatchExpense,Timeline}Request (project from body `project_id`, `can('update')`) + `DocumentController::move` authorize; cross-tenant 403 tests |
+| 6.3 | Guard `AnnotationController::index` / `CommentController::index` (parent→project membership) + tests |
+| 6.4 | Un-shadow storage: disable vendor `local.serve` so guarded `storage.show` route is authoritative; StorageControllerTest asserts real ownership logic |
+| 6.5 | Null-phone guard in `sendWhatsAppMessage` + test |
+
+### Phase 7 — Auth features ("Coming Soon" cards)
+| ID | Step |
+|---|---|
+| 7.1 | Login Notifications: `users.login_notifications_enabled` + `last_login_context`; notify on changed context; Profile toggle; tests |
+| 7.2 | Email Login Code: `LoginCode` model (mirrors prod `login_codes` DDL), request/verify routes, mail, 10-min TTL, 3/min throttle, prune; login-page flow; tests |
+| 7.3 | Fortify 2FA + Recovery Codes: composer install + config (2FA confirm + recovery codes only, Breeze `/login` stays authoritative); Inertia `TwoFactorChallenge` page; Profile QR/confirm/recover/disable wiring; TOTP + challenge + recovery-code tests |
+| 7.4 | Passkeys: `web-auth/webauthn-lib` (pin ^4 unless ^5 round-trips prod's `public_key_credential_source` JSON — test deserializes both rows); `PassKey` model on prod DDL; options/register endpoints; Profile register/list/delete UI; login via passkey; counter tests |
+| 7.5 | WhatsApp verification: user pastes OTP received on WhatsApp → `whatsapp_verified_at`; fillable/casts; Profile card; throttle/expiry tests |
+
+### Phase 8 — Mock pages → real data
+| ID | Step |
+|---|---|
+| 8.1 | WhatsApp page: `WhatsAppController@index` replaces closure (`routes/web.php:146`); `whatsapp_settings` table + persisted toggles; Test Connection checks API config |
+| 8.2 | Dashboard `expenseTrend` computed (AnalyticsController SQL) + fixture test |
+| 8.3 | Batch ZIP downloads: `POST /photos/download`, `/documents/download` (per-item auth) wired to *Download Selected* |
+| 8.4 | Docs/Photos *Share* → existing share pattern with real targets (replaces `alert()`) |
+| 8.5 | Navigation: Receipts entry in `Config/navigation.js`; row links → `documents.show`/`photos.show`/`users.show`; reaches all 9 unreachable pages |
+| 8.6 | Search deep-links: row `id`s (`doc-`/`photo-`/`expense-`) + hash scroll/highlight |
+| 8.7 | Wire `documents/{id}/move` + `receipts.analyze-bulk` into UI; remove dead Welcome footer links |
+
+### Phase 9 — Pipelines + hygiene
+| ID | Step |
+|---|---|
+| 9.1 | Populate `whatsapp_logs.filed_type/filed_id` on receipt filing + `filed(): MorphTo` + display + test |
+| 9.2 | `payment_source`/`confidence`/`source_channel` → fillable/casts, written on intake; accept `'confirmed'` in validation + filter |
+| 9.3 | `whatsapp_webhook_events.processed`/`error_message` set in handler + test |
+| 9.4 | Extract Form Requests (comments/annotations/messages/conversations/share/analyze); dedupe folder rule |
+| 9.5 | Refresh `docs/schema-drift.md`; drop unused import (`AttachesMediaFromRequest`) + stale comment (`ActivityLogs.jsx`) |
+
+Deferred (untouched): Phase 4/5 approvals, AG Grid tree-shaking, PDF-test OOM,
+Carbon date-comparison latent bug, queue wiring, auth-table FKs.
+
 ## Definition of done — measurable targets
 
 | Metric | Now | Target |
