@@ -13,6 +13,7 @@ import useContextMenu from '@/Hooks/useContextMenu';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
+import useHashHighlight from '@/Hooks/useHashHighlight';
 import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -49,6 +50,7 @@ export default function Photos({ photos = [], projects = [] }) {
     };
 
     const activeProject = useActiveProject(projects, activeProjectId);
+    const highlightedPhoto = useHashHighlight('photo-');
 
     const filteredPhotos = useFilteredItems(photos, {
         projectId: activeProjectId,
@@ -249,6 +251,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                 key={photo.id} 
                                 photo={photo} 
                                 selected={isSelected(photo.id)} 
+                                highlighted={highlightedPhoto === String(photo.id)}
                                 onToggle={(multi) => toggleSelection(photo.id, multi)}
                                 onContextMenu={(e) => handleContextMenu(e, photo)}
                                 onPreview={() => setPreviewPhoto(photo)}
@@ -273,6 +276,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                             key={photo.id} 
                                             photo={photo} 
                                             selected={isSelected(photo.id)} 
+                                            highlighted={highlightedPhoto === String(photo.id)}
                                             onToggle={(multi) => toggleSelection(photo.id, multi)}
                                             onContextMenu={(e) => handleContextMenu(e, photo)}
                                             onPreview={() => setPreviewPhoto(photo)}

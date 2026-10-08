@@ -17,6 +17,7 @@ import useMultiSelect from '@/Hooks/useMultiSelect';
 import useActiveProject from '@/Hooks/useActiveProject';
 import useContextMenu from '@/Hooks/useContextMenu';
 import useFilteredItems from '@/Hooks/useFilteredItems';
+import useHashHighlight from '@/Hooks/useHashHighlight';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -78,6 +79,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
         sortFn: sortExpenses,
         searchFields: ['title', 'project_name'],
     });
+    const highlightedExpense = useHashHighlight('expense-');
 
     const handleExport = () => {
         exportToCSV(
@@ -273,7 +275,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                         </tr>
                                     ) : (
                                         filteredExpenses.map((expense) => (
-                                            <tr key={expense.id} className={`hover:bg-white/5 transition cursor-pointer ${isSelected(expense.id) ? 'bg-white/5' : ''}`} onClick={() => handleView(expense)}>
+                                            <tr key={expense.id} id={`expense-${expense.id}`} className={`hover:bg-white/5 transition cursor-pointer ${isSelected(expense.id) ? 'bg-white/5' : highlightedExpense === String(expense.id) ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-400/50' : ''}`} onClick={() => handleView(expense)}>
                                                 <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                                                     <input
                                                         type="checkbox"

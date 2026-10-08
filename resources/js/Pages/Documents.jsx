@@ -23,6 +23,7 @@ import useContextMenu from '@/Hooks/useContextMenu';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
+import useHashHighlight from '@/Hooks/useHashHighlight';
 import DashboardHero from '@/Components/DashboardHero';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import ShareProjectModal from '@/Components/ShareProjectModal';
@@ -60,6 +61,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
 
     // Folder Navigation State
     const [currentFolderId, setCurrentFolderId] = useState(null);
+    const highlightedDoc = useHashHighlight('doc-');
     const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
 
@@ -295,8 +297,9 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             {filteredDocuments.map((doc) => (
                                 <div 
                                     key={doc.id} 
+                                    id={`doc-${doc.id}`}
                                     className={`flex items-center justify-between p-4 transition group cursor-pointer border-l-4
-                                        ${isSelected(doc.id) ? 'bg-white/5 border-[#DC143C]' : 'border-transparent hover:bg-white/5 hover:border-white/10'}
+                                        ${isSelected(doc.id) ? 'bg-white/5 border-[#DC143C]' : highlightedDoc === String(doc.id) ? 'bg-amber-500/10 border-amber-400/70 ring-1 ring-inset ring-amber-400/50' : 'border-transparent hover:bg-white/5 hover:border-white/10'}
                                     `}
                                     onClick={(e) => toggleSelection(doc.id, e.ctrlKey || e.metaKey)}
                                     onContextMenu={(e) => handleContextMenu(e, doc)}
