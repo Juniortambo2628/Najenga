@@ -71,6 +71,7 @@ export const TEST_ROUTES = {
     'profile.destroy': '/profile',
     'profile.edit': '/profile',
     'profile.login-notifications': '/profile/login-notifications',
+    'profile.two-factor': '/profile/two-factor',
     'profile.update': '/profile',
     'projects': '/projects',
     'projects.create': '/projects/create',

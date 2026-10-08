@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import DashboardHero from '@/Components/DashboardHero';
 import DeleteUserForm from './Partials/DeleteUserForm';
@@ -57,7 +57,10 @@ export default function Edit({ mustVerifyEmail, status }) {
                             <p className="text-sm text-gray-400 mt-1">Add additional security to your account using two-factor authentication.</p>
                         </header>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+                            <Link
+                                href={route('profile.two-factor')}
+                                className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:border-white/20 transition"
+                            >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
                                         <i className="fas fa-mobile-alt text-blue-400"></i>
@@ -67,9 +70,16 @@ export default function Edit({ mustVerifyEmail, status }) {
                                         <p className="text-gray-500 text-xs">Use an authenticator app to generate one-time codes</p>
                                     </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-lg bg-yellow-500/10 text-yellow-400 text-xs font-medium border border-yellow-500/20">Not Enabled</span>
-                            </div>
-                            <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+                                {user.two_factor_confirmed_at ? (
+                                    <span className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">Enabled</span>
+                                ) : (
+                                    <span className="px-3 py-1 rounded-lg bg-yellow-500/10 text-yellow-400 text-xs font-medium border border-yellow-500/20">Not Enabled</span>
+                                )}
+                            </Link>
+                            <Link
+                                href={route('profile.two-factor')}
+                                className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:border-white/20 transition"
+                            >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center">
                                         <i className="fas fa-key text-green-400"></i>
@@ -79,8 +89,12 @@ export default function Edit({ mustVerifyEmail, status }) {
                                         <p className="text-gray-500 text-xs">Store recovery codes in a safe place if you lose access</p>
                                     </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Unavailable</span>
-                            </div>
+                                {user.two_factor_confirmed_at ? (
+                                    <span className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">Available</span>
+                                ) : (
+                                    <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Unavailable</span>
+                                )}
+                            </Link>
                         </div>
                     </section>
 

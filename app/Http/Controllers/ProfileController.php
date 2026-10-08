@@ -57,6 +57,19 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the two-factor authentication management page.
+     */
+    public function twoFactor(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('Profile/TwoFactor', [
+            'enabled' => ! is_null($user->two_factor_confirmed_at),
+            'pending' => ! is_null($user->two_factor_secret) && is_null($user->two_factor_confirmed_at),
+        ]);
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse

@@ -214,4 +214,46 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->assertNull($user->two_factor_confirmed_at);
         $this->assertNull($user->two_factor_recovery_codes);
     }
+
+    public function test_two_factor_page_requires_authentication(): void
+    {
+        $this->get(route('profile.two-factor'))->assertRedirect('/login');
+    }
+
+    public function test_two_factor_page_reports_current_state(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('profile.two-factor'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Profile/TwoFactor')
+                ->where('enabled', false)
+                ->where('pending', false));
+
+        $this->actingAs($user)->post(route('two-factor.enable'))->assertRedirect();
+
+        $this->actingAs($user)
+            ->get(route('profile.two-factor'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Profile/TwoFactor')
+                ->where('enabled', false)
+                ->where('pending', true));
+
+        $secret = decrypt($user->fresh()->two_factor_secret);
+        $code = app(Google2FA::class)->getCurrentOtp($secret);
+        $this->actingAs($user)
+            ->post(route('two-factor.confirm'), ['code' => $code])
+            ->assertRedirect();
+
+        $this->actingAs($user)
+            ->get(route('profile.two-factor'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Profile/TwoFactor')
+                ->where('enabled', true)
+                ->where('pending', false));
+    }
 }
