@@ -16,6 +16,7 @@ import BulkActions from '@/Components/BulkActions';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
+import SelectInput from '@/Components/SelectInput';
 import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useActiveProject from '@/Hooks/useActiveProject';
@@ -35,6 +36,9 @@ if (pdfjs.setVerbosityLevel) pdfjs.setVerbosityLevel(pdfjs.VerbosityLevel?.ERROR
 export default function Documents({ documents = [], folders = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [shareTarget, setShareTarget] = useState(null);
+    const [moveTarget, setMoveTarget] = useState(null);
+    const [moveFolderId, setMoveFolderId] = useState('');
+    const [moving, setMoving] = useState(false);
 
     const shareProjectFor = (item) => {
         if (!item?.project_id) {
@@ -125,12 +129,33 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         }
     };
 
+    const openMoveModal = (doc) => {
+        setMoveTarget(doc);
+        setMoveFolderId(doc?.folder_id ? String(doc.folder_id) : '');
+    };
+
+    const handleMove = async () => {
+        setMoving(true);
+        try {
+            await axios.patch(route('documents.move', moveTarget.id), { folder_id: moveFolderId || null });
+            toast.success('Document moved');
+            setMoveTarget(null);
+            setMoveFolderId('');
+            router.reload({ only: ['documents'] });
+        } catch (e) {
+            toast.error(e.response?.data?.errors?.folder_id?.[0] || 'Failed to move document');
+        } finally {
+            setMoving(false);
+        }
+    };
+
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewDoc(contextMenu?.target) },
         { label: 'Download', icon: 'fa-download', action: () =>
             download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
         },
         { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
+        { label: 'Move to Folder', icon: 'fa-folder-open', action: () => openMoveModal(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
             if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
                 try {
@@ -657,6 +682,38 @@ export default function Documents({ documents = [], folders = [], projects = [] 
 
             {shareTarget && (
                 <ShareProjectModal show onClose={() => setShareTarget(null)} project={shareTarget} />
+            )}
+
+            {moveTarget && (
+                <Modal show onClose={() => setMoveTarget(null)} maxWidth="md">
+                    <div className="p-6">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center">
+                                <i className="fas fa-folder-open text-white text-sm"></i>
+                            </div>
+                            Move "{moveTarget.title}"
+                        </h3>
+                        <InputLabel value="Destination folder" />
+                        <SelectInput
+                            value={moveFolderId}
+                            onChange={(e) => setMoveFolderId(e.target.value)}
+                            className="mt-1 block w-full"
+                        >
+                            <option value="">Root (no folder)</option>
+                            {folders
+                                .filter((f) => f.project_id === moveTarget.project_id)
+                                .map((f) => (
+                                    <option key={f.id} value={f.id}>{f.name}</option>
+                                ))}
+                        </SelectInput>
+                        <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-white/10">
+                            <SecondaryButton type="button" onClick={() => setMoveTarget(null)}>Cancel</SecondaryButton>
+                            <PrimaryButton type="button" onClick={handleMove} disabled={moving}>
+                                {moving ? 'Moving...' : 'Move'}
+                            </PrimaryButton>
+                        </div>
+                    </div>
+                </Modal>
             )}
 
         </AuthenticatedLayout>
