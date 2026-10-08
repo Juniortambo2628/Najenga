@@ -6,12 +6,17 @@ use App\Models\User;
 use App\Models\Expense;
 use App\Models\WhatsAppContact;
 use App\Models\WhatsAppLog;
+use App\Models\WhatsAppSetting;
 use App\Models\WhatsAppWebhookEvent;
 use App\Services\ReceiptProcessingService;
 use App\Services\WhatsAppMessageService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class WhatsAppController extends Controller
 {
@@ -19,6 +24,95 @@ class WhatsAppController extends Controller
         protected ReceiptProcessingService $receiptService,
         protected WhatsAppMessageService $whatsappMessageService,
     ) {
+    }
+
+    /**
+     * Display the WhatsApp integration page.
+     */
+    public function index(): Response
+    {
+        $missing = [];
+
+        if (! config('services.meta.whatsapp_phone_number_id')) {
+            $missing[] = 'whatsapp_phone_number_id';
+        }
+
+        if (! config('services.meta.whatsapp_access_token')) {
+            $missing[] = 'whatsapp_access_token';
+        }
+
+        return Inertia::render('WhatsApp', [
+            'connection' => [
+                'configured' => $missing === [],
+                'missing' => $missing,
+            ],
+            'settings' => WhatsAppSetting::current(),
+        ]);
+    }
+
+    /**
+     * Test the configured WhatsApp API credentials against Meta.
+     */
+    public function testConnection(Request $request): JsonResponse
+    {
+        $phoneNumberId = config('services.meta.whatsapp_phone_number_id');
+        $accessToken = config('services.meta.whatsapp_access_token');
+
+        if (! $phoneNumberId || ! $accessToken) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'WhatsApp API credentials are not configured.',
+            ]);
+        }
+
+        try {
+            $response = Http::withToken($accessToken)
+                ->get("https://graph.facebook.com/v18.0/{$phoneNumberId}", [
+                    'fields' => 'display_phone_number',
+                ]);
+
+            if ($response->failed()) {
+                Log::error('WhatsApp connection test failed: ' . $response->body());
+
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Meta rejected the configured credentials.',
+                ]);
+            }
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Connected to ' . ($response->json('display_phone_number') ?: 'WhatsApp') . '.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('WhatsApp connection test failed: ' . $e->getMessage());
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'The connection test failed. Please try again.',
+            ]);
+        }
+    }
+
+    /**
+     * Persist a notification toggle from the WhatsApp page.
+     */
+    public function updateSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'key' => ['required', 'string', Rule::in([
+                'expense_notifications',
+                'project_notifications',
+                'document_notifications',
+            ])],
+            'enabled' => ['required', 'boolean'],
+        ]);
+
+        WhatsAppSetting::current()->update([
+            $validated['key'] => $validated['enabled'],
+        ]);
+
+        return back()->with('success', 'WhatsApp notification settings updated.');
     }
 
     /**

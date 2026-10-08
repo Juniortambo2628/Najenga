@@ -143,7 +143,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Other pages
     Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity.logs');
-    Route::get('/whatsapp', fn() => \Inertia\Inertia::render('WhatsApp'))->name('whatsapp');
+    Route::get('/whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'index'])->name('whatsapp');
+    Route::post('/whatsapp/test-connection', [\App\Http\Controllers\WhatsAppController::class, 'testConnection'])->name('whatsapp.test-connection');
+    Route::patch('/whatsapp/settings', [\App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('whatsapp.settings');
     Route::get('/messages', fn() => \Inertia\Inertia::render('Messages'))->name('messages');
     Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
 

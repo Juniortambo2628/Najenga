@@ -123,6 +123,8 @@ export const TEST_ROUTES = {
     'verification.send': '/email/verification-notification',
     'verification.verify': '/verify-email/{id}/{hash}',
     'whatsapp': '/whatsapp',
+    'whatsapp.settings': '/whatsapp/settings',
+    'whatsapp.test-connection': '/whatsapp/test-connection',
 };
 
 /**
