@@ -9,13 +9,14 @@ use App\Models\Project;
 use App\Traits\HasProjectScope;
 use App\Traits\AttachesMediaFromRequest;
 use App\Traits\BatchDeletes;
+use App\Traits\BatchDownloads;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PhotoController extends Controller
 {
-    use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, RespondsWithModel;
+    use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, BatchDownloads, RespondsWithModel;
     public function index()
     {
         $userId = auth()->id();
@@ -129,5 +130,10 @@ class PhotoController extends Controller
     public function batchDestroy(Request $request)
     {
         return $this->batchDelete($request, Photo::class, 'photo');
+    }
+
+    public function download(Request $request)
+    {
+        return $this->batchDownload($request, Photo::class, 'photo');
     }
 }

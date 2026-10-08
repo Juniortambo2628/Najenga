@@ -12,6 +12,7 @@ import useActiveProject from '@/Hooks/useActiveProject';
 import useContextMenu from '@/Hooks/useContextMenu';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import useFileDownload from '@/Hooks/useFileDownload';
+import useBatchDownload from '@/Hooks/useBatchDownload';
 import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -109,6 +110,17 @@ export default function Photos({ photos = [], projects = [] }) {
         }
     };
 
+    const downloadBatch = useBatchDownload();
+
+    const downloadSelectedPhotos = async () => {
+        const ok = await downloadBatch('/photos/download', [...selectedItems], 'photos.zip');
+        if (ok) {
+            toast.success('Photos downloaded');
+        } else {
+            toast.error('Failed to download photos');
+        }
+    };
+
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewPhoto(contextMenu?.target) },
         { label: 'Download', icon: 'fa-download', action: () =>
@@ -143,7 +155,7 @@ export default function Photos({ photos = [], projects = [] }) {
                     selectedCount={selectedCount}
                     bulkActions={
                         <>
-                            <button className="text-white hover:text-gray-200" title="Download Selected"><i className="fas fa-download"></i></button>
+                            <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i className="fas fa-download"></i></button>
                             <button
                                 className="text-white hover:text-gray-200"
                                 title="Delete Selected"
@@ -168,7 +180,7 @@ export default function Photos({ photos = [], projects = [] }) {
                             onDeselectAll={deselectAll}
                             actions={
                                 <>
-                                    <button className="text-white hover:text-gray-200" title="Download Selected"><i className="fas fa-download"></i></button>
+                                    <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i className="fas fa-download"></i></button>
                                     <button
                                         className="text-white hover:text-gray-200"
                                         title="Delete Selected"

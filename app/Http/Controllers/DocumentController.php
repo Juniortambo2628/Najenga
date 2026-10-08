@@ -10,13 +10,14 @@ use App\Models\Project;
 use App\Traits\HasProjectScope;
 use App\Traits\AttachesMediaFromRequest;
 use App\Traits\BatchDeletes;
+use App\Traits\BatchDownloads;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DocumentController extends Controller
 {
-    use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, RespondsWithModel;
+    use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, BatchDownloads, RespondsWithModel;
     public function index()
     {
         $userId = auth()->id();
@@ -161,6 +162,11 @@ class DocumentController extends Controller
     public function batchDestroy(Request $request)
     {
         return $this->batchDelete($request, Document::class, 'document');
+    }
+
+    public function download(Request $request)
+    {
+        return $this->batchDownload($request, Document::class, 'document');
     }
 
     public function move(Request $request, Document $document)

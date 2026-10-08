@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/photos/{photo}/edit', [\App\Http\Controllers\PhotoController::class, 'edit'])->name('photos.edit');
     Route::patch('/photos/{photo}', [\App\Http\Controllers\PhotoController::class, 'update'])->name('photos.update');
     Route::delete('/photos/batch', [\App\Http\Controllers\PhotoController::class, 'batchDestroy'])->name('photos.batchDestroy');
+    Route::post('/photos/download', [\App\Http\Controllers\PhotoController::class, 'download'])->name('photos.download');
     Route::delete('/photos/{photo}', [\App\Http\Controllers\PhotoController::class, 'destroy'])->name('photos.destroy');
 
     // Documents
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/documents/{document}/edit', [\App\Http\Controllers\DocumentController::class, 'edit'])->name('documents.edit');
     Route::patch('/documents/{document}', [\App\Http\Controllers\DocumentController::class, 'update'])->name('documents.update');
     Route::delete('/documents/batch', [\App\Http\Controllers\DocumentController::class, 'batchDestroy'])->name('documents.batchDestroy');
+    Route::post('/documents/download', [\App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
     Route::delete('/documents/{document}', [\App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::patch('/documents/{document}/move', [\App\Http\Controllers\DocumentController::class, 'move'])->name('documents.move');
 

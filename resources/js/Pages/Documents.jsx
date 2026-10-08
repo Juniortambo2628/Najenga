@@ -22,6 +22,7 @@ import useActiveProject from '@/Hooks/useActiveProject';
 import useContextMenu from '@/Hooks/useContextMenu';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import useFileDownload from '@/Hooks/useFileDownload';
+import useBatchDownload from '@/Hooks/useBatchDownload';
 import DashboardHero from '@/Components/DashboardHero';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
@@ -98,6 +99,17 @@ export default function Documents({ documents = [], folders = [], projects = [] 
 
     const download = useFileDownload();
 
+    const downloadBatch = useBatchDownload();
+
+    const downloadSelectedDocuments = async () => {
+        const ok = await downloadBatch('/documents/download', [...selectedItems], 'documents.zip');
+        if (ok) {
+            toast.success('Documents downloaded');
+        } else {
+            toast.error('Failed to download documents');
+        }
+    };
+
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewDoc(contextMenu?.target) },
         { label: 'Download', icon: 'fa-download', action: () =>
@@ -142,7 +154,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     selectedCount={selectedCount}
                     bulkActions={
                         <>
-                            <button className="text-white hover:text-gray-200"><i className="fas fa-download"></i></button>
+                            <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedDocuments}><i className="fas fa-download"></i></button>
                             <button className="text-white hover:text-gray-200" onClick={async () => {
                                 if (confirm(`Delete ${selectedCount} items?`)) {
                                     try {
