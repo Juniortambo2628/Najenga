@@ -161,6 +161,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile/login-notifications', [ProfileController::class, 'toggleLoginNotifications'])->name('profile.login-notifications');
     Route::get('/profile/two-factor', [ProfileController::class, 'twoFactor'])->name('profile.two-factor');
 Route::get('/profile/passkeys', [ProfileController::class, 'passkeys'])->name('profile.passkeys');
+Route::post('/profile/whatsapp/send-code', [ProfileController::class, 'sendWhatsAppCode'])->middleware('throttle:3,1')->name('profile.whatsapp.send-code');
+Route::post('/profile/whatsapp/verify', [ProfileController::class, 'verifyWhatsAppCode'])->middleware('throttle:6,1')->name('profile.whatsapp.verify');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

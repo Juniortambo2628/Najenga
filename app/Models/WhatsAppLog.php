@@ -13,7 +13,8 @@ class WhatsAppLog extends Model
     // name), which no migration has ever created.
     protected $table = 'whatsapp_logs';
 
-    protected $fillable = ['user_id', 'phone_number', 'message', 'direction', 'status', 'message_id', 'timestamp'];
+    protected $fillable = ['user_id', 'phone_number', 'message', 'direction',
+        'status', 'message_id', 'timestamp', 'error_message'];
     public $timestamps = false;
 
     protected function casts(): array

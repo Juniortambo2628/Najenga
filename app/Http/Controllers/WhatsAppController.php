@@ -8,6 +8,7 @@ use App\Models\WhatsAppContact;
 use App\Models\WhatsAppLog;
 use App\Models\WhatsAppWebhookEvent;
 use App\Services\ReceiptProcessingService;
+use App\Services\WhatsAppMessageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,7 @@ class WhatsAppController extends Controller
 {
     public function __construct(
         protected ReceiptProcessingService $receiptService,
+        protected WhatsAppMessageService $whatsappMessageService,
     ) {
     }
 
@@ -234,46 +236,7 @@ class WhatsAppController extends Controller
      */
     private function sendWhatsAppMessage(?string $to, string $text): void
     {
-        try {
-            $phoneNumberId = config('services.meta.whatsapp_phone_number_id');
-            $accessToken = config('services.meta.whatsapp_access_token');
-
-            if (!$phoneNumberId || !$accessToken) {
-                Log::warning('WhatsApp credentials not configured');
-                return;
-            }
-
-            // Normalize phone number. A null/empty phone (users matched via
-            // whatsapp_wa_id have no requirement to fill in phone) must skip
-            // the send: the previous `string $to` signature turned that into
-            // an uncaught TypeError that 500'd the webhook.
-            $digits = preg_replace('/[^\d]/', '', (string) $to);
-            if ($digits === '') {
-                Log::info('WhatsApp message skipped: recipient has no usable phone number');
-                return;
-            }
-
-            $to = '+' . $digits;
-
-            Http::withToken($accessToken)
-                ->post("https://graph.facebook.com/v18.0/{$phoneNumberId}/messages", [
-                    'messaging_product' => 'whatsapp',
-                    'to' => $to,
-                    'type' => 'text',
-                    'text' => ['body' => $text],
-                ]);
-
-            // Log outbound message
-            WhatsAppLog::create([
-                'phone_number' => $to,
-                'message' => $text,
-                'direction' => 'outbound',
-                'status' => 'sent',
-                'timestamp' => now(),
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to send WhatsApp message: ' . $e->getMessage());
-        }
+        $this->whatsappMessageService->send($to, $text);
     }
 
     /**

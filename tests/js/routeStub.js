@@ -75,6 +75,8 @@ export const TEST_ROUTES = {
     'profile.passkeys': '/profile/passkeys',
     'profile.two-factor': '/profile/two-factor',
     'profile.update': '/profile',
+    'profile.whatsapp.send-code': '/profile/whatsapp/send-code',
+    'profile.whatsapp.verify': '/profile/whatsapp/verify',
     'projects': '/projects',
     'projects.create': '/projects/create',
     'projects.destroy': '/projects/{project}',

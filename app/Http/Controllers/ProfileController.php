@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\WhatsAppMessageService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,10 +20,17 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+        $digits = preg_replace('/[^\d]/', '', (string) ($user->whatsapp_wa_id ?? $user->phone));
+
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
-            'passkeysCount' => $request->user()->passkeys()->count(),
+            'passkeysCount' => $user->passkeys()->count(),
+            'whatsapp' => [
+                'phone' => $digits !== '' ? '+' . $digits : null,
+                'verified' => ! is_null($user->whatsapp_verified_at),
+            ],
         ]);
     }
 
@@ -87,6 +96,75 @@ class ProfileController extends Controller
                     'last_used_at' => $passkey->last_used_at?->format('M j, Y'),
                 ]),
         ]);
+    }
+
+    /**
+     * Send a WhatsApp verification code to the user's number.
+     */
+    public function sendWhatsAppCode(Request $request, WhatsAppMessageService $whatsapp): RedirectResponse
+    {
+        $user = $request->user();
+        $digits = preg_replace('/[^\d]/', '', (string) ($user->whatsapp_wa_id ?? $user->phone));
+
+        if ($digits === '') {
+            return back()->withErrors([
+                'whatsapp' => 'Add a phone number to your profile before verifying WhatsApp.',
+            ]);
+        }
+
+        $code = (string) random_int(100000, 999999);
+
+        $sent = $whatsapp->send(
+            '+' . $digits,
+            "Your Najenga verification code is {$code}. It expires in 10 minutes."
+        );
+
+        if (! $sent) {
+            return back()->withErrors([
+                'whatsapp' => 'The verification code could not be sent. Check the WhatsApp configuration.',
+            ]);
+        }
+
+        Cache::put("whatsapp.verify.{$user->id}", [
+            'code' => hash('sha256', $code),
+            'digits' => $digits,
+            'expires_at' => now()->addMinutes(10),
+        ], now()->addMinutes(15));
+
+        return back()->with('status', 'whatsapp-code-sent');
+    }
+
+    /**
+     * Verify the WhatsApp code the user pasted from the message.
+     */
+    public function verifyWhatsAppCode(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'regex:/^\d{6}$/'],
+        ]);
+
+        $key = "whatsapp.verify.{$request->user()->id}";
+        $payload = Cache::get($key);
+
+        if (! $payload || $payload['expires_at']->isPast()) {
+            Cache::forget($key);
+
+            return back()->withErrors([
+                'code' => 'The verification code has expired. Request a new one.',
+            ]);
+        }
+
+        if (! hash_equals($payload['code'], hash('sha256', $validated['code']))) {
+            return back()->withErrors([
+                'code' => 'The verification code is incorrect.',
+            ]);
+        }
+
+        Cache::forget($key);
+
+        $request->user()->fill(['whatsapp_verified_at' => now()])->save();
+
+        return back()->with('status', 'whatsapp-verified');
     }
 
     /**

@@ -31,6 +31,7 @@ class User extends Authenticatable implements PasskeyUser
         'profile_image',
         'telegram_chat_id',
         'whatsapp_wa_id',
+        'whatsapp_verified_at',
     ];
 
     /**
@@ -57,6 +58,7 @@ class User extends Authenticatable implements PasskeyUser
             'password' => 'hashed',
             'login_notifications_enabled' => 'boolean',
             'last_login_context' => 'array',
+            'whatsapp_verified_at' => 'datetime',
         ];
     }
 

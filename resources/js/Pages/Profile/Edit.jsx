@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import InputError from '@/Components/InputError';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import DashboardHero from '@/Components/DashboardHero';
@@ -7,11 +8,14 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
-export default function Edit({ mustVerifyEmail, status, passkeysCount }) {
-    const user = usePage().props.auth.user;
+export default function Edit({ mustVerifyEmail, status, passkeysCount, whatsapp }) {
+    const { auth, errors } = usePage().props;
+    const user = auth.user;
     const [loginNotificationsEnabled, setLoginNotificationsEnabled] = useState(
         Boolean(user.login_notifications_enabled)
     );
+    const [codeSent, setCodeSent] = useState(false);
+    const [code, setCode] = useState('');
 
     const toggleLoginNotifications = (enabled) => {
         setLoginNotificationsEnabled(enabled);
@@ -19,6 +23,33 @@ export default function Edit({ mustVerifyEmail, status, passkeysCount }) {
             route('profile.login-notifications'),
             { enabled },
             { preserveScroll: true }
+        );
+    };
+
+    const sendWhatsAppCode = () => {
+        setCode('');
+        router.post(
+            route('profile.whatsapp.send-code'),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setCodeSent(true),
+            }
+        );
+    };
+
+    const verifyWhatsAppCode = (e) => {
+        e.preventDefault();
+        router.post(
+            route('profile.whatsapp.verify'),
+            { code },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setCodeSent(false);
+                    setCode('');
+                },
+            }
         );
     };
 
@@ -95,6 +126,71 @@ export default function Edit({ mustVerifyEmail, status, passkeysCount }) {
                                     <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Unavailable</span>
                                 )}
                             </Link>
+                        </div>
+                    </section>
+
+                    {/* WhatsApp Verification */}
+                    <section className="panel p-6">
+                        <header className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold text-white">WhatsApp Verification</h2>
+                                <p className="text-sm text-gray-400 mt-1">Verify your WhatsApp number to receive receipts and alerts.</p>
+                            </div>
+                            {whatsapp.verified ? (
+                                <span className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">Verified</span>
+                            ) : (
+                                <span className="px-3 py-1 rounded-lg bg-yellow-500/10 text-yellow-400 text-xs font-medium border border-yellow-500/20">Not Verified</span>
+                            )}
+                        </header>
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-400">
+                                {whatsapp.verified
+                                    ? `${whatsapp.phone} can receive WhatsApp messages from Najenga.`
+                                    : whatsapp.phone
+                                        ? `We will send a 6-digit code to ${whatsapp.phone} on WhatsApp.`
+                                        : 'Add a phone number to your profile before verifying WhatsApp.'}
+                            </p>
+                            {!whatsapp.verified && whatsapp.phone && !codeSent && (
+                                <button
+                                    type="button"
+                                    onClick={sendWhatsAppCode}
+                                    className="px-5 py-2.5 rounded-xl bg-[rgb(139,0,0)] text-white text-sm font-medium hover:bg-[rgb(160,20,20)] transition"
+                                >
+                                    Send verification code
+                                </button>
+                            )}
+                            {!whatsapp.verified && whatsapp.phone && codeSent && (
+                                <form onSubmit={verifyWhatsAppCode} className="flex flex-wrap items-center gap-3">
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        maxLength={6}
+                                        value={code}
+                                        onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="6-digit code"
+                                        className="auth-input w-40"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={code.length !== 6}
+                                        className="px-5 py-2.5 rounded-xl bg-[rgb(139,0,0)] text-white text-sm font-medium hover:bg-[rgb(160,20,20)] transition disabled:opacity-50"
+                                    >
+                                        Verify
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={sendWhatsAppCode}
+                                        className="text-sm text-gray-400 hover:text-white transition"
+                                    >
+                                        Resend code
+                                    </button>
+                                </form>
+                            )}
+                            <InputError
+                                message={errors?.whatsapp || errors?.code}
+                                className="mt-1"
+                            />
                         </div>
                     </section>
 
