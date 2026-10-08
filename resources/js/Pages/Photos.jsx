@@ -21,6 +21,7 @@ import SearchFilterBar from '@/Components/SearchFilterBar';
 import BulkActions from '@/Components/BulkActions';
 import DashboardHero from '@/Components/DashboardHero';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import ShareProjectModal from '@/Components/ShareProjectModal';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -34,6 +35,18 @@ export default function Photos({ photos = [], projects = [] }) {
 
     // Preview State
     const [previewPhoto, setPreviewPhoto] = useState(null);
+    const [shareTarget, setShareTarget] = useState(null);
+
+    const shareProjectFor = (item) => {
+        if (!item?.project_id) {
+            toast.error('This photo is not part of a project yet');
+            return;
+        }
+        setShareTarget(
+            projects.find((p) => p.id === item.project_id) ||
+                { id: item.project_id, name: item.project_name || 'Untitled Project' }
+        );
+    };
 
     const activeProject = useActiveProject(projects, activeProjectId);
 
@@ -126,7 +139,7 @@ export default function Photos({ photos = [], projects = [] }) {
         { label: 'Download', icon: 'fa-download', action: () =>
             download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
         },
-        { label: 'Share', icon: 'fa-share-alt', action: () => alert('Sharing not implemented yet') },
+        { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: () =>
             deleteSelectedPhotos(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)
         },
@@ -351,6 +364,10 @@ export default function Photos({ photos = [], projects = [] }) {
                     </div>
                 </div>
             </PreviewModal>
+
+            {shareTarget && (
+                <ShareProjectModal show onClose={() => setShareTarget(null)} project={shareTarget} />
+            )}
 
         </AuthenticatedLayout>
     );

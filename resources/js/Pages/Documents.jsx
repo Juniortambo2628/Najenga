@@ -25,6 +25,7 @@ import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
 import DashboardHero from '@/Components/DashboardHero';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import ShareProjectModal from '@/Components/ShareProjectModal';
 
 // Configure PDF worker (served locally, no CDN round-trip)
 pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
@@ -32,6 +33,18 @@ if (pdfjs.setVerbosityLevel) pdfjs.setVerbosityLevel(pdfjs.VerbosityLevel?.ERROR
 
 export default function Documents({ documents = [], folders = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
+    const [shareTarget, setShareTarget] = useState(null);
+
+    const shareProjectFor = (item) => {
+        if (!item?.project_id) {
+            toast.error('This document is not part of a project yet');
+            return;
+        }
+        setShareTarget(
+            projects.find((p) => p.id === item.project_id) ||
+                { id: item.project_id, name: item.project_name || 'Untitled Project' }
+        );
+    };
     const [typeFilter, setTypeFilter] = useState('all');
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [viewMode, setViewMode] = useState('grid'); // Default to grid
@@ -115,7 +128,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         { label: 'Download', icon: 'fa-download', action: () =>
             download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
         },
-        { label: 'Share', icon: 'fa-share-alt', action: () => alert('Shared!') },
+        { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
             if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
                 try {
@@ -634,6 +647,10 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     </div>
                 </div>
             </Modal>
+
+            {shareTarget && (
+                <ShareProjectModal show onClose={() => setShareTarget(null)} project={shareTarget} />
+            )}
 
         </AuthenticatedLayout>
     );
