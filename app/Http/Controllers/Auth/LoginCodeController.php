@@ -3,21 +3,20 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RequestLoginCodeRequest;
+use App\Http\Requests\VerifyLoginCodeRequest;
 use App\Models\LoginCode;
 use App\Models\User;
 use App\Notifications\LoginCodeNotification;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class LoginCodeController extends Controller
 {
-    public function request(Request $request): RedirectResponse
+    public function request(RequestLoginCodeRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'email' => 'required|email',
-        ]);
+        $data = $request->validated();
 
         $user = User::where('email', $data['email'])->first();
 
@@ -37,12 +36,9 @@ class LoginCodeController extends Controller
         return back()->with('status', 'If that address exists, a sign-in code is on its way.');
     }
 
-    public function verify(Request $request): RedirectResponse
+    public function verify(VerifyLoginCodeRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'email' => 'required|email',
-            'code' => 'required|string|size:6',
-        ]);
+        $data = $request->validated();
 
         $user = User::where('email', $data['email'])->first();
 

@@ -2,21 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShareProjectRequest;
 use App\Models\Project;
 use App\Models\User;
-use Illuminate\Http\Request;
 
 class ProjectShareController extends Controller
 {
-    public function store(Request $request, Project $project)
+    public function store(ShareProjectRequest $request, Project $project)
     {
-        $this->authorize('update', $project);
-
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'role' => 'in:viewer,editor'
-        ]);
-
         $user = User::where('email', $request->email)->first();
 
         if ($project->users()->where('user_id', $user->id)->exists()) {

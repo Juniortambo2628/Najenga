@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\ToggleLoginNotificationsRequest;
+use App\Http\Requests\VerifyWhatsAppCodeRequest;
 use App\Services\WhatsAppMessageService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -53,11 +55,9 @@ class ProfileController extends Controller
     /**
      * Toggle login notifications for the authenticated user.
      */
-    public function toggleLoginNotifications(Request $request): RedirectResponse
+    public function toggleLoginNotifications(ToggleLoginNotificationsRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'enabled' => 'required|boolean',
-        ]);
+        $validated = $request->validated();
 
         $request->user()->forceFill([
             'login_notifications_enabled' => $validated['enabled'],
@@ -137,11 +137,9 @@ class ProfileController extends Controller
     /**
      * Verify the WhatsApp code the user pasted from the message.
      */
-    public function verifyWhatsAppCode(Request $request): RedirectResponse
+    public function verifyWhatsAppCode(VerifyWhatsAppCodeRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'regex:/^\d{6}$/'],
-        ]);
+        $validated = $request->validated();
 
         $key = "whatsapp.verify.{$request->user()->id}";
         $payload = Cache::get($key);

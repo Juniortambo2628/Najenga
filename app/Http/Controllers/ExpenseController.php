@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\StoreBatchExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
+use App\Http\Requests\UploadExpenseReceiptRequest;
 use App\Models\Expense;
 use App\Models\Project;
 use App\Services\ActivityLogger;
@@ -131,14 +132,8 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function uploadReceipt(Request $request, Expense $expense)
+    public function uploadReceipt(UploadExpenseReceiptRequest $request, Expense $expense)
     {
-        $this->authorize('update', $expense);
-
-        $request->validate([
-            'receipt' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
-        ]);
-
         $expense->clearMediaCollection('receipt');
 
         $expense

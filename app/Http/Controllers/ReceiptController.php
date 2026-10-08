@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AnalyzeBulkReceiptRequest;
+use App\Http\Requests\AnalyzeReceiptRequest;
+use App\Http\Requests\MatchReceiptRequest;
+use App\Http\Requests\StoreBulkReceiptRequest;
 use App\Http\Requests\StoreReceiptRequest;
 use App\Http\Requests\UpdateReceiptRequest;
 use App\Models\Expense;
@@ -9,7 +13,6 @@ use App\Services\ActivityLogger;
 use App\Services\OcrService;
 use App\Services\ReceiptParser;
 use App\Services\ReceiptProcessingService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -33,12 +36,8 @@ class ReceiptController extends Controller
         ]);
     }
 
-    public function analyze(Request $request)
+    public function analyze(AnalyzeReceiptRequest $request)
     {
-        $request->validate([
-            'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:102400',
-        ]);
-
         try {
             $uploaded = $request->file('receipt');
             $path = $uploaded->store('temp_receipts', 'local');
@@ -78,13 +77,8 @@ class ReceiptController extends Controller
      * Bulk analyze multiple receipts at once.
      * Accepts up to 20 files. Returns extracted data for each.
      */
-    public function analyzeBulk(Request $request)
+    public function analyzeBulk(AnalyzeBulkReceiptRequest $request)
     {
-        $request->validate([
-            'receipts'   => 'required|array|max:20',
-            'receipts.*' => 'required|file|mimes:jpg,jpeg,png,pdf|max:102400',
-        ]);
-
         $results = [];
         $files = $request->file('receipts');
 
@@ -140,24 +134,8 @@ class ReceiptController extends Controller
     /**
      * Bulk store multiple expenses at once.
      */
-    public function storeBulk(Request $request)
+    public function storeBulk(StoreBulkReceiptRequest $request)
     {
-        $request->validate([
-            'expenses'   => 'required|array|max:20',
-            'expenses.*' => 'required|array',
-            'expenses.*.title'           => 'required|string',
-            'expenses.*.amount'          => 'nullable|numeric|min:0',
-            'expenses.*.expense_date'    => 'required|date',
-            'expenses.*.time'            => 'nullable|string',
-            'expenses.*.recipient'       => 'nullable|string',
-            'expenses.*.payment_method'  => 'nullable|string',
-            'expenses.*.reference_number'=> 'nullable|string',
-            'expenses.*.purpose'         => 'nullable|string',
-            'expenses.*.category'        => 'nullable|string',
-            'expenses.*.project_id'      => 'nullable|exists:projects,id',
-            'expenses.*.temp_path'       => 'required|string',
-        ]);
-
         $saved = [];
         $errors = [];
 
@@ -241,14 +219,8 @@ class ReceiptController extends Controller
         return response()->json(['success' => true, 'expense' => $expense->fresh(), 'matched' => false]);
     }
 
-    public function match(Request $request)
+    public function match(MatchReceiptRequest $request)
     {
-        $request->validate([
-            'reference_number' => 'required|string',
-            'date' => 'nullable|date',
-            'time' => 'nullable|string',
-        ]);
-
         $candidates = $this->matchingExpenses($request->reference_number);
 
         if ($candidates->isEmpty()) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MoveDocumentRequest;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
 use App\Models\Document;
@@ -169,13 +170,9 @@ class DocumentController extends Controller
         return $this->batchDownload($request, Document::class, 'document');
     }
 
-    public function move(Request $request, Document $document)
+    public function move(MoveDocumentRequest $request, Document $document)
     {
-        $this->authorize('update', $document);
-
-        $validated = $request->validate([
-            'folder_id' => ['nullable', 'exists:folders,id', new \App\Rules\FolderInProject($document->project_id)],
-        ]);
+        $validated = $request->validated();
 
         $document->update(['folder_id' => $validated['folder_id'] ?? null]);
 

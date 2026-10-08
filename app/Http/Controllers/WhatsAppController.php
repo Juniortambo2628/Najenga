@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateWhatsAppSettingsRequest;
 use App\Models\User;
 use App\Models\Expense;
 use App\Models\WhatsAppContact;
@@ -14,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -97,16 +97,9 @@ class WhatsAppController extends Controller
     /**
      * Persist a notification toggle from the WhatsApp page.
      */
-    public function updateSettings(Request $request)
+    public function updateSettings(UpdateWhatsAppSettingsRequest $request)
     {
-        $validated = $request->validate([
-            'key' => ['required', 'string', Rule::in([
-                'expense_notifications',
-                'project_notifications',
-                'document_notifications',
-            ])],
-            'enabled' => ['required', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         WhatsAppSetting::current()->update([
             $validated['key'] => $validated['enabled'],
