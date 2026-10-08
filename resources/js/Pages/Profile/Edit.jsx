@@ -7,7 +7,7 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
-export default function Edit({ mustVerifyEmail, status }) {
+export default function Edit({ mustVerifyEmail, status, passkeysCount }) {
     const user = usePage().props.auth.user;
     const [loginNotificationsEnabled, setLoginNotificationsEnabled] = useState(
         Boolean(user.login_notifications_enabled)
@@ -105,7 +105,10 @@ export default function Edit({ mustVerifyEmail, status }) {
                             <p className="text-sm text-gray-400 mt-1">Configure additional security settings for your account.</p>
                         </header>
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
+                            <Link
+                                href={route('profile.passkeys')}
+                                className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:border-white/20 transition"
+                            >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
                                         <i className="fas fa-fingerprint text-purple-400"></i>
@@ -115,8 +118,14 @@ export default function Edit({ mustVerifyEmail, status }) {
                                         <p className="text-gray-500 text-xs">Use biometrics or security keys to sign in</p>
                                     </div>
                                 </div>
-                                <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">Coming Soon</span>
-                            </div>
+                                {passkeysCount > 0 ? (
+                                    <span className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
+                                        {passkeysCount} {passkeysCount === 1 ? 'Passkey' : 'Passkeys'}
+                                    </span>
+                                ) : (
+                                    <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">None yet</span>
+                                )}
+                            </Link>
                             <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">

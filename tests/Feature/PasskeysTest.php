@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Inertia\Testing\AssertableInertia;
 use Laravel\Passkeys\Actions\StorePasskey;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\Support\WebAuthn;
@@ -151,5 +152,29 @@ class PasskeysTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('passkeys', ['id' => $passkey->id]);
+    }
+
+    public function test_profile_passkeys_page_reports_registered_credentials(): void
+    {
+        $user = User::factory()->create();
+        $passkey = app(StorePasskey::class)->createPasskey(
+            $user,
+            'SURFACE',
+            WebAuthn::fromJson(self::SURFACE_CREDENTIAL, CredentialRecord::class),
+        );
+
+        $this->actingAs($user)
+            ->get(route('profile.passkeys'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Profile/Passkeys')
+                ->has('passkeys', 1)
+                ->where('passkeys.0.id', $passkey->id)
+                ->where('passkeys.0.name', 'SURFACE'));
+
+        $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('passkeysCount', 1));
     }
 }

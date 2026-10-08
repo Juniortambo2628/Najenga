@@ -1,6 +1,7 @@
 import InputError from '@/Components/InputError';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
@@ -12,6 +13,19 @@ export default function Login({ status, canResetPassword }) {
         password: '',
         remember: false,
         code: '',
+    });
+    const {
+        verify,
+        isLoading: passkeyLoading,
+        error: passkeyError,
+        isSupported: passkeySupported,
+    } = usePasskeyVerify({
+        autofill: true,
+        onSuccess: (response) => {
+            if (response.redirect) {
+                window.location.href = response.redirect;
+            }
+        },
     });
 
     const switchMode = (nextMode) => {
@@ -71,7 +85,7 @@ export default function Login({ status, canResetPassword }) {
                         value={data.email}
                         className="auth-input"
                         placeholder="eg. johnfrans@gmail.com"
-                        autoComplete="username"
+                        autoComplete="username webauthn"
                         autoFocus
                         onChange={(e) => setData('email', e.target.value)}
                     />
@@ -162,6 +176,33 @@ export default function Login({ status, canResetPassword }) {
                                 : 'Send Sign-In Code'}
                 </motion.button>
             </form>
+
+            {passkeySupported && (
+                <div className="mt-5">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="flex-1 h-px bg-white/10"></span>
+                        <span className="text-gray-500 text-xs">or</span>
+                        <span className="flex-1 h-px bg-white/10"></span>
+                    </div>
+                    <motion.button
+                        type="button"
+                        onClick={() => verify()}
+                        disabled={passkeyLoading}
+                        className="w-full px-5 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/15 transition disabled:opacity-50"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                    >
+                        {passkeyLoading
+                            ? 'Waiting for authenticator...'
+                            : 'Sign in with passkey'}
+                    </motion.button>
+                    {passkeyError && (
+                        <p className="text-sm text-red-400 mt-2 text-center">
+                            {passkeyError}
+                        </p>
+                    )}
+                </div>
+            )}
 
             <div className="text-center mt-4">
                 <button

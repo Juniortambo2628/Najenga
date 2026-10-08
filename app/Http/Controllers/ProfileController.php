@@ -21,6 +21,7 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            'passkeysCount' => $request->user()->passkeys()->count(),
         ]);
     }
 
@@ -66,6 +67,25 @@ class ProfileController extends Controller
         return Inertia::render('Profile/TwoFactor', [
             'enabled' => ! is_null($user->two_factor_confirmed_at),
             'pending' => ! is_null($user->two_factor_secret) && is_null($user->two_factor_confirmed_at),
+        ]);
+    }
+
+    /**
+     * Display the passkey management page.
+     */
+    public function passkeys(Request $request): Response
+    {
+        return Inertia::render('Profile/Passkeys', [
+            'passkeys' => $request->user()
+                ->passkeys()
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(fn ($passkey) => [
+                    'id' => $passkey->id,
+                    'name' => $passkey->name,
+                    'created_at' => $passkey->created_at?->format('M j, Y'),
+                    'last_used_at' => $passkey->last_used_at?->format('M j, Y'),
+                ]),
         ]);
     }
 

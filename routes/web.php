@@ -160,6 +160,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/login-notifications', [ProfileController::class, 'toggleLoginNotifications'])->name('profile.login-notifications');
     Route::get('/profile/two-factor', [ProfileController::class, 'twoFactor'])->name('profile.two-factor');
+Route::get('/profile/passkeys', [ProfileController::class, 'passkeys'])->name('profile.passkeys');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
