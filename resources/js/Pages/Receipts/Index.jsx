@@ -56,7 +56,11 @@ export default function Index({ receipts = [] }) {
                                                     <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500">
                                                         <i className="fas fa-file-image text-sm"></i>
                                                     </div>
-                                                    <span className="text-white text-sm font-medium">{receipt.filename || 'Unknown'}</span>
+                                                    <span className="text-white text-sm font-medium hover:text-[#DC143C] transition">
+                                                        <Link href={route('receipts.show', receipt.id)}>
+                                                            {receipt.filename || 'Unknown'}
+                                                        </Link>
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">

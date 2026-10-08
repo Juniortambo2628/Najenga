@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+
 export default function PhotoCard({ photo, selected, onToggle, onContextMenu, onPreview }) {
     return (
         <div
@@ -27,7 +29,11 @@ export default function PhotoCard({ photo, selected, onToggle, onContextMenu, on
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <p className="text-white text-sm font-medium truncate">{photo.title}</p>
+                    <p className="text-white text-sm font-medium truncate">
+                        <Link href={route('photos.show', photo.id)} onClick={(e) => e.stopPropagation()}>
+                            {photo.title}
+                        </Link>
+                    </p>
                     {photo.project_name && (
                         <p className="text-gray-300 text-xs truncate">{photo.project_name}</p>
                     )}
@@ -41,6 +47,16 @@ export default function PhotoCard({ photo, selected, onToggle, onContextMenu, on
             >
                 <i className="fas fa-expand text-xs"></i>
             </button>
+
+            {/* Open detail button */}
+            <Link
+                href={route('photos.show', photo.id)}
+                onClick={(e) => e.stopPropagation()}
+                title="Open photo"
+                className="absolute top-2 right-10 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+            >
+                <i className="fas fa-external-link-alt text-xs"></i>
+            </Link>
         </div>
     );
 }

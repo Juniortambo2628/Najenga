@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useMemo, Fragment } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
 import PreviewModal from '@/Components/PreviewModal';
@@ -319,7 +319,11 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                             } text-white text-xl`}></i>
                                         </div>
                                         <div>
-                                            <h4 className="text-white font-medium group-hover:text-[#DC143C] transition">{doc.title}</h4>
+                                            <h4 className="text-white font-medium group-hover:text-[#DC143C] transition">
+                                                <Link href={route('documents.show', doc.id)} onClick={(e) => e.stopPropagation()}>
+                                                    {doc.title}
+                                                </Link>
+                                            </h4>
                                             <p className="text-gray-400 text-sm">
                                                 <span className="bg-white/10 px-2 py-0.5 rounded text-xs mr-2 text-gray-300">{doc.document_type}</span>
                                                 {doc.project_name}

@@ -8,6 +8,7 @@ export const NAV_ITEMS = [
     { name: 'Dashboard', href: route('dashboard'), icon: 'fa-tachometer-alt' },
     { name: 'Projects', href: route('projects'), icon: 'fa-project-diagram' },
     { name: 'Expenses', href: route('expenses'), icon: 'fa-receipt' },
+    { name: 'Receipts', href: route('receipts.index'), icon: 'fa-file-invoice-dollar' },
     { name: 'Photos', href: route('photos'), icon: 'fa-images' },
     { name: 'Documents', href: route('documents'), icon: 'fa-file-alt' },
     { name: 'Timeline', href: route('timeline'), icon: 'fa-calendar-alt' },

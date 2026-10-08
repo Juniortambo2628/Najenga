@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardHero from '@/Components/DashboardHero';
@@ -206,7 +206,11 @@ export default function Index({ users }) {
                                                 {user.first_name?.[0]}{user.last_name?.[0]}
                                             </div>
                                             <div>
-                                                <p className="text-white font-medium">{user.first_name} {user.last_name}</p>
+                                                <p className="text-white font-medium">
+                                                    <Link href={route('users.show', user.id)} className="hover:text-[#DC143C] transition">
+                                                        {user.first_name} {user.last_name}
+                                                    </Link>
+                                                </p>
                                                 <p className="text-gray-500 text-sm">@{user.username}</p>
                                             </div>
                                         </div>
