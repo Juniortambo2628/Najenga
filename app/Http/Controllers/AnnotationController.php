@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\AnnotationQueryRequest;
+use App\Http\Requests\StoreAnnotationRequest;
+use App\Http\Requests\UpdateAnnotationRequest;
 use App\Models\Annotation;
 use App\Traits\HasPolymorphicType;
 use App\Traits\DispatchesActivityNotifications;
@@ -10,12 +12,7 @@ use App\Traits\DispatchesActivityNotifications;
 class AnnotationController extends Controller
 {
     use HasPolymorphicType, DispatchesActivityNotifications;
-    public function index(Request $request) {
-        $request->validate([
-            'annotatable_id' => 'required|integer',
-            'annotatable_type' => 'required|string',
-        ]);
-        
+    public function index(AnnotationQueryRequest $request) {
         $type = $this->getModelClass($request->annotatable_type);
         if (!$type) return response()->json(['error' => 'Invalid type'], 400);
 
@@ -30,18 +27,8 @@ class AnnotationController extends Controller
             ->get();
     }
 
-    public function store(Request $request)
+    public function store(StoreAnnotationRequest $request)
     {
-        $request->validate([
-            'annotatable_id' => 'required|integer',
-            'annotatable_type' => 'required|string',
-            'x' => 'required|numeric',
-            'y' => 'required|numeric',
-            'width' => 'nullable|numeric',
-            'height' => 'nullable|numeric',
-            'body' => 'nullable|string',
-        ]);
-
         $type = $this->getModelClass($request->annotatable_type);
         if (!$type) return response()->json(['error' => 'Invalid type'], 400);
 
@@ -80,7 +67,7 @@ class AnnotationController extends Controller
         return response()->json($annotation->load('user'), 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateAnnotationRequest $request, $id)
     {
         // Safety check: The library might send non-numeric string IDs (temp IDs)
         if (!is_numeric($id)) {
@@ -90,14 +77,6 @@ class AnnotationController extends Controller
         $annotation = Annotation::findOrFail($id);
 
         $this->authorize('update', $annotation);
-
-        $request->validate([
-            'x' => 'nullable|numeric',
-            'y' => 'nullable|numeric',
-            'width' => 'nullable|numeric',
-            'height' => 'nullable|numeric',
-            'body' => 'nullable|string',
-        ]);
 
         $data = $request->only(['x', 'y', 'width', 'height', 'body']);
         

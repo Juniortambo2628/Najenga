@@ -2,25 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CommentQueryRequest;
+use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\Project;
 use App\Models\Photo;
 use App\Models\Document;
 use App\Traits\HasPolymorphicType;
 use App\Traits\DispatchesActivityNotifications;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
     use HasPolymorphicType, DispatchesActivityNotifications;
-    public function index(Request $request)
+    public function index(CommentQueryRequest $request)
     {
-        $request->validate([
-            'commentable_id' => 'required|integer',
-            'commentable_type' => 'required|string',
-        ]);
-
         $modelClass = $this->getModelClass($request->commentable_type);
 
         if (!$modelClass) {
@@ -42,15 +39,8 @@ class CommentController extends Controller
         return response()->json($comments);
     }
 
-    public function store(Request $request)
+    public function store(StoreCommentRequest $request)
     {
-        $request->validate([
-            'body' => 'required|string',
-            'commentable_id' => 'required|integer',
-            'commentable_type' => 'required|string',
-            'parent_id' => 'nullable|integer|exists:comments,id',
-        ]);
-
         $modelClass = $this->getModelClass($request->commentable_type);
 
         if (!$modelClass) {
@@ -84,13 +74,9 @@ class CommentController extends Controller
         return response()->json($comment->load('user'), 201);
     }
 
-    public function update(Request $request, Comment $comment)
+    public function update(UpdateCommentRequest $request, Comment $comment)
     {
         $this->authorize('update', $comment);
-
-        $request->validate([
-            'body' => 'required|string',
-        ]);
 
         $comment->update([
             'body' => $request->body,

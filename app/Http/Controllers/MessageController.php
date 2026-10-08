@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMessageRequest;
+use App\Http\Requests\UpdateMessageRequest;
 use App\Models\Conversation;
 use App\Models\Message;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -27,14 +28,9 @@ class MessageController extends Controller
         return response()->json($messages);
     }
 
-    public function store(Request $request, Conversation $conversation)
+    public function store(StoreMessageRequest $request, Conversation $conversation)
     {
         $this->authorize('update', $conversation);
-
-        $request->validate([
-            'body' => 'required|string',
-            'type' => 'nullable|string',
-        ]);
 
         $message = DB::transaction(function () use ($request, $conversation) {
             $msg = $conversation->messages()->create([
@@ -51,13 +47,9 @@ class MessageController extends Controller
         return response()->json($message->load('user'), 201);
     }
 
-    public function update(Request $request, Conversation $conversation, Message $message)
+    public function update(UpdateMessageRequest $request, Conversation $conversation, Message $message)
     {
         $this->authorize('update', $message);
-
-        $request->validate([
-            'body' => 'required|string',
-        ]);
 
         $message->update(['body' => $request->body]);
 

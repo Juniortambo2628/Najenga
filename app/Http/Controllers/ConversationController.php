@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreConversationRequest;
 use App\Models\Conversation;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -19,13 +19,8 @@ class ConversationController extends Controller
         return response()->json($conversations);
     }
 
-    public function store(Request $request)
+    public function store(StoreConversationRequest $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'project_id' => 'nullable|exists:projects,id',
-        ]);
-
         if ($request->user_id == Auth::id()) {
             return response()->json(['error' => 'Cannot chat with yourself'], 422);
         }
