@@ -88,4 +88,83 @@ class DashboardControllerTest extends TestCase
                 ->has('recentProjects', 2)
                 ->where('stats.totalProjects', 2));
     }
+
+    public function test_expense_trend_compares_this_month_with_the_previous_month(): void
+    {
+        $project = Project::factory()->create(['client_id' => $this->user->id]);
+        Expense::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $project->id,
+            'amount' => 1500,
+            'expense_date' => now()->startOfMonth()->toDateString(),
+        ]);
+        Expense::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $project->id,
+            'amount' => 1000,
+            'expense_date' => now()->subMonth()->toDateString(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.expenseTrend', 50));
+    }
+
+    public function test_expense_trend_is_zero_without_previous_month_spend(): void
+    {
+        $project = Project::factory()->create(['client_id' => $this->user->id]);
+        Expense::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $project->id,
+            'amount' => 5000,
+            'expense_date' => now()->startOfMonth()->toDateString(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.expenseTrend', 0));
+    }
+
+    public function test_expense_trend_ignores_older_months_and_other_users(): void
+    {
+        $project = Project::factory()->create(['client_id' => $this->user->id]);
+        Expense::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $project->id,
+            'amount' => 1500,
+            'expense_date' => now()->startOfMonth()->toDateString(),
+        ]);
+        Expense::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $project->id,
+            'amount' => 1000,
+            'expense_date' => now()->subMonth()->toDateString(),
+        ]);
+        Expense::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $project->id,
+            'amount' => 999999,
+            'expense_date' => now()->subMonths(3)->toDateString(),
+        ]);
+
+        $otherUser = User::factory()->create(['role' => 'client']);
+        $otherProject = Project::factory()->create(['client_id' => $otherUser->id]);
+        Expense::factory()->create([
+            'user_id' => $otherUser->id,
+            'project_id' => $otherProject->id,
+            'amount' => 999999,
+            'expense_date' => now()->subMonth()->toDateString(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.expenseTrend', 50));
+    }
 }
+

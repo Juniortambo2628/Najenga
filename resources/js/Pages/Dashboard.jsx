@@ -46,6 +46,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                             value={`KES ${totalExpenses.toLocaleString()}`}
                             label="Total Expenses"
                             icon="fa-receipt"
+                            trend={expenseTrend}
                         />
                         <StatCard
                             value={activeProjects}
