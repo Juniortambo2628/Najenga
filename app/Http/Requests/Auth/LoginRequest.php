@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Auth;
 
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -35,14 +37,22 @@ class LoginRequest extends FormRequest
     /**
      * Attempt to authenticate the request's credentials.
      *
+     * Returns a redirect to the two-factor challenge when the user has
+     * two-factor authentication enabled; null once a session is created.
+     *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function authenticate(): void
+    public function authenticate(): ?RedirectResponse
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $provider = Auth::guard('web')->getProvider();
+        $user = $provider->retrieveByCredentials($this->only('email', 'password'));
+
+        if (! $user || ! $provider->validateCredentials($user, $this->only('email', 'password'))) {
             RateLimiter::hit($this->throttleKey());
+
+            event(new Failed('web', $user, $this->only('email', 'password')));
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -50,6 +60,17 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        if ($user->hasEnabledTwoFactorAuthentication()) {
+            $this->session()->put('login.id', $user->getAuthIdentifier());
+            $this->session()->put('login.remember', $this->boolean('remember'));
+
+            return redirect()->route('two-factor.login');
+        }
+
+        Auth::guard('web')->login($user, $this->boolean('remember'));
+
+        return null;
     }
 
     /**

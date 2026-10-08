@@ -105,6 +105,8 @@ export const TEST_ROUTES = {
     'timelines.destroy': '/timelines/{timeline}',
     'timelines.store': '/timelines',
     'timelines.update': '/timelines/{timeline}',
+    'two-factor.login': '/two-factor-challenge',
+    'two-factor.login.store': '/two-factor-challenge',
     'users.create': '/users/create',
     'users.destroy': '/users/{user}',
     'users.edit': '/users/{user}/edit',
