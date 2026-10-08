@@ -26,6 +26,7 @@ class Photo extends Model implements HasMedia
         'location',
         'description',
         'category',
+        'source_channel',
         'photo_date',
         'is_featured',
     ];

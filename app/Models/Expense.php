@@ -31,6 +31,9 @@ class Expense extends Model implements HasMedia
         'time',
         'receipt_id',
         'expense_date',
+        'payment_source',
+        'confidence',
+        'source_channel',
         'status',
     ];
 
@@ -38,6 +41,7 @@ class Expense extends Model implements HasMedia
     {
         return [
             'amount' => 'decimal:2',
+            'confidence' => 'decimal:3',
             'expense_date' => 'date',
         ];
     }

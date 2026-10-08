@@ -94,6 +94,9 @@ class ExpenseController extends Controller
                             'purpose' => $row['purpose'] ?? null,
                             'time' => $row['time'] ?? null,
                             'currency' => $row['currency'] ?? 'KES',
+                            'payment_source' => $row['payment_source'] ?? null,
+                            'confidence' => $row['confidence'] ?? null,
+                            'source_channel' => $row['source_channel'] ?? null,
                             'status' => $row['status'] ?? 'draft',
                             'user_id' => $user->id,
                         ]);
