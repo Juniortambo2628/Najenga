@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Expense;
 use App\Models\User;
 use App\Models\WhatsAppLog;
+use App\Models\WhatsAppWebhookEvent;
 use App\Services\OcrService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -66,6 +67,20 @@ class WhatsAppWebhookTest extends TestCase
                 ]],
             ]],
         ];
+    }
+
+    private function textPayload(): array
+    {
+        $payload = $this->payload();
+        $payload['entry'][0]['changes'][0]['value']['messages'][0] = [
+            'from' => '254700000000',
+            'id' => 'wamid.TEST',
+            'timestamp' => '1700000000',
+            'type' => 'text',
+            'text' => ['body' => 'receipt attached'],
+        ];
+
+        return $payload;
     }
 
     public function test_receipt_image_is_fetched_exactly_once(): void
@@ -219,5 +234,32 @@ class WhatsAppWebhookTest extends TestCase
         $this->assertNull($log->filed_type);
         $this->assertNull($log->filed_id);
         $this->assertDatabaseCount('expenses', 0);
+    }
+
+    public function test_handled_events_are_marked_processed(): void
+    {
+        User::factory()->create(['whatsapp_wa_id' => '254700000000', 'phone' => '254700000000']);
+
+        $this->postJson('/api/whatsapp/webhook', $this->textPayload())->assertOk();
+
+        $event = WhatsAppWebhookEvent::query()->firstOrFail();
+
+        $this->assertTrue($event->processed);
+        $this->assertNull($event->error_message);
+        $this->assertDatabaseCount('whatsapp_logs', 1);
+    }
+
+    public function test_invalid_signature_records_an_error_and_leaves_the_event_unprocessed(): void
+    {
+        config(['services.meta.whatsapp_app_secret' => 'APP_SECRET']);
+
+        $this->withHeader('x-hub-signature-256', 'sha256=not-the-right-hash')
+            ->postJson('/api/whatsapp/webhook', $this->payload())
+            ->assertStatus(401);
+
+        $event = WhatsAppWebhookEvent::query()->firstOrFail();
+
+        $this->assertFalse($event->processed);
+        $this->assertSame('Invalid signature', $event->error_message);
     }
 }

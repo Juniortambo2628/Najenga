@@ -20,6 +20,7 @@ class WhatsAppWebhookEvent extends Model
     {
         return [
             'payload' => 'array',
+            'processed' => 'boolean',
             'timestamp' => 'datetime',
         ];
     }

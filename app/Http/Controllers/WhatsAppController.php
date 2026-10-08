@@ -140,7 +140,7 @@ class WhatsAppController extends Controller
     public function handleWebhook(Request $request)
     {
         // Log the raw webhook event
-        WhatsAppWebhookEvent::create([
+        $event = WhatsAppWebhookEvent::create([
             'payload' => $request->all(),
             'signature' => $request->header('x-hub-signature-256'),
         ]);
@@ -149,12 +149,14 @@ class WhatsAppController extends Controller
         if (config('services.meta.whatsapp_app_secret')) {
             if (!$this->verifySignature($request)) {
                 Log::warning('WhatsApp webhook signature verification failed');
+                $event->update(['error_message' => 'Invalid signature']);
                 return response('Invalid signature', 401);
             }
         }
 
         // Meta sends a GET for verification and POST for messages
         if ($request->method() !== 'POST') {
+            $event->update(['processed' => true]);
             return response('OK', 200);
         }
 
@@ -163,6 +165,7 @@ class WhatsAppController extends Controller
 
             // Validate this is a WhatsApp message event
             if (($payload['object'] ?? '') !== 'whatsapp_business_account') {
+                $event->update(['processed' => true]);
                 return response('OK', 200);
             }
 
@@ -171,6 +174,7 @@ class WhatsAppController extends Controller
             $value = $changes['value'] ?? null;
 
             if (!$value) {
+                $event->update(['processed' => true]);
                 return response('OK', 200);
             }
 
@@ -181,11 +185,13 @@ class WhatsAppController extends Controller
                 $this->processMessage($message, $contacts, $value['metadata'] ?? []);
             }
 
+            $event->update(['processed' => true]);
             return response('OK', 200);
         } catch (\Exception $e) {
             Log::error('WhatsApp webhook processing error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
+            $event->update(['error_message' => $e->getMessage()]);
             return response('OK', 200); // Return 200 to prevent Meta retries for app errors
         }
     }
