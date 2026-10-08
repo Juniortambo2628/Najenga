@@ -147,6 +147,26 @@ class DocumentControllerTest extends TestCase
         ]);
     }
 
+    public function test_document_update_rejects_a_folder_from_another_project(): void
+    {
+        $otherProject = Project::factory()->create(['client_id' => $this->user->id]);
+        $foreignFolder = Folder::factory()->create(['project_id' => $otherProject->id]);
+        $document = Document::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $this->project->id,
+        ]);
+
+        $this->actingAs($this->user)
+            ->from("/documents/{$document->id}/edit")
+            ->patch("/documents/{$document->id}", [
+                'folder_id' => $foreignFolder->id,
+            ])
+            ->assertRedirect("/documents/{$document->id}/edit")
+            ->assertSessionHasErrors('folder_id');
+
+        $this->assertNull($document->fresh()->folder_id);
+    }
+
     public function test_user_can_create_folder(): void
     {
         $this->actingAs($this->user)

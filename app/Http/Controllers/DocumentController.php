@@ -173,18 +173,12 @@ class DocumentController extends Controller
     {
         $this->authorize('update', $document);
 
-        $validated = $request->validate(['folder_id' => 'nullable|exists:folders,id']);
-        $folderId = $validated['folder_id'] ?? null;
+        $validated = $request->validate([
+            'folder_id' => ['nullable', 'exists:folders,id', new \App\Rules\FolderInProject($document->project_id)],
+        ]);
 
-        if ($folderId) {
-            $folder = Folder::find($folderId);
+        $document->update(['folder_id' => $validated['folder_id'] ?? null]);
 
-            if ($folder && (int) $folder->project_id !== (int) $document->project_id) {
-                return redirect()->back()->withErrors(['folder_id' => 'Folder belongs to a different project.']);
-            }
-        }
-
-        $document->update(['folder_id' => $folderId]);
         return redirect()->back()->with('success', 'Document moved successfully');
     }
 }

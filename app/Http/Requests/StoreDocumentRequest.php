@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Folder;
 use App\Models\Project;
+use App\Rules\FolderInProject;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreDocumentRequest extends FormRequest
@@ -26,17 +26,7 @@ class StoreDocumentRequest extends FormRequest
             return false;
         }
 
-        $folderId = $this->input('folder_id');
-
-        if ($folderId) {
-            $folder = Folder::find($folderId);
-
-            if ($folder && (int) $folder->project_id !== (int) $project->id) {
-                return false;
-            }
-        }
-
-        return true;
+        return FolderInProject::matches($this->input('folder_id'), $project->id);
     }
 
     public function rules(): array
@@ -44,7 +34,7 @@ class StoreDocumentRequest extends FormRequest
         return [
             'documents.*' => 'required|file|max:51200',
             'project_id' => 'nullable|exists:projects,id',
-            'folder_id' => 'nullable|exists:folders,id',
+            'folder_id' => ['nullable', 'exists:folders,id', new FolderInProject($this->input('project_id'))],
         ];
     }
 }
