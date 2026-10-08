@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Expense;
 use App\Models\User;
+use App\Models\WhatsAppLog;
 use App\Services\OcrService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -164,5 +166,58 @@ class WhatsAppWebhookTest extends TestCase
 
         $this->assertDatabaseCount('expenses', 1);
         $this->assertDatabaseMissing('whatsapp_logs', ['direction' => 'outbound']);
+    }
+
+    public function test_processed_receipt_files_the_inbound_log_against_the_expense(): void
+    {
+        User::factory()->create(['whatsapp_wa_id' => '254700000000', 'phone' => '254700000000']);
+
+        $ocr = $this->createMock(OcrService::class);
+        $ocr->method('extractText')->willReturn([
+            'success'    => true,
+            'text'       => 'KES 1500 paid to Jane Doe Ref: ABC123 12/03/2026',
+            'confidence' => 0.9,
+            'source'     => 'test-fixture',
+        ]);
+        $this->app->instance(OcrService::class, $ocr);
+
+        Http::fake([
+            'graph.facebook.com/*' => Http::response(['url' => 'https://cdn.example/receipt.jpg']),
+            'cdn.example/*' => Http::response($this->jpegBytes(), 200),
+        ]);
+
+        $this->postJson('/api/whatsapp/webhook', $this->payload())->assertOk();
+
+        $expense = Expense::query()->firstOrFail();
+        $log = WhatsAppLog::query()->where('direction', 'inbound')->firstOrFail();
+
+        $this->assertSame($expense->getMorphClass(), $log->filed_type);
+        $this->assertSame($expense->id, $log->filed_id);
+        $this->assertTrue($log->filed->is($expense));
+    }
+
+    public function test_failed_processing_leaves_the_log_unfiled(): void
+    {
+        User::factory()->create(['whatsapp_wa_id' => '254700000000', 'phone' => '254700000000']);
+
+        $ocr = $this->createMock(OcrService::class);
+        $ocr->method('extractText')->willReturn([
+            'success' => false,
+            'message' => 'unreadable',
+        ]);
+        $this->app->instance(OcrService::class, $ocr);
+
+        Http::fake([
+            'graph.facebook.com/*' => Http::response(['url' => 'https://cdn.example/receipt.jpg']),
+            'cdn.example/*' => Http::response($this->jpegBytes(), 200),
+        ]);
+
+        $this->postJson('/api/whatsapp/webhook', $this->payload())->assertOk();
+
+        $log = WhatsAppLog::query()->where('direction', 'inbound')->firstOrFail();
+
+        $this->assertNull($log->filed_type);
+        $this->assertNull($log->filed_id);
+        $this->assertDatabaseCount('expenses', 0);
     }
 }

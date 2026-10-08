@@ -212,7 +212,7 @@ class WhatsAppController extends Controller
         }
 
         // Log the inbound message
-        WhatsAppLog::create([
+        $log = WhatsAppLog::create([
             'user_id' => $user->id,
             'phone_number' => $from,
             'message' => $message['text']['body'] ?? ($type === 'image' ? '[Image]' : '[' . ucfirst($type) . ']'),
@@ -224,7 +224,14 @@ class WhatsAppController extends Controller
 
         // Handle image messages (receipts)
         if ($type === 'image' && isset($message['image']['id'])) {
-            $this->processReceipt($message['image']['id'], $user);
+            $expense = $this->processReceipt($message['image']['id'], $user);
+
+            if ($expense) {
+                $log->update([
+                    'filed_type' => $expense->getMorphClass(),
+                    'filed_id' => $expense->id,
+                ]);
+            }
         }
     }
 
@@ -267,7 +274,7 @@ class WhatsAppController extends Controller
     /**
      * Process a receipt image from WhatsApp.
      */
-    private function processReceipt(string $mediaId, User $user): void
+    private function processReceipt(string $mediaId, User $user): ?Expense
     {
         try {
             // Download media from Meta Graph API
@@ -278,7 +285,7 @@ class WhatsAppController extends Controller
 
             if ($response->failed()) {
                 Log::error('Failed to fetch WhatsApp media: ' . $response->body());
-                return;
+                return null;
             }
 
             $mediaData = $response->json();
@@ -286,7 +293,7 @@ class WhatsAppController extends Controller
 
             if (!$downloadUrl) {
                 Log::error('No download URL in WhatsApp media response');
-                return;
+                return null;
             }
 
             // Download the actual image
@@ -294,7 +301,7 @@ class WhatsAppController extends Controller
 
             if ($imageResponse->failed()) {
                 Log::error('Failed to download WhatsApp image');
-                return;
+                return null;
             }
 
             // Use ReceiptProcessingService for consistent OCR processing.
@@ -316,12 +323,16 @@ class WhatsAppController extends Controller
                     "Receipt received but could not be processed. Please try again or upload manually."
                 );
             }
+
+            return $expense;
         } catch (\Exception $e) {
             Log::error('WhatsApp receipt processing error: ' . $e->getMessage());
             $this->sendWhatsAppMessage(
                 $user->phone,
                 "Sorry, there was an error processing your receipt. Please try again later."
             );
+
+            return null;
         }
     }
 
