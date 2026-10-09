@@ -65,7 +65,6 @@ export default function ActivityLogs({ logs }) {
                             </table>
                         </div>
 
-                        {/* Pagination placeholder */}
                         {logs.links && logs.links.length > 3 && (
                             <div className="px-6 py-4 bg-white/5 border-t border-white/10 flex justify-center gap-2">
                                 {logs.links.map((link, i) => (

@@ -2,9 +2,7 @@
 
 namespace App\Traits;
 
-use App\Models\Expense;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
 trait AttachesMediaFromRequest
 {
