@@ -29,7 +29,6 @@ class Expense extends Model implements HasMedia
         'reference_number',
         'purpose',
         'time',
-        'receipt_id',
         'expense_date',
         'payment_source',
         'confidence',

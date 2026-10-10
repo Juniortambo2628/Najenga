@@ -28,7 +28,6 @@ class User extends Authenticatable implements PasskeyUser
         'phone',
         'role',
         'status',
-        'profile_image',
         'telegram_chat_id',
         'whatsapp_wa_id',
         'whatsapp_verified_at',

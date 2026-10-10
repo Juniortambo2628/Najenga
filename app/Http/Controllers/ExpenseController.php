@@ -39,7 +39,6 @@ class ExpenseController extends Controller
                     'reference_number' => $e->reference_number,
                     'purpose' => $e->purpose,
                     'time' => $e->time,
-                    'receipt_id' => $e->receipt_id,
                     'receipt_url' => $e->getFirstMediaUrl('receipt') ?: null,
                     'expense_date' => $e->expense_date->format('Y-m-d'),
                     'status' => $e->status,
