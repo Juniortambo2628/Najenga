@@ -29,12 +29,16 @@ return new class extends Migration
                 if (Schema::hasIndex($table, $indexName)) {
                     DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fk->CONSTRAINT_NAME}`");
                     Schema::table($table, fn ($t) => $t->dropIndex($indexName));
-                    Schema::table($table, function ($t) use ($fk) {
-                        $refTable = match ($fk->COLUMN_NAME) {
-                            'project_id' => 'projects',
-                            'user_id' => 'users',
-                            'conversation_id' => 'conversations',
-                        };
+                    $refTable = match ($fk->COLUMN_NAME) {
+                        'project_id' => 'projects',
+                        'user_id' => 'users',
+                        'conversation_id' => 'conversations',
+                        default => null,
+                    };
+                    if ($refTable === null) {
+                        continue;
+                    }
+                    Schema::table($table, function ($t) use ($fk, $refTable) {
                         $t->foreign($fk->COLUMN_NAME)->references('id')->on($refTable)->onDelete('cascade');
                     });
                 }
@@ -44,22 +48,20 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('expenses', function ($table) {
-            $table->index('project_id');
-        });
-        Schema::table('photos', function ($table) {
-            $table->index('project_id');
-        });
-        Schema::table('documents', function ($table) {
-            $table->index('project_id');
-        });
-        Schema::table('project_user', function ($table) {
-            $table->index('project_id');
-            $table->index('user_id');
-        });
-        Schema::table('messages', function ($table) {
-            $table->index('conversation_id');
-            $table->index('user_id');
-        });
+        $indexes = [
+            'expenses' => ['project_id'],
+            'photos' => ['project_id'],
+            'documents' => ['project_id'],
+            'project_user' => ['project_id', 'user_id'],
+            'messages' => ['conversation_id', 'user_id'],
+        ];
+
+        foreach ($indexes as $table => $columns) {
+            foreach ($columns as $column) {
+                if (! Schema::hasIndex($table, "{$table}_{$column}_index")) {
+                    Schema::table($table, fn ($t) => $t->index($column));
+                }
+            }
+        }
     }
 };

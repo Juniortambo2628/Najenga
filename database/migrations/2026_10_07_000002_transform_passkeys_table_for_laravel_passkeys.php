@@ -52,16 +52,6 @@ return new class extends Migration
             $table->unsignedBigInteger('counter')->default(0);
         });
 
-        foreach (DB::table('passkeys')->orderBy('id')->get() as $row) {
-            $source = json_decode($row->credential, true, flags: JSON_THROW_ON_ERROR);
-
-            DB::table('passkeys')->where('id', $row->id)->update([
-                'public_key_credential_source' => $row->credential,
-                'counter' => $source['counter'] ?? 0,
-                'credential_id' => Base64UrlSafe::decode($row->credential_id),
-            ]);
-        }
-
         Schema::table('passkeys', function (Blueprint $table) {
             $table->dropIndex(['user_id']);
             $table->dropUnique(['credential_id']);
@@ -71,6 +61,16 @@ return new class extends Migration
             $table->binary('credential_id')->change();
             $table->string('name', 100)->change();
         });
+
+        foreach (DB::table('passkeys')->orderBy('id')->get() as $row) {
+            $source = json_decode($row->credential, true, flags: JSON_THROW_ON_ERROR);
+
+            DB::table('passkeys')->where('id', $row->id)->update([
+                'public_key_credential_source' => $row->credential,
+                'counter' => $source['counter'] ?? 0,
+                'credential_id' => Base64UrlSafe::decode($row->credential_id),
+            ]);
+        }
 
         Schema::table('passkeys', function (Blueprint $table) {
             $table->dropColumn('credential');

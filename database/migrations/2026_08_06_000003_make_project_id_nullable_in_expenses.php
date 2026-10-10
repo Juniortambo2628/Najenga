@@ -18,9 +18,25 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('expenses', function (Blueprint $table) {
-            $table->dropIndex(['project_id']);
-            $table->unsignedBigInteger('project_id')->nullable(false)->change();
+        if (DB::getDriverName() === 'mysql') {
+            $indexes = DB::select(
+                "SELECT DISTINCT INDEX_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'expenses' AND COLUMN_NAME = 'project_id' AND INDEX_NAME != 'PRIMARY'"
+            );
+            foreach ($indexes as $index) {
+                DB::statement("ALTER TABLE `expenses` DROP INDEX `{$index->INDEX_NAME}`");
+            }
+        } else {
+            Schema::table('expenses', function (Blueprint $table) {
+                $table->dropIndex(['project_id']);
+            });
+        }
+
+        $hasNulls = DB::table('expenses')->whereNull('project_id')->exists();
+
+        Schema::table('expenses', function (Blueprint $table) use ($hasNulls) {
+            if (! $hasNulls) {
+                $table->unsignedBigInteger('project_id')->nullable(false)->change();
+            }
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
         });
     }
