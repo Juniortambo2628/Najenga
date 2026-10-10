@@ -20,7 +20,6 @@ class ProjectFactory extends Factory
             'budget' => fake()->randomFloat(2, 10000, 5000000),
             'currency' => 'KES',
             'location' => fake()->city(),
-            'progress' => fake()->numberBetween(0, 100),
         ];
     }
 
@@ -31,6 +30,6 @@ class ProjectFactory extends Factory
 
     public function completed(): static
     {
-        return $this->state(fn () => ['status' => 'completed', 'progress' => 100]);
+        return $this->state(fn () => ['status' => 'completed']);
     }
 }
