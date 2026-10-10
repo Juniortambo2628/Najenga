@@ -12,6 +12,7 @@ use App\Traits\BatchDeletes;
 use App\Traits\BatchDownloads;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PhotoController extends Controller
@@ -122,7 +123,7 @@ class PhotoController extends Controller
     {
         $this->authorize('delete', $photo);
 
-        Photo::withoutSyncingToSearch(fn () => $photo->delete());
+        DB::transaction(fn () => Photo::withoutSyncingToSearch(fn () => $photo->delete()));
 
         return $this->respondOrRedirect($request, 'Photo deleted successfully', response()->json(null, 204));
     }

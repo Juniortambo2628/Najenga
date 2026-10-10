@@ -2,9 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Expense;
+use App\Models\Photo;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Tests\TestCase;
 
 class ProjectControllerTest extends TestCase
@@ -133,6 +138,33 @@ class ProjectControllerTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseHas('projects', ['id' => $project->id]);
+    }
+
+    public function test_deleting_a_project_cleans_up_children_and_their_media(): void
+    {
+        Storage::fake('public');
+
+        $project = Project::factory()->create(['client_id' => $this->user->id]);
+        $photo = Photo::factory()->create([
+            'project_id' => $project->id,
+            'user_id' => $this->user->id,
+        ]);
+        $photo->addMedia(UploadedFile::fake()->image('site.jpg'))
+            ->usingName('site.jpg')
+            ->toMediaCollection('photos');
+        $expense = Expense::factory()->create([
+            'project_id' => $project->id,
+            'user_id' => $this->user->id,
+        ]);
+
+        $this->actingAs($this->user)
+            ->delete("/projects/{$project->id}")
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+        $this->assertDatabaseMissing('photos', ['id' => $photo->id]);
+        $this->assertDatabaseMissing('expenses', ['id' => $expense->id]);
+        $this->assertSame(0, Media::where('model_type', Photo::class)->where('model_id', $photo->id)->count());
     }
 
     public function test_user_can_share_project(): void

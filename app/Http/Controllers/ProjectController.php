@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Services\ActivityLogger;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
@@ -76,9 +77,11 @@ class ProjectController extends Controller
     {
         $this->authorize('delete', $project);
 
-        $project->delete();
+        DB::transaction(function () use ($project) {
+            $project->delete();
 
-        ActivityLogger::log('project.deleted', sprintf('Deleted project "%s" (#%d)', $project->name, $project->id));
+            ActivityLogger::log('project.deleted', sprintf('Deleted project "%s" (#%d)', $project->name, $project->id));
+        });
 
         return $this->respondOrRedirect($request, 'Project deleted successfully', response()->json(null, 204));
     }

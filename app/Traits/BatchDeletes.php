@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The "select rows, press delete" action shared by documents, photos and
@@ -21,9 +22,18 @@ trait BatchDeletes
             'ids.*' => "integer|exists:{$table},id",
         ]);
 
-        $deleted = $model::withoutSyncingToSearch(fn () => $model::whereIn('id', $request->input('ids'))
-            ->where('user_id', auth()->id())
-            ->delete());
+        $deleted = 0;
+
+        DB::transaction(function () use ($model, $request, &$deleted) {
+            $rows = $model::whereIn('id', $request->input('ids'))
+                ->where('user_id', auth()->id())
+                ->get();
+
+            foreach ($rows as $row) {
+                $model::withoutSyncingToSearch(fn () => $row->delete());
+                $deleted++;
+            }
+        });
 
         return response()->json([
             'deleted' => $deleted,

@@ -183,9 +183,11 @@ class ExpenseController extends Controller
     {
         $this->authorize('delete', $expense);
 
-        Expense::withoutSyncingToSearch(fn () => $expense->delete());
+        DB::transaction(function () use ($expense) {
+            Expense::withoutSyncingToSearch(fn () => $expense->delete());
 
-        ActivityLogger::log('expense.deleted', sprintf('Deleted expense "%s" (#%d)', $expense->title, $expense->id), $expense);
+            ActivityLogger::log('expense.deleted', sprintf('Deleted expense "%s" (#%d)', $expense->title, $expense->id), $expense);
+        });
 
         return redirect()->back()->with('success', 'Expense deleted successfully');
     }

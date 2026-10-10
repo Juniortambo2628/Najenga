@@ -14,6 +14,7 @@ use App\Traits\BatchDeletes;
 use App\Traits\BatchDownloads;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DocumentController extends Controller
@@ -155,7 +156,7 @@ class DocumentController extends Controller
     {
         $this->authorize('delete', $document);
 
-        Document::withoutSyncingToSearch(fn () => $document->delete());
+        DB::transaction(fn () => Document::withoutSyncingToSearch(fn () => $document->delete()));
 
         return $this->respondOrRedirect($request, 'Document deleted successfully');
     }
