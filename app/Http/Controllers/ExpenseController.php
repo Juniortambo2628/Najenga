@@ -7,7 +7,6 @@ use App\Http\Requests\StoreBatchExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Http\Requests\UploadExpenseReceiptRequest;
 use App\Models\Expense;
-use App\Models\Project;
 use App\Services\ActivityLogger;
 use App\Traits\HasProjectScope;
 use App\Traits\BatchDeletes;

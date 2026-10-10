@@ -6,7 +6,6 @@ use App\Http\Requests\StoreFolderRequest;
 use App\Http\Requests\UpdateFolderRequest;
 use App\Models\Folder;
 use App\Models\Document;
-use Illuminate\Http\Request;
 
 class FolderController extends Controller
 {

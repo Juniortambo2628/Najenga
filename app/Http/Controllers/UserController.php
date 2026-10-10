@@ -6,7 +6,6 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Services\ActivityLogger;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class UserController extends Controller

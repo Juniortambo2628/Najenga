@@ -12,8 +12,6 @@ import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import Card from '@/Components/Card';
-import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import useFilteredItems from '@/Hooks/useFilteredItems';

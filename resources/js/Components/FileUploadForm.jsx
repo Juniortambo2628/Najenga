@@ -4,7 +4,6 @@ import SelectInput from '@/Components/SelectInput';
 import { router } from '@inertiajs/react';
 import { useState, useRef } from 'react';
 import InputLabel from '@/Components/InputLabel';
-import InputError from '@/Components/InputError';
 
 export default function FileUploadForm({ title, breadcrumbs, accept, hint, submitLabel, storeRoute, filesKey, projects }) {
     const [files, setFiles] = useState([]);

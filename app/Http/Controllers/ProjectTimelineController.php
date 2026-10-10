@@ -7,7 +7,6 @@ use App\Http\Requests\UpdateTimelineRequest;
 use App\Models\Document;
 use App\Models\Expense;
 use App\Models\Photo;
-use App\Models\Project;
 use App\Models\ProjectTimeline;
 use App\Traits\HasProjectScope;
 use Illuminate\Http\Request;

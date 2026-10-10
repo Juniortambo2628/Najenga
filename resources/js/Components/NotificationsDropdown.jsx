@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Link } from '@inertiajs/react';
 
 export default function NotificationsDropdown() {
     const [notifications, setNotifications] = useState([]);

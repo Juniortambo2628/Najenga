@@ -6,7 +6,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Spatie\MediaLibrary\Conversions\Conversion;
 use Spatie\MediaLibrary\Conversions\ImageGenerators\ImageGenerator;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 /**
  * Generates a JPEG thumbnail of a PDF's first page using Ghostscript CLI.

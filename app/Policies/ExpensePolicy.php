@@ -2,8 +2,6 @@
 
 namespace App\Policies;
 
-use App\Models\Expense;
-use App\Models\User;
 use App\Traits\BelongsToUserPolicy;
 
 class ExpensePolicy

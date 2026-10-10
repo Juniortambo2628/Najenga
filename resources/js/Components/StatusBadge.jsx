@@ -1,4 +1,3 @@
-import React from 'react';
 
 const STATUS_STYLES = {
     completed: 'bg-green-500/10 text-green-400',

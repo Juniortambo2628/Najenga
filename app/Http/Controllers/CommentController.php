@@ -7,8 +7,6 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\Project;
-use App\Models\Photo;
-use App\Models\Document;
 use App\Traits\HasPolymorphicType;
 use App\Traits\DispatchesActivityNotifications;
 use Illuminate\Support\Facades\Auth;

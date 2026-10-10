@@ -1,7 +1,7 @@
 import ImageAnnotator from '@/Components/ImageAnnotator';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
 import PreviewModal from '@/Components/PreviewModal';
 import CommentsSection from '@/Components/CommentsSection';
