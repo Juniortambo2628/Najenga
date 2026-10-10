@@ -84,9 +84,7 @@ composer.phar
 create-shortcut.bat
 create-shortcut.ps1
 create_notifications_table.php
-eng.traineddata
 fix_i_tags2.ps1
-ocr-worker.mjs
 start-dev.bat
 start-dev.ps1
 status-dev.bat
