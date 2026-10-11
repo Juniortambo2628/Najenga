@@ -55,7 +55,7 @@ export const TEST_ROUTES = {
     'notifications.markAllAsRead': '/notifications/read-all',
     'notifications.markAsRead': '/notifications/{id}/read',
     'passkey.destroy': '/user/passkeys/{passkey}',
-    'password.confirm': '/confirm-password',
+    'password.confirm': '/user/confirm-password',
     'password.email': '/forgot-password',
     'password.request': '/forgot-password',
     'password.reset': '/reset-password/{token}',
