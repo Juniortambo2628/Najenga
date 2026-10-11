@@ -60,15 +60,21 @@ class LogAuthentication
             'last_login_context' => json_encode($context),
         ]);
 
+        $GLOBALS['__la_ev'] = ($GLOBALS['__la_ev'] ?? 0) + 1;
+        $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 18);
+        $trace = '';
+        foreach ($bt as $f) {
+            $trace .= ($f['class'] ?? '') . ($f['type'] ?? '') . ($f['function'] ?? '') . '@' . ($f['line'] ?? '?') . ' < ';
+        }
         fwrite(STDERR, json_encode([
             'ci-debug',
+            'n' => $GLOBALS['__la_ev'],
+            'event' => spl_object_id($event),
             'uid' => $user->id,
-            'conn' => $user->getConnectionName(),
-            'attrs' => $user->getAttributes(),
-            'db_value' => DB::table('users')->where('id', $user->id)->value('last_login_context'),
-            'context' => $context,
+            'token' => $user->remember_token,
             'known' => $isKnownContext,
             'affected' => $affected,
+            'trace' => $trace,
         ], JSON_UNESCAPED_SLASHES) . "\n");
 
         if ($isKnownContext || !$user->login_notifications_enabled || !$user->email) {
