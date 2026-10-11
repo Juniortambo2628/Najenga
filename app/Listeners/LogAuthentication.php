@@ -44,10 +44,10 @@ class LogAuthentication
         }
 
         ActivityLogger::logFor($event->user, 'auth.login', 'Signed in');
-        $this->notifyNewContext($event->user);
+        $this->notifyNewContext($event->user, $event);
     }
 
-    private function notifyNewContext($user): void
+    private function notifyNewContext($user, $event): void
     {
         $context = [
             'ip' => request()->ip(),
