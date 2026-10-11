@@ -6,10 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Fortify\TwoFactorAuthenticatable;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\PasskeyAuthenticatable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements PasskeyUser
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, PasskeyAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -25,7 +28,6 @@ class User extends Authenticatable
         'phone',
         'role',
         'status',
-        'profile_image',
         'telegram_chat_id',
         'whatsapp_wa_id',
         'whatsapp_verified_at',
@@ -54,6 +56,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'whatsapp_verified_at' => 'datetime',
             'password' => 'hashed',
+            'login_notifications_enabled' => 'boolean',
+            'last_login_context' => 'array',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted',
             'two_factor_confirmed_at' => 'datetime',

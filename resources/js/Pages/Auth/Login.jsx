@@ -1,17 +1,53 @@
 import InputError from '@/Components/InputError';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { usePasskeyVerify } from '@laravel/passkeys/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 export default function Login({ status, canResetPassword }) {
+    const [mode, setMode] = useState('password');
+    const [codeSent, setCodeSent] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
         remember: false,
+        code: '',
     });
+    const {
+        verify,
+        isLoading: passkeyLoading,
+        error: passkeyError,
+        isSupported: passkeySupported,
+    } = usePasskeyVerify({
+        autofill: true,
+        onSuccess: (response) => {
+            if (response.redirect) {
+                window.location.href = response.redirect;
+            }
+        },
+    });
+
+    const switchMode = (nextMode) => {
+        setMode(nextMode);
+        setCodeSent(false);
+        reset('password', 'code');
+    };
 
     const submit = (e) => {
         e.preventDefault();
+
+        if (mode === 'code') {
+            if (!codeSent) {
+                post(route('login-code.request'), {
+                    onSuccess: () => setCodeSent(true),
+                });
+            } else {
+                post(route('login-code.verify'));
+            }
+            return;
+        }
+
         post(route('login'), {
             onFinish: () => reset('password'),
         });
@@ -49,7 +85,7 @@ export default function Login({ status, canResetPassword }) {
                         value={data.email}
                         className="auth-input"
                         placeholder="eg. johnfrans@gmail.com"
-                        autoComplete="username"
+                        autoComplete="username webauthn"
                         autoFocus
                         onChange={(e) => setData('email', e.target.value)}
                     />
@@ -57,44 +93,71 @@ export default function Login({ status, canResetPassword }) {
                 </div>
 
                 {/* Password */}
-                <div>
-                    <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2">
-                        Password
-                    </label>
-                    <input
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="auth-input"
-                        placeholder="Enter your password"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
+                {mode === 'password' && (
+                    <div>
+                        <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            value={data.password}
+                            className="auth-input"
+                            placeholder="Enter your password"
+                            autoComplete="current-password"
+                            onChange={(e) => setData('password', e.target.value)}
+                        />
+                        <InputError message={errors.password} className="mt-2" />
+                    </div>
+                )}
+
+                {/* Login Code */}
+                {mode === 'code' && codeSent && (
+                    <div>
+                        <label htmlFor="code" className="block text-gray-300 text-sm font-medium mb-2">
+                            Sign-In Code
+                        </label>
+                        <input
+                            id="code"
+                            type="text"
+                            name="code"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            maxLength={6}
+                            value={data.code}
+                            className="auth-input"
+                            placeholder="6-digit code"
+                            autoFocus
+                            onChange={(e) => setData('code', e.target.value.replace(/\D/g, ''))}
+                        />
+                        <InputError message={errors.code} className="mt-2" />
+                    </div>
+                )}
 
                 {/* Remember Me + Forgot */}
-                <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) => setData('remember', e.target.checked)}
-                            className="w-4 h-4 rounded border-white/20 bg-white/10 text-[rgb(139,0,0)] focus:ring-[rgb(139,0,0)]"
-                        />
-                        <span className="text-gray-400 text-sm">Remember me</span>
-                    </label>
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="text-sm text-gray-400 hover:text-white transition"
-                        >
-                            Forgot password?
-                        </Link>
-                    )}
-                </div>
+                {mode === 'password' && (
+                    <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                name="remember"
+                                checked={data.remember}
+                                onChange={(e) => setData('remember', e.target.checked)}
+                                className="w-4 h-4 rounded border-white/20 bg-white/10 text-[rgb(139,0,0)] focus:ring-[rgb(139,0,0)]"
+                            />
+                            <span className="text-gray-400 text-sm">Remember me</span>
+                        </label>
+                        {canResetPassword && (
+                            <Link
+                                href={route('password.request')}
+                                className="text-sm text-gray-400 hover:text-white transition"
+                            >
+                                Forgot password?
+                            </Link>
+                        )}
+                    </div>
+                )}
 
                 {/* Submit */}
                 <motion.button
@@ -104,18 +167,53 @@ export default function Login({ status, canResetPassword }) {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                 >
-                    {processing ? 'Signing In...' : 'Sign In'}
+                    {processing
+                        ? 'Please wait...'
+                        : mode === 'password'
+                            ? 'Sign In'
+                            : codeSent
+                                ? 'Verify & Sign In'
+                                : 'Send Sign-In Code'}
                 </motion.button>
             </form>
 
-            <div className="flex items-center justify-center gap-3 text-center text-gray-400 text-sm mt-4">
-                <Link href={route('login.passkey')} className="hover:text-white underline">
-                    Use a passkey
-                </Link>
-                <span className="text-white/20">·</span>
-                <Link href={route('login.code')} className="hover:text-white underline">
-                    Email me a code
-                </Link>
+            {passkeySupported && (
+                <div className="mt-5">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="flex-1 h-px bg-white/10"></span>
+                        <span className="text-gray-500 text-xs">or</span>
+                        <span className="flex-1 h-px bg-white/10"></span>
+                    </div>
+                    <motion.button
+                        type="button"
+                        onClick={() => verify()}
+                        disabled={passkeyLoading}
+                        className="w-full px-5 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/15 transition disabled:opacity-50"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                    >
+                        {passkeyLoading
+                            ? 'Waiting for authenticator...'
+                            : 'Sign in with passkey'}
+                    </motion.button>
+                    {passkeyError && (
+                        <p className="text-sm text-red-400 mt-2 text-center">
+                            {passkeyError}
+                        </p>
+                    )}
+                </div>
+            )}
+
+            <div className="text-center mt-4">
+                <button
+                    type="button"
+                    onClick={() => switchMode(mode === 'password' ? 'code' : 'password')}
+                    className="text-sm text-gray-400 hover:text-white transition"
+                >
+                    {mode === 'password'
+                        ? 'Email me a sign-in code instead'
+                        : 'Use password instead'}
+                </button>
             </div>
 
             <p className="text-center text-gray-400 text-sm mt-6">

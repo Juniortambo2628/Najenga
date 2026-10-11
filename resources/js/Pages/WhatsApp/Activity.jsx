@@ -115,8 +115,8 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                         title="WhatsApp"
                         subtitle={isAdmin ? 'All WhatsApp activity across accounts.' : 'Your WhatsApp activity — messages sent to and from Najenga.'}
                         breadcrumbs={[
-                            { label: 'Home', href: '/home' },
-                            { label: 'Dashboard', href: '/dashboard' },
+                            { label: 'Home', href: route('home') },
+                            { label: 'Dashboard', href: route('dashboard') },
                             { label: 'WhatsApp' },
                         ]}
                     />

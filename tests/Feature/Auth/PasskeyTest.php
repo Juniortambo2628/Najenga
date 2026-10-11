@@ -56,8 +56,7 @@ class PasskeyTest extends TestCase
             'user_id' => $owner->id,
             'name' => 'Test',
             'credential_id' => 'raw-id',
-            'public_key_credential_source' => '{}',
-            'counter' => 0,
+            'credential' => '{}',
         ]);
 
         $this->actingAs($other)

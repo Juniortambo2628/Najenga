@@ -12,11 +12,11 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
-        router.get('/search', { q, type });
+        router.get(route('search'), { q, type });
     }, [q, type]);
 
     const handleTypeFilter = useCallback((newType) => {
-        router.get('/search', { q, type: newType });
+        router.get(route('search'), { q, type: newType });
     }, [q]);
 
     return (
@@ -95,7 +95,7 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
                             >
                                 <div className="aspect-video bg-white/5 relative overflow-hidden flex items-center justify-center">
                                     {r.thumb_url ? (
-                                        <img src={r.thumb_url} alt={r.title} className="w-full h-full object-cover" />
+                                        <img loading="lazy" decoding="async"  src={r.thumb_url} alt={r.title} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="text-gray-400 text-3xl">[{r.type}]</div>
                                     )}

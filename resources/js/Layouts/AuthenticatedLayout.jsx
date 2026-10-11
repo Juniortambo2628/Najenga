@@ -1,11 +1,22 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import { Toaster } from 'react-hot-toast';
+import FlashToast from '@/Components/FlashToast';
+import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
+import { navItemsFor } from '@/Config/navigation';
 
-export default function AuthenticatedLayout({ children, pageTitle }) {
+export default function AuthenticatedLayout({ children }) {
     const user = usePage().props.auth.user;
     const url = usePage().url;
+    const component = usePage().component;
+
+    // Page heading is reported by DashboardHero. Keyed on url so a title from
+    // the previous page can never leak into the next one while it mounts.
+    const [reported, setReported] = useState({ url: '', title: '' });
+    const setHeading = useCallback((title) => setReported({ url, title }), [url]);
+    const headingContext = useMemo(() => ({ setHeading }), [setHeading]);
+    const heading = reported.url === url ? reported.title : fallbackHeading(component);
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -41,7 +52,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
     const handleSearchSubmit = useCallback((e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            router.get('/search', { q: searchQuery.trim() });
+            router.get(route('search'), { q: searchQuery.trim() });
             setSearchOpen(false);
         }
     }, [searchQuery]);
@@ -74,27 +85,15 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const navItems = [
-        { name: 'Home', href: '/home', icon: 'fa-home' },
-        { name: 'Dashboard', href: '/dashboard', icon: 'fa-tachometer-alt' },
-        { name: 'Projects', href: '/projects', icon: 'fa-project-diagram' },
-        { name: 'Expenses', href: '/expenses', icon: 'fa-receipt' },
-        { name: 'Photos', href: '/photos', icon: 'fa-images' },
-        { name: 'Documents', href: '/documents', icon: 'fa-file-alt' },
-        { name: 'Timeline', href: '/timeline', icon: 'fa-calendar-alt' },
-        { name: 'Receipt Verification', href: '/receipt-verification', icon: 'fa-check-circle' },
-        { name: 'WhatsApp', href: '/whatsapp', icon: 'fa-whatsapp' },
-        { name: 'Messages', href: '/messages', icon: 'fa-comment-alt' },
-        { name: 'Analytics', href: '/analytics', icon: 'fa-chart-bar', roles: ['admin'] },
-        { name: 'Users', href: '/users', icon: 'fa-users-cog', roles: ['admin'] },
-        { name: 'Profile', href: '/profile', icon: 'fa-user' },
-    ].filter(item => !item.roles || item.roles.includes(user.role));
+    const navItems = navItemsFor(user.role);
 
     return (
         <>
+            <PageHeadingContext.Provider value={headingContext}>
             <Toaster position="top-right" />
+            <FlashToast />
+
             <a href="#main-content" className="skip-link">Skip to main content</a>
-            
             <div className="min-h-screen bg-black flex">
                 {/* Sidebar Overlay for Mobile */}
                 {sidebarOpen && (
@@ -112,9 +111,9 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                     ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}>
                     {/* Sidebar Brand */}
-                    <Link href="/" className="h-14 flex items-center justify-center border-b border-white/10 flex-shrink-0 hover:bg-white/5 transition px-3">
+                    <Link href={route('home')} className="h-14 flex items-center justify-center border-b border-white/10 flex-shrink-0 hover:bg-white/5 transition px-3">
                         <img 
-                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png" 
+                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp" 
                             alt="Najenga" 
                             className="h-10 w-10 object-contain flex-shrink-0"
                         />
@@ -164,7 +163,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                             >
                                 <i aria-hidden="true" className="fas fa-bars text-lg"></i>
                             </button>
-                            <span className="text-white font-semibold hidden md:block">{pageTitle || 'Dashboard'}</span>
+                            <span className="text-white font-semibold hidden md:block">{heading}</span>
                         </div>
 
                         {/* Right Side - Search + User Menu */}
@@ -194,7 +193,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                                                 className="flex items-center gap-3 w-full px-3 py-2 text-left hover:bg-white/5 transition"
                                             >
                                                 {r.thumb_url ? (
-                                                    <img src={r.thumb_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                                                    <img loading="lazy" decoding="async"  src={r.thumb_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
                                                 ) : (
                                                     <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
                                                         <i aria-hidden="true" className={`fas ${r.type === 'document' ? 'fa-file-alt' : r.type === 'photo' ? 'fa-image' : 'fa-receipt'} text-gray-400 text-xs`}></i>
@@ -251,7 +250,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                                                 <p className="text-white font-medium">{user.first_name || user.name} {user.last_name || ''}</p>
                                                 <p className="text-gray-400 text-sm truncate">{user.email}</p>
                                             </div>
-                                            <Link href="/" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
+                                            <Link href={route('home')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
                                                 <i aria-hidden="true" className="fas fa-home w-5"></i>Home
                                             </Link>
                                             <Link href={route('profile.edit')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
@@ -280,6 +279,7 @@ export default function AuthenticatedLayout({ children, pageTitle }) {
                     </main>
                 </div>
             </div>
+            </PageHeadingContext.Provider>
         </>
     );
 }

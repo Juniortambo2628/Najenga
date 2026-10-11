@@ -9,6 +9,8 @@ class WhatsAppWebhookEvent extends Model
 {
     use HasFactory;
 
+    // Without this Eloquent derives whats_app_webhook_events, which no
+    // migration has ever created.
     protected $table = 'whatsapp_webhook_events';
 
     protected $fillable = ['payload', 'signature', 'processed', 'error_message'];
@@ -18,6 +20,7 @@ class WhatsAppWebhookEvent extends Model
     {
         return [
             'payload' => 'array',
+            'processed' => 'boolean',
             'timestamp' => 'datetime',
         ];
     }

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Link } from '@inertiajs/react';
 
 export default function NotificationsDropdown() {
     const [notifications, setNotifications] = useState([]);
@@ -99,7 +98,7 @@ export default function NotificationsDropdown() {
                                 <div key={notification.id} className="p-4 border-b border-white/5 hover:bg-white/5 transition flex gap-3 relative group">
                                     <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0 flex items-center justify-center text-xs text-white overflow-hidden">
                                         {notification.data.user_avatar ? (
-                                            <img src={notification.data.user_avatar} alt="" className="w-full h-full object-cover" />
+                                            <img loading="lazy" decoding="async"  src={notification.data.user_avatar} alt="" className="w-full h-full object-cover" />
                                         ) : (
                                             <i aria-hidden="true" className={`fas ${notification.data.type === 'comment' ? 'fa-comment' : 'fa-thumbtack'}`}></i>
                                         )}

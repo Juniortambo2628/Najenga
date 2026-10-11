@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function ActivityLogs({ logs }) {
     return (
@@ -13,8 +14,7 @@ export default function ActivityLogs({ logs }) {
                         title="Activity Logs"
                         subtitle="Review system actions and changes"
                         breadcrumbs={[
-                            { label: 'Home', href: '/home' },
-                            { label: 'Dashboard', href: '/dashboard' },
+                            ...rootBreadcrumbs(),
                             { label: 'Activity Logs' },
                         ]}
                     />
@@ -65,7 +65,6 @@ export default function ActivityLogs({ logs }) {
                             </table>
                         </div>
 
-                        {/* Pagination placeholder */}
                         {logs.links && logs.links.length > 3 && (
                             <div className="px-6 py-4 bg-white/5 border-t border-white/10 flex justify-center gap-2">
                                 {logs.links.map((link, i) => (

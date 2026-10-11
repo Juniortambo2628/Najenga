@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
 import StatusBadge from '@/Components/StatusBadge';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Show({ user }) {
     return (
@@ -12,9 +13,8 @@ export default function Show({ user }) {
                     title={`${user.first_name} ${user.last_name}`}
                     subtitle="User profile"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
-                        { label: 'Users', href: '/users' },
+                        ...rootBreadcrumbs(),
+                        { label: 'Users', href: route('users.index') },
                         { label: `${user.first_name} ${user.last_name}` },
                     ]}
                     actions={

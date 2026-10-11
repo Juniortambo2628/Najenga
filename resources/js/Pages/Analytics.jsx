@@ -1,12 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import StatCard from '@/Components/StatCard';
 import Card from '@/Components/Card';
 import DashboardHero from '@/Components/DashboardHero';
 import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import { formatCurrency } from '@/Config/currencies';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 const PERIODS = [
     { value: '3months', label: '3 Months' },
@@ -189,7 +190,7 @@ export default function Analytics({
     const handleContextChange = (newPeriod, newProject) => {
         setPeriod(newPeriod);
         setProjectFilter(newProject);
-        router.get('/analytics', { period: newPeriod, project_id: newProject }, { preserveState: true, replace: true });
+        router.get(route('analytics'), { period: newPeriod, project_id: newProject }, { preserveState: true, replace: true });
     };
 
     const totalExpenses = stats.totalExpenses || 0;
@@ -209,8 +210,7 @@ export default function Analytics({
                     title="Advanced Analytics"
                     subtitle="Deep insights into your construction project data"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Analytics' },
                     ]}
                 />

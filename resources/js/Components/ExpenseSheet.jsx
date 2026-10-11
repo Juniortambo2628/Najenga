@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
-import { EXPENSE_CATEGORIES, PAYMENT_METHODS, PAYMENT_LABELS, PAYMENT_METHOD_VALUES } from '@/Config/expenses';
+import { EXPENSE_CATEGORIES, PAYMENT_LABELS, PAYMENT_METHOD_VALUES } from '@/Config/expenses';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 
 ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);

@@ -188,6 +188,51 @@ class ExpenseControllerTest extends TestCase
         $this->assertDatabaseHas('expenses', ['title' => 'Batch Expense 2', 'user_id' => $this->user->id]);
     }
 
+    public function test_batch_store_accepts_confirmed_status_and_ocr_fields(): void
+    {
+        $this->actingAs($this->user)
+            ->post('/expenses/batch', [
+                'expenses' => [
+                    [
+                        'title' => 'Confirmed OCR row',
+                        'amount' => 250,
+                        'category' => 'materials',
+                        'expense_date' => '2026-08-03',
+                        'status' => 'confirmed',
+                        'payment_source' => 'ocr',
+                        'confidence' => 0.912,
+                        'source_channel' => 'whatsapp',
+                    ],
+                ],
+            ])
+            ->assertOk()
+            ->assertJson(['saved_count' => 1, 'error_count' => 0]);
+
+        $expense = Expense::query()->where('title', 'Confirmed OCR row')->firstOrFail();
+
+        $this->assertSame('confirmed', $expense->status);
+        $this->assertSame('ocr', $expense->payment_source);
+        $this->assertSame('whatsapp', $expense->source_channel);
+        $this->assertSame(0.912, (float) $expense->confidence);
+    }
+
+    public function test_batch_store_still_rejects_unknown_status(): void
+    {
+        $this->actingAs($this->user)
+            ->postJson('/expenses/batch', [
+                'expenses' => [
+                    [
+                        'title' => 'Bogus status row',
+                        'amount' => 100,
+                        'category' => 'materials',
+                        'expense_date' => '2026-08-03',
+                        'status' => 'bogus',
+                    ],
+                ],
+            ])
+            ->assertJsonValidationErrors(['expenses.0.status']);
+    }
+
     public function test_user_can_view_expense(): void
     {
         $expense = Expense::factory()->create([

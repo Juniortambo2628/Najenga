@@ -31,4 +31,13 @@ return new class extends Migration
             });
         }
     }
+
+    /**
+     * Phase 3.4: every other migration in this chain is reversible; this one
+     * shipped without a down().
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('media');
+    }
 };

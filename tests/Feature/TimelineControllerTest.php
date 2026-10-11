@@ -40,6 +40,35 @@ class TimelineControllerTest extends TestCase
             ->assertOk();
     }
 
+    public function test_user_can_view_own_timeline(): void
+    {
+        $timeline = ProjectTimeline::factory()->create([
+            'project_id' => $this->project->id,
+            'start_date' => '2026-08-01',
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($this->user)
+            ->get("/timeline/{$timeline->id}")
+            ->assertOk();
+    }
+
+    public function test_user_cannot_view_another_clients_timeline(): void
+    {
+        $otherProject = Project::factory()->create(['client_id' => $this->otherUser->id]);
+        $timeline = ProjectTimeline::factory()->create([
+            'project_id' => $otherProject->id,
+            'start_date' => '2026-08-01',
+            'status' => 'pending',
+        ]);
+
+        // show() had no authorize() call, so any signed-in user could open
+        // any timeline by id.
+        $this->actingAs($this->user)
+            ->get("/timeline/{$timeline->id}")
+            ->assertForbidden();
+    }
+
     public function test_user_can_create_timeline_event(): void
     {
         $this->actingAs($this->user)

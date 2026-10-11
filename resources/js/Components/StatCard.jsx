@@ -1,8 +1,7 @@
-import React from 'react';
 
 export default function StatCard({ icon, label, value, trend }) {
     return (
-        <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+        <div className="panel p-6">
             <div className="flex items-start justify-between">
                 <div className="flex-1">
                     <p className="text-gray-400 text-sm mb-1">{label}</p>

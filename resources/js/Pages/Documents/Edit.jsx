@@ -104,11 +104,13 @@ export default function Edit({ document: doc, projects, folders }) {
                         onChange={(e) => setData('folder_id', e.target.value)}
                     >
                         <option value="">No folder (Root)</option>
-                        {folders.map((folder) => (
-                            <option key={folder.id} value={folder.id}>
-                                {folder.name}
-                            </option>
-                        ))}
+                        {folders
+                            .filter((folder) => folder.project_id === doc.project_id)
+                            .map((folder) => (
+                                <option key={folder.id} value={folder.id}>
+                                    {folder.name}
+                                </option>
+                            ))}
                     </SelectInput>
                     <InputError id="documents-edit-folder-id-error" message={errors.folder_id} className="mt-2" />
                 </div>

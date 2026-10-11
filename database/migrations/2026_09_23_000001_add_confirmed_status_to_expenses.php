@@ -1,30 +1,50 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Reproduces the production migration of the same name (it was never committed to this repo).
+ */
 return new class extends Migration
 {
     public function up(): void
     {
-        // ENUM MODIFY is MySQL-specific syntax. SQLite (local `php artisan test`)
-        // stores enums as TEXT with no CHECK constraint here, so it already
-        // accepts any status — nothing to do.
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+        if (! Schema::hasTable('expenses')) {
             return;
         }
 
-        DB::statement("ALTER TABLE expenses MODIFY COLUMN status ENUM('draft','pending','confirmed','approved','rejected','paid') DEFAULT 'draft'");
+        // ENUM MODIFY is MySQL-specific syntax. SQLite stores enums as TEXT
+        // with a CHECK constraint, so a schema change rebuilds the table with
+        // the widened value list there.
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE expenses MODIFY COLUMN status ENUM('draft','pending','confirmed','approved','rejected','paid') DEFAULT 'draft'");
+
+            return;
+        }
+
+        Schema::table('expenses', function (Blueprint $table) {
+            $table->enum('status', ['draft', 'pending', 'confirmed', 'approved', 'rejected', 'paid'])->default('draft')->change();
+        });
     }
 
     public function down(): void
     {
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+        if (! Schema::hasTable('expenses')) {
             return;
         }
 
-        DB::statement("UPDATE expenses SET status = 'approved' WHERE status = 'confirmed'");
-        DB::statement("ALTER TABLE expenses MODIFY COLUMN status ENUM('draft','pending','approved','rejected','paid') DEFAULT 'draft'");
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement("UPDATE expenses SET status = 'approved' WHERE status = 'confirmed'");
+            DB::statement("ALTER TABLE expenses MODIFY COLUMN status ENUM('draft','pending','approved','rejected','paid') DEFAULT 'draft'");
+
+            return;
+        }
+
+        Schema::table('expenses', function (Blueprint $table) {
+            $table->enum('status', ['draft', 'pending', 'approved', 'rejected', 'paid'])->default('draft')->change();
+        });
     }
 };

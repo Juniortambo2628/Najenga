@@ -11,15 +11,7 @@ import { formatCurrency } from '@/Config/currencies';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-
-function DetailRow({ label, value, mono = false }) {
-    return (
-        <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">{label}</span>
-            <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
-        </div>
-    );
-}
+import DetailRow from '@/Components/DetailRow';
 
 function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors, projects, onSave, onCancel, saving, onStartEdit }) {
     const handleChange = (field) => (e) => {
@@ -30,7 +22,12 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
     if (!editing) {
         return (
             <div className="space-y-6">
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-3">
+                    {expense?.id && (
+                        <SecondaryButton as="link" href={`/expenses/${expense.id}`} className="text-xs">
+                            <i className="fas fa-external-link-alt mr-1"></i>Open page
+                        </SecondaryButton>
+                    )}
                     <PrimaryButton onClick={onStartEdit} className="text-xs">
                         <i aria-hidden="true" className="fas fa-edit mr-1"></i>Edit
                     </PrimaryButton>
@@ -203,7 +200,7 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
                         {previewUrl.endsWith('.pdf') ? (
                             <iframe src={previewUrl} className="w-full h-[400px]" title="Receipt" />
                         ) : (
-                            <img src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
+                            <img loading="lazy" decoding="async"  src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
                         )}
                     </div>
                     <div className="flex justify-between items-center">

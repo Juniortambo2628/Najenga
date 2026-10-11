@@ -7,14 +7,14 @@ export default function Privacy({ effectiveDate, contactEmail }) {
             <div className="min-h-screen bg-black text-gray-200">
                 <header className="border-b border-white/10 bg-black/60 backdrop-blur sticky top-0 z-10">
                     <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
-                        <Link href="/" className="flex items-center gap-2">
+                        <Link href={route('home')} className="flex items-center gap-2">
                             <img src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png" alt="Najenga" className="h-8 w-8" />
                             <span className="text-white font-semibold">Najenga</span>
                         </Link>
                         <nav className="flex items-center gap-4 text-sm text-gray-400">
-                            <Link href="/privacy" className="text-white">Privacy</Link>
-                            <Link href="/terms" className="hover:text-white">Terms</Link>
-                            <Link href="/login" className="hover:text-white">Sign in</Link>
+                            <Link href={route('privacy')} className="text-white">Privacy</Link>
+                            <Link href={route('terms')} className="hover:text-white">Terms</Link>
+                            <Link href={route('login')} className="hover:text-white">Sign in</Link>
                         </nav>
                     </div>
                 </header>
@@ -179,9 +179,9 @@ export default function Privacy({ effectiveDate, contactEmail }) {
                     </Section>
 
                     <footer className="mt-16 pt-6 border-t border-white/10 text-xs text-gray-400 flex flex-wrap gap-4">
-                        <Link href="/" className="hover:text-white">Home</Link>
-                        <Link href="/privacy" className="hover:text-white">Privacy</Link>
-                        <Link href="/terms" className="hover:text-white">Terms</Link>
+                        <Link href={route('home')} className="hover:text-white">Home</Link>
+                        <Link href={route('privacy')} className="hover:text-white">Privacy</Link>
+                        <Link href={route('terms')} className="hover:text-white">Terms</Link>
                         <span className="ml-auto">&copy; {new Date().getFullYear()} OKJTech</span>
                     </footer>
                 </main>

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Index({ receipts = [] }) {
     return (
@@ -12,13 +13,12 @@ export default function Index({ receipts = [] }) {
                     title="Receipts"
                     subtitle="View and manage uploaded receipts"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Receipts' },
                     ]}
                     actions={
                         <Link
-                            href={route('receipt-verification')}
+                            href={route('receipt.verification')}
                             className="px-6 py-3 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition flex items-center gap-2"
                         >
                             <i aria-hidden="true" className="fas fa-receipt"></i>
@@ -56,7 +56,11 @@ export default function Index({ receipts = [] }) {
                                                     <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500">
                                                         <i aria-hidden="true" className="fas fa-file-image text-sm"></i>
                                                     </div>
-                                                    <span className="text-white text-sm font-medium">{receipt.filename || 'Unknown'}</span>
+                                                    <span className="text-white text-sm font-medium hover:text-[#DC143C] transition">
+                                                        <Link href={route('receipts.show', receipt.id)}>
+                                                            {receipt.filename || 'Unknown'}
+                                                        </Link>
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">

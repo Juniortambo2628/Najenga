@@ -37,7 +37,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
 
     const regenerate = () => {
         if (!window.confirm('Regenerate recovery codes? Your old codes will stop working.')) return;
-        router.post(route('two-factor.recovery-codes.regenerate'), {}, { preserveScroll: true });
+        router.post(route('two-factor.regenerate-recovery-codes'), {}, { preserveScroll: true });
     };
 
     return (

@@ -1,10 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useMemo, Fragment } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
 import PreviewModal from '@/Components/PreviewModal';
 import CommentsSection from '@/Components/CommentsSection';
-import FileUploadModal from '@/Components/FileUploadModal';
 import ImageAnnotator from '@/Components/ImageAnnotator';
 import { Document as PdfDocument, Page, pdfjs } from 'react-pdf';
 import { toast } from 'react-hot-toast';
@@ -17,42 +16,60 @@ import BulkActions from '@/Components/BulkActions';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
+import SelectInput from '@/Components/SelectInput';
 import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useActiveProject from '@/Hooks/useActiveProject';
+import useContextMenu from '@/Hooks/useContextMenu';
+import useFilteredItems from '@/Hooks/useFilteredItems';
+import useFileDownload from '@/Hooks/useFileDownload';
+import useBatchDownload from '@/Hooks/useBatchDownload';
+import useHashHighlight from '@/Hooks/useHashHighlight';
 import DashboardHero from '@/Components/DashboardHero';
-import { menuPoint } from '@/Utils/a11y';
+import { rootBreadcrumbs } from '@/Config/navigation';
+import ShareProjectModal from '@/Components/ShareProjectModal';
 
-// Configure PDF worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configure PDF worker (served locally, no CDN round-trip)
+pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
 if (pdfjs.setVerbosityLevel) pdfjs.setVerbosityLevel(pdfjs.VerbosityLevel?.ERRORS ?? 1);
 
 export default function Documents({ documents = [], folders = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
+    const [shareTarget, setShareTarget] = useState(null);
+    const [moveTarget, setMoveTarget] = useState(null);
+    const [moveFolderId, setMoveFolderId] = useState('');
+    const [moving, setMoving] = useState(false);
+
+    const shareProjectFor = (item) => {
+        if (!item?.project_id) {
+            toast.error('This document is not part of a project yet');
+            return;
+        }
+        setShareTarget(
+            projects.find((p) => p.id === item.project_id) ||
+                { id: item.project_id, name: item.project_name || 'Untitled Project' }
+        );
+    };
     const [typeFilter, setTypeFilter] = useState('all');
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [viewMode, setViewMode] = useState('grid'); // Default to grid
     
-    // Modal State
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-
     // Selection State
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
     
     // Context Menu State
-    const [contextMenu, setContextMenu] = useState(null);
+    const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
 
     // Preview State
     const [previewDoc, setPreviewDoc] = useState(null);
 
     // Folder Navigation State
     const [currentFolderId, setCurrentFolderId] = useState(null);
+    const highlightedDoc = useHashHighlight('doc-');
     const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
 
-    const activeProject = useMemo(
-        () => projects.find(p => String(p.id) === String(activeProjectId)),
-        [projects, activeProjectId]
-    );
+    const activeProject = useActiveProject(projects, activeProjectId);
 
     // Extract unique types
     const types = useMemo(() => {
@@ -81,43 +98,64 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         return crumbs;
     }, [folders, currentFolderId]);
 
-    const filteredDocuments = useMemo(() => {
+    const folderAndTypeFiltered = useMemo(() => {
         let result = documents.filter(doc => doc.folder_id === currentFolderId);
         if (typeFilter !== 'all') result = result.filter(doc => doc.document_type === typeFilter);
-        if (activeProjectId) {
-            result = result.filter(doc => String(doc.project_id) === String(activeProjectId));
-        }
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            result = result.filter(doc => 
-                doc.title.toLowerCase().includes(lowerQuery) ||
-                doc.project_name.toLowerCase().includes(lowerQuery)
-            );
-        }
         return result;
-    }, [documents, typeFilter, activeProjectId, searchQuery, currentFolderId]);
+    }, [documents, typeFilter, currentFolderId]);
+
+    const filteredDocuments = useFilteredItems(folderAndTypeFiltered, {
+        projectId: activeProjectId,
+        searchQuery,
+        searchFields: ['title', 'project_name'],
+    });
 
     // Handlers
     const handleContextMenu = (e, doc) => {
-        e.preventDefault();
         if (!isSelected(doc.id)) selectAll([doc.id]);
-        setContextMenu({
-            ...menuPoint(e),
-            target: doc
-        });
+        openContextMenu(e, doc);
     };
 
-    const closeContextMenu = () => setContextMenu(null);
+    const download = useFileDownload();
+
+    const downloadBatch = useBatchDownload();
+
+    const downloadSelectedDocuments = async () => {
+        const ok = await downloadBatch('/documents/download', [...selectedItems], 'documents.zip');
+        if (ok) {
+            toast.success('Documents downloaded');
+        } else {
+            toast.error('Failed to download documents');
+        }
+    };
+
+    const openMoveModal = (doc) => {
+        setMoveTarget(doc);
+        setMoveFolderId(doc?.folder_id ? String(doc.folder_id) : '');
+    };
+
+    const handleMove = async () => {
+        setMoving(true);
+        try {
+            await axios.patch(route('documents.move', moveTarget.id), { folder_id: moveFolderId || null });
+            toast.success('Document moved');
+            setMoveTarget(null);
+            setMoveFolderId('');
+            router.reload({ only: ['documents'] });
+        } catch (e) {
+            toast.error(e.response?.data?.errors?.folder_id?.[0] || 'Failed to move document');
+        } finally {
+            setMoving(false);
+        }
+    };
 
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewDoc(contextMenu?.target) },
-        { label: 'Download', icon: 'fa-download', action: () => {
-             const link = document.createElement('a');
-             link.href = `/storage/${contextMenu?.target.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`;
-             link.download = contextMenu?.target.original_name || 'download';
-             link.click();
-        }},
-        { label: 'Share', icon: 'fa-share-alt', action: () => alert('Shared!') },
+        { label: 'Download', icon: 'fa-download', action: () =>
+            download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
+        },
+        { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
+        { label: 'Move to Folder', icon: 'fa-folder-open', action: () => openMoveModal(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
             if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
                 try {
@@ -137,28 +175,12 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         <AuthenticatedLayout>
             <Head title="Documents" />
 
-            <FileUploadModal
-                isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                uploadUrl="/documents"
-                acceptedFileTypes={{ 
-                    'application/pdf': [], 
-                    'application/msword': [], 
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [],
-                    'application/vnd.ms-excel': [],
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': []
-                }}
-                title="Upload Documents"
-                extraData={currentFolderId ? { folder_id: currentFolderId } : {}}
-            />
-
             <div onClick={closeContextMenu}>
                 <DashboardHero
                     title="Documents"
                     subtitle={`${filteredDocuments.length} document${filteredDocuments.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Documents' },
                     ]}
                 />
@@ -172,7 +194,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     selectedCount={selectedCount}
                     bulkActions={
                         <>
-                            <button className="text-white hover:text-gray-200" aria-label="Download selected"><i aria-hidden="true" className="fas fa-download"></i></button>
+                            <button className="text-white hover:text-gray-200" title="Download Selected" aria-label="Download selected" onClick={downloadSelectedDocuments}><i aria-hidden="true" className="fas fa-download"></i></button>
                             <button className="text-white hover:text-gray-200" aria-label="Delete selected" onClick={async () => {
                                 if (confirm(`Delete ${selectedCount} items?`)) {
                                     try {
@@ -197,8 +219,8 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             >
                                 <i aria-hidden="true" className="fas fa-folder-plus mr-1"></i> New Folder
                             </button>
-                            <PrimaryButton onClick={() => setIsUploadModalOpen(true)}>
-                                <i aria-hidden="true" className="fas fa-upload"></i> Upload
+                            <PrimaryButton as="link" href={route('documents.create')}>
+                                <i className="fas fa-upload"></i> Upload
                             </PrimaryButton>
                         </>
                     }
@@ -257,7 +279,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                         icon="fa-file-alt" 
                         title="No documents yet" 
                         message="Upload documents to keep them organized"
-                        action={{ label: 'Upload Document', onClick: () => setIsUploadModalOpen(true) }}
+                        action={{ label: 'Upload Document', onClick: () => router.get(route('documents.create')) }}
                     />
                 )}
 
@@ -301,8 +323,9 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             {filteredDocuments.map((doc) => (
                                 <div 
                                     key={doc.id} 
+                                    id={`doc-${doc.id}`}
                                     className={`flex items-center justify-between p-4 transition group cursor-pointer border-l-4
-                                        ${isSelected(doc.id) ? 'bg-white/5 border-[#DC143C]' : 'border-transparent hover:bg-white/5 hover:border-white/10'}
+                                        ${isSelected(doc.id) ? 'bg-white/5 border-[#DC143C]' : highlightedDoc === String(doc.id) ? 'bg-amber-500/10 border-amber-400/70 ring-1 ring-inset ring-amber-400/50' : 'border-transparent hover:bg-white/5 hover:border-white/10'}
                                     `}
                                     onClick={(e) => toggleSelection(doc.id, e.ctrlKey || e.metaKey)}
                                     onContextMenu={(e) => handleContextMenu(e, doc)}
@@ -329,7 +352,11 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                             } text-white text-xl`}></i>
                                         </div>
                                         <div>
-                                            <h4 className="text-white font-medium group-hover:text-[#DC143C] transition">{doc.title}</h4>
+                                            <h4 className="text-white font-medium group-hover:text-[#DC143C] transition">
+                                                <Link href={route('documents.show', doc.id)} onClick={(e) => e.stopPropagation()}>
+                                                    {doc.title}
+                                                </Link>
+                                            </h4>
                                             <p className="text-gray-400 text-sm">
                                                 <span className="bg-white/10 px-2 py-0.5 rounded text-xs mr-2 text-gray-300">{doc.document_type}</span>
                                                 {doc.project_name}
@@ -395,7 +422,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     {/* Thumbnail Area */}
                                     <div className="flex-1 overflow-hidden bg-white/5 relative flex items-center justify-center">
                                          {isImage ? (
-                                            <img
+                                            <img loading="lazy" decoding="async" 
                                                 src={doc.thumb_url || `/storage/${doc.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`}
                                                 className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
                                                 alt={doc.title}
@@ -466,10 +493,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                             <button 
                                                 onClick={(e) => { 
                                                     e.stopPropagation(); 
-                                                    const link = document.createElement('a');
-                                                    link.href = `/storage/${doc.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`;
-                                                    link.download = doc.original_name || 'download';
-                                                    link.click();
+                                                    download(doc.file_path, doc.original_name || 'download');
                                                 }}
                                                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-[#8B0000] text-white transition flex items-center justify-center"
                                                 title="Download"
@@ -629,7 +653,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     if (e.key === 'Enter' && newFolderName.trim()) {
                                         const projectId = documents[0]?.project_id;
                                         if (projectId) {
-                                            router.post('/folders', {
+                                            router.post(route('folders.store'), {
                                                 name: newFolderName.trim(),
                                                 project_id: projectId,
                                                 parent_id: currentFolderId,
@@ -651,7 +675,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                 if (!newFolderName.trim()) return;
                                 const projectId = documents[0]?.project_id;
                                 if (projectId) {
-                                    router.post('/folders', {
+                                    router.post(route('folders.store'), {
                                         name: newFolderName.trim(),
                                         project_id: projectId,
                                         parent_id: currentFolderId,
@@ -667,6 +691,42 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     </div>
                 </div>
             </Modal>
+
+            {shareTarget && (
+                <ShareProjectModal show onClose={() => setShareTarget(null)} project={shareTarget} />
+            )}
+
+            {moveTarget && (
+                <Modal show onClose={() => setMoveTarget(null)} maxWidth="md">
+                    <div className="p-6">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center">
+                                <i className="fas fa-folder-open text-white text-sm"></i>
+                            </div>
+                            Move "{moveTarget.title}"
+                        </h3>
+                        <InputLabel value="Destination folder" />
+                        <SelectInput
+                            value={moveFolderId}
+                            onChange={(e) => setMoveFolderId(e.target.value)}
+                            className="mt-1 block w-full"
+                        >
+                            <option value="">Root (no folder)</option>
+                            {folders
+                                .filter((f) => f.project_id === moveTarget.project_id)
+                                .map((f) => (
+                                    <option key={f.id} value={f.id}>{f.name}</option>
+                                ))}
+                        </SelectInput>
+                        <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-white/10">
+                            <SecondaryButton type="button" onClick={() => setMoveTarget(null)}>Cancel</SecondaryButton>
+                            <PrimaryButton type="button" onClick={handleMove} disabled={moving}>
+                                {moving ? 'Moving...' : 'Move'}
+                            </PrimaryButton>
+                        </div>
+                    </div>
+                </Modal>
+            )}
 
         </AuthenticatedLayout>
     );

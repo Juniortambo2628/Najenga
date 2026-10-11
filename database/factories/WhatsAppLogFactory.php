@@ -17,7 +17,7 @@ class WhatsAppLogFactory extends Factory
             'phone_number' => fake()->e164PhoneNumber(),
             'message' => fake()->sentence(),
             'direction' => fake()->randomElement(['inbound', 'outbound']),
-            'status' => fake()->randomElement(['pending', 'sent', 'delivered', 'read', 'failed']),
+            'status' => fake()->randomElement(['sent', 'received', 'read', 'failed']),
             'message_id' => fake()->uuid(),
             'timestamp' => fake()->dateTimeBetween('-30 days', 'now'),
         ];

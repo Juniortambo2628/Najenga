@@ -13,6 +13,18 @@ trait BelongsToProjectPolicy
     }
 
     /**
+     * Authorize view if user is the project client.
+     *
+     * Mirrors update() deliberately: ProjectTimelineController::index scopes
+     * with whereHas('project', client_id = user), so a direct URL may never
+     * reveal more than the list already does.
+     */
+    public function view($user, $model): bool
+    {
+        return $this->userIsProjectClient($user, $model);
+    }
+
+    /**
      * Authorize update if user is the project client.
      */
     public function update($user, $model): bool

@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LoginCode extends Model
 {
+    use Prunable;
+
     protected $fillable = [
         'user_id',
         'code_hash',
@@ -31,5 +35,10 @@ class LoginCode extends Model
     public function isUsable(): bool
     {
         return is_null($this->used_at) && $this->expires_at->isFuture();
+    }
+
+    public function prunable(): Builder
+    {
+        return static::where('created_at', '<', now()->subDay());
     }
 }

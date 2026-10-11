@@ -1,4 +1,3 @@
-import React from 'react';
 
 const variants = {
     default: 'bg-black/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm',

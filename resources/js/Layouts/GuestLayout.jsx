@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+import FlashToast from '@/Components/FlashToast';
 
 const STEPS = {
     register: [
@@ -39,12 +41,15 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
 
     return (
         <div className="flex min-h-screen">
+            <Toaster position="top-right" />
+            <FlashToast />
+
             {/* Left Panel - Image + Branding */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
                 {/* Background Image */}
                 <div className="absolute inset-0">
                     <img
-                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.jpg"
+                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.webp"
                         alt="Construction site"
                         className="w-full h-full object-cover"
                     />
@@ -58,9 +63,9 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: 'easeOut' }}
                     >
-                        <Link href="/" className="flex items-center gap-3 mb-12">
+                        <Link href={route('home')} className="flex items-center gap-3 mb-12">
                             <img
-                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png"
+                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                                 alt="Najenga"
                                 className="h-14"
                             />
@@ -111,9 +116,9 @@ export default function GuestLayout({ children, stepKey = 'register', title, sub
                 >
                     {/* Mobile Logo */}
                     <div className="lg:hidden text-center mb-8">
-                        <Link href="/" className="inline-flex items-center gap-3">
-                            <img
-                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png"
+                        <Link href={route('home')} className="inline-flex items-center gap-3">
+                            <img loading="lazy" decoding="async" 
+                                src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                                 alt="Najenga"
                                 className="h-12"
                             />

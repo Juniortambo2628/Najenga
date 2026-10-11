@@ -23,5 +23,7 @@ export default function useFilteredItems(items, { projectId, searchQuery, sortFn
         }
 
         return filtered;
-    }, [items, projectId, searchQuery, sortFn, searchFields]);
+        // searchFields is keyed by content: callers pass a fresh array literal
+        // each render, and array identity would defeat the memoisation.
+    }, [items, projectId, searchQuery, sortFn, searchFields.join(',')]);
 }

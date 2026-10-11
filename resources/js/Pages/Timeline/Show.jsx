@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
 import StatusBadge from '@/Components/StatusBadge';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Show({ timeline }) {
     return (
@@ -12,9 +13,8 @@ export default function Show({ timeline }) {
                     title={timeline.title}
                     subtitle="Milestone details"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
-                        { label: 'Timeline', href: '/timeline' },
+                        ...rootBreadcrumbs(),
+                        { label: 'Timeline', href: route('timeline') },
                         { label: timeline.title },
                     ]}
                     actions={

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Show({ photo }) {
     return (
@@ -12,9 +13,8 @@ export default function Show({ photo }) {
                     title={photo.title}
                     subtitle={photo.project?.name || 'Photo details'}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
-                        { label: 'Photos', href: '/photos' },
+                        ...rootBreadcrumbs(),
+                        { label: 'Photos', href: route('photos') },
                         { label: photo.title },
                     ]}
                     actions={
@@ -36,11 +36,11 @@ export default function Show({ photo }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Photo</h3>
                             {photo.photo_url ? (
                                 <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center">
-                                    <img
+                                    <img loading="lazy" decoding="async" 
                                         src={photo.preview_url || photo.photo_url}
                                         alt={photo.title}
                                         className="max-w-full max-h-[600px] object-contain"
@@ -55,7 +55,7 @@ export default function Show({ photo }) {
                         </section>
 
                         {photo.description && (
-                            <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                            <section className="panel p-6">
                                 <h3 className="text-lg font-bold text-white mb-4">Description</h3>
                                 <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{photo.description}</p>
                             </section>
@@ -63,7 +63,7 @@ export default function Show({ photo }) {
                     </div>
 
                     <div className="space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Details</h3>
                             <dl className="space-y-4 text-sm">
                                 <div className="flex justify-between">
@@ -85,7 +85,7 @@ export default function Show({ photo }) {
                             </dl>
                         </section>
 
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
                             <div className="space-y-3">
                                 <Link

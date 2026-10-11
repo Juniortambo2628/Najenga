@@ -1,14 +1,19 @@
 import ImageAnnotator from '@/Components/ImageAnnotator';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
 import PreviewModal from '@/Components/PreviewModal';
 import CommentsSection from '@/Components/CommentsSection';
-import FileUploadModal from '@/Components/FileUploadModal';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useActiveProject from '@/Hooks/useActiveProject';
+import useContextMenu from '@/Hooks/useContextMenu';
+import useFilteredItems from '@/Hooks/useFilteredItems';
+import useFileDownload from '@/Hooks/useFileDownload';
+import useBatchDownload from '@/Hooks/useBatchDownload';
+import useHashHighlight from '@/Hooks/useHashHighlight';
 import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -16,43 +21,42 @@ import PhotoCard from '@/Components/PhotoCard';
 import SearchFilterBar from '@/Components/SearchFilterBar';
 import BulkActions from '@/Components/BulkActions';
 import DashboardHero from '@/Components/DashboardHero';
-import { menuPoint } from '@/Utils/a11y';
+import { rootBreadcrumbs } from '@/Config/navigation';
+import ShareProjectModal from '@/Components/ShareProjectModal';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeProjectId, setActiveProjectId] = useState(null);
     
-    // Modal State
-    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    
     // Selection State
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
 
     // Context Menu State
-    const [contextMenu, setContextMenu] = useState(null);
+    const { contextMenu, openContextMenu, closeContextMenu } = useContextMenu();
 
     // Preview State
     const [previewPhoto, setPreviewPhoto] = useState(null);
+    const [shareTarget, setShareTarget] = useState(null);
 
-    const activeProject = useMemo(
-        () => projects.find(p => String(p.id) === String(activeProjectId)),
-        [projects, activeProjectId]
-    );
+    const shareProjectFor = (item) => {
+        if (!item?.project_id) {
+            toast.error('This photo is not part of a project yet');
+            return;
+        }
+        setShareTarget(
+            projects.find((p) => p.id === item.project_id) ||
+                { id: item.project_id, name: item.project_name || 'Untitled Project' }
+        );
+    };
 
-    const filteredPhotos = useMemo(() => {
-        let result = [...photos];
-        if (activeProjectId) {
-            result = result.filter(photo => String(photo.project_id) === String(activeProjectId));
-        }
-        if (searchQuery) {
-            const lowerQuery = searchQuery.toLowerCase();
-            result = result.filter(photo => 
-                photo.title.toLowerCase().includes(lowerQuery) ||
-                photo.project_name.toLowerCase().includes(lowerQuery)
-            );
-        }
-        return result;
-    }, [photos, activeProjectId, searchQuery]);
+    const activeProject = useActiveProject(projects, activeProjectId);
+    const highlightedPhoto = useHashHighlight('photo-');
+
+    const filteredPhotos = useFilteredItems(photos, {
+        projectId: activeProjectId,
+        searchQuery,
+        searchFields: ['title', 'project_name'],
+    });
 
     // Timeline State
     const [viewMode, setViewMode] = useState('grid');
@@ -100,61 +104,59 @@ export default function Photos({ photos = [], projects = [] }) {
 
     // Handlers
     const handleContextMenu = (e, photo) => {
-        e.preventDefault();
         if (!isSelected(photo.id)) {
             toggleSelection(photo.id, false);
         }
-        setContextMenu({
-            ...menuPoint(e),
-            target: photo
-        });
+        openContextMenu(e, photo);
     };
 
-    const closeContextMenu = () => setContextMenu(null);
+    const download = useFileDownload();
+
+    const deleteSelectedPhotos = async (message) => {
+        if (!confirm(message)) return;
+        try {
+            const ids = [...selectedItems];
+            await axios.delete('/photos/batch', { data: { ids } });
+            clearSelection();
+            toast.success('Photos deleted successfully');
+            router.reload({ only: ['photos'] });
+        } catch (e) {
+            toast.error('Failed to delete photos');
+        }
+    };
+
+    const downloadBatch = useBatchDownload();
+
+    const downloadSelectedPhotos = async () => {
+        const ok = await downloadBatch('/photos/download', [...selectedItems], 'photos.zip');
+        if (ok) {
+            toast.success('Photos downloaded');
+        } else {
+            toast.error('Failed to download photos');
+        }
+    };
 
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewPhoto(contextMenu?.target) },
-        { label: 'Download', icon: 'fa-download', action: () => {
-            const link = document.createElement('a');
-            link.href = `/storage/${contextMenu?.target.file_path.split('/').map(seg => encodeURIComponent(seg)).join('/')}`;
-            link.download = contextMenu?.target.original_name || 'download';
-            link.click();
-        }},
-        { label: 'Share', icon: 'fa-share-alt', action: () => alert('Sharing not implemented yet') },
-        { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
-            if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
-                try {
-                    const ids = [...selectedItems];
-                    await axios.delete('/photos/batch', { data: { ids } });
-                    clearSelection();
-                    toast.success('Photos deleted successfully');
-                    router.reload({ only: ['photos'] });
-                } catch (e) {
-                    toast.error('Failed to delete photos');
-                }
-            }
-        }},
+        { label: 'Download', icon: 'fa-download', action: () =>
+            download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
+        },
+        { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
+        { label: 'Delete', icon: 'fa-trash', danger: true, action: () =>
+            deleteSelectedPhotos(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)
+        },
     ];
 
     return (
         <AuthenticatedLayout>
             <Head title="Photos" />
 
-            <FileUploadModal
-                isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                uploadUrl="/photos"
-                acceptedFileTypes={{ 'image/*': [] }}
-                title="Upload Photos"
-            />
-
             <div onClick={closeContextMenu}>
                 <DashboardHero
                     title="Photos"
                     subtitle={`${filteredPhotos.length} photo${filteredPhotos.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Photos' },
                     ]}
                 />
@@ -168,23 +170,11 @@ export default function Photos({ photos = [], projects = [] }) {
                     selectedCount={selectedCount}
                     bulkActions={
                         <>
-                            <button className="text-white hover:text-gray-200" title="Download Selected"><i aria-hidden="true" className="fas fa-download"></i></button>
+                            <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i aria-hidden="true" className="fas fa-download"></i></button>
                             <button
                                 className="text-white hover:text-gray-200"
                                 title="Delete Selected"
-                                onClick={async () => {
-                                    if (confirm(`Delete ${selectedCount} items?`)) {
-                                        try {
-                                            const ids = [...selectedItems];
-                                            await axios.delete('/photos/batch', { data: { ids } });
-                                            clearSelection();
-                                            toast.success('Photos deleted successfully');
-                                            router.reload({ only: ['photos'] });
-                                        } catch (e) {
-                                            toast.error('Failed to delete photos');
-                                        }
-                                    }
-                                }}
+                                onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
                             >
                                 <i aria-hidden="true" className="fas fa-trash"></i>
                             </button>
@@ -192,8 +182,8 @@ export default function Photos({ photos = [], projects = [] }) {
                         </>
                     }
                     actions={
-                        <PrimaryButton onClick={() => setIsUploadModalOpen(true)}>
-                            <i aria-hidden="true" className="fas fa-upload"></i> Upload Photo
+                        <PrimaryButton as="link" href={route('photos.create')}>
+                            <i className="fas fa-upload"></i> Upload Photo
                         </PrimaryButton>
                     }
                 >
@@ -205,23 +195,11 @@ export default function Photos({ photos = [], projects = [] }) {
                             onDeselectAll={deselectAll}
                             actions={
                                 <>
-                                    <button className="text-white hover:text-gray-200" title="Download Selected"><i aria-hidden="true" className="fas fa-download"></i></button>
+                                    <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i aria-hidden="true" className="fas fa-download"></i></button>
                                     <button
                                         className="text-white hover:text-gray-200"
                                         title="Delete Selected"
-                                        onClick={async () => {
-                                            if (confirm(`Delete ${selectedCount} items?`)) {
-                                                try {
-                                                    const ids = [...selectedItems];
-                                                    await axios.delete('/photos/batch', { data: { ids } });
-                                                    clearSelection();
-                                                    toast.success('Photos deleted successfully');
-                                                    router.reload({ only: ['photos'] });
-                                                } catch (e) {
-                                                    toast.error('Failed to delete photos');
-                                                }
-                                            }
-                                        }}
+                                        onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
                                     >
                                         <i aria-hidden="true" className="fas fa-trash"></i>
                                     </button>
@@ -274,6 +252,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                 key={photo.id} 
                                 photo={photo} 
                                 selected={isSelected(photo.id)} 
+                                highlighted={highlightedPhoto === String(photo.id)}
                                 onToggle={(multi) => toggleSelection(photo.id, multi)}
                                 onContextMenu={(e) => handleContextMenu(e, photo)}
                                 onPreview={() => setPreviewPhoto(photo)}
@@ -298,6 +277,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                             key={photo.id} 
                                             photo={photo} 
                                             selected={isSelected(photo.id)} 
+                                            highlighted={highlightedPhoto === String(photo.id)}
                                             onToggle={(multi) => toggleSelection(photo.id, multi)}
                                             onContextMenu={(e) => handleContextMenu(e, photo)}
                                             onPreview={() => setPreviewPhoto(photo)}
@@ -389,6 +369,10 @@ export default function Photos({ photos = [], projects = [] }) {
                     </div>
                 </div>
             </PreviewModal>
+
+            {shareTarget && (
+                <ShareProjectModal show onClose={() => setShareTarget(null)} project={shareTarget} />
+            )}
 
         </AuthenticatedLayout>
     );

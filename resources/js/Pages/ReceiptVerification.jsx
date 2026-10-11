@@ -10,6 +10,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DashboardHero from '@/Components/DashboardHero';
 import { EXPENSE_CATEGORIES } from '@/Config/expenses';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 const CATEGORIES = EXPENSE_CATEGORIES;
 
@@ -24,6 +25,18 @@ const emptyForm = {
     purpose: '',
     category: 'Materials',
 };
+
+const mapExtractedToForm = (ext = {}) => ({
+    title: ext.merchant || ext.recipient || 'Unknown',
+    amount: ext.total || '',
+    expense_date: ext.date || new Date().toISOString().split('T')[0],
+    time: ext.time || '',
+    recipient: ext.recipient || '',
+    payment_method: ext.payment_method || 'mobile_money',
+    reference_number: ext.reference_number || '',
+    purpose: '',
+    category: 'Materials',
+});
 
 export default function ReceiptVerification() {
     const [files, setFiles] = useState([]);
@@ -89,17 +102,7 @@ export default function ReceiptVerification() {
 
             if (response.data.success) {
                 const ext = response.data.extracted;
-                const populated = {
-                    title: ext.merchant || ext.recipient || 'Unknown',
-                    amount: ext.total || '',
-                    expense_date: ext.date || new Date().toISOString().split('T')[0],
-                    time: ext.time || '',
-                    recipient: ext.recipient || '',
-                    payment_method: ext.payment_method || 'mobile_money',
-                    reference_number: ext.reference_number || '',
-                    purpose: '',
-                    category: 'Materials',
-                };
+                const populated = mapExtractedToForm(ext);
 
                 setQueue(prev => prev.map((e, i) => i === idx ? {
                     ...e,
@@ -161,13 +164,93 @@ export default function ReceiptVerification() {
         setProcessing(true);
         setErrors({});
 
-        const pending = queue.filter(e => e.status === 'pending');
-        for (let i = 0; i < queue.length; i++) {
-            if (queue[i].status === 'pending') {
-                await analyzeOne(queue[i], i);
-            }
+        const pending = queue
+            .map((entry, idx) => ({ entry, idx }))
+            .filter(({ entry }) => entry.status === 'pending');
+
+        if (pending.length === 0) {
+            setProcessing(false);
+            return;
         }
-        setProcessing(false);
+
+        const data = new FormData();
+        pending.forEach(({ entry }) => data.append('receipts[]', entry.file));
+
+        try {
+            const response = await axios.post('/receipts/analyze-bulk', data, getAxiosConfig({
+                'Content-Type': 'multipart/form-data',
+            }));
+
+            const byIndex = new Map((response.data.results || []).map((r) => [r.index, r]));
+            const populatedByQueueIdx = new Map();
+            let failed = 0;
+
+            pending.forEach(({ entry, idx }, position) => {
+                const result = byIndex.get(position);
+
+                if (!result || !result.success) {
+                    failed += 1;
+                    setQueue(prev => prev.map((e, i) => i === idx ? { ...e, status: 'error', result: null } : e));
+                    return;
+                }
+
+                const ext = result.extracted || {};
+                const populated = mapExtractedToForm(ext);
+                populatedByQueueIdx.set(idx, { populated, result });
+
+                setQueue(prev => prev.map((e, i) => i === idx ? {
+                    ...e,
+                    status: 'ready',
+                    result: { extracted: ext, temp_path: result.temp_path },
+                    formData: populated,
+                    rawText: result.text || '',
+                } : e));
+            });
+
+            const firstReady = pending.find(({ idx }) => populatedByQueueIdx.has(idx));
+            if (firstReady) {
+                const { populated, result } = populatedByQueueIdx.get(firstReady.idx);
+                setCurrentIndex(firstReady.idx);
+                setCurrentFileId(firstReady.entry.id);
+                setFormData(populated);
+                setRawText(result.text || '');
+                setCurrentTempPath(result.temp_path || '');
+            }
+
+            for (const [idx, { populated }] of populatedByQueueIdx) {
+                if (!populated.reference_number) continue;
+                try {
+                    const matchResponse = await axios.get('/receipts/match', {
+                        ...getAxiosConfig(),
+                        params: {
+                            reference_number: populated.reference_number,
+                            date: populated.expense_date,
+                            time: populated.time,
+                        },
+                    });
+                    if (matchResponse.data.matched) {
+                        const matchedExpense = matchResponse.data.expense;
+                        setQueue(prev => prev.map((e, i) => i === idx ? { ...e, matchedExpense } : e));
+                    }
+                } catch (err) {
+                    // Silently fail - matching is optional
+                }
+            }
+
+            if (failed > 0) {
+                setErrors({ analysis: `${failed} receipt${failed > 1 ? 's' : ''} failed OCR.` });
+            } else if (populatedByQueueIdx.size === 0) {
+                setErrors({ analysis: 'OCR failed.' });
+            }
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Failed to analyze receipts.';
+            pending.forEach(({ idx }) => {
+                setQueue(prev => prev.map((e, i) => i === idx ? { ...e, status: 'error', result: null } : e));
+            });
+            setErrors({ analysis: msg });
+        } finally {
+            setProcessing(false);
+        }
     };
 
     const handleSave = async (e) => {
@@ -276,8 +359,7 @@ export default function ReceiptVerification() {
                     title="Receipt Verification"
                     subtitle="Upload and verify receipts with OCR"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Receipt Verification' },
                     ]}
                 />
@@ -350,7 +432,7 @@ export default function ReceiptVerification() {
                                             : 'bg-black/30 border-white/5 hover:bg-white/5'
                                     }`}
                                 >
-                                    <img src={entry.preview} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                                    <img loading="lazy" decoding="async"  src={entry.preview} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
                                     <button
                                         type="button"
                                         disabled={entry.status === 'pending'}
@@ -390,7 +472,7 @@ export default function ReceiptVerification() {
                                     {queue[currentIndex].file?.type === 'application/pdf' ? (
                                         <iframe src={queue[currentIndex].preview} className="w-full h-[400px] rounded-lg" title="Receipt PDF" />
                                     ) : (
-                                        <img src={queue[currentIndex].preview} alt="Receipt Preview" className="w-full max-h-[400px] object-contain rounded-lg" />
+                                        <img loading="lazy" decoding="async"  src={queue[currentIndex].preview} alt="Receipt Preview" className="w-full max-h-[400px] object-contain rounded-lg" />
                                     )}
                                 </div>
 

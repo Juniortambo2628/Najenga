@@ -8,6 +8,7 @@ use Cose\Algorithm\Manager as AlgorithmManager;
 use Cose\Algorithm\Signature\ECDSA\ES256;
 use Cose\Algorithm\Signature\RSA\RS256;
 use Illuminate\Support\Facades\URL;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use Symfony\Component\Serializer\SerializerInterface;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
@@ -116,9 +117,8 @@ class PasskeyService
         return Passkey::create([
             'user_id' => $user->id,
             'name' => $friendlyName,
-            'credential_id' => $source->publicKeyCredentialId,
-            'public_key_credential_source' => $this->serializer->serialize($source, 'json'),
-            'counter' => $source->counter,
+            'credential_id' => Base64UrlSafe::encodeUnpadded($source->publicKeyCredentialId),
+            'credential' => $this->serializer->serialize($source, 'json'),
         ]);
     }
 
@@ -155,14 +155,16 @@ class PasskeyService
             throw new \InvalidArgumentException('Not an assertion response');
         }
 
-        $passkey = Passkey::query()->where('credential_id', $credential->rawId)->first();
+        $passkey = Passkey::query()
+            ->where('credential_id', Base64UrlSafe::encodeUnpadded($credential->rawId))
+            ->first();
         if (! $passkey) {
             throw new \RuntimeException('Unknown passkey');
         }
 
         /** @var CredentialRecord $stored */
         $stored = $this->serializer->deserialize(
-            $passkey->public_key_credential_source,
+            $passkey->credential,
             PublicKeyCredentialSource::class,
             'json',
         );
@@ -177,8 +179,7 @@ class PasskeyService
 
         // Save updated counter and last_used_at.
         $passkey->forceFill([
-            'public_key_credential_source' => $this->serializer->serialize($stored, 'json'),
-            'counter' => $stored->counter,
+            'credential' => $this->serializer->serialize($stored, 'json'),
             'last_used_at' => now(),
         ])->save();
 
@@ -214,11 +215,10 @@ class PasskeyService
 
     // -- Helpers -------------------------------------------------------------
 
-    /** Raw bytes stored in the DB column; may be binary. */
+    /** Raw credential ID bytes for descriptor construction. */
     private function rawCredentialId(Passkey $p): string
     {
-        $value = $p->credential_id;
-        return is_resource($value) ? stream_get_contents($value) : (string) $value;
+        return Base64UrlSafe::decodeNoPadding($p->credential_id);
     }
 
     public function rpId(): string

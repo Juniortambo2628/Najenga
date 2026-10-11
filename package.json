@@ -30,6 +30,7 @@
     },
     "dependencies": {
         "@annotorious/react": "^3.7.19",
+        "@laravel/passkeys": "^0.4.0",
         "ag-grid-community": "^36.0.2",
         "ag-grid-react": "^36.0.2",
         "browser-image-compression": "^2.0.2",

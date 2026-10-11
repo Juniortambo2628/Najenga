@@ -49,6 +49,34 @@ class ProjectShareControllerTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_owner_can_view_share_list(): void
+    {
+        $this->actingAs($this->owner)
+            ->getJson("/projects/{$this->project->id}/users")
+            ->assertOk();
+    }
+
+    public function test_stranger_cannot_view_share_list(): void
+    {
+        $stranger = User::factory()->create(['role' => 'client']);
+
+        // The member list used to be reachable twice: share/index and
+        // projects/users. The share route is gone, so projects/users now
+        // carries the same policy check.
+        $this->actingAs($stranger)
+            ->getJson("/projects/{$this->project->id}/users")
+            ->assertForbidden();
+    }
+
+    public function test_collaborator_can_view_share_list(): void
+    {
+        $this->project->users()->attach($this->collaborator->id, ['role' => 'viewer']);
+
+        $this->actingAs($this->collaborator)
+            ->getJson("/projects/{$this->project->id}/users")
+            ->assertOk();
+    }
+
     public function test_owner_can_unshare_project(): void
     {
         $this->project->users()->attach($this->collaborator->id, ['role' => 'viewer']);

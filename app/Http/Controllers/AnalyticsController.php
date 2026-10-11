@@ -7,6 +7,7 @@ use App\Models\Expense;
 use App\Models\Photo;
 use App\Models\Project;
 use App\Models\ProjectTimeline;
+use App\Services\StatsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,6 +16,11 @@ use Inertia\Inertia;
 
 class AnalyticsController extends Controller
 {
+    public function __construct(
+        protected StatsService $stats,
+    ) {
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -168,22 +174,25 @@ class AnalyticsController extends Controller
             ]);
 
         // Project-level summary
-        $projectSummaries = Project::where('client_id', $userId)
+        $projects = Project::where('client_id', $userId)
             ->withCount(['expenses', 'photos', 'documents'])
-            ->get()
-            ->map(fn ($project) => [
-                'id' => $project->id,
-                'name' => $project->name,
-                'status' => $project->status,
-                'budget' => (float) $project->budget,
-                'total_expenses' => Expense::where('project_id', $project->id)->sum('amount'),
-                'expense_count' => $project->expenses_count,
-                'photo_count' => $project->photos_count,
-                'document_count' => $project->documents_count,
-                'budget_used_percentage' => $project->budget > 0
-                    ? round((Expense::where('project_id', $project->id)->sum('amount') / $project->budget) * 100, 1)
-                    : 0,
-            ]);
+            ->get();
+
+        $expenseTotals = $this->stats->projectExpenseTotals($projects->pluck('id'));
+
+        $projectSummaries = $projects->map(fn ($project) => [
+            'id' => $project->id,
+            'name' => $project->name,
+            'status' => $project->status,
+            'budget' => (float) $project->budget,
+            'total_expenses' => $expenseTotals[$project->id] ?? 0.0,
+            'expense_count' => $project->expenses_count,
+            'photo_count' => $project->photos_count,
+            'document_count' => $project->documents_count,
+            'budget_used_percentage' => $project->budget > 0
+                ? round((($expenseTotals[$project->id] ?? 0.0) / $project->budget) * 100, 1)
+                : 0,
+        ]);
 
         // Average expense amount
         $avgExpense = (clone $expenseQuery)->avg('amount');

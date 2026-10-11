@@ -20,7 +20,7 @@ export default function LinkWhatsAppForm({ whatsapp = {} }) {
         }
         setSending(true);
         try {
-            const { data } = await axios.post('/profile/whatsapp/send-code', { phone });
+            const { data } = await axios.post('/profile/whatsapp/link/send-code', { phone });
             setMaskedPhone(data.phone_masked);
             setStage('sent');
             toast.success(`Code sent to ${data.phone_masked}`);
@@ -35,7 +35,7 @@ export default function LinkWhatsAppForm({ whatsapp = {} }) {
         e.preventDefault();
         setVerifying(true);
         try {
-            await axios.post('/profile/whatsapp/verify', { code });
+            await axios.post('/profile/whatsapp/link/verify', { code });
             toast.success('WhatsApp number linked');
             setStage('linked');
             setCode('');

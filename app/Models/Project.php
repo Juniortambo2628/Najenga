@@ -24,6 +24,15 @@ class Project extends Model
         'location',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Project $project) {
+            $project->photos->each->delete();
+            $project->documents->each->delete();
+            $project->expenses->each->delete();
+        });
+    }
+
     protected function casts(): array
     {
         return [

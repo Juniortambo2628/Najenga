@@ -11,8 +11,7 @@ class Passkey extends Model
         'user_id',
         'name',
         'credential_id',
-        'public_key_credential_source',
-        'counter',
+        'credential',
         'last_used_at',
     ];
 
@@ -20,7 +19,6 @@ class Passkey extends Model
     {
         return [
             'last_used_at' => 'datetime',
-            'counter' => 'integer',
         ];
     }
 

@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardHero from '@/Components/DashboardHero';
@@ -13,9 +13,10 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useBulkDelete from '@/Hooks/useBulkDelete';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Index({ users }) {
-    const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [form, setForm] = useState({
@@ -31,14 +32,6 @@ export default function Index({ users }) {
     const resetForm = () => {
         setForm({ first_name: '', last_name: '', email: '', role: 'client', password: '' });
         setErrors({});
-    };
-
-    const handleCreate = (e) => {
-        e.preventDefault();
-        router.post('/users', form, {
-            onSuccess: () => { setShowCreateModal(false); resetForm(); toast.success('User created'); },
-            onError: (err) => setErrors(err),
-        });
     };
 
     const handleEdit = (user) => {
@@ -67,100 +60,13 @@ export default function Index({ users }) {
         }
     };
 
-    const handleBulkDelete = async () => {
-        if (!confirm(`Delete ${selectedCount} user${selectedCount !== 1 ? 's' : ''}?`)) return;
-        const ids = [...selectedItems];
-        let failed = 0;
-        for (const id of ids) {
-            try {
-                await new Promise((resolve, reject) => {
-                    router.delete(`/users/${id}`, {
-                        preserveScroll: true,
-                        onSuccess: resolve,
-                        onError: reject,
-                    });
-                });
-            } catch {
-                failed++;
-            }
-        }
-        clearSelection();
-        if (failed > 0) {
-            toast.error(`Failed to delete ${failed} user${failed !== 1 ? 's' : ''}`);
-        } else {
-            toast.success(`${ids.length} user${ids.length !== 1 ? 's' : ''} deleted`);
-        }
-        router.reload({ only: ['users'] });
-    };
-
-    const createModalTabs = [
-        {
-            label: 'Account',
-            icon: 'fa-user',
-            content: (
-                <form onSubmit={handleCreate} className="space-y-5">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <InputLabel htmlFor="users-first-name" value="First Name" />
-                            <TextInput id="users-first-name" aria-invalid={!!errors.first_name} aria-describedby={errors.first_name ? 'users-first-name-error' : undefined} value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-                            <InputError id="users-first-name-error" message={errors.first_name} />
-                        </div>
-                        <div>
-                            <InputLabel htmlFor="users-last-name" value="Last Name" />
-                            <TextInput id="users-last-name" aria-invalid={!!errors.last_name} aria-describedby={errors.last_name ? 'users-last-name-error' : undefined} value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-                            <InputError id="users-last-name-error" message={errors.last_name} />
-                        </div>
-                    </div>
-                    <div>
-                        <InputLabel htmlFor="users-email" value="Email" />
-                        <TextInput id="users-email" aria-invalid={!!errors.email} aria-describedby={errors.email ? 'users-email-error' : undefined} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                        <InputError id="users-email-error" message={errors.email} />
-                    </div>
-                    <div>
-                        <InputLabel htmlFor="users-password" value="Password" />
-                        <TextInput id="users-password" aria-invalid={!!errors.password} aria-describedby={errors.password ? 'users-password-error' : undefined} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                        <InputError id="users-password-error" message={errors.password} />
-                    </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); resetForm(); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit">Create User</PrimaryButton>
-                    </div>
-                </form>
-            ),
-        },
-        {
-            label: 'Permissions',
-            icon: 'fa-shield-alt',
-            content: (
-                <form onSubmit={handleCreate} className="space-y-5">
-                    <div>
-                        <InputLabel htmlFor="users-role" value="Role" />
-                        <SelectInput
-                            id="users-role"
-                            value={form.role}
-                            onChange={(e) => setForm({ ...form, role: e.target.value })}
-                        >
-                            <option value="client">Client</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                        </SelectInput>
-                    </div>
-                    <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                        <h4 className="text-sm font-medium text-gray-300 mb-2">Role Permissions</h4>
-                        <div className="space-y-2 text-xs text-gray-400">
-                            {form.role === 'admin' && <p>Full access to all features, user management, and settings.</p>}
-                            {form.role === 'manager' && <p>Can manage projects, expenses, documents, and team members.</p>}
-                            {form.role === 'client' && <p>Can view assigned projects, upload photos, and submit expenses.</p>}
-                        </div>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                        <SecondaryButton type="button" onClick={() => { setShowCreateModal(false); resetForm(); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit">Create User</PrimaryButton>
-                    </div>
-                </form>
-            ),
-        },
-    ];
+    const handleBulkDelete = useBulkDelete({
+        selected: selectedItems,
+        noun: 'user',
+        path: (id) => `/users/${id}`,
+        onDone: clearSelection,
+        reload: ['users'],
+    });
 
     const editModalTabs = [
         {
@@ -241,8 +147,7 @@ export default function Index({ users }) {
                 title="User Management"
                 subtitle="Manage platform users and their roles"
                 breadcrumbs={[
-                    { label: 'Home', href: '/home' },
-                    { label: 'Dashboard', href: '/dashboard' },
+                    ...rootBreadcrumbs(),
                     { label: 'Users' },
                 ]}
                 actions={
@@ -258,14 +163,14 @@ export default function Index({ users }) {
                                 </button>
                             }
                         />
-                        <PrimaryButton onClick={() => { resetForm(); setShowCreateModal(true); }}>
-                            <i aria-hidden="true" className="fas fa-plus mr-2"></i>Add User
+                        <PrimaryButton as="link" href={route('users.create')}>
+                            <i className="fas fa-plus mr-2"></i>Add User
                         </PrimaryButton>
                     </div>
                 }
             />
 
-            <div className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="panel overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
@@ -305,8 +210,12 @@ export default function Index({ users }) {
                                                 {user.first_name?.[0]}{user.last_name?.[0]}
                                             </div>
                                             <div>
-                                                <p className="text-white font-medium">{user.first_name} {user.last_name}</p>
-                                                <p className="text-gray-400 text-sm">@{user.username}</p>
+                                                <p className="text-white font-medium">
+                                                    <Link href={route('users.show', user.id)} className="hover:text-[#DC143C] transition">
+                                                        {user.first_name} {user.last_name}
+                                                    </Link>
+                                                </p>
+                                                <p className="text-gray-500 text-sm">@{user.username}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -343,16 +252,6 @@ export default function Index({ users }) {
                     </table>
                 </div>
             </div>
-
-            {/* Create User Modal (Tabbed) */}
-            <Modal
-                show={showCreateModal}
-                onClose={() => { setShowCreateModal(false); resetForm(); }}
-                maxWidth="3xl"
-                tabs={createModalTabs}
-                title="New User"
-                subtitle="Create Account"
-            />
 
             {/* Edit User Modal (Tabbed) */}
             <Modal

@@ -4,16 +4,13 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
-use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\LoginCodeController;
+use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasskeyAuthenticationController;
 use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RecoveryCodesController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\TwoFactorAuthenticationController;
-use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,12 +24,6 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
-
-    Route::get('two-factor-challenge', [TwoFactorChallengeController::class, 'create'])
-        ->name('two-factor.login');
-
-    Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store'])
-        ->middleware('throttle:6,1');
 
     Route::get('login/code', [LoginCodeController::class, 'create'])
         ->name('login.code');
@@ -57,6 +48,14 @@ Route::middleware('guest')->group(function () {
 
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
         ->name('password.email');
+
+    Route::post('login-code', [LoginCodeController::class, 'request'])
+        ->middleware('throttle:3,1')
+        ->name('login-code.request');
+
+    Route::post('login-code/verify', [LoginCodeController::class, 'verify'])
+        ->middleware('throttle:6,1')
+        ->name('login-code.verify');
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');
@@ -84,25 +83,13 @@ Route::middleware('auth')->group(function () {
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
-    Route::post('two-factor/enable', [TwoFactorAuthenticationController::class, 'enable'])
-        ->name('two-factor.enable');
-
-    Route::post('two-factor/confirm', [TwoFactorAuthenticationController::class, 'confirm'])
-        ->name('two-factor.confirm');
-
-    Route::delete('two-factor', [TwoFactorAuthenticationController::class, 'destroy'])
-        ->name('two-factor.disable');
-
-    Route::post('two-factor/recovery-codes', [RecoveryCodesController::class, 'regenerate'])
-        ->name('two-factor.recovery-codes.regenerate');
-
     Route::post('passkeys/options', [PasskeyController::class, 'options'])
         ->name('passkeys.options');
 
     Route::post('passkeys', [PasskeyController::class, 'register'])
         ->name('passkeys.register');
 
-    Route::delete('passkeys/{passkey}', [PasskeyController::class, 'destroy'])
+    Route::delete('passkeys/{ownedPasskey}', [PasskeyController::class, 'destroy'])
         ->name('passkeys.destroy');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])

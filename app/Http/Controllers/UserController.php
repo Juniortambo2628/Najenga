@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Services\ActivityLogger;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -28,7 +28,9 @@ class UserController extends Controller
         $validated['password'] = bcrypt($validated['password']);
         $validated['username'] = $validated['username'] ?? strtolower($validated['first_name'] . '.' . $validated['last_name']);
 
-        User::create($validated);
+        $user = User::create($validated);
+
+        ActivityLogger::log('user.created', sprintf('Created user %s (#%d)', $user->email, $user->id));
 
         return redirect()->back()->with('success', 'User created successfully');
     }
@@ -61,6 +63,8 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         $this->authorize('delete', $user);
+
+        ActivityLogger::log('user.deleted', sprintf('Deleted user %s (#%d)', $user->email, $user->id));
 
         $user->delete();
         return redirect()->back()->with('success', 'User deleted successfully');

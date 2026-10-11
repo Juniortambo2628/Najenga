@@ -7,15 +7,8 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
-
-function DetailRow({ label, value, mono = false }) {
-    return (
-        <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">{label}</span>
-            <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
-        </div>
-    );
-}
+import { rootBreadcrumbs } from '@/Config/navigation';
+import DetailRow from '@/Components/DetailRow';
 
 function ReceiptSection({ expense, onUpdate }) {
     const [uploading, setUploading] = useState(false);
@@ -67,7 +60,7 @@ function ReceiptSection({ expense, onUpdate }) {
                     {previewUrl.endsWith('.pdf') ? (
                         <iframe src={previewUrl} className="w-full h-[400px]" title="Receipt" />
                     ) : (
-                        <img src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
+                        <img loading="lazy" decoding="async"  src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
                     )}
                 </div>
                 <div className="flex justify-end gap-2">
@@ -121,9 +114,8 @@ export default function Show({ expense }) {
                     title={expense.title}
                     subtitle={expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details'}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
-                        { label: 'Expenses', href: '/expenses' },
+                        ...rootBreadcrumbs(),
+                        { label: 'Expenses', href: route('expenses') },
                         { label: expense.title },
                     ]}
                     actions={
@@ -143,7 +135,7 @@ export default function Show({ expense }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Details</h3>
                             <div className="grid grid-cols-2 gap-5">
                                 <DetailRow label="Amount" value={formatCurrency(expense.amount, expense.currency)} mono />
@@ -163,14 +155,14 @@ export default function Show({ expense }) {
                             )}
                         </section>
 
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Receipt</h3>
                             <ReceiptSection expense={expense} onUpdate={() => router.reload({ only: ['expense'] })} />
                         </section>
                     </div>
 
                     <div className="space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Summary</h3>
                             <dl className="space-y-4 text-sm">
                                 <div className="flex justify-between">
@@ -188,7 +180,7 @@ export default function Show({ expense }) {
                             </dl>
                         </section>
 
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
                             <div className="space-y-3">
                                 <Link

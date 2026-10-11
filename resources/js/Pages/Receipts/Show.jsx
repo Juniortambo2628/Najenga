@@ -2,15 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import DashboardHero from '@/Components/DashboardHero';
 import { formatCurrency } from '@/Config/currencies';
-
-function DetailRow({ label, value, mono = false }) {
-    return (
-        <div className="flex flex-col gap-1">
-            <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">{label}</span>
-            <span className={`text-sm text-white ${mono ? 'font-mono' : ''}`}>{value || '—'}</span>
-        </div>
-    );
-}
+import { rootBreadcrumbs } from '@/Config/navigation';
+import DetailRow from '@/Components/DetailRow';
 
 export default function Show({ receipt }) {
     const expense = receipt.expense;
@@ -30,9 +23,8 @@ export default function Show({ receipt }) {
                     title={receipt.original_name || `Receipt #${receipt.id}`}
                     subtitle={expense ? `Expense: ${expense.title}` : 'Receipt details'}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
-                        { label: 'Receipts', href: '/receipts' },
+                        ...rootBreadcrumbs(),
+                        { label: 'Receipts', href: route('receipts.index') },
                         { label: receipt.original_name || `Receipt #${receipt.id}` },
                     ]}
                     actions={
@@ -52,11 +44,11 @@ export default function Show({ receipt }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Receipt Image</h3>
                             {receipt.file_path ? (
                                 <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center min-h-[300px]">
-                                    <img
+                                    <img loading="lazy" decoding="async" 
                                         src={`/storage/${receipt.file_path}`}
                                         alt={receipt.original_name}
                                         className="max-w-full max-h-[500px] object-contain"
@@ -72,7 +64,7 @@ export default function Show({ receipt }) {
                     </div>
 
                     <div className="space-y-8">
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">OCR Extracted Data</h3>
                             <div className="grid grid-cols-1 gap-5">
                                 <DetailRow label="Merchant" value={receipt.extracted_merchant} />
@@ -84,7 +76,7 @@ export default function Show({ receipt }) {
                             </div>
                         </section>
 
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">File Info</h3>
                             <dl className="space-y-4 text-sm">
                                 <div className="flex justify-between">
@@ -102,7 +94,7 @@ export default function Show({ receipt }) {
                             </dl>
                         </section>
 
-                        <section className="bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6">
+                        <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
                             <div className="space-y-3">
                                 <Link

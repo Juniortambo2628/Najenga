@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -41,6 +42,38 @@ class OcrService
             return ['success' => false, 'message' => "File not found: {$absolutePath}"];
         }
 
+        // Memoise on file CONTENT, not path: the upload preview (analyze) and
+        // the write to expenses (store) read the same bytes under different
+        // temp names, and that second run is exactly what this exists to skip.
+        $key = $this->cacheKey($absolutePath, $language);
+
+        if (is_array($cached = Cache::get($key))) {
+            return $cached;
+        }
+
+        $result = $this->runExtraction($absolutePath, $language);
+
+        // Failures are never cached: a transient engine or network error must
+        // not pin the file as unreadable for the rest of the TTL.
+        if ($result['success'] ?? false) {
+            Cache::put($key, $result, now()->addDay());
+        }
+
+        return $result;
+    }
+
+    /**
+     * Hand the file to whichever OCR engine is available, in preference order.
+     * Reached only through extractText(), which owns caching and the guard.
+     *
+     * @return array{success: bool, text?: string, confidence?: float, source?: string, message?: string}
+     */
+    protected function runExtraction(string $absolutePath, string $language): array
+    {
+        if (!file_exists($absolutePath)) {
+            return ['success' => false, 'message' => "File not found: {$absolutePath}"];
+        }
+
         // 1. Native Tesseract CLI — fastest path
         if ($tesseract = $this->findTesseract()) {
             return $this->runNativeTesseract($tesseract, $absolutePath, $language);
@@ -53,6 +86,21 @@ class OcrService
 
         // 3. Cloud fallback — disabled by default for financial data sensitivity
         return $this->cloudFallback($absolutePath, $language);
+    }
+
+    /**
+     * Cache key for one file's OCR output.
+     *
+     * A content hash rather than a path: the upload flow renames the file
+     * between preview and commit, so the path key would miss on the very run
+     * this exists to skip. The language is part of the key because it changes
+     * the engine's output for identical bytes.
+     */
+    protected function cacheKey(string $absolutePath, string $language): string
+    {
+        $hash = @sha1_file($absolutePath);
+
+        return 'ocr:' . ($hash ?: 'path:' . md5($absolutePath)) . ':' . $language;
     }
 
     /**

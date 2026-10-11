@@ -51,6 +51,61 @@ class AnnotationCommentTest extends TestCase
         ]);
     }
 
+    public function test_user_cannot_annotate_another_users_photo(): void
+    {
+        $otherPhoto = Photo::factory()->create([
+            'user_id' => $this->otherUser->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
+        ]);
+
+        // annotatable_id is client-supplied, so without a parent check any
+        // signed-in user could annotate someone else's photo.
+        $this->actingAs($this->user)
+            ->postJson('/annotations', [
+                'annotatable_type' => 'photo',
+                'annotatable_id' => $otherPhoto->id,
+                'x' => 100,
+                'y' => 200,
+                'body' => 'should not land',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('annotations', ['annotatable_id' => $otherPhoto->id]);
+    }
+
+    public function test_annotation_on_nonexistent_parent_is_rejected(): void
+    {
+        // The schema has no FK, so previously this created an orphan row.
+        $this->actingAs($this->user)
+            ->postJson('/annotations', [
+                'annotatable_type' => 'photo',
+                'annotatable_id' => 999999,
+                'x' => 100,
+                'y' => 200,
+            ])
+            ->assertNotFound();
+
+        $this->assertDatabaseMissing('annotations', ['annotatable_id' => 999999]);
+    }
+
+    public function test_user_cannot_comment_on_another_users_photo(): void
+    {
+        $otherPhoto = Photo::factory()->create([
+            'user_id' => $this->otherUser->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
+        ]);
+
+        $this->actingAs($this->user)
+            ->postJson('/comments', [
+                'commentable_type' => 'photo',
+                'commentable_id' => $otherPhoto->id,
+                'body' => 'should not land',
+            ])
+            ->assertForbidden();
+
+        $this->assertDatabaseMissing('comments', ['commentable_id' => $otherPhoto->id]);
+    }
+
     public function test_user_can_update_own_annotation(): void
     {
         $annotation = Annotation::factory()->create([

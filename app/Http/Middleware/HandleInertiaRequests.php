@@ -29,10 +29,19 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $session = $request->hasSession() ? $request->session() : null;
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+            ],
+            // 24 controllers call ->with('success'|...)-> with no consumer until
+            // this was added - see Components/FlashToast.jsx.
+            'flash' => [
+                'success' => $session?->get('success'),
+                'error' => $session?->get('error'),
+                'status' => $session?->get('status'),
             ],
         ];
     }

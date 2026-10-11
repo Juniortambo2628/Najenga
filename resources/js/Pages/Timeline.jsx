@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import DashboardHero from '@/Components/DashboardHero';
 import ContextToolbar from '@/Components/ContextToolbar';
@@ -12,11 +12,11 @@ import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import Card from '@/Components/Card';
-import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useBulkDelete from '@/Hooks/useBulkDelete';
+import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
-import toast from 'react-hot-toast';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -54,7 +54,13 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
             <div className="flex-1 bg-gray-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition">
                 <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
-                        <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+                        {item.type === 'milestone' ? (
+                            <Link href={`/timeline/${item.id}`} className="text-xl font-semibold text-white hover:text-red-400 transition">
+                                {item.title}
+                            </Link>
+                        ) : (
+                            <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+                        )}
                         <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full bg-white/5 ${config.textColor}`}>
                             {item.type}
                         </span>
@@ -136,7 +142,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
     const [filterProject, setFilterProject] = useState(null);
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
 
-    const { data, setData, post, patch, processing, errors, reset } = useForm({
+    const { data, setData, patch, processing, errors, reset } = useForm({
         title: '',
         description: '',
         project_id: '',
@@ -157,13 +163,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         return items.sort((a, b) => (b.sortDate || '').localeCompare(a.sortDate || ''));
     }, [timelines, expenses, photos, documents]);
 
-    const filteredItems = useMemo(() => {
-        let items = allItems;
-        if (filterProject) {
-            items = items.filter((i) => String(i.project_id) === String(filterProject));
-        }
-        return items;
-    }, [allItems, filterProject]);
+    const filteredItems = useFilteredItems(allItems, { projectId: filterProject });
 
     const tabData = useMemo(() => {
         const filter = (arr) => filterProject ? arr.filter((i) => String(i.project_id) === String(filterProject)) : arr;
@@ -178,20 +178,16 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
 
     const currentItems = tabData[activeTab] || [];
 
-    function openModal(timeline = null) {
+    function openModal(timeline) {
         setEditingTimeline(timeline);
-        if (timeline) {
-            setData({
-                title: timeline.title || '',
-                description: timeline.description || '',
-                project_id: timeline.project_id || '',
-                start_date: timeline.start_date || '',
-                end_date: timeline.end_date || '',
-                status: timeline.status || 'pending',
-            });
-        } else {
-            reset();
-        }
+        setData({
+            title: timeline.title || '',
+            description: timeline.description || '',
+            project_id: timeline.project_id || '',
+            start_date: timeline.start_date || '',
+            end_date: timeline.end_date || '',
+            status: timeline.status || 'pending',
+        });
         setIsModalOpen(true);
     }
 
@@ -203,11 +199,8 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
 
     function handleSubmit(e) {
         e.preventDefault();
-        if (editingTimeline) {
-            patch(`/timelines/${editingTimeline.id}`, { onSuccess: () => closeModal() });
-        } else {
-            post('/timelines', { onSuccess: () => closeModal() });
-        }
+        if (!editingTimeline) return;
+        patch(`/timelines/${editingTimeline.id}`, { onSuccess: () => closeModal() });
     }
 
     function handleDelete(item) {
@@ -217,24 +210,16 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         }
     }
 
-    async function handleBulkDelete() {
-        if (!confirm(`Delete ${selectedCount} item${selectedCount !== 1 ? 's' : ''}?`)) return;
-        const ids = [...selectedItems];
-        let failed = 0;
-        for (const id of ids) {
+    const handleBulkDelete = useBulkDelete({
+        selected: selectedItems,
+        noun: 'item',
+        path: (id) => {
             const item = allItems.find((i) => i.id === id && i.type === 'milestone');
-            if (!item) continue;
-            try {
-                await new Promise((resolve, reject) => {
-                    router.delete(`/timelines/${item.id}`, { preserveScroll: true, onSuccess: resolve, onError: reject });
-                });
-            } catch { failed++; }
-        }
-        clearSelection();
-        if (failed > 0) toast.error(`Failed to delete ${failed} item${failed !== 1 ? 's' : ''}`);
-        else toast.success(`${ids.length} item${ids.length !== 1 ? 's' : ''} deleted`);
-        router.reload({ only: ['timelines'] });
-    }
+            return item ? `/timelines/${item.id}` : null;
+        },
+        onDone: clearSelection,
+        reload: ['timelines'],
+    });
 
     return (
         <AuthenticatedLayout>
@@ -245,8 +230,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     title="Timeline"
                     subtitle="Track all project activity across milestones, expenses, photos, and documents"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Timeline' },
                     ]}
                 />
@@ -256,8 +240,8 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     currentProjectId={filterProject}
                     onProjectChange={(val) => setFilterProject(val)}
                     actions={
-                        <PrimaryButton onClick={() => openModal()}>
-                            <i aria-hidden="true" className="fas fa-plus"></i> Add Milestone
+                        <PrimaryButton as="link" href={route('timeline.create')}>
+                            <i className="fas fa-plus"></i> Add Milestone
                         </PrimaryButton>
                     }
                 />
@@ -311,7 +295,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-stream"
                             title="No activity yet"
                             message="Add milestones, expenses, photos, or documents to see them on the timeline"
-                            action={{ label: 'Add Milestone', onClick: () => openModal() }}
+                            action={{ label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) }}
                         />
                     ) : (
                         <div className="relative">
@@ -336,7 +320,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-flag"
                             title="No milestones yet"
                             message="Add milestones to track your project progress"
-                            action={{ label: 'Add Milestone', onClick: () => openModal() }}
+                            action={{ label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) }}
                         />
                     ) : (
                         <div className="relative">
@@ -392,7 +376,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                 <div key={photo.id} className="bg-gray-900/50 border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition group">
                                     <div className="aspect-square bg-white/5 flex items-center justify-center overflow-hidden">
                                         {photo.file_path ? (
-                                            <img
+                                            <img loading="lazy" decoding="async" 
                                                 src={`/storage/${photo.file_path.split('/').map((s) => encodeURIComponent(s)).join('/')}`}
                                                 alt={photo.title}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
@@ -455,7 +439,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
             <Modal show={isModalOpen} onClose={closeModal} maxWidth="md">
                 <div className="p-8">
                     <h2 className="text-xl font-bold text-white mb-6">
-                        {editingTimeline ? 'Edit Milestone' : 'Add Milestone'}
+                        Edit Milestone
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
@@ -511,7 +495,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                         <div className="flex justify-end gap-3 pt-5 border-t border-white/10">
                             <SecondaryButton onClick={closeModal} type="button">Cancel</SecondaryButton>
                             <PrimaryButton type="submit" disabled={processing}>
-                                {processing ? 'Saving...' : editingTimeline ? 'Update Milestone' : 'Create Milestone'}
+                                {processing ? 'Saving...' : 'Update Milestone'}
                             </PrimaryButton>
                         </div>
                     </form>

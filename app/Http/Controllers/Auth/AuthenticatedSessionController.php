@@ -29,7 +29,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        $challenge = $request->authenticate();
+
+        if ($challenge) {
+            return $challenge;
+        }
 
         if ($request->requiresTwoFactor()) {
             $request->session()->put('login.id', $request->twoFactorUser()->getKey());

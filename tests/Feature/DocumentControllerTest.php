@@ -113,6 +113,20 @@ class DocumentControllerTest extends TestCase
             ->assertOk();
     }
 
+    public function test_user_cannot_view_another_users_document(): void
+    {
+        $document = Document::factory()->create([
+            'user_id' => $this->otherUser->id,
+            'project_id' => $this->project->id,
+        ]);
+
+        // show() had no authorize() call, so any signed-in user could open
+        // any document by id.
+        $this->actingAs($this->user)
+            ->get("/documents/{$document->id}")
+            ->assertForbidden();
+    }
+
     public function test_user_can_move_document_to_folder(): void
     {
         $folder = Folder::factory()->create(['project_id' => $this->project->id]);
@@ -131,6 +145,26 @@ class DocumentControllerTest extends TestCase
             'id' => $document->id,
             'folder_id' => $folder->id,
         ]);
+    }
+
+    public function test_document_update_rejects_a_folder_from_another_project(): void
+    {
+        $otherProject = Project::factory()->create(['client_id' => $this->user->id]);
+        $foreignFolder = Folder::factory()->create(['project_id' => $otherProject->id]);
+        $document = Document::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $this->project->id,
+        ]);
+
+        $this->actingAs($this->user)
+            ->from("/documents/{$document->id}/edit")
+            ->patch("/documents/{$document->id}", [
+                'folder_id' => $foreignFolder->id,
+            ])
+            ->assertRedirect("/documents/{$document->id}/edit")
+            ->assertSessionHasErrors('folder_id');
+
+        $this->assertNull($document->fresh()->folder_id);
     }
 
     public function test_user_can_create_folder(): void

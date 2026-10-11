@@ -2,13 +2,26 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $projectId = $this->input('project_id');
+
+        if (! $projectId) {
+            return true;
+        }
+
+        $project = Project::find($projectId);
+
+        if (! $project) {
+            return true;
+        }
+
+        return $this->user()->can('update', $project);
     }
 
     public function rules(): array

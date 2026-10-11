@@ -16,9 +16,11 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
+import useBulkDelete from '@/Hooks/useBulkDelete';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import { CURRENCY_OPTIONS, formatCurrency } from '@/Config/currencies';
 import DashboardHero from '@/Components/DashboardHero';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Projects({ projects = [] }) {
     const { auth } = usePage().props;
@@ -33,7 +35,7 @@ export default function Projects({ projects = [] }) {
     const [editingProject, setEditingProject] = useState(null);
     const [sharingProject, setSharingProject] = useState(null);
 
-    const { data, setData, post, patch, processing, reset, errors } = useForm({
+    const { data, setData, patch, processing, reset, errors } = useForm({
         name: '',
         description: '',
         status: 'planning',
@@ -66,12 +68,6 @@ export default function Projects({ projects = [] }) {
     }, [projects, statusFilter, searchQuery, sortBy]);
 
     // Project Modal Handlers
-    const openCreateModal = () => {
-        reset();
-        setEditingProject(null);
-        setIsModalOpen(true);
-    };
-
     const openEditModal = (project) => {
         setEditingProject(project);
         setData({
@@ -89,15 +85,10 @@ export default function Projects({ projects = [] }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (editingProject) {
-            patch(`/projects/${editingProject.id}`, {
-                onSuccess: () => { setIsModalOpen(false); reset(); toast.success('Project updated'); }
-            });
-        } else {
-            post('/projects', {
-                onSuccess: () => { setIsModalOpen(false); reset(); toast.success('Project created'); }
-            });
-        }
+        if (!editingProject) return;
+        patch(`/projects/${editingProject.id}`, {
+            onSuccess: () => { setIsModalOpen(false); reset(); toast.success('Project updated'); }
+        });
     };
 
     const handleExport = () => {
@@ -114,31 +105,13 @@ export default function Projects({ projects = [] }) {
         );
     };
 
-    const handleBulkDelete = async () => {
-        if (!confirm(`Delete ${selectedCount} project${selectedCount !== 1 ? 's' : ''}?`)) return;
-        const ids = [...selectedItems];
-        let failed = 0;
-        for (const id of ids) {
-            try {
-                await new Promise((resolve, reject) => {
-                    router.delete(`/projects/${id}`, {
-                        preserveScroll: true,
-                        onSuccess: resolve,
-                        onError: reject,
-                    });
-                });
-            } catch {
-                failed++;
-            }
-        }
-        clearSelection();
-        if (failed > 0) {
-            toast.error(`Failed to delete ${failed} project${failed !== 1 ? 's' : ''}`);
-        } else {
-            toast.success(`${ids.length} project${ids.length !== 1 ? 's' : ''} deleted`);
-        }
-        router.reload({ only: ['projects'] });
-    };
+    const handleBulkDelete = useBulkDelete({
+        selected: selectedItems,
+        noun: 'project',
+        path: (id) => `/projects/${id}`,
+        onDone: clearSelection,
+        reload: ['projects'],
+    });
 
     // Create/Edit Modal Tabs
     const projectModalTabs = [
@@ -220,7 +193,7 @@ export default function Projects({ projects = [] }) {
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project')}
+                            {processing ? 'Saving...' : 'Update Project'}
                         </PrimaryButton>
                     </div>
                 </form>
@@ -281,7 +254,7 @@ export default function Projects({ projects = [] }) {
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton type="submit" disabled={processing}>
-                            {processing ? 'Saving...' : (editingProject ? 'Update Project' : 'Create Project')}
+                            {processing ? 'Saving...' : 'Update Project'}
                         </PrimaryButton>
                     </div>
                 </form>
@@ -298,8 +271,7 @@ export default function Projects({ projects = [] }) {
                     title="Projects"
                     subtitle={`${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''}`}
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
+                        ...rootBreadcrumbs(),
                         { label: 'Projects' },
                     ]}
                 />
@@ -323,9 +295,9 @@ export default function Projects({ projects = [] }) {
                             <button onClick={handleExport} className="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 rounded-xl hover:bg-white/10 transition text-sm font-medium">
                                 <i aria-hidden="true" className="fas fa-download mr-2"></i> Export
                             </button>
-                            <PrimaryButton onClick={openCreateModal}>
-                                <i aria-hidden="true" className="fas fa-plus"></i> New Project
-                            </PrimaryButton>
+                                <PrimaryButton as="link" href={route('projects.create')}>
+                                    <i className="fas fa-plus"></i> New Project
+                                </PrimaryButton>
                         </>
                     }
                 >
@@ -371,12 +343,12 @@ export default function Projects({ projects = [] }) {
                         icon="fa-project-diagram"
                         title="No projects found"
                         message="Create your first project to get started."
-                        action={{ label: 'New Project', onClick: openCreateModal }}
+                        action={{ label: 'New Project', onClick: () => router.get(route('projects.create')) }}
                     />
                 ) : (
                     <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
                         {filteredProjects.map((project) => (
-                            <div key={project.id} className={`group bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] hover:border-[#8B0000]/30 rounded-2xl p-5 transition-all hover:shadow-xl hover:shadow-[#8B0000]/10 ${viewMode === 'list' ? 'flex items-center justify-between gap-6' : ''} ${isSelected(project.id) ? 'ring-1 ring-[#8B0000]/50' : ''}`}>
+                            <div key={project.id} className={`group panel p-5 hover:border-[#8B0000]/30 transition-all hover:shadow-xl hover:shadow-[#8B0000]/10 ${viewMode === 'list' ? 'flex items-center justify-between gap-6' : ''} ${isSelected(project.id) ? 'ring-1 ring-[#8B0000]/50' : ''}`}>
                                 <div className={viewMode === 'list' ? 'flex-1' : ''}>
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-2">
@@ -452,14 +424,14 @@ export default function Projects({ projects = [] }) {
                 onSuccess={() => setSharingProject(null)}
             />
 
-            {/* Create/Edit Project Modal (Tabbed) */}
+            {/* Edit Project Modal (Tabbed) */}
             <Modal
                 show={isModalOpen}
                 onClose={() => { setIsModalOpen(false); setEditingProject(null); reset(); }}
                 maxWidth="3xl"
                 tabs={projectModalTabs}
-                title={editingProject ? 'Edit Project' : 'New Project'}
-                subtitle={editingProject ? 'Update Project' : 'Create Project'}
+                title="Edit Project"
+                subtitle="Update Project"
             />
         </AuthenticatedLayout>
     );

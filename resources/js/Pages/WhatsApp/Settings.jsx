@@ -46,9 +46,9 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                     title="WhatsApp Integration"
                     subtitle="Meta WhatsApp Cloud API — configuration & test"
                     breadcrumbs={[
-                        { label: 'Home', href: '/home' },
-                        { label: 'Dashboard', href: '/dashboard' },
-                        { label: 'WhatsApp', href: '/whatsapp' },
+                        { label: 'Home', href: route('home') },
+                        { label: 'Dashboard', href: route('dashboard') },
+                        { label: 'WhatsApp', href: route('whatsapp') },
                         { label: 'Settings' },
                     ]}
                 />

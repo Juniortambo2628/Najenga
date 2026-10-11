@@ -8,6 +8,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::command('model:prune', ['--model' => [\App\Models\LoginCode::class]])->daily();
+
 // Weekly WhatsApp digest — Mondays at 08:00 UTC (11:00 EAT).
 Schedule::command('whatsapp:send-weekly-digest')
     ->weeklyOn(1, '08:00')

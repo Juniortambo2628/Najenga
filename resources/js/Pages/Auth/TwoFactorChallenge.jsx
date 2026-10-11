@@ -1,96 +1,140 @@
-import { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import GuestLayout from '@/Layouts/GuestLayout';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
+import GuestLayout from '@/Layouts/GuestLayout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 export default function TwoFactorChallenge() {
-    const [useRecovery, setUseRecovery] = useState(false);
+    const [mode, setMode] = useState('code');
     const { data, setData, post, processing, errors, reset } = useForm({
         code: '',
         recovery_code: '',
     });
 
-    const submit = (e) => {
-        e.preventDefault();
-        post(route('two-factor.login'), {
-            onFinish: () => reset('code', 'recovery_code'),
-        });
-    };
-
-    const toggle = () => {
-        setUseRecovery((r) => !r);
+    const switchMode = (nextMode) => {
+        setMode(nextMode);
         reset('code', 'recovery_code');
     };
 
+    const submit = (e) => {
+        e.preventDefault();
+        post(route('two-factor.login.store'));
+    };
+
     return (
-        <GuestLayout
-            stepKey="two-factor"
-            title="One more step"
-            subtitle="Two-factor authentication is on for this account."
-        >
-            <Head title="Two-Factor Authentication - Najenga" />
+        <GuestLayout>
+            <Head title="Two-Factor Authentication" />
 
-            <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white mb-1">Verify it's you</h2>
-                <p className="text-gray-400 text-sm">
-                    {useRecovery
-                        ? 'Enter one of your recovery codes.'
-                        : 'Enter the 6-digit code from your authenticator app.'}
-                </p>
-            </div>
-
-            <form onSubmit={submit} className="space-y-4">
-                {useRecovery ? (
-                    <div>
-                        <InputLabel htmlFor="recovery_code" value="Recovery code" />
-                        <TextInput
-                            id="recovery_code"
-                            name="recovery_code"
-                            type="text"
-                            autoComplete="one-time-code"
-                            value={data.recovery_code}
-                            className="mt-1 block w-full"
-                            onChange={(e) => setData('recovery_code', e.target.value)}
-                            required
-                            autoFocus
-                        />
-                        <InputError message={errors.recovery_code} className="mt-2" />
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="auth-card"
+            >
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 flex items-center justify-center">
+                        <i className="fas fa-shield-halved text-2xl text-white" />
                     </div>
-                ) : (
-                    <div>
-                        <InputLabel htmlFor="code" value="Authentication code" />
-                        <TextInput
-                            id="code"
-                            name="code"
-                            type="text"
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            maxLength={6}
-                            value={data.code}
-                            className="mt-1 block w-full"
-                            onChange={(e) => setData('code', e.target.value)}
-                            required
-                            autoFocus
-                        />
-                        <InputError message={errors.code} className="mt-2" />
-                    </div>
-                )}
+                    <h1 className="text-2xl font-bold text-white mb-2">
+                        Two-Factor Authentication
+                    </h1>
+                    <p className="text-gray-400 text-sm">
+                        {mode === 'code'
+                            ? 'Enter the 6-digit code from your authenticator app.'
+                            : 'Enter one of your recovery codes to sign in.'}
+                    </p>
+                </div>
 
-                <div className="flex items-center justify-between">
+                <form onSubmit={submit} className="space-y-6">
+                    {mode === 'code' ? (
+                        <div>
+                            <label
+                                htmlFor="code"
+                                className="block text-gray-300 text-sm font-medium mb-2"
+                            >
+                                Authentication Code
+                            </label>
+                            <input
+                                id="code"
+                                type="text"
+                                name="code"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                maxLength={6}
+                                value={data.code}
+                                className="auth-input"
+                                placeholder="6-digit code"
+                                autoFocus
+                                onChange={(e) =>
+                                    setData(
+                                        'code',
+                                        e.target.value.replace(/\D/g, '')
+                                    )
+                                }
+                            />
+                            <InputError message={errors.code} className="mt-2" />
+                        </div>
+                    ) : (
+                        <div>
+                            <label
+                                htmlFor="recovery_code"
+                                className="block text-gray-300 text-sm font-medium mb-2"
+                            >
+                                Recovery Code
+                            </label>
+                            <input
+                                id="recovery_code"
+                                type="text"
+                                name="recovery_code"
+                                autoComplete="one-time-code"
+                                value={data.recovery_code}
+                                className="auth-input"
+                                placeholder="Enter recovery code"
+                                autoFocus
+                                onChange={(e) =>
+                                    setData('recovery_code', e.target.value)
+                                }
+                            />
+                            <InputError
+                                message={errors.recovery_code}
+                                className="mt-2"
+                            />
+                        </div>
+                    )}
+
+                    <motion.button
+                        type="submit"
+                        disabled={processing}
+                        className="auth-submit"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                    >
+                        {processing ? 'Please wait...' : 'Verify & Sign In'}
+                    </motion.button>
+                </form>
+
+                <div className="text-center mt-4">
                     <button
                         type="button"
-                        onClick={toggle}
-                        className="text-sm text-gray-400 hover:text-white underline"
+                        onClick={() =>
+                            switchMode(mode === 'code' ? 'recovery' : 'code')
+                        }
+                        className="text-sm text-gray-400 hover:text-white transition"
                     >
-                        {useRecovery ? 'Use authenticator app instead' : 'Use a recovery code instead'}
+                        {mode === 'code'
+                            ? 'Use a recovery code instead'
+                            : 'Use an authentication code instead'}
                     </button>
-
-                    <PrimaryButton disabled={processing}>Continue</PrimaryButton>
                 </div>
-            </form>
+
+                <p className="text-center text-gray-400 text-sm mt-6">
+                    <Link
+                        href={route('login')}
+                        className="hover:text-white transition"
+                    >
+                        Back to sign in
+                    </Link>
+                </p>
+            </motion.div>
         </GuestLayout>
     );
 }

@@ -24,7 +24,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
         expenseTrend = 0,
     } = stats;
 
-    const cardClass = "bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl";
+    const cardClass = "panel";
 
     return (
         <AuthenticatedLayout>
@@ -36,7 +36,6 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         title={`Welcome back, ${auth.user.first_name || auth.user.name}!`}
                         subtitle="Here's what's happening with your construction projects."
                         breadcrumbs={[
-                            { label: 'Home', href: '/home' },
                             { label: 'Dashboard' },
                         ]}
                     />
@@ -47,6 +46,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                             value={`KES ${totalExpenses.toLocaleString()}`}
                             label="Total Expenses"
                             icon="fa-receipt"
+                            trend={expenseTrend}
                         />
                         <StatCard
                             value={activeProjects}
@@ -75,12 +75,12 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         </div>
                         <div className="p-6">
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-                                <QuickAction href="/expenses" icon="plus" label="Add Expense" />
-                                <QuickAction href="/photos" icon="camera" label="Upload Photo" />
-                                <QuickAction href="/projects" icon="project-diagram" label="New Project" />
-                                <QuickAction href="/documents" icon="file-upload" label="Upload Document" />
-                                <QuickAction href="/timeline" icon="calendar-plus" label="Add Timeline" />
-                                <QuickAction href="/analytics" icon="chart-bar" label="View Analytics" />
+                                <QuickAction href={route('expenses')} icon="plus" label="Add Expense" />
+                                <QuickAction href={route('photos')} icon="camera" label="Upload Photo" />
+                                <QuickAction href={route('projects')} icon="project-diagram" label="New Project" />
+                                <QuickAction href={route('documents')} icon="file-upload" label="Upload Document" />
+                                <QuickAction href={route('timeline')} icon="calendar-plus" label="Add Timeline" />
+                                <QuickAction href={route('analytics')} icon="chart-bar" label="View Analytics" />
                             </div>
                         </div>
                     </div>
@@ -123,7 +123,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                                     <i aria-hidden="true" className="fas fa-project-diagram"></i>
                                     Your Projects
                                 </h5>
-                                <Link href="/projects" className="btn-primary text-sm">
+                                <Link href={route('projects')} className="btn-primary text-sm">
                                     Manage
                                 </Link>
                             </div>
@@ -135,7 +135,9 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                                         {recentProjects.map((project) => (
                                             <div key={project.id} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                                                 <div>
-                                                    <h6 className="text-white font-medium">{project.name}</h6>
+                                                    <Link href={`/projects/${project.id}`} className="text-white font-medium hover:text-red-400 transition">
+                                                        {project.name}
+                                                    </Link>
                                                     <small className="text-gray-400">{project.location}</small>
                                                 </div>
                                                 <StatusBadge status={project.status} />

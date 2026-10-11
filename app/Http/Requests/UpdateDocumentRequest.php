@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\FolderInProject;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateDocumentRequest extends FormRequest
@@ -18,7 +19,7 @@ class UpdateDocumentRequest extends FormRequest
             'description' => 'nullable|string',
             'category' => 'sometimes|string|in:drawing,permit,invoice,ticket,other',
             'document_date' => 'nullable|date',
-            'folder_id' => 'nullable|exists:folders,id',
+            'folder_id' => ['nullable', 'exists:folders,id', new FolderInProject($this->route('document')->project_id)],
         ];
     }
 }

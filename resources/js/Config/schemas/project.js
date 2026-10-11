@@ -1,5 +1,4 @@
 import { field, group } from '@/Config/fieldBuilder';
-import { CURRENCY_OPTIONS } from '@/Config/currencies';
 
 const PROJECT_STATUSES = [
     { value: 'planning', label: 'Planning' },

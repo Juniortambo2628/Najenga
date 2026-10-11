@@ -10,11 +10,13 @@ class LoginCodeNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private readonly string $code, private readonly int $ttlMinutes)
+    public function __construct(public string $code)
     {
     }
 
     /**
+     * Get the notification's delivery channels.
+     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
@@ -24,11 +26,11 @@ class LoginCodeNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage())
-            ->subject('Your '.config('app.name').' sign-in code')
-            ->greeting('Hi '.($notifiable->first_name ?: $notifiable->username).',')
-            ->line('Use the code below to sign in. It expires in '.$this->ttlMinutes.' minutes.')
-            ->line('**'.$this->code.'**')
-            ->line('If you did not request this code, you can safely ignore this email — no one can sign in without it.');
+        return (new MailMessage)
+            ->subject('Your ' . config('app.name') . ' sign-in code')
+            ->line('Here is the one-time code to sign in to your account:')
+            ->line($this->code)
+            ->line('It expires in 10 minutes and can only be used once.')
+            ->line('If you did not request this, you can safely ignore this email.');
     }
 }

@@ -61,10 +61,10 @@ class PasskeyController extends Controller
         return back();
     }
 
-    public function destroy(Request $request, Passkey $passkey): RedirectResponse
+    public function destroy(Request $request, Passkey $ownedPasskey): RedirectResponse
     {
-        abort_unless($passkey->user_id === $request->user()->id, 403);
-        $passkey->delete();
+        abort_unless($ownedPasskey->user_id === $request->user()->id, 403);
+        $ownedPasskey->delete();
 
         return back();
     }

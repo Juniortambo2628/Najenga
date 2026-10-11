@@ -2,12 +2,27 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreBatchExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        foreach ((array) $this->input('expenses', []) as $row) {
+            $projectId = is_array($row) ? ($row['project_id'] ?? null) : null;
+
+            if (! $projectId) {
+                continue;
+            }
+
+            $project = Project::find($projectId);
+
+            if ($project && ! $this->user()->can('update', $project)) {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -27,7 +42,10 @@ class StoreBatchExpenseRequest extends FormRequest
             'expenses.*.purpose' => 'nullable|string',
             'expenses.*.time' => 'nullable|string|max:20',
             'expenses.*.currency' => 'nullable|string|max:3',
-            'expenses.*.status' => 'nullable|in:draft,pending,approved,rejected,paid',
+            'expenses.*.payment_source' => 'nullable|string|max:32',
+            'expenses.*.confidence' => 'nullable|numeric|between:0,1',
+            'expenses.*.source_channel' => 'nullable|string|max:32',
+            'expenses.*.status' => 'nullable|in:draft,pending,confirmed,approved,rejected,paid',
         ];
     }
 }

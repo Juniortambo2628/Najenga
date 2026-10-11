@@ -29,7 +29,7 @@ export default function HeroSection({ auth }) {
             <div className="absolute inset-0 overflow-hidden">
                 <motion.div className="absolute inset-0 -inset-x-[5%] -inset-y-[10%]" style={{ y: bgY }}>
                     <img
-                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.jpg"
+                        src="/Najenga-backgrounds/pexels-curtis-adams-1694007-7027840.webp"
                         alt="Construction site"
                         className="w-full h-full object-cover"
                     />
@@ -46,9 +46,9 @@ export default function HeroSection({ auth }) {
                 }`}
             >
                 <div className="container mx-auto px-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3">
+                    <Link href={route('home')} className="flex items-center gap-3">
                         <motion.img
-                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.png"
+                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp"
                             alt="Najenga"
                             className="h-16"
                             animate={{ scale: scrolled ? 0.85 : 1 }}
@@ -64,15 +64,15 @@ export default function HeroSection({ auth }) {
 
                     <div className="flex items-center gap-4">
                         {auth.user ? (
-                            <Link href="/dashboard" className="glass-nav-btn">
+                            <Link href={route('dashboard')} className="glass-nav-btn">
                                 Dashboard
                             </Link>
                         ) : (
                             <>
-                                <Link href="/login" className="hidden sm:inline-flex text-white/80 hover:text-white transition text-sm font-medium">
+                                <Link href={route('login')} className="hidden sm:inline-flex text-white/80 hover:text-white transition text-sm font-medium">
                                     Login
                                 </Link>
-                                <Link href="/register" className="glass-nav-btn">
+                                <Link href={route('register')} className="glass-nav-btn">
                                     Get Started
                                     <i aria-hidden="true" className="fas fa-arrow-right text-xs ml-1"></i>
                                 </Link>
@@ -131,10 +131,10 @@ export default function HeroSection({ auth }) {
                                 Trusted by construction professionals across Kenya to deliver projects on time and on budget.
                             </p>
                             <div className="flex flex-wrap gap-4">
-                                <GlassButton href="/register" variant="brand">
+                                <GlassButton href={route('register')} variant="brand">
                                     Get Started
                                 </GlassButton>
-                                <GlassButton href="/login" variant="ghost" icon="arrow-right">
+                                <GlassButton href={route('login')} variant="ghost" icon="arrow-right">
                                     How it works
                                 </GlassButton>
                             </div>
