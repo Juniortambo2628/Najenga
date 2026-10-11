@@ -35,41 +35,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(\App\Models\ProjectTimeline::class, \App\Policies\TimelinePolicy::class);
         Gate::policy(\App\Models\Folder::class, \App\Policies\FolderPolicy::class);
 
-        // Listed rather than left to withEvents() auto-discovery: that keys off
-        // a single type-hinted parameter on handle(), and LogAuthentication
-        // serves four distinct events.
+        // Event auto-discovery is disabled in bootstrap/app.php, so these four
+        // lines are the only registration path for LogAuthentication. Discovery
+        // would also match its union type-hinted handle() and register it a
+        // second time, double-firing every auth notification.
         Event::listen(\Illuminate\Auth\Events\Login::class, \App\Listeners\LogAuthentication::class);
         Event::listen(\Illuminate\Auth\Events\Logout::class, \App\Listeners\LogAuthentication::class);
         Event::listen(\Illuminate\Auth\Events\Registered::class, \App\Listeners\LogAuthentication::class);
         Event::listen(\Illuminate\Auth\Events\Failed::class, \App\Listeners\LogAuthentication::class);
 
-        $this->logListenerState('boot');
-
         $this->app->singleton(\App\Services\ReceiptParser::class);
-    }
-
-    private function logListenerState(string $when): void
-    {
-        try {
-            $ev = app('events');
-            $exactProp = new \ReflectionProperty($ev, 'listeners');
-            $exactProp->setAccessible(true);
-            $entries = $exactProp->getValue($ev)[\Illuminate\Auth\Events\Login::class] ?? [];
-
-            $wildProp = new \ReflectionProperty($ev, 'wildcards');
-            $wildProp->setAccessible(true);
-            $wild = array_keys($wildProp->getValue($ev));
-
-            fwrite(STDERR, json_encode([
-                'ci-reg',
-                'when' => $when,
-                'entries' => $entries,
-                'wild' => $wild,
-                'app' => spl_object_id(app()),
-                'disp' => spl_object_id($ev),
-            ], JSON_UNESCAPED_SLASHES) . "\n");
-        } catch (\Throwable $e) {
-            fwrite(STDERR, 'ci-reg-error: ' . $e->getMessage() . "\n");
-        }
     }
 }

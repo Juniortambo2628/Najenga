@@ -44,10 +44,10 @@ class LogAuthentication
         }
 
         ActivityLogger::logFor($event->user, 'auth.login', 'Signed in');
-        $this->notifyNewContext($event->user, $event);
+        $this->notifyNewContext($event->user);
     }
 
-    private function notifyNewContext($user, $event): void
+    private function notifyNewContext($user): void
     {
         $context = [
             'ip' => request()->ip(),
@@ -56,31 +56,9 @@ class LogAuthentication
 
         $isKnownContext = $user->last_login_context === $context;
 
-        $affected = DB::table('users')->where('id', $user->id)->update([
+        DB::table('users')->where('id', $user->id)->update([
             'last_login_context' => json_encode($context),
         ]);
-
-        $GLOBALS['__la_ev'] = ($GLOBALS['__la_ev'] ?? 0) + 1;
-        $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 18);
-        $trace = '';
-        foreach ($bt as $f) {
-            $trace .= ($f['class'] ?? '') . ($f['type'] ?? '') . ($f['function'] ?? '') . '@' . ($f['line'] ?? '?') . ' < ';
-        }
-        $ev = app('events');
-        $exactProp = new \ReflectionProperty($ev, 'listeners');
-        $exactProp->setAccessible(true);
-        $entries = $exactProp->getValue($ev)[Login::class] ?? [];
-        fwrite(STDERR, json_encode([
-            'ci-debug',
-            'n' => $GLOBALS['__la_ev'],
-            'event' => spl_object_id($event),
-            'uid' => $user->id,
-            'known' => $isKnownContext,
-            'affected' => $affected,
-            'entries' => $entries,
-            'app' => spl_object_id(app()),
-            'disp' => spl_object_id($ev),
-        ], JSON_UNESCAPED_SLASHES) . "\n");
 
         if ($isKnownContext || !$user->login_notifications_enabled || !$user->email) {
             return;
