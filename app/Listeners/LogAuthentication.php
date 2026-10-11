@@ -60,14 +60,15 @@ class LogAuthentication
             'last_login_context' => json_encode($context),
         ]);
 
-        dump('ci-debug', [
+        fwrite(STDERR, json_encode([
+            'ci-debug',
             'ip' => request()->ip(),
             'ua' => (string) request()->userAgent(),
             'raw_stored' => $user->getAttributes()['last_login_context'] ?? 'NO_KEY',
             'context' => $context,
             'known' => $isKnownContext,
             'affected' => $affected,
-        ]);
+        ], JSON_UNESCAPED_SLASHES) . "\n");
 
         if ($isKnownContext || !$user->login_notifications_enabled || !$user->email) {
             return;
