@@ -56,8 +56,17 @@ class LogAuthentication
 
         $isKnownContext = $user->last_login_context === $context;
 
-        DB::table('users')->where('id', $user->id)->update([
+        $affected = DB::table('users')->where('id', $user->id)->update([
             'last_login_context' => json_encode($context),
+        ]);
+
+        dump('ci-debug', [
+            'ip' => request()->ip(),
+            'ua' => (string) request()->userAgent(),
+            'raw_stored' => $user->getAttributes()['last_login_context'] ?? 'NO_KEY',
+            'context' => $context,
+            'known' => $isKnownContext,
+            'affected' => $affected,
         ]);
 
         if ($isKnownContext || !$user->login_notifications_enabled || !$user->email) {
