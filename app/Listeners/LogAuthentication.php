@@ -66,6 +66,10 @@ class LogAuthentication
         foreach ($bt as $f) {
             $trace .= ($f['class'] ?? '') . ($f['type'] ?? '') . ($f['function'] ?? '') . '@' . ($f['line'] ?? '?') . ' < ';
         }
+        $ev = app('events');
+        $exactProp = new \ReflectionProperty($ev, 'listeners');
+        $exactProp->setAccessible(true);
+        $exact = count($exactProp->getValue($ev)[Login::class] ?? []);
         fwrite(STDERR, json_encode([
             'ci-debug',
             'n' => $GLOBALS['__la_ev'],
@@ -74,6 +78,9 @@ class LogAuthentication
             'token' => $user->remember_token,
             'known' => $isKnownContext,
             'affected' => $affected,
+            'exact' => $exact,
+            'app' => spl_object_id(app()),
+            'disp' => spl_object_id($ev),
             'trace' => $trace,
         ], JSON_UNESCAPED_SLASHES) . "\n");
 
