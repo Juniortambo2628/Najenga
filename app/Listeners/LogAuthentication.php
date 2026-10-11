@@ -62,9 +62,10 @@ class LogAuthentication
 
         fwrite(STDERR, json_encode([
             'ci-debug',
-            'ip' => request()->ip(),
-            'ua' => (string) request()->userAgent(),
-            'raw_stored' => $user->getAttributes()['last_login_context'] ?? 'NO_KEY',
+            'uid' => $user->id,
+            'conn' => $user->getConnectionName(),
+            'attrs' => $user->getAttributes(),
+            'db_value' => DB::table('users')->where('id', $user->id)->value('last_login_context'),
             'context' => $context,
             'known' => $isKnownContext,
             'affected' => $affected,
