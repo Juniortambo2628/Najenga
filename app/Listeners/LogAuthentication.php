@@ -69,19 +69,17 @@ class LogAuthentication
         $ev = app('events');
         $exactProp = new \ReflectionProperty($ev, 'listeners');
         $exactProp->setAccessible(true);
-        $exact = count($exactProp->getValue($ev)[Login::class] ?? []);
+        $entries = $exactProp->getValue($ev)[Login::class] ?? [];
         fwrite(STDERR, json_encode([
             'ci-debug',
             'n' => $GLOBALS['__la_ev'],
             'event' => spl_object_id($event),
             'uid' => $user->id,
-            'token' => $user->remember_token,
             'known' => $isKnownContext,
             'affected' => $affected,
-            'exact' => $exact,
+            'entries' => $entries,
             'app' => spl_object_id(app()),
             'disp' => spl_object_id($ev),
-            'trace' => $trace,
         ], JSON_UNESCAPED_SLASHES) . "\n");
 
         if ($isKnownContext || !$user->login_notifications_enabled || !$user->email) {

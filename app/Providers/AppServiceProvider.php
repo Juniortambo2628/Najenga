@@ -54,35 +54,19 @@ class AppServiceProvider extends ServiceProvider
             $ev = app('events');
             $exactProp = new \ReflectionProperty($ev, 'listeners');
             $exactProp->setAccessible(true);
-            $exact = count($exactProp->getValue($ev)[\Illuminate\Auth\Events\Login::class] ?? []);
+            $entries = $exactProp->getValue($ev)[\Illuminate\Auth\Events\Login::class] ?? [];
 
             $wildProp = new \ReflectionProperty($ev, 'wildcards');
             $wildProp->setAccessible(true);
-            $wild = 0;
-            foreach (array_keys($wildProp->getValue($ev)) as $key) {
-                if (\Illuminate\Support\Str::is($key, \Illuminate\Auth\Events\Login::class)) {
-                    $wild++;
-                }
-            }
-
-            if ($exact === 1 && $wild === 0) {
-                return;
-            }
-
-            $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 14);
-            $trace = '';
-            foreach ($bt as $f) {
-                $trace .= ($f['class'] ?? '') . ($f['type'] ?? '') . ($f['function'] ?? '') . '@' . ($f['line'] ?? '?') . ' < ';
-            }
+            $wild = array_keys($wildProp->getValue($ev));
 
             fwrite(STDERR, json_encode([
                 'ci-reg',
                 'when' => $when,
-                'exact' => $exact,
+                'entries' => $entries,
                 'wild' => $wild,
                 'app' => spl_object_id(app()),
                 'disp' => spl_object_id($ev),
-                'trace' => $trace,
             ], JSON_UNESCAPED_SLASHES) . "\n");
         } catch (\Throwable $e) {
             fwrite(STDERR, 'ci-reg-error: ' . $e->getMessage() . "\n");
