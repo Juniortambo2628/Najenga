@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\ToggleLoginNotificationsRequest;
 use App\Http\Requests\VerifyWhatsAppCodeRequest;
+use App\Services\TwoFactorAuthenticator;
 use App\Services\WhatsAppMessageService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -20,19 +21,54 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request, TwoFactorAuthenticator $totp): Response
     {
         $user = $request->user();
         $digits = preg_replace('/[^\d]/', '', (string) ($user->whatsapp_wa_id ?? $user->phone));
+
+        $twoFactor = [
+            'enabled' => $user->hasEnabledTwoFactorAuthentication(),
+            'recovery_codes' => $user->hasEnabledTwoFactorAuthentication()
+                ? $user->recoveryCodes()
+                : [],
+        ];
+
+        // Setup in progress: secret written but not yet confirmed - show the
+        // QR + confirmation input.
+        if (! $user->hasEnabledTwoFactorAuthentication() && ! is_null($user->two_factor_secret)) {
+            $secret = decrypt($user->two_factor_secret);
+            $otpauth = $totp->otpauthUrl($user, $secret);
+            $twoFactor['pending'] = [
+                'secret' => $secret,
+                'otpauth_url' => $otpauth,
+                'qr_svg' => $totp->qrCodeSvg($otpauth),
+            ];
+        }
+
+        $passkeys = \App\Models\Passkey::where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'last_used_at', 'created_at'])
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'last_used_at' => $p->last_used_at?->toIso8601String(),
+                'created_at' => $p->created_at?->toIso8601String(),
+            ]);
 
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
             'passkeysCount' => $user->passkeys()->count(),
+            'passkeys' => $passkeys,
             'whatsapp' => [
                 'phone' => $digits !== '' ? '+' . $digits : null,
                 'verified' => ! is_null($user->whatsapp_verified_at),
+                'wa_id' => $user->whatsapp_wa_id,
+                'verified_at' => $user->whatsapp_verified_at?->toIso8601String(),
+                'configured' => (bool) config('services.meta.whatsapp_access_token')
+                    && (bool) config('services.meta.whatsapp_phone_number_id'),
             ],
+            'twoFactor' => $twoFactor,
         ]);
     }
 

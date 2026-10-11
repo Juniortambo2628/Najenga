@@ -76,14 +76,14 @@ export default function Index({ users }) {
                 <form onSubmit={handleUpdate} className="space-y-5">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <InputLabel value="First Name" />
-                            <TextInput value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-                            <InputError message={errors.first_name} />
+                            <InputLabel htmlFor="users-first-name-2" value="First Name" />
+                            <TextInput id="users-first-name-2" aria-invalid={!!errors.first_name} aria-describedby={errors.first_name ? 'users-first-name-2-error' : undefined} value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
+                            <InputError id="users-first-name-2-error" message={errors.first_name} />
                         </div>
                         <div>
-                            <InputLabel value="Last Name" />
-                            <TextInput value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-                            <InputError message={errors.last_name} />
+                            <InputLabel htmlFor="users-last-name-2" value="Last Name" />
+                            <TextInput id="users-last-name-2" aria-invalid={!!errors.last_name} aria-describedby={errors.last_name ? 'users-last-name-2-error' : undefined} value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
+                            <InputError id="users-last-name-2-error" message={errors.last_name} />
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
@@ -99,8 +99,9 @@ export default function Index({ users }) {
             content: (
                 <form onSubmit={handleUpdate} className="space-y-5">
                     <div>
-                        <InputLabel value="Role" />
+                        <InputLabel htmlFor="users-role-2" value="Role" />
                         <SelectInput
+                            id="users-role-2"
                             value={form.role}
                             onChange={(e) => setForm({ ...form, role: e.target.value })}
                         >
@@ -110,8 +111,9 @@ export default function Index({ users }) {
                         </SelectInput>
                     </div>
                     <div>
-                        <InputLabel value="Status" />
+                        <InputLabel htmlFor="users-status" value="Status" />
                         <SelectInput
+                            id="users-status"
                             value={form.status}
                             onChange={(e) => setForm({ ...form, status: e.target.value })}
                         >
@@ -157,7 +159,7 @@ export default function Index({ users }) {
                             onDeselectAll={deselectAll}
                             actions={
                                 <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                    <i className="fas fa-trash"></i>
+                                    <i aria-hidden="true" className="fas fa-trash"></i>
                                 </button>
                             }
                         />
@@ -177,8 +179,9 @@ export default function Index({ users }) {
                                     <input
                                         type="checkbox"
                                         checked={selectedCount === users.length && users.length > 0}
+                                        aria-label="Select all users"
                                         onChange={() => selectedCount === users.length ? deselectAll() : selectAll(users.map(u => u.id))}
-                                        className="rounded border-white/20 bg-white/5 text-[#8B0000] focus:ring-[#8B0000]"
+                                        className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                     />
                                 </th>
                                 <th className="px-6 py-4 text-gray-400 text-sm font-medium">User</th>
@@ -197,7 +200,8 @@ export default function Index({ users }) {
                                             type="checkbox"
                                             checked={isSelected(user.id)}
                                             onChange={() => toggleSelection(user.id)}
-                                            className="rounded border-white/20 bg-white/5 text-[#8B0000] focus:ring-[#8B0000]"
+                                            aria-label={`Select ${user.name}`}
+                                            className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                         />
                                     </td>
                                     <td className="px-6 py-4">
@@ -227,11 +231,11 @@ export default function Index({ users }) {
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button onClick={() => handleEdit(user)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
-                                                <i className="fas fa-edit"></i>
+                                            <button onClick={() => handleEdit(user)} aria-label={`Edit ${user.name}`} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                                                <i aria-hidden="true" className="fas fa-edit"></i>
                                             </button>
-                                            <button onClick={() => handleDelete(user)} className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
-                                                <i className="fas fa-trash"></i>
+                                            <button onClick={() => handleDelete(user)} aria-label={`Delete ${user.name}`} className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                                                <i aria-hidden="true" className="fas fa-trash"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -239,7 +243,7 @@ export default function Index({ users }) {
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
                                         No users found
                                     </td>
                                 </tr>

@@ -43,8 +43,8 @@ function AnnotationPopup() {
         <div className="absolute top-4 right-4 bg-white/95 backdrop-blur shadow-2xl rounded-xl p-4 w-72 border border-gray-100/20 z-50 animate-in fade-in slide-in-from-top-4 duration-200">
             <div className="flex justify-between items-center mb-3">
                 <h3 className="font-bold text-sm text-gray-900">Annotation Details</h3>
-                <button onClick={() => anno.cancelSelected ? anno.cancelSelected() : anno.setSelected(undefined)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i className="fas fa-times"></i>
+                <button onClick={() => anno.cancelSelected ? anno.cancelSelected() : anno.setSelected(undefined)} aria-label="Close" className="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i aria-hidden="true" className="fas fa-times"></i>
                 </button>
             </div>
             
@@ -52,6 +52,7 @@ function AnnotationPopup() {
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[#8B0000] focus:border-transparent outline-none resize-none mb-4 transition-all placeholder:text-gray-400"
                 rows={3}
                 placeholder="Add a label or comment..."
+                aria-label="Annotation label or comment"
                 value={body}
                 onChange={e => setBody(e.target.value)}
                 autoFocus
@@ -62,7 +63,7 @@ function AnnotationPopup() {
                     onClick={() => anno.removeAnnotation(selected[0])}
                     className="text-xs font-semibold text-red-500 hover:text-red-700 flex items-center gap-1 px-2 py-1.5 rounded hover:bg-red-50 transition-colors"
                 >
-                    <i className="fas fa-trash-alt"></i> Delete
+                    <i aria-hidden="true" className="fas fa-trash-alt"></i> Delete
                 </button>
                 <button 
                     onClick={onSave}
@@ -93,7 +94,7 @@ function AnnotationToolbar() {
                 className={`p-2 rounded transition-colors ${tool === 'rectangle' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
                 title="Rectangle Tool"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 </svg>
             </button>
@@ -102,7 +103,7 @@ function AnnotationToolbar() {
                 className={`p-2 rounded transition-colors ${tool === 'polygon' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
                 title="Polygon Tool"
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2l-8.66 5v10l8.66 5 8.66-5v-10z"></path>
                 </svg>
             </button>
@@ -116,21 +117,29 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
     const isSyncing = useRef(false);
     const imgRef = useRef(null);
 
-    // Check if image is already loaded (cached) to trigger onLoad
+    // Check if image is already loaded (cached) to trigger onLoad. An image
+    // that 404s also flips `complete` to true but with natural{Width,Height}
+    // = 0, so require real dimensions before we call onLoad — otherwise the
+    // annotator initializes against a phantom image and every overlay draws
+    // at Infinity.
     useEffect(() => {
-        if (imgRef.current && imgRef.current.complete) {
+        const img = imgRef.current;
+        if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
             onLoad();
         }
     }, [onLoad]);
 
-    // Helper to get geometry in percent
+    // Helper to get geometry in percent. Guards against a not-yet-loaded or
+    // 404'd image (natural{Width,Height} = 0) which would otherwise divide
+    // by zero and hand Infinity to <rect>/<circle>, producing the noisy
+    // "Expected length, Infinity" SVG errors and invisible overlays.
     const getGeometry = (annotation) => {
         const img = imgRef.current;
         if (!img) return { x: 0, y: 0, width: 0, height: 0 };
-        
+
         const selector = annotation.target.selector;
         const value = selector.value || '';
-        
+
         if (value.includes('percent:')) {
             const match = value.match(/percent:([\d.]+),([\d.]+),([\d.]+),([\d.]+)/);
             if (match) return {
@@ -143,15 +152,18 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
              // Assume pixels (xywh=x,y,w,h or xywh=pixel:x,y,w,h)
              const match = value.match(/xywh=(?:pixel:)?([\d.]+),([\d.]+),([\d.]+),([\d.]+)/);
              if (match) {
+                 const nw = img.naturalWidth;
+                 const nh = img.naturalHeight;
+                 if (!nw || !nh) return { x: 0, y: 0, width: 0, height: 0 };
                  const x = parseFloat(match[1]);
                  const y = parseFloat(match[2]);
                  const w = parseFloat(match[3]);
                  const h = parseFloat(match[4]);
                  return {
-                     x: (x / img.naturalWidth) * 100,
-                     y: (y / img.naturalHeight) * 100,
-                     width: (w / img.naturalWidth) * 100,
-                     height: (h / img.naturalHeight) * 100
+                     x: (x / nw) * 100,
+                     y: (y / nh) * 100,
+                     width: (w / nw) * 100,
+                     height: (h / nh) * 100
                  };
              }
         }
@@ -292,7 +304,14 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
                 src={imageUrl}
                 alt={resource.title || 'Annotatable Image'}
                 className="w-full h-full object-contain"
-                onLoad={onLoad}
+                onLoad={(e) => {
+                    // A 404 also fires onLoad in some browsers via the
+                    // error-image placeholder path; ignore unless we have
+                    // real pixels to annotate over.
+                    if (e.currentTarget.naturalWidth > 0 && e.currentTarget.naturalHeight > 0) {
+                        onLoad();
+                    }
+                }}
             />
         </AnnotoriousImageAnnotator>
     );    
@@ -400,7 +419,7 @@ export default function ImageAnnotator({ resource, type }) {
                 className={`absolute inset-0 flex items-center justify-center text-white z-40 bg-black/60 pointer-events-none transition-opacity duration-300 ${imageLoaded ? 'opacity-0' : 'opacity-100'}`}
             >
                 <div className="flex flex-col items-center gap-4">
-                    <i className="fas fa-spinner fa-spin text-3xl"></i>
+                    <i aria-hidden="true" className="fas fa-spinner fa-spin text-3xl"></i>
                     <span className="text-sm font-medium">Initializing Annotator...</span>
                 </div>
             </div>

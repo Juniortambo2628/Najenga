@@ -125,7 +125,7 @@ export default function Register() {
                         onChange={(e) => setData('password', e.target.value)}
                         required
                     />
-                    <p className="text-gray-500 text-xs mt-1">Must be at least 8 characters.</p>
+                    <p className="text-gray-400 text-xs mt-1">Must be at least 8 characters.</p>
                     <InputError message={errors.password} className="mt-1" />
                 </div>
 

@@ -22,7 +22,7 @@ export default function Show({ user }) {
                             href={route('users.edit', user.id)}
                             className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
                         >
-                            <i className="fas fa-edit mr-2"></i>Edit
+                            <i aria-hidden="true" className="fas fa-edit mr-2"></i>Edit
                         </Link>
                     }
                 />
@@ -32,23 +32,23 @@ export default function Show({ user }) {
                         <h2 className="text-lg font-semibold text-white mb-4">Profile Information</h2>
                         <dl className="space-y-3 text-sm">
                             <div className="flex justify-between">
-                                <dt className="text-gray-500">Email</dt>
+                                <dt className="text-gray-400">Email</dt>
                                 <dd className="text-gray-300">{user.email}</dd>
                             </div>
                             <div className="flex justify-between">
-                                <dt className="text-gray-500">Username</dt>
+                                <dt className="text-gray-400">Username</dt>
                                 <dd className="text-gray-300">{user.username}</dd>
                             </div>
                             <div className="flex justify-between">
-                                <dt className="text-gray-500">Phone</dt>
+                                <dt className="text-gray-400">Phone</dt>
                                 <dd className="text-gray-300">{user.phone ?? 'N/A'}</dd>
                             </div>
                             <div className="flex justify-between">
-                                <dt className="text-gray-500">Role</dt>
+                                <dt className="text-gray-400">Role</dt>
                                 <dd><StatusBadge status={user.role} /></dd>
                             </div>
                             <div className="flex justify-between">
-                                <dt className="text-gray-500">Status</dt>
+                                <dt className="text-gray-400">Status</dt>
                                 <dd><StatusBadge status={user.status} /></dd>
                             </div>
                         </dl>

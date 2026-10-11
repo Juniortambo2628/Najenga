@@ -6,6 +6,8 @@ use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\LoginCodeController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasskeyAuthenticationController;
+use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -22,6 +24,24 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('login/code', [LoginCodeController::class, 'create'])
+        ->name('login.code');
+
+    Route::post('login/code', [LoginCodeController::class, 'request'])
+        ->name('login.code.request');
+
+    Route::post('login/code/verify', [LoginCodeController::class, 'verify'])
+        ->name('login.code.verify');
+
+    Route::get('login/passkey', [PasskeyAuthenticationController::class, 'create'])
+        ->name('login.passkey');
+
+    Route::post('login/passkey/options', [PasskeyAuthenticationController::class, 'options'])
+        ->name('login.passkey.options');
+
+    Route::post('login/passkey', [PasskeyAuthenticationController::class, 'login'])
+        ->name('login.passkey.verify');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
@@ -62,6 +82,15 @@ Route::middleware('auth')->group(function () {
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+
+    Route::post('passkeys/options', [PasskeyController::class, 'options'])
+        ->name('passkeys.options');
+
+    Route::post('passkeys', [PasskeyController::class, 'register'])
+        ->name('passkeys.register');
+
+    Route::delete('passkeys/{ownedPasskey}', [PasskeyController::class, 'destroy'])
+        ->name('passkeys.destroy');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');

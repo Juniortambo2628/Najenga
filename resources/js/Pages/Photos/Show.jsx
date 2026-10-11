@@ -21,14 +21,14 @@ export default function Show({ photo }) {
                         <div className="flex gap-3">
                             {photo.is_featured && (
                                 <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                    <i className="fas fa-star mr-1"></i>Featured
+                                    <i aria-hidden="true" className="fas fa-star mr-1"></i>Featured
                                 </span>
                             )}
                             <Link
                                 href={route('photos.edit', photo.id)}
                                 className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
                             >
-                                <i className="fas fa-edit mr-2"></i> Edit
+                                <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                             </Link>
                         </div>
                     }
@@ -47,8 +47,8 @@ export default function Show({ photo }) {
                                     />
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center gap-3 py-12 text-gray-500">
-                                    <i className="fas fa-image text-3xl text-gray-600"></i>
+                                <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
+                                    <i aria-hidden="true" className="fas fa-image text-3xl text-gray-400"></i>
                                     <p className="text-sm">No image available</p>
                                 </div>
                             )}
@@ -67,19 +67,19 @@ export default function Show({ photo }) {
                             <h3 className="text-lg font-bold text-white mb-4">Details</h3>
                             <dl className="space-y-4 text-sm">
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Category</dt>
+                                    <dt className="text-gray-400">Category</dt>
                                     <dd className="text-gray-300">{photo.category || '—'}</dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Location</dt>
+                                    <dt className="text-gray-400">Location</dt>
                                     <dd className="text-gray-300">{photo.location || '—'}</dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Date</dt>
+                                    <dt className="text-gray-400">Date</dt>
                                     <dd className="text-gray-300 font-mono">{photo.photo_date || '—'}</dd>
                                 </div>
                                 <div className="flex justify-between">
-                                    <dt className="text-gray-500">Created</dt>
+                                    <dt className="text-gray-400">Created</dt>
                                     <dd className="text-gray-300">{photo.created_at ? new Date(photo.created_at).toLocaleDateString() : '—'}</dd>
                                 </div>
                             </dl>
@@ -92,13 +92,13 @@ export default function Show({ photo }) {
                                     href={route('photos.edit', photo.id)}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-edit text-[#DC143C]"></i> Edit Photo
+                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Photo
                                 </Link>
                                 <Link
                                     href={route('photos')}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
                                 >
-                                    <i className="fas fa-list text-[#DC143C]"></i> Back to Photos
+                                    <i aria-hidden="true" className="fas fa-list text-[#DC143C]"></i> Back to Photos
                                 </Link>
                             </div>
                         </section>

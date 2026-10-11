@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -71,6 +73,16 @@ class LoginRequest extends FormRequest
         Auth::guard('web')->login($user, $this->boolean('remember'));
 
         return null;
+    }
+
+    public function requiresTwoFactor(): bool
+    {
+        return $this->attributes->has('two_factor_user');
+    }
+
+    public function twoFactorUser(): User
+    {
+        return $this->attributes->get('two_factor_user');
     }
 
     /**

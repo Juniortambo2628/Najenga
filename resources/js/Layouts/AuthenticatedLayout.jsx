@@ -64,6 +64,17 @@ export default function AuthenticatedLayout({ children }) {
         setSearchOpen(false);
     }, []);
 
+    // Escape closes whichever popover is open (WCAG 2.1.1 / 2.1.2)
+    useEffect(() => {
+        const onKeyDown = (e) => {
+            if (e.key !== 'Escape') return;
+            setUserDropdownOpen(false);
+            setSearchOpen(false);
+        };
+        document.addEventListener('keydown', onKeyDown);
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, []);
+
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (searchRef.current && !searchRef.current.contains(e.target)) {
@@ -82,6 +93,7 @@ export default function AuthenticatedLayout({ children }) {
             <Toaster position="top-right" />
             <FlashToast />
 
+            <a href="#main-content" className="skip-link">Skip to main content</a>
             <div className="min-h-screen bg-black flex">
                 {/* Sidebar Overlay for Mobile */}
                 {sidebarOpen && (
@@ -108,7 +120,7 @@ export default function AuthenticatedLayout({ children }) {
                     </Link>
 
                     {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5 custom-scrollbar">
+                    <nav aria-label="Main" className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5 custom-scrollbar">
                         {navItems.map((item) => {
                             const isActive = url === item.href || url.startsWith(item.href + '/');
                             return (
@@ -119,13 +131,15 @@ export default function AuthenticatedLayout({ children }) {
                                         flex items-center px-3 py-2 rounded-lg transition-all text-sm
                                         ${isActive
                                             ? 'bg-white text-[#8B0000] shadow-lg font-bold'
-                                            : 'text-white/80 hover:bg-white/10 hover:text-white'
+                                            : 'text-white hover:bg-white/10'
                                         }
                                         ${sidebarOpen ? 'gap-2.5' : 'justify-center'}
                                     `}
-                                    title={!sidebarOpen ? item.name : ''}
+                                    title={!sidebarOpen ? item.name : undefined}
+                                    aria-label={!sidebarOpen ? item.name : undefined}
+                                    aria-current={isActive ? 'page' : undefined}
                                 >
-                                    <i className={`fas ${item.icon} w-5 text-center`}></i>
+                                    <i aria-hidden="true" className={`fas ${item.icon} w-5 text-center`}></i>
                                     <span className={`transition-opacity duration-300 whitespace-nowrap overflow-hidden ${sidebarOpen ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 hidden'}`}>
                                         {item.name}
                                     </span>
@@ -143,9 +157,11 @@ export default function AuthenticatedLayout({ children }) {
                         <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
+                                aria-label={sidebarOpen ? 'Collapse navigation' : 'Expand navigation'}
+                                aria-expanded={sidebarOpen}
                                 className="p-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition"
                             >
-                                <i className="fas fa-bars text-lg"></i>
+                                <i aria-hidden="true" className="fas fa-bars text-lg"></i>
                             </button>
                             <span className="text-white font-semibold hidden md:block">{heading}</span>
                         </div>
@@ -154,15 +170,16 @@ export default function AuthenticatedLayout({ children }) {
                         <div className="flex items-center gap-4">
                             {/* Live Search */}
                             <div className="relative" ref={searchRef}>
-                                <form onSubmit={handleSearchSubmit} className="relative">
+                                <form onSubmit={handleSearchSubmit} className="relative" role="search">
                                     <div className="flex items-center bg-white/5 border border-white/10 rounded-lg">
-                                        <i className="fas fa-search text-gray-400 text-xs pl-3"></i>
+                                        <i aria-hidden="true" className="fas fa-search text-gray-400 text-xs pl-3"></i>
                                         <input
                                             type="text"
+                                            aria-label="Search projects, expenses, photos and documents"
                                             value={searchQuery}
                                             onChange={handleSearchChange}
                                             placeholder="Search..."
-                                            className="bg-transparent text-white text-sm placeholder-gray-500 outline-none py-1.5 px-3 w-48 focus:w-64 transition-all duration-300"
+                                            className="bg-transparent text-white text-sm placeholder-gray-400 outline-none py-1.5 px-3 w-48 focus:w-64 transition-all duration-300"
                                         />
                                     </div>
                                 </form>
@@ -179,12 +196,12 @@ export default function AuthenticatedLayout({ children }) {
                                                     <img loading="lazy" decoding="async"  src={r.thumb_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
                                                 ) : (
                                                     <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
-                                                        <i className={`fas ${r.type === 'document' ? 'fa-file-alt' : r.type === 'photo' ? 'fa-image' : 'fa-receipt'} text-gray-400 text-xs`}></i>
+                                                        <i aria-hidden="true" className={`fas ${r.type === 'document' ? 'fa-file-alt' : r.type === 'photo' ? 'fa-image' : 'fa-receipt'} text-gray-400 text-xs`}></i>
                                                     </div>
                                                 )}
                                                 <div className="min-w-0">
                                                     <p className="text-white text-sm truncate">{r.title}</p>
-                                                    <p className="text-gray-500 text-xs truncate">{r.type}{r.subtitle ? ` - ${r.subtitle}` : ''}</p>
+                                                    <p className="text-gray-400 text-xs truncate">{r.type}{r.subtitle ? ` - ${r.subtitle}` : ''}</p>
                                                 </div>
                                             </button>
                                         ))}
@@ -199,7 +216,7 @@ export default function AuthenticatedLayout({ children }) {
                                 )}
                                 {searchOpen && searchResults.length === 0 && searchQuery.length >= 2 && (
                                     <div className="absolute right-0 mt-1 w-80 bg-gray-900 border border-white/10 rounded-xl shadow-2xl z-50 p-3 text-center">
-                                        <p className="text-gray-500 text-xs">No results found</p>
+                                        <p className="text-gray-400 text-xs">No results found</p>
                                     </div>
                                 )}
                             </div>
@@ -211,13 +228,15 @@ export default function AuthenticatedLayout({ children }) {
                             <div className="relative">
                                 <button 
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                                    aria-expanded={userDropdownOpen}
+                                    aria-label={`Account menu for ${user.first_name || user.name || 'user'}`}
                                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 transition"
                                 >
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center">
-                                        <i className="fas fa-user text-white text-sm"></i>
+                                        <i aria-hidden="true" className="fas fa-user text-white text-sm"></i>
                                     </div>
                                     <span className="hidden lg:block">{user.first_name || user.name || 'User'} {user.last_name || ''}</span>
-                                    <i className="fas fa-chevron-down text-xs"></i>
+                                    <i aria-hidden="true" className="fas fa-chevron-down text-xs"></i>
                                 </button>
 
                                 {userDropdownOpen && (
@@ -232,10 +251,10 @@ export default function AuthenticatedLayout({ children }) {
                                                 <p className="text-gray-400 text-sm truncate">{user.email}</p>
                                             </div>
                                             <Link href={route('home')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
-                                                <i className="fas fa-home w-5"></i>Home
+                                                <i aria-hidden="true" className="fas fa-home w-5"></i>Home
                                             </Link>
                                             <Link href={route('profile.edit')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
-                                                <i className="fas fa-user w-5"></i>Profile
+                                                <i aria-hidden="true" className="fas fa-user w-5"></i>Profile
                                             </Link>
                                             <div className="border-t border-white/10 mt-2 pt-2">
                                                 <Link 
@@ -244,7 +263,7 @@ export default function AuthenticatedLayout({ children }) {
                                                     as="button"
                                                     className="flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-500/10 w-full"
                                                 >
-                                                    <i className="fas fa-sign-out-alt w-5"></i>Logout
+                                                    <i aria-hidden="true" className="fas fa-sign-out-alt w-5"></i>Logout
                                                 </Link>
                                             </div>
                                         </div>
@@ -255,7 +274,7 @@ export default function AuthenticatedLayout({ children }) {
                     </header>
 
                     {/* Page Content */}
-                    <main className="flex-1 py-8 px-4 overflow-x-hidden min-w-0">
+                    <main id="main-content" tabIndex={-1} className="flex-1 py-8 px-4 overflow-x-hidden min-w-0">
                         {children}
                     </main>
                 </div>

@@ -32,6 +32,11 @@ class LoginCode extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function isUsable(): bool
+    {
+        return is_null($this->used_at) && $this->expires_at->isFuture();
+    }
+
     public function prunable(): Builder
     {
         return static::where('created_at', '<', now()->subDay());

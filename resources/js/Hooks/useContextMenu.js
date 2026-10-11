@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { menuPoint } from '@/Utils/a11y';
 
 export default function useContextMenu() {
     const [contextMenu, setContextMenu] = useState(null);
@@ -6,7 +7,7 @@ export default function useContextMenu() {
     const openContextMenu = useCallback((e, target) => {
         e.preventDefault();
         e.stopPropagation();
-        setContextMenu({ x: e.clientX, y: e.clientY, target });
+        setContextMenu({ ...menuPoint(e), target });
     }, []);
 
     const closeContextMenu = useCallback(() => {

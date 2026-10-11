@@ -32,41 +32,53 @@ export default function Edit({ photo, projects }) {
         >
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <InputLabel value="Title" />
+                    <InputLabel htmlFor="photos-edit-title" value="Title" />
                     <TextInput
+                        id="photos-edit-title"
+                        aria-invalid={!!errors.title}
+                        aria-describedby={errors.title ? 'photos-edit-title-error' : undefined}
                         value={data.title}
                         onChange={(e) => setData('title', e.target.value)}
                         className="mt-1 block w-full"
                         placeholder="Enter photo title"
                     />
-                    <InputError message={errors.title} className="mt-2" />
+                    <InputError id="photos-edit-title-error" message={errors.title} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel value="Location" />
+                    <InputLabel htmlFor="photos-edit-location" value="Location" />
                     <TextInput
+                        id="photos-edit-location"
+                        aria-invalid={!!errors.location}
+                        aria-describedby={errors.location ? 'photos-edit-location-error' : undefined}
                         value={data.location}
                         onChange={(e) => setData('location', e.target.value)}
                         className="mt-1 block w-full"
                         placeholder="Enter location"
                     />
-                    <InputError message={errors.location} className="mt-2" />
+                    <InputError id="photos-edit-location-error" message={errors.location} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel value="Description" />
+                    <InputLabel htmlFor="photos-edit-description" value="Description" />
                     <TextArea
+                        id="photos-edit-description"
+                        aria-invalid={!!errors.description}
+                        aria-describedby={errors.description ? 'photos-edit-description-error' : undefined}
                         value={data.description}
                         onChange={(e) => setData('description', e.target.value)}
                         rows={3}
                         placeholder="Enter description"
                     />
-                    <InputError message={errors.description} className="mt-2" />
+                    <InputError id="photos-edit-description-error" message={errors.description} className="mt-2" />
                 </div>
 
                 <div>
-                    <InputLabel value="Project" />
+                    <InputLabel htmlFor="photos-edit-project-id" value="Project" />
                     <SelectInput
+                        id="photos-edit-project-id"
+                        aria-invalid={!!errors.project_id}
+                        aria-describedby={errors.project_id ? 'photos-edit-project-id-error' : undefined}
                         value={data.project_id}
                         onChange={(e) => setData('project_id', e.target.value)}
                     >
@@ -77,7 +89,7 @@ export default function Edit({ photo, projects }) {
                             </option>
                         ))}
                     </SelectInput>
-                    <InputError message={errors.project_id} className="mt-2" />
+                    <InputError id="photos-edit-project-id-error" message={errors.project_id} className="mt-2" />
                 </div>
 
                 <FormActions

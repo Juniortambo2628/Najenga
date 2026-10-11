@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function PhotoCard({ photo, selected, highlighted = false, onToggle, onContextMenu, onPreview }) {
+    const [broken, setBroken] = useState(false);
     return (
         <div
             id={`photo-${photo.id}`}
@@ -11,24 +13,41 @@ export default function PhotoCard({ photo, selected, highlighted = false, onTogg
             onContextMenu={onContextMenu}
             onDoubleClick={onPreview}
         >
-            <img
-                src={photo.thumb_url || `/storage/${photo.file_path}`}
-                alt={photo.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-            />
+            {broken ? (
+                <div
+                    className="w-full h-full flex flex-col items-center justify-center text-center gap-2 text-gray-500 bg-gray-900/60"
+                    role="img"
+                    aria-label={`Missing file for ${photo.title || 'photo'}`}
+                >
+                    <i aria-hidden="true" className="fas fa-image-slash text-3xl"></i>
+                    <p className="text-xs px-2 leading-tight">File missing on server</p>
+                </div>
+            ) : (
+                <img
+                    src={photo.thumb_url || `/storage/${photo.file_path}`}
+                    alt={photo.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
+                    onError={() => setBroken(true)}
+                />
+            )}
 
             {/* Selection indicator */}
-            <div className={`absolute top-2 left-2 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+            <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggle(e.metaKey || e.ctrlKey); }}
+                aria-pressed={!!selected}
+                aria-label={`Select ${photo.title || 'photo'}`}
+                className={`absolute top-2 left-2 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                 selected
                     ? 'bg-[#DC143C] border-[#DC143C]'
-                    : 'border-white/40 bg-black/30 opacity-0 group-hover:opacity-100'
+                    : 'border-white/40 bg-black/30 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
             }`}>
-                {selected && <i className="fas fa-check text-white text-[10px]"></i>}
-            </div>
+                {selected && <i aria-hidden="true" className="fas fa-check text-white text-[10px]"></i>}
+            </button>
 
             {/* Hover overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200">
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p className="text-white text-sm font-medium truncate">
                         <Link href={route('photos.show', photo.id)} onClick={(e) => e.stopPropagation()}>
@@ -44,9 +63,10 @@ export default function PhotoCard({ photo, selected, highlighted = false, onTogg
             {/* Preview button */}
             <button
                 onClick={(e) => { e.stopPropagation(); onPreview(); }}
-                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                aria-label={`Preview ${photo.title || 'photo'}`}
+                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity hover:bg-black/70"
             >
-                <i className="fas fa-expand text-xs"></i>
+                <i aria-hidden="true" className="fas fa-expand text-xs"></i>
             </button>
 
             {/* Open detail button */}

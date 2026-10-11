@@ -41,7 +41,9 @@ return new class extends Migration
         });
 
         Schema::table('passkeys', function (Blueprint $table) {
-            $table->index('user_id');
+            if (! Schema::hasIndex('passkeys', 'passkeys_user_id_index')) {
+                $table->index('user_id');
+            }
         });
     }
 

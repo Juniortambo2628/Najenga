@@ -170,15 +170,15 @@ export default function Photos({ photos = [], projects = [] }) {
                     selectedCount={selectedCount}
                     bulkActions={
                         <>
-                            <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i className="fas fa-download"></i></button>
+                            <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i aria-hidden="true" className="fas fa-download"></i></button>
                             <button
                                 className="text-white hover:text-gray-200"
                                 title="Delete Selected"
                                 onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
                             >
-                                <i className="fas fa-trash"></i>
+                                <i aria-hidden="true" className="fas fa-trash"></i>
                             </button>
-                            <button className="text-white hover:text-gray-200" onClick={clearSelection} title="Clear Selection"><i className="fas fa-times"></i></button>
+                            <button className="text-white hover:text-gray-200" onClick={clearSelection} title="Clear Selection"><i aria-hidden="true" className="fas fa-times"></i></button>
                         </>
                     }
                     actions={
@@ -195,15 +195,15 @@ export default function Photos({ photos = [], projects = [] }) {
                             onDeselectAll={deselectAll}
                             actions={
                                 <>
-                                    <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i className="fas fa-download"></i></button>
+                                    <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i aria-hidden="true" className="fas fa-download"></i></button>
                                     <button
                                         className="text-white hover:text-gray-200"
                                         title="Delete Selected"
                                         onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
                                     >
-                                        <i className="fas fa-trash"></i>
+                                        <i aria-hidden="true" className="fas fa-trash"></i>
                                     </button>
-                                    <button className="text-white hover:text-gray-200" onClick={clearSelection} title="Clear Selection"><i className="fas fa-times"></i></button>
+                                    <button className="text-white hover:text-gray-200" onClick={clearSelection} title="Clear Selection"><i aria-hidden="true" className="fas fa-times"></i></button>
                                 </>
                             }
                         />
@@ -228,7 +228,8 @@ export default function Photos({ photos = [], projects = [] }) {
                             <button 
                                 key={g}
                                 onClick={() => setTimelineGroup(g)}
-                                className={`px-3 py-1.5 rounded-lg transition text-xs uppercase font-bold ${timelineGroup === g ? 'bg-white text-black' : 'text-gray-500 hover:text-gray-300'}`}
+                                aria-pressed={timelineGroup === g}
+                                className={`px-3 py-1.5 rounded-lg transition text-xs uppercase font-bold ${timelineGroup === g ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-300'}`}
                             >
                                 {g}
                             </button>
@@ -268,7 +269,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                         {groupTitle}
                                     </div>
                                     <div className="h-[1px] bg-gradient-to-r from-[#8B0000]/50 to-transparent flex-1"></div>
-                                    <span className="text-gray-500 text-xs font-mono">{photos.length} photos</span>
+                                    <span className="text-gray-400 text-xs font-mono">{photos.length} photos</span>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pl-4 border-l-2 border-[#8B0000]/20">
                                     {photos.map((photo) => (
@@ -319,8 +320,8 @@ export default function Photos({ photos = [], projects = [] }) {
                             {/* Editable Fields */}
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-gray-500 text-xs uppercase tracking-wider block mb-1">Title</label>
-                                    <input 
+                                    <label htmlFor="photos-title" className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Title</label>
+                                    <input id="photos-title" 
                                         type="text" 
                                         value={previewPhoto?.title || ''}
                                         onChange={(e) => {
@@ -338,10 +339,10 @@ export default function Photos({ photos = [], projects = [] }) {
                                 </div>
                                 
                                 <div>
-                                    <label className="text-gray-500 text-xs uppercase tracking-wider block mb-1">Location</label>
+                                    <label htmlFor="photos-location" className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Location</label>
                                     <div className="relative">
-                                        <i className="fas fa-map-marker-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-                                        <input 
+                                        <i aria-hidden="true" className="fas fa-map-marker-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                        <input id="photos-location" 
                                             type="text" 
                                             value={previewPhoto?.location || ''}
                                             onChange={(e) => setPreviewPhoto(prev => ({...prev, location: e.target.value}))}

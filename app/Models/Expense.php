@@ -34,6 +34,9 @@ class Expense extends Model implements HasMedia
         'confidence',
         'source_channel',
         'status',
+        'payment_source',
+        'confidence',
+        'source_channel',
     ];
 
     protected function casts(): array

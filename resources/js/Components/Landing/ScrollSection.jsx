@@ -53,7 +53,7 @@ export default function ScrollSection({ id, title, description, buttonText, butt
                                 className="landing-scroll-arrow"
                                 aria-label="Scroll left"
                             >
-                                <i className="fas fa-chevron-left text-sm"></i>
+                                <i aria-hidden="true" className="fas fa-chevron-left text-sm"></i>
                             </button>
                         </div>
                         <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10">
@@ -62,7 +62,7 @@ export default function ScrollSection({ id, title, description, buttonText, butt
                                 className="landing-scroll-arrow"
                                 aria-label="Scroll right"
                             >
-                                <i className="fas fa-chevron-right text-sm"></i>
+                                <i aria-hidden="true" className="fas fa-chevron-right text-sm"></i>
                             </button>
                         </div>
 

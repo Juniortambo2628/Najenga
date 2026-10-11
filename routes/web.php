@@ -2,8 +2,19 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/health', function () {
+    $checks = ['app' => true, 'db' => false, 'cache' => false, 'storage_writable' => false];
+    try { DB::select('select 1'); $checks['db'] = true; } catch (\Throwable $e) {}
+    try { Cache::put('health_probe', 1, 5); $checks['cache'] = Cache::get('health_probe') === 1; } catch (\Throwable $e) {}
+    $checks['storage_writable'] = is_writable(storage_path('logs'));
+    $ok = ! in_array(false, $checks, true);
+    return response()->json(['status' => $ok ? 'ok' : 'degraded', 'checks' => $checks, 'time' => now()->toIso8601String()], $ok ? 200 : 503);
+})->name('health');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -13,6 +24,16 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
     ]);
 })->name('home');
+
+Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', [
+    'effectiveDate' => '16 September 2026',
+    'contactEmail' => 'najenga-info@okjtech.co.ke',
+]))->name('privacy');
+
+Route::get('/terms', fn () => Inertia::render('Legal/Terms', [
+    'effectiveDate' => '16 September 2026',
+    'contactEmail' => 'najenga-info@okjtech.co.ke',
+]))->name('terms');
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -145,14 +166,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Other pages
     Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity.logs');
-    Route::get('/whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'index'])->name('whatsapp');
+    // The main /whatsapp page is a user-visible activity feed of what came
+    // in and out via WhatsApp; each user sees their own, admins see everyone.
+    Route::get('/whatsapp', [\App\Http\Controllers\WhatsAppActivityController::class, 'index'])->name('whatsapp');
+    Route::delete('/whatsapp/activity/{log}', [\App\Http\Controllers\WhatsAppActivityController::class, 'destroy'])->name('whatsapp.activity.destroy');
+    Route::post('/whatsapp/activity/{log}/reclassify', [\App\Http\Controllers\WhatsAppActivityController::class, 'reclassify'])->name('whatsapp.activity.reclassify');
     Route::post('/whatsapp/test-connection', [\App\Http\Controllers\WhatsAppController::class, 'testConnection'])->name('whatsapp.test-connection');
-    Route::patch('/whatsapp/settings', [\App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('whatsapp.settings');
+    Route::patch('/whatsapp/settings', [\App\Http\Controllers\WhatsAppController::class, 'updateSettings'])->name('whatsapp.settings.update');
+    Route::middleware('admin')->group(function () {
+        Route::get('/whatsapp/settings', [\App\Http\Controllers\WhatsAppSettingsController::class, 'index'])->name('whatsapp.settings');
+        Route::post('/whatsapp/settings/test-send', [\App\Http\Controllers\WhatsAppSettingsController::class, 'testSend'])->name('whatsapp.test-send');
+    });
     Route::get('/messages', fn() => \Inertia\Inertia::render('Messages'))->name('messages');
     Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
 
     // Full-text search (MeiliSearch)
     Route::get('/search', [\App\Http\Controllers\SearchController::class, 'index'])->name('search');
+    Route::get('/api/search/live', [\App\Http\Controllers\SearchController::class, 'live'])->name('search.live');
+
+    // Private files (auth-gated). Public assets are served directly from
+    // the /storage symlink by the web server without hitting Laravel.
+    Route::get('/private-files/{path}', [\App\Http\Controllers\StorageController::class, 'show'])->where('path', '.*')->name('private.file');
 });
 
 // Outside the auth group on purpose: signed-out requests must reach the
@@ -168,6 +202,12 @@ Route::get('/profile/passkeys', [ProfileController::class, 'passkeys'])->name('p
 Route::post('/profile/whatsapp/send-code', [ProfileController::class, 'sendWhatsAppCode'])->middleware('throttle:3,1')->name('profile.whatsapp.send-code');
 Route::post('/profile/whatsapp/verify', [ProfileController::class, 'verifyWhatsAppCode'])->middleware('throttle:6,1')->name('profile.whatsapp.verify');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // WhatsApp number linking: verify the number already on the profile
+    // above, or link a new one end-to-end (enter number, confirm code).
+    Route::post('/profile/whatsapp/link/send-code', [\App\Http\Controllers\WhatsAppLinkController::class, 'sendCode'])->name('profile.whatsapp.link.send-code');
+    Route::post('/profile/whatsapp/link/verify', [\App\Http\Controllers\WhatsAppLinkController::class, 'verifyCode'])->name('profile.whatsapp.link.verify');
+    Route::delete('/profile/whatsapp', [\App\Http\Controllers\WhatsAppLinkController::class, 'unlink'])->name('profile.whatsapp.unlink');
 });
 
 require __DIR__.'/auth.php';

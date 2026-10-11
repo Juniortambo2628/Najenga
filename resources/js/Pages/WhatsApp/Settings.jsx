@@ -1,0 +1,261 @@
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
+import DashboardHero from '@/Components/DashboardHero';
+import { useState } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+
+export default function Settings({ config = {}, diagnostics = [] }) {
+    const [phone, setPhone] = useState('');
+    const [message, setMessage] = useState('Hello from Najenga!');
+    const [sending, setSending] = useState(false);
+    const [result, setResult] = useState(null);
+
+    const submit = async (e) => {
+        e.preventDefault();
+        setSending(true);
+        setResult(null);
+        try {
+            const { data } = await axios.post('/whatsapp/settings/test-send', { phone, message });
+            setResult({ ok: true, data });
+            // Meta accepting the request is not the same as WhatsApp delivering
+            // the message — say "queued at Meta" so we don't lie in test mode.
+            toast.success('Queued at Meta — check the activity page for delivery status');
+        } catch (err) {
+            const payload = err.response?.data ?? { error: err.message };
+            setResult({ ok: false, data: payload });
+            toast.error(payload.error || 'Send failed');
+        } finally {
+            setSending(false);
+        }
+    };
+
+    const Status = ({ id, ok, label }) => (
+        <div id={id} className={`flex items-center gap-2 text-sm ${ok ? 'text-green-400' : 'text-red-400'}`}>
+            <span className={`w-2 h-2 rounded-full ${ok ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            {label}
+        </div>
+    );
+
+    return (
+        <AuthenticatedLayout>
+            <Head title="WhatsApp Settings" />
+
+            <div className="max-w-6xl mx-auto space-y-6">
+                <DashboardHero
+                    title="WhatsApp Integration"
+                    subtitle="Meta WhatsApp Cloud API — configuration & test"
+                    breadcrumbs={[
+                        { label: 'Home', href: route('home') },
+                        { label: 'Dashboard', href: route('dashboard') },
+                        { label: 'WhatsApp', href: route('whatsapp') },
+                        { label: 'Settings' },
+                    ]}
+                />
+
+                {config.test_mode && (
+                    <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-100 flex items-start gap-3">
+                        <i aria-hidden="true" className="fas fa-flask mt-0.5 text-yellow-300"></i>
+                        <div className="space-y-1">
+                            <p className="font-semibold text-yellow-200">Test mode — 5-recipient limit</p>
+                            <p className="text-yellow-100/90">
+                                This Meta app hasn't been business-verified. Messages can only be sent to numbers you
+                                add to Meta's test recipient list (max 5). Anyone else's WhatsApp will get nothing.
+                                To lift this limit, register a business and complete Meta business verification.
+                            </p>
+                            {config.admin_wa_id ? (
+                                <p className="text-yellow-100/80">Admin notifications go to <span className="font-mono">+{config.admin_wa_id}</span>.</p>
+                            ) : (
+                                <p className="text-yellow-100/80">Set <span className="font-mono">NAJENGA_ADMIN_WA_ID</span> in .env to receive admin alerts.</p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
+                        <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+                            <i aria-hidden="true" className="fab fa-whatsapp text-green-400 text-xl mr-2"></i>
+                            Configuration
+                        </h2>
+                        <div className="space-y-3 text-sm">
+                            <Status id="whatsapp-config-status" ok={config.configured} label={config.configured ? 'Configured' : 'Not configured — set META_WHATSAPP_* env vars'} />
+                            <dl className="space-y-3">
+                                <Row k="App ID" v={config.app_id || '—'} />
+                                <Row k="App Secret" v={config.app_secret_masked || '—'} />
+                                <Row k="Access Token" v={config.access_token_masked || '—'} />
+                                <Row k="Phone Number ID" v={config.phone_number_id || '—'} />
+                                <Row k="Verify Token" v={config.verify_token_set ? 'set' : 'not set'} />
+                                <Row k="Webhook URL" v={config.webhook_url || '—'} mono />
+                            </dl>
+                        </div>
+
+                        <div className="mt-5 p-3 rounded-lg bg-white/5 border border-white/10 text-xs text-gray-300 leading-relaxed">
+                            <p className="font-semibold text-white mb-1">Setup steps</p>
+                            <ol className="list-decimal ml-4 space-y-1">
+                                <li>Create a Meta App with the "Connect with customers through WhatsApp" use case.</li>
+                                <li>Copy Phone Number ID + generate a permanent System User token.</li>
+                                <li>Set the callback URL above and your chosen verify token in Meta.</li>
+                                <li>Subscribe to <code>messages</code> on the WABA.</li>
+                                <li>Fill in <code>META_WHATSAPP_*</code> in production .env, then redeploy.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
+                        <h2 className="text-lg font-semibold text-white mb-4">
+                            <i aria-hidden="true" className="fas fa-paper-plane text-blue-400 mr-2"></i>
+                            Test send
+                        </h2>
+                        <form onSubmit={submit} className="space-y-3">
+                            <div>
+                                <label htmlFor="whatsapp-test-phone" className="block text-xs text-gray-400 mb-1">Recipient phone (E.164, e.g. +2547...)</label>
+                                <input
+                                    id="whatsapp-test-phone"
+                                    type="tel"
+                                    autoComplete="tel"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    required
+                                    placeholder="+2547XXXXXXXX"
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-white/30"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="whatsapp-test-message" className="block text-xs text-gray-400 mb-1">Message</label>
+                                <textarea
+                                    id="whatsapp-test-message"
+                                    aria-describedby="whatsapp-test-window-hint"
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    rows={4}
+                                    required
+                                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-white/30"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={sending || !config.configured}
+                                aria-describedby={!config.configured ? 'whatsapp-config-status' : undefined}
+                                className="w-full py-2 rounded-lg bg-gradient-to-r from-[#8B0000] to-[#DC143C] text-white font-semibold disabled:opacity-50"
+                            >
+                                {sending ? 'Sending…' : 'Send test message'}
+                            </button>
+                            <p id="whatsapp-test-window-hint" className="text-xs text-gray-400">
+                                Free-form messages only work inside a 24h window after the user last messaged you. Outside that window, use a message template.
+                            </p>
+                        </form>
+
+                        {result && (
+                            <div className="mt-4 space-y-2">
+                                {result.ok && result.data?.note && (
+                                    <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-100">
+                                        <p className="font-semibold text-yellow-200 mb-1">Delivery is not guaranteed</p>
+                                        <p>{result.data.note}</p>
+                                        {result.data.wamid && (
+                                            <p className="mt-2 font-mono break-all">wamid: {result.data.wamid}</p>
+                                        )}
+                                    </div>
+                                )}
+                                <pre
+                                    tabIndex={0}
+                                    role="region"
+                                    aria-label={result.ok ? 'API response' : 'API error response'}
+                                    className={`text-xs p-3 rounded-lg overflow-auto max-h-56 border ${result.ok ? 'border-green-500/30 bg-green-500/5 text-green-200' : 'border-red-500/30 bg-red-500/5 text-red-200'}`}>
+{JSON.stringify(result.data, null, 2)}
+                                </pre>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-lg font-semibold text-white mb-1 flex items-center">
+                        <i aria-hidden="true" className="fas fa-satellite-dish text-purple-300 mr-2"></i>
+                        Recent webhook deliveries
+                    </h2>
+                    <p className="text-sm text-gray-400 mb-4">
+                        The last 10 raw callbacks Meta POSTed to <code className="font-mono">/api/whatsapp/webhook</code>.
+                        If this list is empty, nothing is reaching us — check the Meta app's webhook URL and that the WABA
+                        is subscribed to <code className="font-mono">messages</code>.
+                        {!config.app_secret_set && (
+                            <span className="block mt-1 text-yellow-300">
+                                <i aria-hidden="true" className="fas fa-triangle-exclamation mr-1"></i>
+                                <code className="font-mono">META_WHATSAPP_APP_SECRET</code> is not set — in production the webhook
+                                will reject every request as unsigned.
+                            </span>
+                        )}
+                    </p>
+
+                    {diagnostics.length === 0 ? (
+                        <p className="text-sm text-gray-500 italic">No webhook events recorded yet.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="text-left text-gray-400 border-b border-white/10">
+                                    <tr>
+                                        <th className="py-2 pr-3">#</th>
+                                        <th className="py-2 pr-3">Received</th>
+                                        <th className="py-2 pr-3">Processed</th>
+                                        <th className="py-2 pr-3">From</th>
+                                        <th className="py-2 pr-3">Status callbacks</th>
+                                        <th className="py-2 pr-3">Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-gray-200">
+                                    {diagnostics.map((e) => (
+                                        <tr key={e.id} className="border-b border-white/5 align-top">
+                                            <td className="py-2 pr-3 font-mono text-xs text-gray-400">{e.id}</td>
+                                            <td className="py-2 pr-3 text-xs text-gray-300">
+                                                {e.received_at ? new Date(e.received_at).toLocaleString() : '—'}
+                                            </td>
+                                            <td className="py-2 pr-3">
+                                                {e.processed ? (
+                                                    <span className="text-green-400 text-xs">✓ ok</span>
+                                                ) : (
+                                                    <span className="text-yellow-300 text-xs">pending / failed</span>
+                                                )}
+                                            </td>
+                                            <td className="py-2 pr-3">
+                                                {(e.senders || []).length === 0 ? (
+                                                    <span className="text-gray-500 text-xs">no messages</span>
+                                                ) : (
+                                                    <ul className="space-y-1">
+                                                        {e.senders.map((s, i) => (
+                                                            <li key={i} className="text-xs">
+                                                                <span className="font-mono">+{s.from}</span>
+                                                                <span className="text-gray-500"> · {s.type}</span>
+                                                                {s.matched_user ? (
+                                                                    <span className="ml-2 text-green-400">→ {s.matched_user}</span>
+                                                                ) : (
+                                                                    <span className="ml-2 text-yellow-300">no matching user</span>
+                                                                )}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </td>
+                                            <td className="py-2 pr-3 text-xs text-gray-400">{e.statuses || 0}</td>
+                                            <td className="py-2 pr-3 text-xs text-red-300 max-w-xs truncate">
+                                                {e.error_message || ''}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </AuthenticatedLayout>
+    );
+}
+
+function Row({ k, v, mono }) {
+    return (
+        <div className="flex justify-between gap-3">
+            <dt className="text-gray-400">{k}</dt>
+            <dd className={`text-white text-right break-all ${mono ? 'font-mono text-xs' : ''}`}>{v}</dd>
+        </div>
+    );
+}

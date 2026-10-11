@@ -9,11 +9,41 @@ use App\Models\LoginCode;
 use App\Models\User;
 use App\Notifications\LoginCodeNotification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
+/**
+ * Email-based one-time-code login. The flow is:
+ *   1. User enters email -> request() issues a 6-digit code, stores its hash,
+ *      mails the plaintext code, and flashes a "check your email" state.
+ *   2. User enters the code -> verify() matches it against the newest unused
+ *      code for that email, marks it used, and logs in via the same 2FA-aware
+ *      path as regular login.
+ *
+ * The mailed code is the only plaintext copy - it is never persisted or logged.
+ * Request throttling lives on the routes; verification attempts are throttled
+ * per email+IP below.
+ */
 class LoginCodeController extends Controller
 {
+    private const CODE_TTL_MINUTES = 10;
+    private const VERIFY_ATTEMPTS = 6;
+    private const VERIFY_WINDOW = 900;
+
+    public function create(Request $request): Response
+    {
+        return Inertia::render('Auth/LoginCode', [
+            'email' => (string) $request->session()->get('login_code.email', ''),
+            'awaitingCode' => (bool) $request->session()->get('login_code.awaiting', false),
+        ]);
+    }
+
     public function request(RequestLoginCodeRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -21,43 +51,69 @@ class LoginCodeController extends Controller
         $user = User::where('email', $data['email'])->first();
 
         if ($user) {
-            $plain = (string) random_int(100000, 999999);
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
             LoginCode::create([
                 'user_id' => $user->id,
-                'code_hash' => Hash::make($plain),
-                'expires_at' => now()->addMinutes(10),
+                'code_hash' => Hash::make($code),
+                'expires_at' => now()->addMinutes(self::CODE_TTL_MINUTES),
                 'requested_ip' => $request->ip(),
             ]);
 
-            $user->notify(new LoginCodeNotification($plain));
+            $user->notify(new LoginCodeNotification($code));
         }
 
-        return back()->with('status', 'If that address exists, a sign-in code is on its way.');
+        return redirect()->route('login.code')->with([
+            'login_code.email' => $data['email'],
+            'login_code.awaiting' => true,
+            'status' => 'If that address exists, a sign-in code is on its way.',
+        ]);
     }
 
     public function verify(VerifyLoginCodeRequest $request): RedirectResponse
     {
         $data = $request->validated();
 
-        $user = User::where('email', $data['email'])->first();
+        $key = 'login-code:ver:'.Str::lower($data['email']).'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($key, self::VERIFY_ATTEMPTS)) {
+            throw ValidationException::withMessages([
+                'code' => trans('auth.throttle', [
+                    'seconds' => RateLimiter::availableIn($key),
+                    'minutes' => (int) ceil(RateLimiter::availableIn($key) / 60),
+                ]),
+            ]);
+        }
 
-        $code = $user
+        $user = User::where('email', $data['email'])->first();
+        $loginCode = $user
             ? LoginCode::where('user_id', $user->id)
                 ->whereNull('used_at')
-                ->where('expires_at', '>', now())
                 ->latest('id')
                 ->first()
             : null;
 
-        if (!$code || !Hash::check($data['code'], $code->code_hash)) {
-            return back()->withErrors(['code' => 'That code is invalid or has expired.']);
+        if (! $user || ! $loginCode || ! $loginCode->isUsable() || ! Hash::check($data['code'], $loginCode->code_hash)) {
+            RateLimiter::hit($key, self::VERIFY_WINDOW);
+
+            throw ValidationException::withMessages([
+                'code' => 'That sign-in code is invalid or expired.',
+            ]);
         }
 
-        $code->update(['used_at' => now()]);
+        RateLimiter::clear($key);
+        $loginCode->forceFill(['used_at' => now()])->save();
+
+        if ($user->hasEnabledTwoFactorAuthentication()) {
+            $request->session()->put('login.id', $user->getKey());
+            $request->session()->put('login.remember', false);
+            $request->session()->forget(['login_code.email', 'login_code.awaiting']);
+
+            return redirect()->route('two-factor.login');
+        }
 
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->forget(['login_code.email', 'login_code.awaiting']);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

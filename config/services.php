@@ -45,6 +45,8 @@ return [
         'whatsapp_access_token' => env('META_WHATSAPP_ACCESS_TOKEN'),
         'whatsapp_phone_number_id' => env('META_WHATSAPP_PHONE_NUMBER_ID'),
         'whatsapp_verify_token' => env('META_WHATSAPP_VERIFY_TOKEN'),
+        'admin_wa_id' => env('NAJENGA_ADMIN_WA_ID'),
+        'test_mode' => filter_var(env('NAJENGA_WHATSAPP_TEST_MODE', true), FILTER_VALIDATE_BOOLEAN),
     ],
 
 ];
