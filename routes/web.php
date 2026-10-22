@@ -69,6 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/expenses', [\App\Http\Controllers\ExpenseController::class, 'store'])->name('expenses.store');
     Route::post('/expenses/batch', [\App\Http\Controllers\ExpenseController::class, 'batchStore'])->name('expenses.batch');
     Route::delete('/expenses/batch', [\App\Http\Controllers\ExpenseController::class, 'batchDestroy'])->name('expenses.batchDestroy');
+Route::patch('/expenses/batch/project', [\App\Http\Controllers\ExpenseController::class, 'batchAssignProject'])->name('expenses.batchAssignProject');
     Route::get('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'show'])->name('expenses.show');
     Route::get('/expenses/{expense}/edit', [\App\Http\Controllers\ExpenseController::class, 'edit'])->name('expenses.edit');
     Route::patch('/expenses/{expense}', [\App\Http\Controllers\ExpenseController::class, 'update'])->name('expenses.update');

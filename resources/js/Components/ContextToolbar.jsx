@@ -14,7 +14,7 @@ export default function ContextToolbar({
     const currentProject = useActiveProject(projects, currentProjectId);
 
     return (
-        <div className="panel px-5 py-3 mb-6">
+        <div className="panel px-5 py-3 mb-6 sticky top-16 z-[15]">
             <div className="flex items-center justify-between flex-wrap gap-3">
                 {/* Left: Project context + page info */}
                 <div className="flex items-center gap-4 min-w-0">

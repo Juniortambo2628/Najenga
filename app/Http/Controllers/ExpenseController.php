@@ -7,6 +7,7 @@ use App\Http\Requests\StoreBatchExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Http\Requests\UploadExpenseReceiptRequest;
 use App\Models\Expense;
+use App\Models\Project;
 use App\Services\ActivityLogger;
 use App\Traits\HasProjectScope;
 use App\Traits\BatchDeletes;
@@ -118,6 +119,39 @@ class ExpenseController extends Controller
     public function batchDestroy(Request $request)
     {
         return $this->batchDelete($request, Expense::class, 'expense');
+    }
+
+    public function batchAssignProject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:expenses,id',
+            'project_id' => 'nullable|integer|exists:projects,id',
+        ]);
+
+        $projectId = $request->input('project_id');
+
+        $updated = Expense::whereIn('id', $request->input('ids'))
+            ->where('user_id', auth()->id())
+            ->update(['project_id' => $projectId]);
+
+        $projectName = $projectId ? Project::find($projectId)?->name : null;
+
+        $verb = $updated !== 1 ? 'expenses' : 'expense';
+
+        ActivityLogger::log(
+            'expense.project_assigned',
+            $projectName
+                ? "Assigned {$updated} {$verb} to \"{$projectName}\""
+                : "Removed project from {$updated} {$verb}",
+        );
+
+        return response()->json([
+            'updated' => $updated,
+            'message' => $projectName
+                ? "{$updated} {$verb} assigned to {$projectName}"
+                : "Project removed from {$updated} {$verb}",
+        ]);
     }
 
     public function show(Expense $expense)

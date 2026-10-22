@@ -10,6 +10,7 @@ import ContextToolbar from '@/Components/ContextToolbar';
 import EmptyState from '@/Components/EmptyState';
 import SearchFilterBar from '@/Components/SearchFilterBar';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Button from '@/Components/Button';
 import DashboardHero from '@/Components/DashboardHero';
 import Modal from '@/Components/Modal';
 import BulkActions from '@/Components/BulkActions';
@@ -42,6 +43,8 @@ export default function Expenses({ expenses = [], projects = [] }) {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState(null);
     const [detailExpense, setDetailExpense] = useState(null);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [assignProjectId, setAssignProjectId] = useState('');
 
     const editForm = useForm({
         title: '',
@@ -153,6 +156,23 @@ export default function Expenses({ expenses = [], projects = [] }) {
         router.reload({ only: ['expenses'] });
     };
 
+    const handleBulkAssign = async () => {
+        const ids = [...selectedItems];
+        try {
+            const res = await axios.patch('/expenses/batch/project', {
+                ids,
+                project_id: assignProjectId || null,
+            });
+            toast.success(res.data.message || `${ids.length} expense${ids.length !== 1 ? 's' : ''} updated`);
+            setIsAssignModalOpen(false);
+            setAssignProjectId('');
+            clearSelection();
+            router.reload({ only: ['expenses'] });
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to assign expenses');
+        }
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Expenses" />
@@ -184,9 +204,14 @@ export default function Expenses({ expenses = [], projects = [] }) {
                             onSelectAll={() => selectAll(filteredExpenses.map(e => e.id))}
                             onDeselectAll={deselectAll}
                             actions={
-                                <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                    <i aria-hidden="true" className="fas fa-trash"></i>
-                                </button>
+                                <>
+                                    <button className="text-white hover:text-gray-200" title="Assign to Project" onClick={() => setIsAssignModalOpen(true)}>
+                                        <i aria-hidden="true" className="fas fa-folder-open"></i>
+                                    </button>
+                                    <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
+                                        <i aria-hidden="true" className="fas fa-trash"></i>
+                                    </button>
+                                </>
                             }
                         />
                     </div>
@@ -354,6 +379,39 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         }}
                         onCancel={() => { setIsEditModalOpen(false); setSelectedExpense(null); }}
                     />
+                </div>
+            </Modal>
+
+            {/* Bulk Assign to Project Modal */}
+            <Modal show={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} maxWidth="md">
+                <div className="p-6">
+                    <h2 className="text-xl font-bold text-white mb-2">Assign to Project</h2>
+                    <p className="text-sm text-gray-400 mb-4">
+                        Assign {selectedCount} selected expense{selectedCount !== 1 ? 's' : ''} to a project.
+                    </p>
+                    <label htmlFor="bulk-project" className="block text-sm font-medium text-gray-300 mb-2">
+                        Project
+                    </label>
+                    <select
+                        id="bulk-project"
+                        value={assignProjectId}
+                        onChange={(e) => setAssignProjectId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#8B0000] cursor-pointer"
+                    >
+                        <option value="">No project</option>
+                        {projects.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                    <div className="flex justify-end gap-3 mt-6">
+                        <Button variant="ghost" onClick={() => setIsAssignModalOpen(false)}>
+                            Cancel
+                        </Button>
+                        <PrimaryButton onClick={handleBulkAssign}>
+                            <i aria-hidden="true" className="fas fa-folder-open mr-1"></i>
+                            {assignProjectId ? 'Assign' : 'Remove from Project'}
+                        </PrimaryButton>
+                    </div>
                 </div>
             </Modal>
 

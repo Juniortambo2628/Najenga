@@ -150,7 +150,7 @@ export default function AuthenticatedLayout({ children }) {
                 </aside>
 
                 {/* Main Content Area */}
-                <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-hidden ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+                <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-clip ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
                     {/* Top Navbar */}
                     <header className="h-16 bg-black border-b border-white/10 flex items-center justify-between px-4 sticky top-0 z-10">
                         {/* Left Side - Toggle & Title */}
@@ -274,7 +274,7 @@ export default function AuthenticatedLayout({ children }) {
                     </header>
 
                     {/* Page Content */}
-                    <main id="main-content" tabIndex={-1} className="flex-1 py-8 px-4 overflow-x-hidden min-w-0">
+                    <main id="main-content" tabIndex={-1} className="flex-1 py-8 px-4 overflow-x-clip min-w-0">
                         {children}
                     </main>
                 </div>

@@ -268,4 +268,85 @@ class ExpenseControllerTest extends TestCase
             ->get('/expenses')
             ->assertOk();
     }
+
+    public function test_user_can_batch_assign_expenses_to_project(): void
+    {
+        $target = Project::factory()->create(['client_id' => $this->user->id]);
+        $expenses = Expense::factory()->count(3)->create([
+            'user_id' => $this->user->id,
+            'project_id' => null,
+        ]);
+
+        $this->actingAs($this->user)
+            ->patchJson('/expenses/batch/project', [
+                'ids' => $expenses->pluck('id')->all(),
+                'project_id' => $target->id,
+            ])
+            ->assertOk()
+            ->assertJson(['updated' => 3]);
+
+        foreach ($expenses as $expense) {
+            $this->assertEquals($target->id, $expense->fresh()->project_id);
+        }
+    }
+
+    public function test_user_can_remove_project_from_batch_of_expenses(): void
+    {
+        $expenses = Expense::factory()->count(2)->create([
+            'user_id' => $this->user->id,
+            'project_id' => $this->project->id,
+        ]);
+
+        $this->actingAs($this->user)
+            ->patchJson('/expenses/batch/project', [
+                'ids' => $expenses->pluck('id')->all(),
+                'project_id' => null,
+            ])
+            ->assertOk()
+            ->assertJson(['updated' => 2]);
+
+        foreach ($expenses as $expense) {
+            $this->assertNull($expense->fresh()->project_id);
+        }
+    }
+
+    public function test_batch_assign_does_not_touch_other_users_expenses(): void
+    {
+        $target = Project::factory()->create(['client_id' => $this->user->id]);
+        $own = Expense::factory()->create(['user_id' => $this->user->id, 'project_id' => null]);
+        $other = Expense::factory()->create(['user_id' => $this->otherUser->id, 'project_id' => null]);
+
+        $this->actingAs($this->user)
+            ->patchJson('/expenses/batch/project', [
+                'ids' => [$own->id, $other->id],
+                'project_id' => $target->id,
+            ])
+            ->assertOk()
+            ->assertJson(['updated' => 1]);
+
+        $this->assertEquals($target->id, $own->fresh()->project_id);
+        $this->assertNull($other->fresh()->project_id);
+    }
+
+    public function test_batch_assign_rejects_unknown_project(): void
+    {
+        $expense = Expense::factory()->create(['user_id' => $this->user->id, 'project_id' => null]);
+
+        $this->actingAs($this->user)
+            ->patchJson('/expenses/batch/project', [
+                'ids' => [$expense->id],
+                'project_id' => 999999,
+            ])
+            ->assertUnprocessable();
+
+        $this->assertNull($expense->fresh()->project_id);
+    }
+
+    public function test_unauthenticated_user_cannot_batch_assign(): void
+    {
+        $this->patchJson('/expenses/batch/project', [
+            'ids' => [1],
+            'project_id' => null,
+        ])->assertUnauthorized();
+    }
 }
