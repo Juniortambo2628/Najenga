@@ -152,23 +152,28 @@ export default function Index({ users }) {
                 ]}
                 actions={
                     <div className="flex items-center gap-3">
-                        <BulkActions
-                            selectedCount={selectedCount}
-                            totalCount={users.length}
-                            onSelectAll={() => selectAll(users.map(u => u.id))}
-                            onDeselectAll={deselectAll}
-                            actions={
-                                <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                    <i aria-hidden="true" className="fas fa-trash"></i>
-                                </button>
-                            }
-                        />
                         <PrimaryButton as="link" href={route('users.create')}>
                             <i className="fas fa-plus mr-2"></i>Add User
                         </PrimaryButton>
                     </div>
                 }
             />
+
+            {selectedCount > 0 && (
+                <div className="panel px-5 py-3 mb-6 sticky top-16 z-[15]">
+                    <BulkActions
+                        selectedCount={selectedCount}
+                        totalCount={users.length}
+                        onSelectAll={() => selectAll(users.map(u => u.id))}
+                        onDeselectAll={deselectAll}
+                        actions={
+                            <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
+                                <i aria-hidden="true" className="fas fa-trash"></i>
+                            </button>
+                        }
+                    />
+                </div>
+            )}
 
             <div className="panel overflow-hidden">
                 <div className="overflow-x-auto">
