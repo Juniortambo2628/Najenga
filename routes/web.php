@@ -81,6 +81,7 @@ Route::patch('/expenses/batch/project', [\App\Http\Controllers\ExpenseController
     Route::get('/photos', [\App\Http\Controllers\PhotoController::class, 'index'])->name('photos');
     Route::get('/photos/create', [\App\Http\Controllers\PhotoController::class, 'create'])->name('photos.create');
     Route::post('/photos', [\App\Http\Controllers\PhotoController::class, 'store'])->name('photos.store');
+    Route::post('/photos/resolve-dates', [\App\Http\Controllers\PhotoController::class, 'resolveDates'])->name('photos.resolveDates');
     Route::get('/photos/{photo}', [\App\Http\Controllers\PhotoController::class, 'show'])->name('photos.show');
     Route::get('/photos/{photo}/edit', [\App\Http\Controllers\PhotoController::class, 'edit'])->name('photos.edit');
     Route::patch('/photos/{photo}', [\App\Http\Controllers\PhotoController::class, 'update'])->name('photos.update');

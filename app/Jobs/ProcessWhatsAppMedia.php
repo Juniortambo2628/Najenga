@@ -9,6 +9,7 @@ use App\Models\WhatsAppLog;
 use App\Services\MediaClassifier;
 use App\Services\OcrService;
 use App\Services\PaymentMatcher;
+use App\Services\PhotoDateResolver;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -277,7 +278,8 @@ class ProcessWhatsAppMedia implements ShouldQueue
                 'file_size' => Storage::disk('public')->size($storagePath),
                 'mime_type' => $this->payload['mime'] ?? ($mediaType === 'video' ? 'video/mp4' : 'image/jpeg'),
                 'source_channel' => 'whatsapp',
-                'photo_date' => now()->toDateString(),
+                'taken_at' => app(PhotoDateResolver::class)->now(),
+                'date_source' => PhotoDateResolver::SOURCE_UPLOAD,
             ]);
         } catch (\Throwable $e) {
             Log::warning('Failed to create Photo from WhatsApp: ' . $e->getMessage());
