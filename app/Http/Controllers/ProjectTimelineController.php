@@ -52,7 +52,7 @@ class ProjectTimelineController extends Controller
                 'recipient' => $e->recipient,
                 'payment_method' => $e->payment_method,
             ]),
-            'photos' => $photos->orderBy('photo_date', 'desc')->get()->map(fn ($p) => [
+            'photos' => $photos->orderBy('photo_date', 'desc')->orderBy('taken_at', 'desc')->get()->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,
                 'file_path' => $p->file_path,

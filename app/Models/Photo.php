@@ -28,13 +28,28 @@ class Photo extends Model implements HasMedia
         'category',
         'source_channel',
         'photo_date',
+        'taken_at',
+        'date_source',
+        'source_path',
+        'content_hash',
         'is_featured',
     ];
+
+    protected static function booted(): void
+    {
+        // photo_date stays the day of taken_at so date-only queries keep working.
+        static::saving(function (Photo $photo) {
+            if ($photo->isDirty('taken_at') && $photo->taken_at) {
+                $photo->photo_date = $photo->taken_at->toDateString();
+            }
+        });
+    }
 
     protected function casts(): array
     {
         return [
             'photo_date' => 'date',
+            'taken_at' => 'datetime',
             'is_featured' => 'boolean',
         ];
     }

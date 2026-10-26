@@ -66,6 +66,7 @@ export const TEST_ROUTES = {
     'photos.create': '/photos/create',
     'photos.destroy': '/photos/{photo}',
     'photos.edit': '/photos/{photo}/edit',
+    'photos.resolveDates': '/photos/resolve-dates',
     'photos.show': '/photos/{photo}',
     'photos.store': '/photos',
     'photos.update': '/photos/{photo}',
