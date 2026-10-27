@@ -66,3 +66,16 @@ describe('DashboardPage side panel', () => {
         expect(screen.getAllByRole('button', { name: /All files/ })).toHaveLength(2);
     });
 });
+
+describe('DashboardPage classes', () => {
+    it('passes wrapper and body classes through', () => {
+        const { container } = render(
+            <DashboardPage hero={{ title: 'WhatsApp' }} className="max-w-6xl mx-auto" bodyClassName="space-y-6">
+                <p>A</p>
+                <p>B</p>
+            </DashboardPage>,
+        );
+        expect(container.firstChild.className).toContain('max-w-6xl');
+        expect(screen.getByText('A').parentElement.className).toContain('space-y-6');
+    });
+});

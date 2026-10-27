@@ -24,13 +24,16 @@ import { SidePanelAside, SidePanelMobileBar } from '@/Components/SidePanel';
  *                                becomes a chip bar or bottom sheet under the navbar
  * @param {boolean}   [fill]    - Fit the screen; the content's ListPanel scrolls
  * @param {Function}  [onClick] - Click handler on the page (e.g. to close a context menu)
+ * @param {string}    [className]     - Extra classes for the page wrapper (e.g. a max width)
+ * @param {string}    [bodyClassName] - Extra classes for the content column (e.g. spacing between sections)
  */
-export default function DashboardPage({ hero, summary = null, toolbar = null, panel = null, fill = false, onClick, children }) {
+export default function DashboardPage({ hero, summary = null, toolbar = null, panel = null, fill = false, onClick, className = '', bodyClassName = '', children }) {
     // Navbar 4rem + main's padding (2rem top, 6rem bottom for the toolbar).
     const fit = fill ? 'fit:h-[calc(100dvh-12rem)] fit:flex fit:flex-col' : '';
+    const classes = `${fit} ${className}`.trim();
 
     return (
-        <div onClick={onClick} className={fit} data-layout={fill ? 'fill' : 'flow'}>
+        <div onClick={onClick} className={classes || undefined} data-layout={fill ? 'fill' : 'flow'}>
             <div className={fill ? 'fit:shrink-0' : ''}>
                 <DashboardHero {...hero} />
                 {summary && <div className="mb-6">{summary}</div>}
@@ -41,7 +44,7 @@ export default function DashboardPage({ hero, summary = null, toolbar = null, pa
             {panel && <SidePanelMobileBar panel={panel} />}
 
             <div className={`${panel ? 'lg:flex lg:gap-5' : ''} ${fill ? 'fit:flex-1 fit:min-h-0' : ''}`}>
-                <div className={`min-w-0 ${panel ? 'lg:flex-1' : ''} ${fill ? 'fit:h-full fit:flex fit:flex-col' : ''}`}>{children}</div>
+                <div className={`min-w-0 ${panel ? 'lg:flex-1' : ''} ${fill ? 'fit:h-full fit:flex fit:flex-col' : ''} ${bodyClassName}`}>{children}</div>
                 {panel && <SidePanelAside key={panel.id || panel.title} panel={panel} />}
             </div>
         </div>
