@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardHero from '@/Components/DashboardHero';
 import Modal from '@/Components/Modal';
@@ -11,7 +11,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
-import BulkActions from '@/Components/BulkActions';
+import FloatingToolbar from '@/Components/FloatingToolbar';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import { rootBreadcrumbs } from '@/Config/navigation';
@@ -28,6 +28,19 @@ export default function Index({ users }) {
     });
     const [errors, setErrors] = useState({});
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [roleFilter, setRoleFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    const filteredUsers = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        return users.filter((user) => (
+            (roleFilter === 'all' || user.role === roleFilter)
+            && (statusFilter === 'all' || user.status === statusFilter)
+            && (!q || [user.first_name, user.last_name, user.username, user.email]
+                .some((field) => field?.toLowerCase().includes(q)))
+        ));
+    }, [users, searchQuery, roleFilter, statusFilter]);
 
     const resetForm = () => {
         setForm({ first_name: '', last_name: '', email: '', role: 'client', password: '' });
@@ -143,6 +156,8 @@ export default function Index({ users }) {
         <AuthenticatedLayout>
             <Head title="User Management" />
 
+            {/* Fits the screen on desktops: only the table's rows scroll. */}
+            <div className={filteredUsers.length > 0 ? 'fit:h-[calc(100dvh-12rem)] fit:flex fit:flex-col' : ''}>
             <DashboardHero
                 title="User Management"
                 subtitle="Manage platform users and their roles"
@@ -150,42 +165,57 @@ export default function Index({ users }) {
                     ...rootBreadcrumbs(),
                     { label: 'Users' },
                 ]}
-                actions={
-                    <div className="flex items-center gap-3">
-                        <PrimaryButton as="link" href={route('users.create')}>
-                            <i className="fas fa-plus mr-2"></i>Add User
-                        </PrimaryButton>
-                    </div>
-                }
             />
 
-            {selectedCount > 0 && (
-                <div className="panel px-5 py-3 mb-6 sticky top-16 z-[15]">
-                    <BulkActions
-                        selectedCount={selectedCount}
-                        totalCount={users.length}
-                        onSelectAll={() => selectAll(users.map(u => u.id))}
-                        onDeselectAll={deselectAll}
-                        actions={
-                            <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                <i aria-hidden="true" className="fas fa-trash"></i>
-                            </button>
-                        }
-                    />
-                </div>
-            )}
+            <FloatingToolbar
+                search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search users' }}
+                filters={[
+                    {
+                        name: 'role',
+                        title: 'Role',
+                        value: roleFilter,
+                        onChange: setRoleFilter,
+                        options: [
+                            { value: 'all', label: 'All Roles' },
+                            { value: 'admin', label: 'Admin' },
+                            { value: 'manager', label: 'Manager' },
+                            { value: 'client', label: 'Client' },
+                        ],
+                    },
+                    {
+                        name: 'status',
+                        title: 'Status',
+                        value: statusFilter,
+                        onChange: setStatusFilter,
+                        options: [
+                            { value: 'all', label: 'All Statuses' },
+                            { value: 'active', label: 'Active' },
+                            { value: 'inactive', label: 'Inactive' },
+                            { value: 'suspended', label: 'Suspended' },
+                        ],
+                    },
+                ]}
+                actions={[{ id: 'add', label: 'Add User', icon: 'fa-plus', href: route('users.create'), variant: 'primary' }]}
+                selection={{
+                    count: selectedCount,
+                    total: filteredUsers.length,
+                    onSelectAll: () => selectAll(filteredUsers.map(u => u.id)),
+                    onDeselectAll: deselectAll,
+                    actions: [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }],
+                }}
+            />
 
-            <div className="panel overflow-hidden">
-                <div className="overflow-x-auto">
+            <div className="panel overflow-hidden fit:flex-1 fit:min-h-0 fit:flex fit:flex-col">
+                <div className="overflow-x-auto fit:flex-1 fit:min-h-0 fit:overflow-y-auto overscroll-contain">
                     <table className="w-full text-left">
-                        <thead>
+                        <thead className="sticky top-0 z-10 bg-surface-panel">
                             <tr className="border-b border-white/10">
                                 <th className="px-6 py-4 w-10">
                                     <input
                                         type="checkbox"
-                                        checked={selectedCount === users.length && users.length > 0}
+                                        checked={selectedCount === filteredUsers.length && filteredUsers.length > 0}
                                         aria-label="Select all users"
-                                        onChange={() => selectedCount === users.length ? deselectAll() : selectAll(users.map(u => u.id))}
+                                        onChange={() => selectedCount === filteredUsers.length ? deselectAll() : selectAll(filteredUsers.map(u => u.id))}
                                         className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                     />
                                 </th>
@@ -198,7 +228,7 @@ export default function Index({ users }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map((user) => (
+                            {filteredUsers.map((user) => (
                                 <tr key={user.id} className={`border-b border-white/5 hover:bg-white/5 transition ${isSelected(user.id) ? 'bg-white/5' : ''}`}>
                                     <td className="px-6 py-4">
                                         <input
@@ -246,16 +276,17 @@ export default function Index({ users }) {
                                     </td>
                                 </tr>
                             ))}
-                            {users.length === 0 && (
+                            {filteredUsers.length === 0 && (
                                 <tr>
                                     <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
-                                        No users found
+                                        {users.length === 0 ? 'No users found' : 'No users match your search or filters'}
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
 
             {/* Edit User Modal (Tabbed) */}
