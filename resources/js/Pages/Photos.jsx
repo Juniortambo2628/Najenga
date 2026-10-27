@@ -14,12 +14,10 @@ import useFilteredItems from '@/Hooks/useFilteredItems';
 import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
 import useHashHighlight from '@/Hooks/useHashHighlight';
-import ContextToolbar from '@/Components/ContextToolbar';
+import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
 import PhotoCard from '@/Components/PhotoCard';
-import SearchFilterBar from '@/Components/SearchFilterBar';
-import BulkActions from '@/Components/BulkActions';
 import DashboardHero from '@/Components/DashboardHero';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import ShareProjectModal from '@/Components/ShareProjectModal';
@@ -161,65 +159,29 @@ export default function Photos({ photos = [], projects = [] }) {
                     ]}
                 />
                 {/* Context Toolbar */}
-                <ContextToolbar
-                    projects={projects}
-                    currentProjectId={activeProjectId}
-                    onProjectChange={setActiveProjectId}
-                    pageTitle="Photos"
-                    pageSubtitle={`${filteredPhotos.length} photo${filteredPhotos.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
-                    selectedCount={selectedCount}
-                    bulkActions={
-                        <>
-                            <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i aria-hidden="true" className="fas fa-download"></i></button>
-                            <button
-                                className="text-white hover:text-gray-200"
-                                title="Delete Selected"
-                                onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
-                            >
-                                <i aria-hidden="true" className="fas fa-trash"></i>
-                            </button>
-                            <button className="text-white hover:text-gray-200" onClick={clearSelection} title="Clear Selection"><i aria-hidden="true" className="fas fa-times"></i></button>
-                        </>
-                    }
-                    actions={
-                        <PrimaryButton as="link" href={route('photos.create')}>
-                            <i className="fas fa-upload"></i> Upload Photo
-                        </PrimaryButton>
-                    }
-                >
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <BulkActions
-                            selectedCount={selectedCount}
-                            totalCount={filteredPhotos.length}
-                            onSelectAll={() => selectAll(filteredPhotos.map(p => p.id))}
-                            onDeselectAll={deselectAll}
-                            actions={
-                                <>
-                                    <button className="text-white hover:text-gray-200" title="Download Selected" onClick={downloadSelectedPhotos}><i aria-hidden="true" className="fas fa-download"></i></button>
-                                    <button
-                                        className="text-white hover:text-gray-200"
-                                        title="Delete Selected"
-                                        onClick={() => deleteSelectedPhotos(`Delete ${selectedCount} items?`)}
-                                    >
-                                        <i aria-hidden="true" className="fas fa-trash"></i>
-                                    </button>
-                                    <button className="text-white hover:text-gray-200" onClick={clearSelection} title="Clear Selection"><i aria-hidden="true" className="fas fa-times"></i></button>
-                                </>
-                            }
-                        />
-                        <SearchFilterBar
-                            searchValue={searchQuery}
-                            onSearchChange={setSearchQuery}
-                            filters={[]}
-                            viewMode={viewMode}
-                            onViewModeChange={setViewMode}
-                            viewModeOptions={[
-                                { value: 'grid', label: 'Grid', icon: 'fa-th' },
-                                { value: 'timeline', label: 'Timeline', icon: 'fa-clock' },
-                            ]}
-                        />
-                    </div>
-                </ContextToolbar>
+                <FloatingToolbar
+                    project={{ projects, currentId: activeProjectId, onChange: setActiveProjectId }}
+                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search photos' }}
+                    view={{
+                        current: viewMode,
+                        onChange: setViewMode,
+                        modes: [
+                            { value: 'grid', icon: 'fa-th', label: 'Grid' },
+                            { value: 'timeline', icon: 'fa-clock', label: 'Timeline' },
+                        ],
+                    }}
+                    actions={[{ id: 'upload', label: 'Upload Photo', icon: 'fa-upload', href: route('photos.create'), variant: 'primary' }]}
+                    selection={{
+                        count: selectedCount,
+                        total: filteredPhotos.length,
+                        onSelectAll: () => selectAll(filteredPhotos.map(p => p.id)),
+                        onDeselectAll: deselectAll,
+                        actions: [
+                            { id: 'download', label: 'Download Selected', icon: 'fa-download', onClick: downloadSelectedPhotos },
+                            { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: () => deleteSelectedPhotos(`Delete ${selectedCount} items?`) },
+                        ],
+                    }}
+                />
 
                 {/* Timeline Grouping Options */}
                 {viewMode === 'timeline' && (

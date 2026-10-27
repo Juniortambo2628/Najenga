@@ -2,19 +2,17 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage, Link, useForm, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import ContextToolbar from '@/Components/ContextToolbar';
+import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import SearchFilterBar from '@/Components/SearchFilterBar';
 import Modal from '@/Components/Modal';
 import ShareProjectModal from '@/Components/ShareProjectModal';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
-import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import { exportToCSV } from '@/Utils/exportToCSV';
@@ -275,67 +273,54 @@ export default function Projects({ projects = [] }) {
                         { label: 'Projects' },
                     ]}
                 />
-                {/* Context Toolbar */}
-                <ContextToolbar
-                    pageTitle="Projects"
-                    pageSubtitle={`${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''}`}
-                    actions={
-                        <>
-                            <BulkActions
-                                selectedCount={selectedCount}
-                                totalCount={filteredProjects.length}
-                                onSelectAll={() => selectAll(filteredProjects.map(p => p.id))}
-                                onDeselectAll={deselectAll}
-                                actions={
-                                    <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                        <i aria-hidden="true" className="fas fa-trash"></i>
-                                    </button>
-                                }
-                            />
-                            <button onClick={handleExport} className="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 rounded-xl hover:bg-white/10 transition text-sm font-medium">
-                                <i aria-hidden="true" className="fas fa-download mr-2"></i> Export
-                            </button>
-                                <PrimaryButton as="link" href={route('projects.create')}>
-                                    <i className="fas fa-plus"></i> New Project
-                                </PrimaryButton>
-                        </>
-                    }
-                >
-                    <SearchFilterBar
-                        searchValue={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        filters={[
-                            {
-                                name: 'status',
-                                value: statusFilter,
-                                onChange: setStatusFilter,
-                                label: 'All Status',
-                                options: [
-                                    { value: 'planning', label: 'Planning' },
-                                    { value: 'active', label: 'Active' },
-                                    { value: 'completed', label: 'Completed' },
-                                ],
-                            },
-                            {
-                                name: 'sort',
-                                value: sortBy,
-                                onChange: setSortBy,
-                                label: 'Newest First',
-                                options: [
-                                    { value: 'oldest', label: 'Oldest First' },
-                                    { value: 'budget_high', label: 'Budget: High to Low' },
-                                    { value: 'budget_low', label: 'Budget: Low to High' },
-                                ],
-                            },
-                        ]}
-                        viewMode={viewMode}
-                        onViewModeChange={setViewMode}
-                        viewModeOptions={[
-                            { value: 'grid', icon: 'fa-th-large' },
-                            { value: 'list', icon: 'fa-list' },
-                        ]}
-                    />
-                </ContextToolbar>
+                <FloatingToolbar
+                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search projects' }}
+                    filters={[
+                        {
+                            name: 'status',
+                            title: 'Status',
+                            value: statusFilter,
+                            onChange: setStatusFilter,
+                            options: [
+                                { value: 'all', label: 'All Status' },
+                                { value: 'planning', label: 'Planning' },
+                                { value: 'active', label: 'Active' },
+                                { value: 'completed', label: 'Completed' },
+                            ],
+                        },
+                        {
+                            name: 'sort',
+                            title: 'Sort by',
+                            value: sortBy,
+                            onChange: setSortBy,
+                            options: [
+                                { value: 'newest', label: 'Newest First' },
+                                { value: 'oldest', label: 'Oldest First' },
+                                { value: 'budget_high', label: 'Budget: High to Low' },
+                                { value: 'budget_low', label: 'Budget: Low to High' },
+                            ],
+                        },
+                    ]}
+                    view={{
+                        current: viewMode,
+                        onChange: setViewMode,
+                        modes: [
+                            { value: 'grid', icon: 'fa-th-large', label: 'Grid' },
+                            { value: 'list', icon: 'fa-list', label: 'List' },
+                        ],
+                    }}
+                    actions={[
+                        { id: 'new', label: 'New Project', icon: 'fa-plus', href: route('projects.create'), variant: 'primary' },
+                        { id: 'export', label: 'Export', icon: 'fa-download', onClick: handleExport },
+                    ]}
+                    selection={{
+                        count: selectedCount,
+                        total: filteredProjects.length,
+                        onSelectAll: () => selectAll(filteredProjects.map(p => p.id)),
+                        onDeselectAll: deselectAll,
+                        actions: [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }],
+                    }}
+                />
 
                 {/* Grid/List View */}
                 {filteredProjects.length === 0 ? (

@@ -142,7 +142,7 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                 </div>
 
                 {/* Filters */}
-                <div className="rounded-2xl border border-white/10 bg-gray-900/50 p-4 space-y-3">
+                <div className="rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4 space-y-3">
                     <div className="flex flex-wrap gap-2 items-center">
                         {DIRECTION_OPTIONS.map((o) => (
                             <button
@@ -193,7 +193,7 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
 
                 <div className="grid gap-6 md:grid-cols-3">
                     {/* Timeline */}
-                    <div className="md:col-span-2 rounded-2xl border border-white/10 bg-gray-900/50 p-4">
+                    <div className="md:col-span-2 rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4">
                         <h2 className="text-sm font-semibold text-white mb-3">Timeline</h2>
                         {items.length === 0 ? (
                             <p className="text-sm text-gray-400 py-6 text-center">
@@ -282,7 +282,7 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
 
                     {/* Filed */}
                     <div className="space-y-4">
-                        <section className="rounded-2xl border border-white/10 bg-gray-900/50 p-4">
+                        <section className="rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4">
                             <h2 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
                                 <i aria-hidden="true" className="fas fa-receipt text-red-300"></i>
                                 Filed expenses
@@ -316,7 +316,7 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                             )}
                         </section>
 
-                        <section className="rounded-2xl border border-white/10 bg-gray-900/50 p-4">
+                        <section className="rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4">
                             <h2 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
                                 <i aria-hidden="true" className="fas fa-image text-purple-300"></i>
                                 Filed photos

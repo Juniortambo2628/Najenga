@@ -66,11 +66,11 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                                 return (
                                     <div
                                         key={user.id}
-                                        className="w-8 h-8 rounded-full bg-gray-700 border-2 border-black flex items-center justify-center text-xs text-white relative group cursor-pointer"
+                                        className="w-8 h-8 rounded-full bg-white/10 border-2 border-black flex items-center justify-center text-xs text-white relative group cursor-pointer"
                                         title={`${userName} (${role})`}
                                     >
                                         {(userName || '?').charAt(0).toUpperCase()}
-                                        <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap z-10 border border-white/10">
+                                        <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition bg-surface-overlay text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap z-10 border border-white/10">
                                             {userName} · {role}
                                         </div>
                                     </div>
@@ -78,7 +78,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                             })}
                             <button
                                 onClick={() => setShowShareModal(true)}
-                                className="w-8 h-8 rounded-full bg-gray-800 border-2 border-black flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-gray-700 transition"
+                                className="w-8 h-8 rounded-full bg-white/[0.06] border-2 border-black flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-white/10 transition"
                                 title="Add team member"
                             >
                                 <i aria-hidden="true" className="fas fa-plus"></i>
@@ -108,7 +108,7 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                             </div>
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 {photos.map(photo => (
-                                    <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-gray-800 relative group">
+                                    <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-white/[0.06] relative group">
                                         <img loading="lazy" decoding="async"  src={`/storage/${photo.file_path}`} alt={photo.title} className="w-full h-full object-cover" />
                                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition flex items-center justify-center">
                                             <span className="text-white text-sm font-medium">{photo.title}</span>

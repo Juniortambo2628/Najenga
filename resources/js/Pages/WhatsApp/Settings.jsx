@@ -73,7 +73,7 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                 )}
 
                 <div className="grid md:grid-cols-2 gap-6">
-                    <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
+                    <div className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl p-6">
                         <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
                             <i aria-hidden="true" className="fab fa-whatsapp text-green-400 text-xl mr-2"></i>
                             Configuration
@@ -102,7 +102,7 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                         </div>
                     </div>
 
-                    <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
+                    <div className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl p-6">
                         <h2 className="text-lg font-semibold text-white mb-4">
                             <i aria-hidden="true" className="fas fa-paper-plane text-blue-400 mr-2"></i>
                             Test send
@@ -169,7 +169,7 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                     </div>
                 </div>
 
-                <div className="bg-gray-900/50 border border-white/10 rounded-2xl p-6">
+                <div className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl p-6">
                     <h2 className="text-lg font-semibold text-white mb-1 flex items-center">
                         <i aria-hidden="true" className="fas fa-satellite-dish text-purple-300 mr-2"></i>
                         Recent webhook deliveries

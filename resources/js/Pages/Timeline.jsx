@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import DashboardHero from '@/Components/DashboardHero';
-import ContextToolbar from '@/Components/ContextToolbar';
+import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import StatusBadge from '@/Components/StatusBadge';
 import Modal from '@/Components/Modal';
@@ -51,7 +51,7 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
                 </div>
             </div>
 
-            <div className="flex-1 bg-gray-900/50 border border-white/10 rounded-2xl p-6 hover:border-white/20 transition">
+            <div className="flex-1 bg-surface-panel/90 border border-white/[0.08] rounded-2xl p-6 hover:border-white/20 transition">
                 <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
                         {item.type === 'milestone' ? (
@@ -125,7 +125,7 @@ function StatsBar({ expenses, photos, documents, milestones }) {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
             {stats.map((s) => (
-                <div key={s.label} className="bg-gray-900/50 border border-white/10 rounded-xl p-4 text-center">
+                <div key={s.label} className="bg-surface-panel/90 border border-white/[0.08] rounded-xl p-4 text-center">
                     <i aria-hidden="true" className={`fas ${s.icon} ${s.color} text-lg mb-1`}></i>
                     <div className="text-white font-bold text-lg">{s.value}</div>
                     <div className="text-gray-400 text-xs uppercase tracking-wider">{s.label}</div>
@@ -235,21 +235,15 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     ]}
                 />
 
-                <ContextToolbar
-                    projects={projects}
-                    currentProjectId={filterProject}
-                    onProjectChange={(val) => setFilterProject(val)}
-                    actions={
-                        <PrimaryButton as="link" href={route('timeline.create')}>
-                            <i className="fas fa-plus"></i> Add Milestone
-                        </PrimaryButton>
-                    }
+                <FloatingToolbar
+                    project={{ projects, currentId: filterProject, onChange: (val) => setFilterProject(val) }}
+                    actions={[{ id: 'add', label: 'Add Milestone', icon: 'fa-plus', href: route('timeline.create'), variant: 'primary' }]}
                 />
 
                 <StatsBar expenses={expenses} photos={photos} documents={documents} milestones={timelines} />
 
                 {/* Tabs */}
-                <div className="flex gap-1 mb-6 bg-gray-900/50 border border-white/10 rounded-xl p-1 w-fit overflow-x-auto">
+                <div className="flex gap-1 mb-6 bg-surface-panel/90 border border-white/[0.08] rounded-xl p-1 w-fit overflow-x-auto">
                     {TABS.map((tab) => {
                         const count = tabData[tab.key]?.length || 0;
                         return (
@@ -345,7 +339,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     ) : (
                         <div className="space-y-3">
                             {currentItems.map((expense) => (
-                                <div key={expense.id} className="bg-gray-900/50 border border-white/10 rounded-2xl p-5 flex items-center justify-between hover:border-yellow-500/30 transition">
+                                <div key={expense.id} className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl p-5 flex items-center justify-between hover:border-yellow-500/30 transition">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center">
                                             <i aria-hidden="true" className="fas fa-receipt text-white text-sm"></i>
@@ -373,7 +367,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {currentItems.map((photo) => (
-                                <div key={photo.id} className="bg-gray-900/50 border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition group">
+                                <div key={photo.id} className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl overflow-hidden hover:border-cyan-500/30 transition group">
                                     <div className="aspect-square bg-white/5 flex items-center justify-center overflow-hidden">
                                         {photo.file_path ? (
                                             <img loading="lazy" decoding="async" 
@@ -403,7 +397,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     ) : (
                         <div className="space-y-3">
                             {currentItems.map((doc) => (
-                                <div key={doc.id} className="bg-gray-900/50 border border-white/10 rounded-2xl p-5 flex items-center justify-between hover:border-purple-500/30 transition">
+                                <div key={doc.id} className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl p-5 flex items-center justify-between hover:border-purple-500/30 transition">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                                             <i aria-hidden="true" className="fas fa-file-alt text-white text-sm"></i>
@@ -456,7 +450,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
                                 rows={3}
-                                className="mt-1 block w-full px-4 py-2.5 bg-gray-800 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(139,0,0)] focus:border-transparent resize-none"
+                                className="mt-1 block w-full px-4 py-2.5 bg-white/[0.06] border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(139,0,0)] focus:border-transparent resize-none"
                                 placeholder="Describe this milestone"
                             />
                             <InputError id="timeline-description-error" message={errors.description} className="mt-1" />

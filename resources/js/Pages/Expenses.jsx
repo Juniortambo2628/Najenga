@@ -6,14 +6,12 @@ import { rootBreadcrumbs } from '@/Config/navigation';
 const ExpenseSheet = lazy(() => import('@/Components/ExpenseSheet'));
 import ExpenseForm from '@/Components/ExpenseForm';
 import ExpenseDetailModal from '@/Components/ExpenseDetailModal';
-import ContextToolbar from '@/Components/ContextToolbar';
+import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
-import SearchFilterBar from '@/Components/SearchFilterBar';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Button from '@/Components/Button';
 import DashboardHero from '@/Components/DashboardHero';
 import Modal from '@/Components/Modal';
-import BulkActions from '@/Components/BulkActions';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useActiveProject from '@/Hooks/useActiveProject';
 import useContextMenu from '@/Hooks/useContextMenu';
@@ -177,7 +175,12 @@ export default function Expenses({ expenses = [], projects = [] }) {
         <AuthenticatedLayout>
             <Head title="Expenses" />
 
-            <div onClick={closeContextMenu}>
+            {/* List view fits the screen on desktops: only the table's rows scroll
+                (header 4rem + main padding 2rem top, 6rem bottom for the toolbar). */}
+            <div
+                onClick={closeContextMenu}
+                className={viewMode === 'list' && filteredExpenses.length > 0 ? 'fit:h-[calc(100dvh-12rem)] fit:flex fit:flex-col' : ''}
+            >
                 <DashboardHero
                     title="Expenses"
                     subtitle={`${filteredExpenses.length} expense${filteredExpenses.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
@@ -186,67 +189,53 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         { label: 'Expenses' },
                     ]}
                 />
-                <ContextToolbar
-                    projects={projects}
-                    currentProjectId={activeProjectId}
-                    onProjectChange={setActiveProjectId}
-                    selectedCount={selectedCount}
-                    actions={
-                        <PrimaryButton as="link" href={route('expenses.create')}>
-                            <i className="fas fa-plus mr-1"></i>Add Expense
-                        </PrimaryButton>
-                    }
-                >
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <BulkActions
-                            selectedCount={selectedCount}
-                            totalCount={filteredExpenses.length}
-                            onSelectAll={() => selectAll(filteredExpenses.map(e => e.id))}
-                            onDeselectAll={deselectAll}
-                            actions={
-                                <>
-                                    <button className="text-white hover:text-gray-200" title="Assign to Project" onClick={() => setIsAssignModalOpen(true)}>
-                                        <i aria-hidden="true" className="fas fa-folder-open"></i>
-                                    </button>
-                                    <button className="text-white hover:text-gray-200" title="Delete Selected" onClick={handleBulkDelete}>
-                                        <i aria-hidden="true" className="fas fa-trash"></i>
-                                    </button>
-                                </>
-                            }
-                        />
-                    </div>
-                    <SearchFilterBar
-                        searchValue={searchQuery}
-                        onSearchChange={setSearchQuery}
-                        filters={[
-                            {
-                                name: 'category',
-                                label: 'All Categories',
-                                value: categoryFilter,
-                                onChange: setCategoryFilter,
-                                options: categories.map(c => ({ value: c, label: c === 'all' ? 'All Categories' : c })),
-                            },
-                            {
-                                name: 'sort',
-                                label: 'Sort by',
-                                value: sortBy,
-                                onChange: setSortBy,
-                                options: [
-                                    { value: 'date_desc', label: 'Newest First' },
-                                    { value: 'date_asc', label: 'Oldest First' },
-                                    { value: 'amount_high', label: 'Highest Amount' },
-                                    { value: 'amount_low', label: 'Lowest Amount' },
-                                ],
-                            },
-                        ]}
-                        viewMode={viewMode}
-                        onViewModeChange={setViewMode}
-                        viewModeOptions={[
-                            { value: 'list', icon: 'fa-list' },
-                            { value: 'sheet', icon: 'fa-table' },
-                        ]}
-                    />
-                </ContextToolbar>
+                <FloatingToolbar
+                    project={{ projects, currentId: activeProjectId, onChange: setActiveProjectId }}
+                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search expenses' }}
+                    filters={[
+                        {
+                            name: 'category',
+                            title: 'Category',
+                            value: categoryFilter,
+                            onChange: setCategoryFilter,
+                            options: categories.map(c => ({ value: c, label: c === 'all' ? 'All Categories' : c })),
+                        },
+                        {
+                            name: 'sort',
+                            title: 'Sort by',
+                            value: sortBy,
+                            onChange: setSortBy,
+                            options: [
+                                { value: 'date_desc', label: 'Newest First' },
+                                { value: 'date_asc', label: 'Oldest First' },
+                                { value: 'amount_high', label: 'Highest Amount' },
+                                { value: 'amount_low', label: 'Lowest Amount' },
+                            ],
+                        },
+                    ]}
+                    view={{
+                        current: viewMode,
+                        onChange: setViewMode,
+                        modes: [
+                            { value: 'list', icon: 'fa-list', label: 'List' },
+                            { value: 'sheet', icon: 'fa-table', label: 'Spreadsheet' },
+                        ],
+                    }}
+                    actions={[
+                        { id: 'add', label: 'Add Expense', icon: 'fa-plus', href: route('expenses.create'), variant: 'primary' },
+                        { id: 'export', label: 'Export CSV', icon: 'fa-file-export', onClick: handleExport },
+                    ]}
+                    selection={{
+                        count: selectedCount,
+                        total: filteredExpenses.length,
+                        onSelectAll: () => selectAll(filteredExpenses.map(e => e.id)),
+                        onDeselectAll: deselectAll,
+                        actions: [
+                            { id: 'assign', label: 'Assign to Project', icon: 'fa-folder-open', onClick: () => setIsAssignModalOpen(true) },
+                            { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete },
+                        ],
+                    }}
+                />
 
                 {filteredExpenses.length === 0 && viewMode !== 'sheet' && (
                     <EmptyState 
@@ -271,9 +260,9 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         />
                     </Suspense>
                 ) : filteredExpenses.length > 0 ? (
-                    <div className="bg-gray-900/50 border border-white/10 rounded-2xl overflow-x-auto">
+                    <div className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl overflow-x-auto fit:flex-1 fit:min-h-0 fit:overflow-y-auto overscroll-contain">
                             <table className="min-w-full text-left text-gray-400">
-                                <thead className="bg-black/20 text-gray-200 uppercase text-xs font-semibold">
+                                <thead className="bg-[#111213] text-gray-200 uppercase text-xs font-semibold sticky top-0 z-10">
                                     <tr>
                                         <th className="px-6 py-4 w-10">
                                             <input
@@ -427,7 +416,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
             {/* Receipt Preview Modal */}
             {previewExpense && (
                 <Dialog open onClose={() => setPreviewExpense(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <DialogPanel className="bg-gray-900 border border-white/10 rounded-2xl max-w-2xl w-full mx-4 overflow-hidden shadow-2xl">
+                    <DialogPanel className="bg-surface-overlay border border-white/[0.08] rounded-2xl max-w-2xl w-full mx-4 overflow-hidden shadow-2xl">
                         <div className="flex justify-between items-center p-4 border-b border-white/10">
                             <DialogTitle as="h3" className="text-lg font-bold text-white">
                                 {previewExpense.reference_number || 'Receipt'} — {previewExpense.recipient || previewExpense.title}

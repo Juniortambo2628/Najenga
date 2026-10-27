@@ -4,7 +4,7 @@ import { useState } from 'react';
 import StatCard from '@/Components/StatCard';
 import Card from '@/Components/Card';
 import DashboardHero from '@/Components/DashboardHero';
-import ContextToolbar from '@/Components/ContextToolbar';
+import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
@@ -37,7 +37,7 @@ function BarChart({ data, labelKey, valueKey, maxBars = 10 }) {
                         <span className="text-gray-400">{item[labelKey]}</span>
                         <span className="text-white font-mono text-xs">{typeof item[valueKey] === 'number' && item[valueKey] > 100 ? formatCurrency(item[valueKey]) : item[valueKey]}</span>
                     </div>
-                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] rounded-full transition-all duration-700"
                             style={{ width: `${(item[valueKey] / maxVal) * 100}%` }}
@@ -106,7 +106,7 @@ function TrendChart({ data }) {
                 const h = Math.max((month.total / maxVal) * maxH, 4);
                 return (
                     <div key={i} className="flex-1 flex flex-col items-center justify-end group relative" style={{ height: maxH }}>
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition whitespace-nowrap z-10 pointer-events-none">
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-overlay text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition whitespace-nowrap z-10 pointer-events-none">
                             {formatCurrency(month.total)}
                         </div>
                         <div
@@ -144,14 +144,14 @@ function ProjectBudgetBar({ project }) {
     const isWarning = project.budget_used_percentage > 80;
 
     return (
-        <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4 hover:border-white/20 transition">
+        <div className="bg-surface-panel/90 border border-white/[0.08] rounded-xl p-4 hover:border-white/20 transition">
             <div className="flex justify-between items-center mb-2">
                 <h4 className="text-white font-medium text-sm truncate">{project.name}</h4>
                 <span className={`text-xs font-bold ${isOver ? 'text-red-400' : isWarning ? 'text-yellow-400' : 'text-green-400'}`}>
                     {project.budget_used_percentage}%
                 </span>
             </div>
-            <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
+            <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden mb-2">
                 <div
                     className={`h-full rounded-full transition-all duration-700 ${isOver ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)]'}`}
                     style={{ width: `${pct}%` }}
@@ -216,28 +216,25 @@ export default function Analytics({
                 />
 
                 {/* Context Toolbar with project filter + period selector */}
-                <ContextToolbar
-                    projects={projects}
-                    currentProjectId={projectFilter}
-                    onProjectChange={(val) => handleContextChange(period, val)}
-                    actions={
-                        <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
-                            {PERIODS.map((p) => (
-                                <button
-                                    key={p.value}
-                                    onClick={() => handleContextChange(p.value, projectFilter)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                                        period === p.value
-                                            ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
-                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                    }`}
-                                >
-                                    {p.label}
-                                </button>
-                            ))}
-                        </div>
-                    }
-                />
+                <FloatingToolbar
+                    project={{ projects, currentId: projectFilter, onChange: (val) => handleContextChange(period, val) }}
+                >
+                    <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+                        {PERIODS.map((p) => (
+                            <button
+                                key={p.value}
+                                onClick={() => handleContextChange(p.value, projectFilter)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                                    period === p.value
+                                        ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
+                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                            >
+                                {p.label}
+                            </button>
+                        ))}
+                    </div>
+                </FloatingToolbar>
 
                 {/* Overview Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">

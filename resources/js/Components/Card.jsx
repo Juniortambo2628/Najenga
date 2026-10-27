@@ -2,7 +2,7 @@
 const variants = {
     default: 'bg-black/50 border border-white/10 rounded-2xl p-6 backdrop-blur-sm',
     glass: 'bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-lg',
-    elevated: 'bg-gray-900/50 border border-white/10 rounded-2xl p-6',
+    elevated: 'bg-surface-panel/90 border border-white/[0.08] rounded-2xl p-6',
     flat: 'bg-black/50 border border-white/10 rounded-2xl p-6',
 };
 

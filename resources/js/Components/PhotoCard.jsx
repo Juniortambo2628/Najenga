@@ -6,7 +6,7 @@ export default function PhotoCard({ photo, selected, highlighted = false, onTogg
     return (
         <div
             id={`photo-${photo.id}`}
-            className={`relative aspect-square rounded-xl overflow-hidden bg-gray-800 group cursor-pointer transition-all duration-200 ${
+            className={`relative aspect-square rounded-xl overflow-hidden bg-white/[0.06] group cursor-pointer transition-all duration-200 ${
                 selected ? 'ring-2 ring-[#DC143C] ring-offset-2 ring-offset-black' : highlighted ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-black' : 'hover:ring-1 hover:ring-white/20'
             }`}
             onClick={(e) => onToggle(e.metaKey || e.ctrlKey)}
@@ -15,7 +15,7 @@ export default function PhotoCard({ photo, selected, highlighted = false, onTogg
         >
             {broken ? (
                 <div
-                    className="w-full h-full flex flex-col items-center justify-center text-center gap-2 text-gray-500 bg-gray-900/60"
+                    className="w-full h-full flex flex-col items-center justify-center text-center gap-2 text-gray-500 bg-surface-panel"
                     role="img"
                     aria-label={`Missing file for ${photo.title || 'photo'}`}
                 >
