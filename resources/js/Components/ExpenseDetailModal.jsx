@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Modal from '@/Components/Modal';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -12,7 +12,7 @@ import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import DetailRow from '@/Components/DetailRow';
-import { confirmAction } from '@/Utils/feedback';
+import useAction from '@/Hooks/useAction';
 
 function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors, projects, onSave, onCancel, saving, onStartEdit }) {
     const handleChange = (field) => (e) => {
@@ -147,45 +147,43 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
 }
 
 function ReceiptTab({ expense, onReceiptUpdate }) {
-    const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(expense?.receipt_url || null);
 
     useEffect(() => {
         setPreviewUrl(expense?.receipt_url || null);
     }, [expense?.receipt_url]);
 
-    const onDrop = useCallback(async (acceptedFiles) => {
-        if (acceptedFiles.length === 0) return;
-        const file = acceptedFiles[0];
-        setUploading(true);
-        try {
-            const formData = new FormData();
-            formData.append('receipt', file);
-            const res = await axios.post(`/expenses/${expense.id}/receipt`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            if (res.data.success) {
-                setPreviewUrl(res.data.receipt_url);
-                toast.success('Receipt uploaded');
-                if (onReceiptUpdate) onReceiptUpdate(res.data);
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Upload failed');
-        }
-        setUploading(false);
-    }, [expense?.id, onReceiptUpdate]);
-
-    const handleRemove = async () => {
-        if (!(await confirmAction('Remove this receipt?'))) return;
-        try {
-            await axios.delete(`/expenses/${expense.id}/receipt`);
-            setPreviewUrl(null);
-            toast.success('Receipt removed');
-            if (onReceiptUpdate) onReceiptUpdate({ receipt_url: null });
-        } catch {
-            toast.error('Failed to remove receipt');
-        }
+    const upload = useAction((file) => {
+        const formData = new FormData();
+        formData.append('receipt', file);
+        return axios.post(`/expenses/${expense.id}/receipt`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    }, {
+        success: (res) => (res.data.success ? 'Receipt uploaded' : null),
+        error: 'Upload failed',
+        key: () => 'upload',
+        onSuccess: (res) => {
+            if (!res.data.success) return;
+            setPreviewUrl(res.data.receipt_url);
+            if (onReceiptUpdate) onReceiptUpdate(res.data);
+        },
+    });
+    const uploading = upload.pending;
+    const onDrop = (acceptedFiles) => {
+        if (acceptedFiles.length > 0) upload.run(acceptedFiles[0]);
     };
+
+    const remove = useAction(() => axios.delete(`/expenses/${expense.id}/receipt`), {
+        confirm: 'Remove this receipt?',
+        success: 'Receipt removed',
+        error: 'Failed to remove receipt',
+        onSuccess: () => {
+            setPreviewUrl(null);
+            if (onReceiptUpdate) onReceiptUpdate({ receipt_url: null });
+        },
+    });
+    const handleRemove = () => remove.run();
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -291,7 +289,6 @@ function ActivityTab({ expense }) {
 export default function ExpenseDetailModal({ show, onClose, expense, projects = [], onUpdate }) {
     const [activeTab, setActiveTab] = useState(0);
     const [editing, setEditing] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({});
     const [errors, setErrors] = useState({});
 
@@ -318,28 +315,24 @@ export default function ExpenseDetailModal({ show, onClose, expense, projects = 
         }
     }, [show, expense]);
 
-    const handleSave = async () => {
+    const save = useAction((id, data) => axios.patch(route('expenses.update', id), { ...data, amount: Number(data.amount) }), {
+        success: 'Expense updated',
+        // The server's message names the problem; a 422 also marks the fields.
+        error: 'Failed to update expense',
+        onSuccess: () => {
+            setEditing(false);
+            if (onUpdate) onUpdate();
+        },
+        onError: (err) => setErrors(err.response?.status === 422 ? err.response.data.errors || {} : {}),
+    });
+    const saving = save.pending;
+    const handleSave = () => {
         if (!expense?.id) {
             toast.error('Cannot update: expense is missing an id.');
             return;
         }
-        setSaving(true);
         setErrors({});
-        try {
-            await axios.patch(route('expenses.update', expense.id), { ...formData, amount: Number(formData.amount) });
-            toast.success('Expense updated');
-            setEditing(false);
-            if (onUpdate) onUpdate();
-        } catch (err) {
-            if (err.response?.status === 422) {
-                setErrors(err.response.data.errors || {});
-                toast.error('Please fix the highlighted fields.');
-            } else {
-                const msg = err.response?.data?.message || 'Failed to update expense';
-                toast.error(msg);
-            }
-        }
-        setSaving(false);
+        save.run(expense.id, formData);
     };
 
     const handleReceiptUpdate = () => {

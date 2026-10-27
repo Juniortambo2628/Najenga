@@ -13,10 +13,10 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
+import useAction, { visit } from '@/Hooks/useAction';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
-import { confirmAction } from '@/Utils/feedback';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -203,11 +203,12 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         patch(`/timelines/${editingTimeline.id}`, { onSuccess: () => closeModal() });
     }
 
-    async function handleDelete(item) {
-        if (item.type !== 'milestone') return;
-        if (await confirmAction('Delete this milestone?')) {
-            router.delete(`/timelines/${item.id}`);
-        }
+    const deleteMilestone = useAction((item) => visit('delete', `/timelines/${item.id}`), {
+        confirm: 'Delete this milestone?',
+        key: (item) => item.id,
+    });
+    function handleDelete(item) {
+        if (item.type === 'milestone') deleteMilestone.run(item);
     }
 
     const handleBulkDelete = useBulkDelete({

@@ -3,7 +3,7 @@ import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { MentionsInput, Mention } from 'react-mentions';
-import { confirmAction } from '@/Utils/feedback';
+import useAction from '@/Hooks/useAction';
 
 const mentionStyle = {
     control: {
@@ -78,7 +78,6 @@ export default function CommentsSection({ type, id, projectId }) {
     const [replyTo, setReplyTo] = useState(null);
     const [editingComment, setEditingComment] = useState(null);
     const [editBody, setEditBody] = useState('');
-    const [loading, setLoading] = useState(false);
     const [projectUsers, setProjectUsers] = useState([]);
 
     // Fetch project members for @mention
@@ -122,83 +121,66 @@ export default function CommentsSection({ type, id, projectId }) {
         callback(filtered);
     }, [projectUsers]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!newComment.trim()) return;
-
-        setLoading(true);
-        try {
-            const response = await axios.post('/comments', {
-                body: newComment,
-                commentable_id: id,
-                commentable_type: type,
-                parent_id: replyTo?.id || null
-            });
-            
-            if (replyTo) {
-                setComments(comments.map(c => {
-                    if (c.id === replyTo.id) {
-                        return { ...c, replies: [...(c.replies || []), response.data] };
-                    }
-                    return c;
-                }));
+    const post = useAction((body, parentId) => axios.post('/comments', {
+        body,
+        commentable_id: id,
+        commentable_type: type,
+        parent_id: parentId,
+    }), {
+        error: 'Failed to post comment',
+        key: () => 'post',
+        onSuccess: (response, body, parentId) => {
+            if (parentId) {
+                setComments((list) => list.map((c) => (c.id === parentId ? { ...c, replies: [...(c.replies || []), response.data] } : c)));
             } else {
-                setComments([response.data, ...comments]);
+                setComments((list) => [response.data, ...list]);
             }
-            
             setNewComment('');
             setReplyTo(null);
-        } catch (error) {
-            console.error("Failed to post comment", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+    });
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        if (!editBody.trim()) return;
-
-        setLoading(true);
-        try {
-            const response = await axios.patch(`/comments/${editingComment.id}`, {
-                body: editBody
-            });
-            
-            const updateRecursive = (list) => list.map(c => {
-                if (c.id === editingComment.id) return { ...c, body: response.data.body };
+    const update = useAction((commentId, body) => axios.patch(`/comments/${commentId}`, { body }), {
+        error: 'Failed to update comment',
+        key: () => 'update',
+        onSuccess: (response, commentId) => {
+            const updateRecursive = (list) => list.map((c) => {
+                if (c.id === commentId) return { ...c, body: response.data.body };
                 if (c.replies) return { ...c, replies: updateRecursive(c.replies) };
                 return c;
             });
-
-            setComments(updateRecursive(comments));
+            setComments(updateRecursive);
             setEditingComment(null);
             setEditBody('');
-        } catch (error) {
-            console.error("Failed to update comment", error);
-        } finally {
-            setLoading(false);
-        }
+        },
+    });
+
+    const remove = useAction((commentId) => axios.delete(`/comments/${commentId}`), {
+        confirm: 'Delete this comment?',
+        error: 'Failed to delete comment',
+        onSuccess: (response, commentId) => {
+            const deleteRecursive = (list) => list
+                .filter((c) => c.id !== commentId)
+                .map((c) => (c.replies ? { ...c, replies: deleteRecursive(c.replies) } : c));
+            setComments(deleteRecursive);
+        },
+    });
+
+    const loading = post.pending || update.pending;
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!newComment.trim()) return;
+        post.run(newComment, replyTo?.id || null);
     };
 
-    const handleDelete = async (commentId) => {
-        if (!(await confirmAction('Delete this comment?'))) return;
-        try {
-            await axios.delete(`/comments/${commentId}`);
-            
-            const deleteRecursive = (list) => list.filter(c => {
-                if (c.id === commentId) return false;
-                if (c.replies) {
-                    c.replies = deleteRecursive(c.replies);
-                }
-                return true;
-            });
-
-            setComments(deleteRecursive([...comments]));
-        } catch (error) {
-            console.error("Failed to delete comment", error);
-        }
+    const handleUpdate = (e) => {
+        e.preventDefault();
+        if (!editBody.trim()) return;
+        update.run(editingComment.id, editBody);
     };
+
+    const handleDelete = (commentId) => remove.run(commentId);
 
     const CommentItem = ({ comment, isReply = false }) => {
         const isAuthor = comment.user_id === auth.user.id;

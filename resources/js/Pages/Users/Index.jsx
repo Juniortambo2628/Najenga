@@ -1,7 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
 import DashboardPage from '@/Components/DashboardPage';
 import ListPanel from '@/Components/ListPanel';
 import Modal from '@/Components/Modal';
@@ -14,8 +13,8 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
+import useAction, { visit } from '@/Hooks/useAction';
 import { rootBreadcrumbs } from '@/Config/navigation';
-import { confirmAction } from '@/Utils/feedback';
 
 export default function Index({ users }) {
     const [showEditModal, setShowEditModal] = useState(false);
@@ -60,19 +59,22 @@ export default function Index({ users }) {
         setShowEditModal(true);
     };
 
+    // The server flashes "User updated successfully"; FlashToast shows it.
+    const updateUser = useAction((id, data) => visit('put', `/users/${id}`, data, { preserveScroll: false }), {
+        error: false,
+        onSuccess: () => { setShowEditModal(false); setEditingUser(null); resetForm(); },
+        onError: (err) => setErrors(err.errors || {}),
+    });
     const handleUpdate = (e) => {
         e.preventDefault();
-        router.put(`/users/${editingUser.id}`, form, {
-            onSuccess: () => { setShowEditModal(false); setEditingUser(null); resetForm(); toast.success('User updated'); },
-            onError: (err) => setErrors(err),
-        });
+        updateUser.run(editingUser.id, form);
     };
 
-    const handleDelete = async (user) => {
-        if (await confirmAction(`Delete ${user.first_name} ${user.last_name}?`)) {
-            router.delete(`/users/${user.id}`);
-        }
-    };
+    const deleteUser = useAction((user) => visit('delete', `/users/${user.id}`), {
+        confirm: (user) => `Delete ${user.first_name} ${user.last_name}?`,
+        key: (user) => user.id,
+    });
+    const handleDelete = deleteUser.run;
 
     const handleBulkDelete = useBulkDelete({
         selected: selectedItems,
@@ -102,7 +104,7 @@ export default function Index({ users }) {
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
                         <SecondaryButton type="button" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit">Update User</PrimaryButton>
+                        <PrimaryButton type="submit" disabled={updateUser.pending}>Update User</PrimaryButton>
                     </div>
                 </form>
             ),
@@ -146,7 +148,7 @@ export default function Index({ users }) {
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
                         <SecondaryButton type="button" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit">Update User</PrimaryButton>
+                        <PrimaryButton type="submit" disabled={updateUser.pending}>Update User</PrimaryButton>
                     </div>
                 </form>
             ),

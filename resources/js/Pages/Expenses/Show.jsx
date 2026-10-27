@@ -4,49 +4,46 @@ import DashboardPage from '@/Components/DashboardPage';
 import { formatCurrency } from '@/Config/currencies';
 import { PAYMENT_LABELS } from '@/Config/expenses';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import DetailRow from '@/Components/DetailRow';
-import { confirmAction } from '@/Utils/feedback';
+import useAction from '@/Hooks/useAction';
 
 function ReceiptSection({ expense, onUpdate }) {
-    const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(expense?.receipt_url || null);
 
-    const onDrop = async (acceptedFiles) => {
-        if (acceptedFiles.length === 0) return;
-        const file = acceptedFiles[0];
-        setUploading(true);
-        try {
-            const formData = new FormData();
-            formData.append('receipt', file);
-            const res = await axios.post(`/expenses/${expense.id}/receipt`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            if (res.data.success) {
-                setPreviewUrl(res.data.receipt_url);
-                toast.success('Receipt uploaded');
-                if (onUpdate) onUpdate();
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Upload failed');
-        }
-        setUploading(false);
+    const upload = useAction((file) => {
+        const formData = new FormData();
+        formData.append('receipt', file);
+        return axios.post(`/expenses/${expense.id}/receipt`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    }, {
+        success: (res) => (res.data.success ? 'Receipt uploaded' : null),
+        error: 'Upload failed',
+        key: () => 'upload',
+        onSuccess: (res) => {
+            if (!res.data.success) return;
+            setPreviewUrl(res.data.receipt_url);
+            if (onUpdate) onUpdate();
+        },
+    });
+    const uploading = upload.pending;
+    const onDrop = (acceptedFiles) => {
+        if (acceptedFiles.length > 0) upload.run(acceptedFiles[0]);
     };
 
-    const handleRemove = async () => {
-        if (!(await confirmAction('Remove this receipt?'))) return;
-        try {
-            await axios.delete(`/expenses/${expense.id}/receipt`);
+    const remove = useAction(() => axios.delete(`/expenses/${expense.id}/receipt`), {
+        confirm: 'Remove this receipt?',
+        success: 'Receipt removed',
+        error: 'Failed to remove receipt',
+        onSuccess: () => {
             setPreviewUrl(null);
-            toast.success('Receipt removed');
             if (onUpdate) onUpdate();
-        } catch {
-            toast.error('Failed to remove receipt');
-        }
-    };
+        },
+    });
+    const handleRemove = () => remove.run();
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,

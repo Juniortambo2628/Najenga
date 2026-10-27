@@ -17,11 +17,10 @@ import useActiveProject from '@/Hooks/useActiveProject';
 import useContextMenu from '@/Hooks/useContextMenu';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import useHashHighlight from '@/Hooks/useHashHighlight';
+import useAction, { visit } from '@/Hooks/useAction';
 import { exportToCSV } from '@/Utils/exportToCSV';
-import toast from 'react-hot-toast';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
-import { confirmAction } from '@/Utils/feedback';
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [previewExpense, setPreviewExpense] = useState(null);
@@ -127,14 +126,12 @@ export default function Expenses({ expenses = [], projects = [] }) {
         router.reload({ only: ['expenses'] });
     }, []);
 
-    const handleDelete = async (expense) => {
-        if (await confirmAction(`Delete "${expense.title}"?`)) {
-            router.delete(`/expenses/${expense.id}`, {
-                preserveScroll: true,
-                onSuccess: () => closeContextMenu()
-            });
-        }
-    };
+    const deleteExpense = useAction((expense) => visit('delete', `/expenses/${expense.id}`), {
+        confirm: (expense) => `Delete "${expense.title}"?`,
+        key: (expense) => expense.id,
+        onSuccess: () => closeContextMenu(),
+    });
+    const handleDelete = deleteExpense.run;
 
     const contextMenuOptions = [
         { label: 'View', icon: 'fa-eye', action: () => handleView(contextMenu?.target) },
@@ -142,35 +139,28 @@ export default function Expenses({ expenses = [], projects = [] }) {
         { label: 'Delete', icon: 'fa-trash', danger: true, action: () => handleDelete(contextMenu?.target) },
     ];
 
-    const handleBulkDelete = async () => {
-        if (!(await confirmAction(`Delete ${selectedCount} expense${selectedCount !== 1 ? 's' : ''}?`))) return;
-        const ids = [...selectedItems];
-        try {
-            const res = await axios.delete('/expenses/batch', { data: { ids } });
-            toast.success(res.data.message || `${ids.length} expense${ids.length !== 1 ? 's' : ''} deleted`);
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to delete expenses');
-        }
-        clearSelection();
-        router.reload({ only: ['expenses'] });
-    };
+    const bulkDelete = useAction((ids) => axios.delete('/expenses/batch', { data: { ids } }), {
+        confirm: (ids) => `Delete ${ids.length} expense${ids.length !== 1 ? 's' : ''}?`,
+        success: (res, ids) => res.data.message || `${ids.length} expense${ids.length !== 1 ? 's' : ''} deleted`,
+        error: 'Failed to delete expenses',
+        key: () => 'bulk',
+        only: ['expenses'],
+        onSuccess: () => clearSelection(),
+    });
+    const handleBulkDelete = () => bulkDelete.run([...selectedItems]);
 
-    const handleBulkAssign = async () => {
-        const ids = [...selectedItems];
-        try {
-            const res = await axios.patch('/expenses/batch/project', {
-                ids,
-                project_id: assignProjectId || null,
-            });
-            toast.success(res.data.message || `${ids.length} expense${ids.length !== 1 ? 's' : ''} updated`);
+    const bulkAssign = useAction((ids, projectId) => axios.patch('/expenses/batch/project', { ids, project_id: projectId || null }), {
+        success: (res, ids) => res.data.message || `${ids.length} expense${ids.length !== 1 ? 's' : ''} updated`,
+        error: 'Failed to assign expenses',
+        key: () => 'assign',
+        only: ['expenses'],
+        onSuccess: () => {
             setIsAssignModalOpen(false);
             setAssignProjectId('');
             clearSelection();
-            router.reload({ only: ['expenses'] });
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to assign expenses');
-        }
-    };
+        },
+    });
+    const handleBulkAssign = () => bulkAssign.run([...selectedItems], assignProjectId);
 
     return (
         <AuthenticatedLayout>
@@ -396,7 +386,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         <Button variant="ghost" onClick={() => setIsAssignModalOpen(false)}>
                             Cancel
                         </Button>
-                        <PrimaryButton onClick={handleBulkAssign}>
+                        <PrimaryButton onClick={handleBulkAssign} disabled={bulkAssign.pending}>
                             <i aria-hidden="true" className="fas fa-folder-open mr-1"></i>
                             {assignProjectId ? 'Assign' : 'Remove from Project'}
                         </PrimaryButton>

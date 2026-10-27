@@ -6,8 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { useState } from 'react';
 import axios from 'axios';
-import toast from 'react-hot-toast';
-import { confirmAction } from '@/Utils/feedback';
+import useAction from '@/Hooks/useAction';
 
 const ROLE_COLORS = {
     editor: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -17,34 +16,31 @@ const ROLE_COLORS = {
 export default function ShareProjectModal({ show, onClose, project, teamMembers = [], onSuccess }) {
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('viewer');
-    const [loading, setLoading] = useState(false);
-
-    const handleShare = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            await axios.post(`/projects/${project.id}/share`, { email, role });
-            toast.success('Member added');
+    const share = useAction((projectId, data) => axios.post(`/projects/${projectId}/share`, data), {
+        success: 'Member added',
+        error: 'Failed to add member',
+        key: () => 'share',
+        onSuccess: () => {
             setEmail('');
             setRole('viewer');
             onSuccess?.();
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add member');
-        } finally {
-            setLoading(false);
-        }
+        },
+    });
+    const loading = share.pending;
+
+    const handleShare = (e) => {
+        e.preventDefault();
+        share.run(project.id, { email, role });
     };
 
-    const handleRemoveMember = async (userId) => {
-        if (!(await confirmAction('Remove this member from the project?'))) return;
-        try {
-            await axios.delete(`/projects/${project.id}/share/${userId}`);
-            toast.success('Member removed');
-            onSuccess?.();
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to remove member');
-        }
-    };
+    const removeMember = useAction((projectId, userId) => axios.delete(`/projects/${projectId}/share/${userId}`), {
+        confirm: 'Remove this member from the project?',
+        success: 'Member removed',
+        error: 'Failed to remove member',
+        key: (projectId, userId) => userId,
+        onSuccess: () => onSuccess?.(),
+    });
+    const handleRemoveMember = (userId) => removeMember.run(project.id, userId);
 
     const handleClose = () => {
         setEmail('');

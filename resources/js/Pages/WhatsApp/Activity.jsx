@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DashboardPage from '@/Components/DashboardPage';
-import { confirmAction } from '@/Utils/feedback';
+import useAction, { visit } from '@/Hooks/useAction';
 
 const DIRECTION_OPTIONS = [
     { value: 'all', label: 'All' },
@@ -80,24 +80,22 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
         setFilter({ q });
     };
 
-    const onDelete = async (m) => {
-        const suffix = m.filed
-            ? ` This will also delete the linked ${m.filed.kind}.`
-            : '';
-        if (!(await confirmAction({ title: `Delete this ${m.direction} message?`, message: suffix.trim() || undefined, confirmLabel: 'Delete' }))) return;
-        router.delete(route('whatsapp.activity.destroy', m.id), {
-            preserveScroll: true,
-            preserveState: true,
-        });
-    };
+    const remove = useAction((m) => visit('delete', route('whatsapp.activity.destroy', m.id), {}, { preserveState: true }), {
+        confirm: (m) => ({
+            title: `Delete this ${m.direction} message?`,
+            message: m.filed ? `This will also delete the linked ${m.filed.kind}.` : undefined,
+            confirmLabel: 'Delete',
+        }),
+        key: (m) => m.id,
+    });
+    const onDelete = remove.run;
 
+    const reclassify = useAction((m, cls) => visit('post', route('whatsapp.activity.reclassify', m.id), { class: cls }, { preserveState: true }), {
+        key: (m) => m.id,
+    });
     const onReclassify = (m, cls) => {
         if (!cls) return;
-        router.post(
-            route('whatsapp.activity.reclassify', m.id),
-            { class: cls },
-            { preserveScroll: true, preserveState: true },
-        );
+        reclassify.run(m, cls);
     };
 
     const totals = useMemo(() => [
