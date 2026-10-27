@@ -8,7 +8,7 @@ class ShareProjectRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('project'));
+        return $this->user()->can('share', $this->route('project'));
     }
 
     public function rules(): array

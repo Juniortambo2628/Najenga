@@ -114,6 +114,46 @@ class Project extends Model
     }
 
     /**
+     * Project roles that may change the project and the records under it.
+     * Viewers can read and comment only.
+     */
+    public const EDIT_ROLES = ['owner', 'manager', 'editor'];
+
+    /**
+     * Project roles that may add or remove members.
+     */
+    public const MANAGE_ROLES = ['owner', 'manager'];
+
+    /**
+     * The user's role in this project: 'owner' for the client, the pivot role
+     * for a member, null for anyone else.
+     */
+    public function roleFor(User $user): ?string
+    {
+        if ((int) $this->client_id === (int) $user->id) {
+            return 'owner';
+        }
+
+        return $this->users()->where('user_id', $user->id)->value('role');
+    }
+
+    public function userCanEdit(User $user): bool
+    {
+        return in_array($this->roleFor($user), self::EDIT_ROLES, true);
+    }
+
+    /**
+     * True when the user's role here is read-only (a viewer). Such a user may
+     * not change records under the project, even ones they created.
+     */
+    public function isReadOnlyFor(User $user): bool
+    {
+        $role = $this->roleFor($user);
+
+        return $role !== null && ! in_array($role, self::EDIT_ROLES, true);
+    }
+
+    /**
      * The users that belong to the project.
      */
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

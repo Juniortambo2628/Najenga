@@ -17,6 +17,15 @@ trait BelongsToUserPolicy
     }
 
     /**
+     * Check the user owns the model and is not a viewer of its project.
+     */
+    protected function userCanChange($user, $model): bool
+    {
+        return $this->userOwns($user, $model)
+            && ! optional($model->project)->isReadOnlyFor($user);
+    }
+
+    /**
      * Authorize view if user owns the model.
      *
      * Mirrors update() deliberately: DocumentController::index and
@@ -29,18 +38,18 @@ trait BelongsToUserPolicy
     }
 
     /**
-     * Authorize update if user owns the model.
+     * Authorize update if user owns the model and can edit its project.
      */
     public function update($user, $model): bool
     {
-        return $this->userOwns($user, $model);
+        return $this->userCanChange($user, $model);
     }
 
     /**
-     * Authorize delete if user owns the model.
+     * Authorize delete if user owns the model and can edit its project.
      */
     public function delete($user, $model): bool
     {
-        return $this->userOwns($user, $model);
+        return $this->userCanChange($user, $model);
     }
 }

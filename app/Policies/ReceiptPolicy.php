@@ -14,11 +14,13 @@ class ReceiptPolicy
 
     public function update(User $user, Receipt $receipt): bool
     {
-        return $receipt->expense->user_id === $user->id;
+        return $receipt->expense->user_id === $user->id
+            && ! optional($receipt->expense->project)->isReadOnlyFor($user);
     }
 
     public function delete(User $user, Receipt $receipt): bool
     {
-        return $receipt->expense->user_id === $user->id;
+        return $receipt->expense->user_id === $user->id
+            && ! optional($receipt->expense->project)->isReadOnlyFor($user);
     }
 }

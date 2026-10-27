@@ -131,9 +131,20 @@ class ExpenseController extends Controller
 
         $projectId = $request->input('project_id');
 
-        $updated = Expense::whereIn('id', $request->input('ids'))
+        if ($projectId) {
+            $this->authorize('update', Project::findOrFail($projectId));
+        }
+
+        // Only expenses the user may change: their own, and not in a project
+        // where they are a viewer.
+        $ids = Expense::whereIn('id', $request->input('ids'))
             ->where('user_id', auth()->id())
-            ->update(['project_id' => $projectId]);
+            ->with('project')
+            ->get()
+            ->filter(fn ($expense) => $request->user()->can('update', $expense))
+            ->modelKeys();
+
+        $updated = Expense::whereIn('id', $ids)->update(['project_id' => $projectId]);
 
         $projectName = $projectId ? Project::find($projectId)?->name : null;
 
