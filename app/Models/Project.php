@@ -134,7 +134,7 @@ class Project extends Model
             return 'owner';
         }
 
-        return $this->users()->where('user_id', $user->id)->value('role');
+        return $this->users()->where('users.id', $user->id)->value('project_user.role');
     }
 
     public function userCanEdit(User $user): bool
