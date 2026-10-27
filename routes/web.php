@@ -67,8 +67,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Project Sharing
     Route::post('/projects/{project}/share', [\App\Http\Controllers\ProjectShareController::class, 'store'])->name('projects.share.store');
-    Route::delete('/projects/{project}/share/{user}', [\App\Http\Controllers\ProjectShareController::class, 'destroy'])->name('projects.share.destroy');
-    Route::get('/projects/{project}/members', [\App\Http\Controllers\ProjectInvitationController::class, 'index'])->name('projects.members');
+    Route::delete('/projects/{project}/share/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'destroy'])->name('projects.share.destroy');
+    Route::get('/projects/{project}/members', [\App\Http\Controllers\ProjectMemberController::class, 'index'])->name('projects.members');
+    Route::patch('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'update'])->name('projects.members.update');
+    Route::delete('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
     Route::post('/projects/{project}/invitations', [\App\Http\Controllers\ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
     Route::post('/projects/{project}/invitations/{invitation}/resend', [\App\Http\Controllers\ProjectInvitationController::class, 'resend'])->name('projects.invitations.resend');
     Route::delete('/projects/{project}/invitations/{invitation}', [\App\Http\Controllers\ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');

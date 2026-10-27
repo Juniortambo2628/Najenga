@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import ShareProjectModal from '@/Components/ShareProjectModal';
+import SharePanel from '@/Components/SharePanel';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency } from '@/Config/currencies';
@@ -168,12 +168,13 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
             </div>
 
             {/* Share / Team Modal */}
-            <ShareProjectModal
+            <SharePanel
                 show={showShareModal}
-                onClose={() => setShowShareModal(false)}
+                onClose={() => {
+                    setShowShareModal(false);
+                    router.reload({ only: ['project'] });
+                }}
                 project={project}
-                teamMembers={teamMembers}
-                onSuccess={() => router.reload({ only: ['project'] })}
             />
         </AuthenticatedLayout>
     );

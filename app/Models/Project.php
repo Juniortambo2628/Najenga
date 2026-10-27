@@ -28,6 +28,17 @@ class Project extends Model
 
     protected static function booted(): void
     {
+        // The client is always an owner member and the assigned manager a
+        // manager member, so the member list is the one list of who is in.
+        static::saved(function (Project $project) {
+            if ($project->wasChanged('client_id') || $project->wasRecentlyCreated) {
+                $project->grantRole($project->client_id, ProjectRole::OWNER);
+            }
+            if ($project->wasChanged('manager_id') || $project->wasRecentlyCreated) {
+                $project->grantRole($project->manager_id, ProjectRole::MANAGER);
+            }
+        });
+
         static::deleting(function (Project $project) {
             $project->photos->each->delete();
             $project->documents->each->delete();
@@ -170,6 +181,23 @@ class Project extends Model
         }
 
         return $roles;
+    }
+
+    /**
+     * Make the user a member with at least this role (never demotes).
+     */
+    public function grantRole(?int $userId, string $role): void
+    {
+        if (! $userId) {
+            return;
+        }
+
+        $current = $this->users()->where('users.id', $userId)->value('project_user.role');
+        if ($current === null) {
+            $this->users()->attach($userId, ['role' => $role, 'accepted_at' => now()]);
+        } elseif (array_search($current, ProjectRole::ALL, true) > array_search($role, ProjectRole::ALL, true)) {
+            $this->users()->updateExistingPivot($userId, ['role' => $role]);
+        }
     }
 
     public function invitations(): HasMany

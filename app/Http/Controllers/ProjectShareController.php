@@ -20,12 +20,4 @@ class ProjectShareController extends Controller
 
         return response()->json(['message' => 'Project shared successfully', 'user' => $user]);
     }
-
-    public function destroy(Project $project, User $user)
-    {
-        $this->authorize('share', $project);
-
-        $project->users()->detach($user->id);
-        return response()->json(['message' => 'User removed from project']);
-    }
 }

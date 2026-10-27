@@ -36,14 +36,15 @@ class ProjectRolesMigrationTest extends TestCase
             'project_id' => $project->id, 'user_id' => $editor->id, 'role' => 'editor', 'created_at' => $joined, 'updated_at' => $joined,
         ]);
 
+        $before = DB::table('project_user')->count();
         $this->migration()->up();
 
         $row = DB::table('project_user')->where('user_id', $editor->id)->first();
         $this->assertSame('editor', $row->role);
         $this->assertEquals($joined, \Carbon\Carbon::parse($row->accepted_at));
         $this->assertNull($row->invited_by);
-        // No owner rows yet: the client is still only projects.client_id.
-        $this->assertSame(1, DB::table('project_user')->count());
+        // This migration adds no rows (owners and managers come with 12.5).
+        $this->assertSame($before, DB::table('project_user')->count());
         $this->assertTrue(Schema::hasColumns('project_user', ['invited_by', 'invited_at', 'accepted_at']));
     }
 }

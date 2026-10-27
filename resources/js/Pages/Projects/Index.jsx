@@ -7,7 +7,7 @@ import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Modal from '@/Components/Modal';
-import ShareProjectModal from '@/Components/ShareProjectModal';
+import SharePanel from '@/Components/SharePanel';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import InputLabel from '@/Components/InputLabel';
@@ -405,11 +405,10 @@ export default function Projects({ projects = [] }) {
             </DashboardPage>
 
             {/* Share Modal */}
-            <ShareProjectModal
+            <SharePanel
                 show={!!sharingProject}
                 onClose={() => setSharingProject(null)}
-                project={sharingProject || { id: 0, name: '' }}
-                onSuccess={() => setSharingProject(null)}
+                project={sharingProject}
             />
 
             {/* Edit Project Modal (Tabbed) */}

@@ -76,7 +76,9 @@ class ModelRelationshipTest extends TestCase
         $users = User::factory()->count(2)->create();
         $project->users()->attach($users->pluck('id'));
 
-        $this->assertCount(2, $project->users);
+        // The two shared users, plus the client as owner.
+        $this->assertCount(3, $project->users);
+        $this->assertSame('owner', $project->users->firstWhere('id', $project->client_id)->pivot->role);
     }
 
     public function test_project_has_many_annotations(): void

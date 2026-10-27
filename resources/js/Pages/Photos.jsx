@@ -20,7 +20,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import PhotoCard from '@/Components/PhotoCard';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
-import ShareProjectModal from '@/Components/ShareProjectModal';
+import SharePanel from '@/Components/SharePanel';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -330,7 +330,7 @@ export default function Photos({ photos = [], projects = [] }) {
             </PreviewModal>
 
             {shareTarget && (
-                <ShareProjectModal show onClose={() => setShareTarget(null)} project={shareTarget} />
+                <SharePanel show onClose={() => setShareTarget(null)} project={shareTarget} />
             )}
 
         </AuthenticatedLayout>

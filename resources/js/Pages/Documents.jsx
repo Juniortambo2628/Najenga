@@ -24,7 +24,7 @@ import useBatchDownload from '@/Hooks/useBatchDownload';
 import useHashHighlight from '@/Hooks/useHashHighlight';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
-import ShareProjectModal from '@/Components/ShareProjectModal';
+import SharePanel from '@/Components/SharePanel';
 import useAction, { visit } from '@/Hooks/useAction';
 
 // Configure PDF worker (served locally, no CDN round-trip)
@@ -661,7 +661,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
             </Modal>
 
             {shareTarget && (
-                <ShareProjectModal show onClose={() => setShareTarget(null)} project={shareTarget} />
+                <SharePanel show onClose={() => setShareTarget(null)} project={shareTarget} />
             )}
 
             {moveTarget && (
