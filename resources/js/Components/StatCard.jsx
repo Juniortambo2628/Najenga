@@ -1,30 +1,25 @@
-
 export default function StatCard({ icon, label, value, trend }) {
+    const trendIsPositive = trend > 0;
+    const trendIsNegative = trend < 0;
+    const trendColor = trendIsPositive ? 'text-emerald-300' : trendIsNegative ? 'text-rose-300' : 'text-white/50';
+    const trendIcon = trendIsPositive ? 'fa-arrow-trend-up' : trendIsNegative ? 'fa-arrow-trend-down' : 'fa-minus';
+
     return (
-        <div className="panel p-6">
-            <div className="flex items-start justify-between">
-                <div className="flex-1">
-                    <p className="text-gray-400 text-sm mb-1">{label}</p>
-                    <p className="text-white text-2xl font-bold">{value}</p>
+        <div className="panel p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                    <p className="mb-2 text-sm text-white/50">{label}</p>
+                    <p className="truncate text-2xl font-semibold tracking-tight text-white sm:text-3xl">{value}</p>
                     {trend !== undefined && trend !== null && (
-                        <div className="flex items-center gap-1 mt-2">
-                            <i aria-hidden="true"
-                                className={`fas ${
-                                    trend >= 0 ? 'fa-arrow-up text-green-400' : 'fa-arrow-down text-red-400'
-                                } text-xs`}
-                            ></i>
-                            <span
-                                className={`text-xs font-medium ${
-                                    trend >= 0 ? 'text-green-400' : 'text-red-400'
-                                }`}
-                            >
-                                {Math.abs(trend)}%
-                            </span>
+                        <div className="mt-3 flex items-center gap-1.5">
+                            <i aria-hidden="true" className={`fas ${trendIcon} ${trendColor} text-[10px]`} />
+                            <span className={`text-xs font-medium ${trendColor}`}>{Math.abs(trend)}%</span>
+                            <span className="text-xs text-white/35">vs. last month</span>
                         </div>
                     )}
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-[#8B0000]/15 flex items-center justify-center">
-                    <i aria-hidden="true" className={`fas ${icon} text-[#DC143C] text-lg`}></i>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-200/10 bg-rose-950/50">
+                    <i aria-hidden="true" className={`fas ${icon} text-base text-rose-200`} />
                 </div>
             </div>
         </div>

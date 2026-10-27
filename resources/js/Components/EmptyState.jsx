@@ -1,16 +1,15 @@
-
-export default function EmptyState({ icon = 'fa-folder', title, message, action }) {
+export default function EmptyState({ icon = 'fa-folder', title, message, action, compact = false }) {
     return (
-        <div className="bg-black/50 border border-white/10 rounded-2xl p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
-                <i aria-hidden="true" className={`fas ${icon} text-2xl text-gray-400`}></i>
+        <div className={`rounded-2xl border text-center ${compact ? 'border-transparent bg-transparent px-3 py-8' : 'border-white/10 bg-black/50 p-12'}`}>
+            <div className={`inline-flex items-center justify-center rounded-full bg-white/5 ${compact ? 'mb-3 h-12 w-12' : 'mb-4 h-16 w-16'}`}>
+                <i aria-hidden="true" className={`fas ${icon} ${compact ? 'text-xl' : 'text-2xl'} text-gray-400`} />
             </div>
-            <h3 className="text-white text-lg font-semibold mb-2">{title}</h3>
-            <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">{message}</p>
+            <h3 className="mb-2 text-lg font-semibold text-white">{title}</h3>
+            <p className="mx-auto mb-6 max-w-md text-sm text-gray-400">{message}</p>
             {action && (
                 <button
                     onClick={action.onClick}
-                    className="px-5 py-2.5 bg-[#8B0000] hover:bg-[#a50000] text-white rounded-xl text-sm font-medium transition-colors"
+                    className="rounded-xl bg-[#8B0000] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#a50000]"
                 >
                     {action.label}
                 </button>
