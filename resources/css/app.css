@@ -130,7 +130,7 @@
        Appearance only - padding stays a utility (p-6 etc.) so cards with
        their own header/body layout can opt out. */
     .panel {
-        @apply bg-gradient-to-br from-[#1a0508]/80 via-[#120306]/80 to-[#0a0102]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl;
+        @apply bg-[#141516]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl;
     }
 
     /* ============================================
@@ -144,10 +144,10 @@
 
     /* Quick Action Button */
     .quick-action-btn {
-        @apply flex flex-col items-center gap-2 p-4 rounded-xl bg-white/5 border border-white/10 text-gray-300 transition-all duration-300 hover:bg-white/10 hover:text-white hover:-translate-y-0.5 no-underline;
+        @apply flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-gray-300 no-underline transition-all duration-300 hover:-translate-y-0.5 hover:border-rose-200/20 hover:bg-white/[0.045] hover:text-white;
     }
     .quick-action-icon {
-        @apply w-12 h-12 rounded-full flex items-center justify-center text-xl bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white;
+        @apply flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200/10 bg-rose-950/50 text-base text-rose-200;
     }
 
     /* Glass Navigation Button */

@@ -94,7 +94,7 @@ export default function AuthenticatedLayout({ children }) {
             <FlashToast />
 
             <a href="#main-content" className="skip-link">Skip to main content</a>
-            <div className="min-h-screen bg-black flex">
+            <div className="min-h-screen bg-[#0b0c0d] flex">
                 {/* Sidebar Overlay for Mobile */}
                 {sidebarOpen && (
                     <div 
@@ -106,12 +106,12 @@ export default function AuthenticatedLayout({ children }) {
                 {/* Sidebar */}
                 <aside className={`
                     fixed inset-y-0 left-0 z-30 h-screen
-                    bg-gradient-to-b from-[#8B0000] to-[#DC143C] border-r border-white/10 flex flex-col
+                    bg-[#101112] border-r border-white/[0.08] shadow-2xl flex flex-col
                     transform transition-all duration-300 ease-in-out
                     ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}>
                     {/* Sidebar Brand */}
-                    <Link href={route('home')} className="h-14 flex items-center justify-center border-b border-white/10 flex-shrink-0 hover:bg-white/5 transition px-3">
+                    <Link href={route('home')} className="h-16 flex items-center justify-center border-b border-white/[0.08] flex-shrink-0 hover:bg-white/[0.04] transition px-3">
                         <img 
                             src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp" 
                             alt="Najenga" 
@@ -128,10 +128,10 @@ export default function AuthenticatedLayout({ children }) {
                                     key={item.name}
                                     href={item.href}
                                     className={`
-                                        flex items-center px-3 py-2 rounded-lg transition-all text-sm
+                                        flex items-center border border-transparent px-3 py-2 rounded-xl transition-all text-sm
                                         ${isActive
-                                            ? 'bg-white text-[#8B0000] shadow-lg font-bold'
-                                            : 'text-white hover:bg-white/10'
+                                            ? 'bg-white/[0.08] border-white/[0.08] text-white font-semibold'
+                                            : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
                                         }
                                         ${sidebarOpen ? 'gap-2.5' : 'justify-center'}
                                     `}
@@ -152,7 +152,7 @@ export default function AuthenticatedLayout({ children }) {
                 {/* Main Content Area */}
                 <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-clip ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
                     {/* Top Navbar */}
-                    <header className="h-16 bg-black border-b border-white/10 flex items-center justify-between px-4 sticky top-0 z-10">
+                    <header className="h-16 bg-[#0b0c0d]/90 backdrop-blur-xl border-b border-white/[0.07] flex items-center justify-between px-4 sticky top-0 z-10">
                         {/* Left Side - Toggle & Title */}
                         <div className="flex items-center gap-4">
                             <button 
