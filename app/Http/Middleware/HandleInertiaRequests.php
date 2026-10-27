@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use Closure;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Symfony\Component\HttpFoundation\Response;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -13,6 +15,24 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    /**
+     * Dynamic pages must be re-requested after a deployment so the browser
+     * receives the current Vite manifest and Inertia asset version. Built
+     * assets remain cacheable because Vite fingerprints their filenames.
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $response = parent::handle($request, $next);
+
+        if ($request->isMethodCacheable()) {
+            $response->headers->set('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT');
+        }
+
+        return $response;
+    }
 
     /**
      * Determine the current asset version.

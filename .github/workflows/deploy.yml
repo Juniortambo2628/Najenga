@@ -136,6 +136,14 @@ jobs:
           # .htaccess for Apache
           cat > ~/najenga.okjtech.co.ke/.htaccess << 'ENDHT'
           RewriteEngine On
+
+          # Vite assets have content-hashed filenames and are safe to cache immutably.
+          <IfModule mod_headers.c>
+          <FilesMatch "\.[A-Za-z0-9_-]{8}\.(css|js)$">
+            Header set Cache-Control "public, max-age=31536000, immutable"
+          </FilesMatch>
+          </IfModule>
+
           RewriteCond %{REQUEST_FILENAME} !-f
           RewriteCond %{REQUEST_FILENAME} !-d
           RewriteRule ^ index.php [L]
@@ -253,6 +261,45 @@ jobs:
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "ls -t ~/najenga-core/storage/logs/*.log 2>/dev/null | head -1 | xargs -r tail -n 100" || true
           exit 1
+
+      - name: Verify homepage freshness and built entrypoint
+        run: |
+          set -euo pipefail
+          base_url="https://najenga.okjtech.co.ke"
+          page_file="$(mktemp)"
+          page_headers="$(mktemp)"
+          asset_headers="$(mktemp)"
+          trap 'rm -f "$page_file" "$page_headers" "$asset_headers"' EXIT
+
+          curl --location --retry 4 --retry-delay 3 --retry-all-errors -fsS \
+            -D "$page_headers" -o "$page_file" "$base_url/"
+
+          if ! grep -Eiq '^cache-control:.*no-store' "$page_headers"; then
+            echo "Homepage response is missing Cache-Control: no-store"
+            cat "$page_headers"
+            exit 1
+          fi
+
+          asset_path="$(grep -Eo '(src|href)="[^"]+\.js"' "$page_file" | sed -n '1p' | cut -d '"' -f 2)"
+          if [ -z "$asset_path" ]; then
+            echo "Could not find the Vite JavaScript entrypoint in homepage HTML"
+            exit 1
+          fi
+
+          case "$asset_path" in
+            http://*|https://*) asset_url="$asset_path" ;;
+            /*) asset_url="$base_url$asset_path" ;;
+            *) asset_url="$base_url/$asset_path" ;;
+          esac
+
+          curl --location --retry 4 --retry-delay 3 --retry-all-errors -fsS \
+            -D "$asset_headers" -o /dev/null "$asset_url"
+          if ! grep -Eiq '^cache-control:.*max-age=31536000.*immutable' "$asset_headers"; then
+            echo "Fingerprinted Vite asset is missing its immutable cache policy"
+            cat "$asset_headers"
+            exit 1
+          fi
+          echo "Homepage is non-cacheable and current Vite entrypoint is reachable and immutable"
 
       - name: Verify deployment
         run: |
