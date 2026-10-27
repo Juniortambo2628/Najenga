@@ -2,12 +2,27 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreBulkReceiptRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        foreach ((array) $this->input('expenses', []) as $row) {
+            $projectId = is_array($row) ? ($row['project_id'] ?? null) : null;
+
+            if (! $projectId) {
+                continue;
+            }
+
+            $project = Project::find($projectId);
+
+            if ($project && ! $this->user()->can('update', $project)) {
+                return false;
+            }
+        }
+
         return true;
     }
 
