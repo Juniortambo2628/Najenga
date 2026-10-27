@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import StatCard from '@/Components/StatCard';
+import SummaryCards from '@/Components/SummaryCards';
 import Card from '@/Components/Card';
 import DashboardHero from '@/Components/DashboardHero';
 import FloatingToolbar from '@/Components/FloatingToolbar';
@@ -237,13 +237,18 @@ export default function Analytics({
                 </FloatingToolbar>
 
                 {/* Overview Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                    <StatCard icon="fa-receipt" label="Total Expenses" value={formatCurrency(totalExpenses)} />
-                    <StatCard icon="fa-calculator" label="Avg Expense" value={formatCurrency(avgExpense)} />
-                    <StatCard icon="fa-project-diagram" label="Projects" value={totalProjects} />
-                    <StatCard icon="fa-images" label="Photos" value={totalPhotos} />
-                    <StatCard icon="fa-file-alt" label="Documents" value={totalDocuments} />
-                    <StatCard icon="fa-flag" label="Milestones" value={`${completedMilestones}/${totalMilestones}`} />
+                <div className="mb-8">
+                    <SummaryCards
+                        columns={6}
+                        cards={[
+                            { icon: 'fa-receipt', label: 'Total Expenses', value: formatCurrency(totalExpenses) },
+                            { icon: 'fa-calculator', label: 'Avg Expense', value: formatCurrency(avgExpense) },
+                            { icon: 'fa-project-diagram', label: 'Projects', value: totalProjects },
+                            { icon: 'fa-images', label: 'Photos', value: totalPhotos },
+                            { icon: 'fa-file-alt', label: 'Documents', value: totalDocuments },
+                            { icon: 'fa-flag', label: 'Milestones', value: `${completedMilestones}/${totalMilestones}` },
+                        ]}
+                    />
                 </div>
 
                 {/* Insights */}

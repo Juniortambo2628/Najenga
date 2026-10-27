@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import StatCard from '@/Components/StatCard';
+import SummaryCards from '@/Components/SummaryCards';
 import StatusBadge from '@/Components/StatusBadge';
 import EmptyState from '@/Components/EmptyState';
 import DashboardHero from '@/Components/DashboardHero';
@@ -96,9 +96,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         </div>
                         <span className="hidden text-xs text-white/35 sm:block">A snapshot of your workspace</span>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        {statCards.map((stat) => <StatCard key={stat.label} {...stat} />)}
-                    </div>
+                    <SummaryCards cards={statCards} />
                 </section>
 
                 <DashboardSection icon="fa-bolt" eyebrow="Keep things moving" title="Quick actions">
