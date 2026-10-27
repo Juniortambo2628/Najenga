@@ -25,7 +25,7 @@ import useHashHighlight from '@/Hooks/useHashHighlight';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import ShareProjectModal from '@/Components/ShareProjectModal';
-import { confirmAction } from '@/Utils/feedback';
+import useAction, { visit } from '@/Hooks/useAction';
 
 // Configure PDF worker (served locally, no CDN round-trip)
 pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
@@ -36,7 +36,6 @@ export default function Documents({ documents = [], folders = [], projects = [] 
     const [shareTarget, setShareTarget] = useState(null);
     const [moveTarget, setMoveTarget] = useState(null);
     const [moveFolderId, setMoveFolderId] = useState('');
-    const [moving, setMoving] = useState(false);
 
     const shareProjectFor = (item) => {
         if (!item?.project_id) {
@@ -132,20 +131,50 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         setMoveFolderId(doc?.folder_id ? String(doc.folder_id) : '');
     };
 
-    const handleMove = async () => {
-        setMoving(true);
-        try {
-            await axios.patch(route('documents.move', moveTarget.id), { folder_id: moveFolderId || null });
-            toast.success('Document moved');
+    const move = useAction((doc, folderId) => axios.patch(route('documents.move', doc.id), { folder_id: folderId || null }), {
+        success: 'Document moved',
+        error: 'Failed to move document',
+        key: () => 'move',
+        only: ['documents'],
+        onSuccess: () => {
             setMoveTarget(null);
             setMoveFolderId('');
-            router.reload({ only: ['documents'] });
-        } catch (e) {
-            toast.error(e.response?.data?.errors?.folder_id?.[0] || 'Failed to move document');
-        } finally {
-            setMoving(false);
-        }
+        },
+    });
+    const moving = move.pending;
+    const handleMove = () => move.run(moveTarget, moveFolderId);
+
+    const deleteDocuments = useAction((ids) => axios.delete('/documents/batch', { data: { ids } }), {
+        confirm: (ids) => `Delete ${ids.length > 1 ? `${ids.length} items` : 'this item'}?`,
+        success: (res, ids) => `${ids.length} document${ids.length !== 1 ? 's' : ''} deleted`,
+        error: 'Failed to delete documents',
+        key: () => 'bulk',
+        only: ['documents'],
+        onSuccess: () => clearSelection(),
+    });
+
+    const deleteFolder = useAction((folder) => visit('delete', `/folders/${folder.id}`), {
+        confirm: (folder) => ({ title: `Delete folder "${folder.name}"?`, message: 'Documents inside will be moved to the top level.', confirmLabel: 'Delete' }),
+        key: (folder) => folder.id,
+    });
+
+    const createFolder = useAction((data) => visit('post', route('folders.store'), data), {
+        key: () => 'folder',
+        onSuccess: () => {
+            setNewFolderName('');
+            setIsNewFolderModalOpen(false);
+        },
+    });
+    const submitNewFolder = () => {
+        const projectId = documents[0]?.project_id;
+        if (!newFolderName.trim() || !projectId) return;
+        createFolder.run({ name: newFolderName.trim(), project_id: projectId, parent_id: currentFolderId });
     };
+
+    const updateTitle = useAction((doc) => axios.patch(`/documents/${doc.id}`, { title: doc.title }), {
+        success: 'Title updated',
+        error: 'Failed to save the title',
+    });
 
     const contextMenuOptions = [
         { label: 'Preview', icon: 'fa-eye', action: () => setPreviewDoc(contextMenu?.target) },
@@ -154,33 +183,10 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         },
         { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
         { label: 'Move to Folder', icon: 'fa-folder-open', action: () => openMoveModal(contextMenu?.target) },
-        { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
-            if (await confirmAction(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
-                try {
-                    const ids = [...selectedItems];
-                    await axios.delete('/documents/batch', { data: { ids } });
-                    clearSelection();
-                    toast.success(`${ids.length} document${ids.length !== 1 ? 's' : ''} deleted`);
-                    router.reload({ only: ['documents'] });
-                } catch (e) {
-                    toast.error('Failed to delete documents');
-                }
-            }
-        }},
+        { label: 'Delete', icon: 'fa-trash', danger: true, action: () => deleteDocuments.run([...selectedItems]) },
     ];
 
-    const deleteSelectedDocuments = async () => {
-        if (!(await confirmAction(`Delete ${selectedCount} items?`))) return;
-        try {
-            const ids = [...selectedItems];
-            await axios.delete('/documents/batch', { data: { ids } });
-            clearSelection();
-            toast.success(`${ids.length} document${ids.length !== 1 ? 's' : ''} deleted`);
-            router.reload({ only: ['documents'] });
-        } catch (e) {
-            toast.error('Failed to delete documents');
-        }
-    };
+    const deleteSelectedDocuments = () => deleteDocuments.run([...selectedItems]);
 
     return (
         <AuthenticatedLayout>
@@ -302,7 +308,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     </div>
                                     <button
                                         aria-label={`Delete folder ${folder.name}`}
-                                        onClick={async (e) => { e.stopPropagation(); if (await confirmAction({ title: `Delete folder "${folder.name}"?`, message: 'Documents inside will be moved to the top level.', confirmLabel: 'Delete' })) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
+                                        onClick={(e) => { e.stopPropagation(); deleteFolder.run(folder); }}
                                         className="p-2 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                                     >
                                         <i aria-hidden="true" className="fas fa-trash text-xs"></i>
@@ -384,7 +390,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     </h4>
                                     <button
                                         aria-label={`Delete folder ${folder.name}`}
-                                        onClick={async (e) => { e.stopPropagation(); if (await confirmAction({ title: `Delete folder "${folder.name}"?`, message: 'Documents inside will be moved to the top level.', confirmLabel: 'Delete' })) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
+                                        onClick={(e) => { e.stopPropagation(); deleteFolder.run(folder); }}
                                         className="p-1.5 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                                     >
                                         <i aria-hidden="true" className="fas fa-trash text-xs"></i>
@@ -589,12 +595,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                         type="text" 
                                         value={previewDoc?.title || ''}
                                         onChange={(e) => setPreviewDoc(prev => ({...prev, title: e.target.value}))}
-                                        onBlur={async () => {
-                                            try {
-                                                await axios.patch(`/documents/${previewDoc.id}`, { title: previewDoc.title });
-                                                toast.success('Title updated');
-                                            } catch(e) { console.error(e); }
-                                        }}
+                                        onBlur={() => updateTitle.run(previewDoc)}
                                         className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-[#8B0000]"
                                     />
                                 </div>
@@ -640,18 +641,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                 placeholder="e.g. Contracts, Invoices, Plans..."
                                 autoFocus
                                 onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && newFolderName.trim()) {
-                                        const projectId = documents[0]?.project_id;
-                                        if (projectId) {
-                                            router.post(route('folders.store'), {
-                                                name: newFolderName.trim(),
-                                                project_id: projectId,
-                                                parent_id: currentFolderId,
-                                            }, { preserveScroll: true });
-                                            setNewFolderName('');
-                                            setIsNewFolderModalOpen(false);
-                                        }
-                                    }
+                                    if (e.key === 'Enter') submitNewFolder();
                                 }}
                             />
                         </div>
@@ -661,20 +651,8 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             Cancel
                         </SecondaryButton>
                         <PrimaryButton
-                            onClick={() => {
-                                if (!newFolderName.trim()) return;
-                                const projectId = documents[0]?.project_id;
-                                if (projectId) {
-                                    router.post(route('folders.store'), {
-                                        name: newFolderName.trim(),
-                                        project_id: projectId,
-                                        parent_id: currentFolderId,
-                                    }, { preserveScroll: true });
-                                    setNewFolderName('');
-                                    setIsNewFolderModalOpen(false);
-                                }
-                            }}
-                            disabled={!newFolderName.trim()}
+                            onClick={submitNewFolder}
+                            disabled={!newFolderName.trim() || createFolder.pending}
                         >
                             Create Folder
                         </PrimaryButton>

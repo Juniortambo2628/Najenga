@@ -11,7 +11,7 @@ export default function Edit({ receipt }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        router.patch(route('receipts.update', receipt.id), data, {
+        patch(route('receipts.update', receipt.id), {
             onSuccess: () => router.visit(route('receipts.index')),
         });
     };

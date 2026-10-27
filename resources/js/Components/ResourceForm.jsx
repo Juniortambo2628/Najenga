@@ -24,23 +24,15 @@ export default function ResourceForm({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const payload = transform ? transform({ ...data }) : data;
-
-        if (method === 'patch') {
-            router.patch(action, payload, {
-                onSuccess: () => {
-                    if (onSuccess) onSuccess();
-                    else router.visit(cancelHref);
-                },
-            });
-        } else {
-            router.post(action, payload, {
-                onSuccess: () => {
-                    if (onSuccess) onSuccess();
-                    else router.visit(cancelHref);
-                },
-            });
-        }
+        // Submit through the form helper, so `processing` and the field
+        // `errors` it renders below follow the request.
+        formProps.transform((payload) => (transform ? transform({ ...payload }) : payload));
+        formProps[method === 'patch' ? 'patch' : 'post'](action, {
+            onSuccess: () => {
+                if (onSuccess) onSuccess();
+                else router.visit(cancelHref);
+            },
+        });
     };
 
     return (

@@ -1,65 +1,62 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { confirmAction } from '@/Utils/feedback';
+import useAction from '@/Hooks/useAction';
 
 export default function LinkWhatsAppForm({ whatsapp = {} }) {
     const { wa_id, verified_at, configured } = whatsapp;
     const [phone, setPhone] = useState(wa_id ? '+' + wa_id : '');
     const [code, setCode] = useState('');
     const [stage, setStage] = useState(verified_at ? 'linked' : 'idle'); // idle | sent | linked
-    const [sending, setSending] = useState(false);
-    const [verifying, setVerifying] = useState(false);
     const [maskedPhone, setMaskedPhone] = useState(null);
 
-    const sendCode = async (e) => {
+    const send = useAction((number) => axios.post('/profile/whatsapp/link/send-code', { phone: number }), {
+        success: ({ data }) => `Code sent to ${data.phone_masked}`,
+        error: 'Could not send code',
+        key: () => 'send',
+        onSuccess: ({ data }) => {
+            setMaskedPhone(data.phone_masked);
+            setStage('sent');
+        },
+    });
+    const sending = send.pending;
+    const sendCode = (e) => {
         e.preventDefault();
         if (!configured) {
             toast.error('WhatsApp is not configured on the server.');
             return;
         }
-        setSending(true);
-        try {
-            const { data } = await axios.post('/profile/whatsapp/link/send-code', { phone });
-            setMaskedPhone(data.phone_masked);
-            setStage('sent');
-            toast.success(`Code sent to ${data.phone_masked}`);
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'Could not send code');
-        } finally {
-            setSending(false);
-        }
+        send.run(phone);
     };
 
-    const verify = async (e) => {
-        e.preventDefault();
-        setVerifying(true);
-        try {
-            await axios.post('/profile/whatsapp/link/verify', { code });
-            toast.success('WhatsApp number linked');
+    const verifyAction = useAction((value) => axios.post('/profile/whatsapp/link/verify', { code: value }), {
+        success: 'WhatsApp number linked',
+        error: 'Invalid code',
+        key: () => 'verify',
+        only: ['whatsapp'],
+        onSuccess: () => {
             setStage('linked');
             setCode('');
-            router.reload({ only: ['whatsapp'] });
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'Invalid code');
-        } finally {
-            setVerifying(false);
-        }
+        },
+    });
+    const verifying = verifyAction.pending;
+    const verify = (e) => {
+        e.preventDefault();
+        verifyAction.run(code);
     };
 
-    const unlink = async () => {
-        if (!(await confirmAction('Unlink your WhatsApp number?'))) return;
-        try {
-            await axios.delete('/profile/whatsapp');
-            toast.success('Unlinked');
+    const unlinkAction = useAction(() => axios.delete('/profile/whatsapp'), {
+        confirm: 'Unlink your WhatsApp number?',
+        success: 'Unlinked',
+        error: 'Could not unlink',
+        key: () => 'unlink',
+        only: ['whatsapp'],
+        onSuccess: () => {
             setStage('idle');
             setPhone('');
-            router.reload({ only: ['whatsapp'] });
-        } catch (err) {
-            toast.error('Could not unlink');
-        }
-    };
+        },
+    });
+    const unlink = () => unlinkAction.run();
 
     return (
         <div>

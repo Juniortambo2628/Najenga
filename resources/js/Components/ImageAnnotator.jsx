@@ -3,6 +3,7 @@ import { Annotorious, ImageAnnotator as AnnotoriousImageAnnotator, useAnnotator,
 import '@annotorious/react/annotorious-react.css';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import useAction from '@/Hooks/useAction';
 
 // Popup component for editing annotations
 function AnnotationPopup() {
@@ -206,6 +207,18 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
         loadAnnotations();
     }, [resource.id, anno, isLoaded, type]);
 
+    const createAnnotation = useAction((payload) => axios.post('/annotations', payload), {
+        error: 'Failed to save annotation',
+        key: () => 'create',
+    });
+    const updateAnnotation = useAction((id, data) => axios.patch(`/annotations/${id}`, data), {
+        error: 'Failed to update annotation',
+    });
+    const deleteAnnotation = useAction((id) => axios.delete(`/annotations/${id}`), {
+        success: 'Annotation deleted',
+        error: 'Failed to delete annotation',
+    });
+
     // Event Listeners
     useEffect(() => {
         if (!anno || !isLoaded) return;
@@ -213,37 +226,31 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
         const onCreate = async (annotation) => {
             if (isSyncing.current) return;
             
-            try {
-                // Use getGeometry to normalize percent/pixel
-                const { x, y, width, height } = getGeometry(annotation);
-                
-                const targetType = type === 'project_document' ? 'document' : 'photo';
-                const payload = {
-                    annotatable_type: targetType,
-                    annotatable_id: resource.id,
-                    x, y, width, height,
-                    body: '' // Initial body is empty
-                };
-                
-                const res = await axios.post('/annotations', payload);
-                const savedAnnotation = res.data;
-                
-                // Update the local annotation with the backend ID (essential for updates later)
-                const updatedW3C = {
-                    ...annotation,
-                    id: `#anno-${savedAnnotation.id}`
-                };
-                
-                // Flag to ignore own update
-                isSyncing.current = true;
-                anno.updateAnnotation(annotation, updatedW3C); 
-                setTimeout(() => { isSyncing.current = false; }, 100);
-                
-            } catch (error) {
-                console.error('Create error:', error);
-                toast.error('Failed to save annotation');
+            // Use getGeometry to normalize percent/pixel
+            const { x, y, width, height } = getGeometry(annotation);
+
+            const targetType = type === 'project_document' ? 'document' : 'photo';
+            const res = await createAnnotation.run({
+                annotatable_type: targetType,
+                annotatable_id: resource.id,
+                x, y, width, height,
+                body: '' // Initial body is empty
+            });
+            if (!res) {
                 anno.removeAnnotation(annotation);
+                return;
             }
+
+            // Update the local annotation with the backend ID (essential for updates later)
+            const updatedW3C = {
+                ...annotation,
+                id: `#anno-${res.data.id}`
+            };
+
+            // Flag to ignore own update
+            isSyncing.current = true;
+            anno.updateAnnotation(annotation, updatedW3C);
+            setTimeout(() => { isSyncing.current = false; }, 100);
         };
 
         const onUpdate = async (annotation, previous) => {
@@ -252,35 +259,20 @@ const AnnotatorCore = memo(function AnnotatorCore({ resource, type, imageUrl, on
              // Check if it's a backend annotation
              if (!annotation.id.startsWith('#anno-')) return;
              
-             try {
-                const id = annotation.id.replace('#anno-', '');
-                const { x, y, width, height } = getGeometry(annotation);
-                
-                // Extract body text safely
-                const bodyText = annotation.body && annotation.body.length > 0 ? annotation.body[0].value : '';
-                
-                await axios.patch(`/annotations/${id}`, {
-                    x, y, width, height,
-                    body: bodyText
-                });
-             } catch (error) {
-                 console.error('Update error:', error);
-                 toast.error('Failed to update annotation');
-             }
+             const id = annotation.id.replace('#anno-', '');
+             const { x, y, width, height } = getGeometry(annotation);
+
+             // Extract body text safely
+             const bodyText = annotation.body && annotation.body.length > 0 ? annotation.body[0].value : '';
+
+             updateAnnotation.run(id, { x, y, width, height, body: bodyText });
         };
 
         const onDelete = async (annotation) => {
             if (isSyncing.current) return;
             if (!annotation.id.startsWith('#anno-')) return; // Don't delete unsaved/temp
             
-            try {
-                const id = annotation.id.replace('#anno-', '');
-                await axios.delete(`/annotations/${id}`);
-                toast.success('Annotation deleted');
-            } catch (error) {
-                console.error('Delete error:', error);
-                toast.error('Failed to delete annotation');
-            }
+            deleteAnnotation.run(annotation.id.replace('#anno-', ''));
         };
 
         anno.on('createAnnotation', onCreate);

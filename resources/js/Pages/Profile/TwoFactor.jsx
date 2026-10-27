@@ -1,9 +1,10 @@
 import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { rootBreadcrumbs } from '@/Config/navigation';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
 import { useEffect, useState } from 'react';
+import useAction, { visit } from '@/Hooks/useAction';
 
 export default function TwoFactor({ enabled, pending: initialPending }) {
     const [pending, setPending] = useState(initialPending);
@@ -13,7 +14,6 @@ export default function TwoFactor({ enabled, pending: initialPending }) {
     const [codes, setCodes] = useState(null);
     const [showCodes, setShowCodes] = useState(false);
     const [code, setCode] = useState('');
-    const [processing, setProcessing] = useState(false);
     const { errors } = usePage().props;
 
     const confirmError =
@@ -48,65 +48,49 @@ export default function TwoFactor({ enabled, pending: initialPending }) {
         }
     }, [isEnabled, showCodes]);
 
-    const enable = () => {
-        setProcessing(true);
-        router.post(
-            route('two-factor.enable'),
-            {},
-            {
-                onSuccess: () => setPending(true),
-                onFinish: () => setProcessing(false),
-            }
-        );
-    };
+    const enableAction = useAction(() => visit('post', route('two-factor.enable'), {}, { preserveScroll: false }), {
+        key: () => 'enable',
+        onSuccess: () => setPending(true),
+    });
+    const enable = () => enableAction.run();
 
+    const confirmAction2fa = useAction((value) => visit('post', route('two-factor.confirm'), { code: value }, { preserveScroll: false }), {
+        key: () => 'confirm',
+        error: false, // the code field shows the error
+        onSuccess: () => {
+            setIsEnabled(true);
+            setPending(false);
+            setCode('');
+            setShowCodes(true);
+        },
+    });
     const confirm = (e) => {
         e.preventDefault();
-        setProcessing(true);
-        router.post(
-            route('two-factor.confirm'),
-            { code },
-            {
-                onSuccess: () => {
-                    setIsEnabled(true);
-                    setPending(false);
-                    setCode('');
-                    setShowCodes(true);
-                },
-                onFinish: () => setProcessing(false),
-            }
-        );
+        confirmAction2fa.run(code);
     };
 
-    const regenerate = () => {
-        setProcessing(true);
-        router.post(
-            route('two-factor.regenerate-recovery-codes'),
-            {},
-            {
-                onSuccess: () => loadCodes(),
-                onFinish: () => setProcessing(false),
-            }
-        );
-    };
+    const regenerateAction = useAction(() => visit('post', route('two-factor.regenerate-recovery-codes'), {}, { preserveScroll: false }), {
+        confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' },
+        key: () => 'regenerate',
+        onSuccess: () => loadCodes(),
+    });
+    const regenerate = () => regenerateAction.run();
 
-    const disable = () => {
-        setProcessing(true);
-        router.delete(
-            route('two-factor.disable'),
-            {
-                onSuccess: () => {
-                    setIsEnabled(false);
-                    setPending(false);
-                    setCodes(null);
-                    setShowCodes(false);
-                    setQr(null);
-                    setSecret(null);
-                },
-                onFinish: () => setProcessing(false),
-            }
-        );
-    };
+    const disableAction = useAction(() => visit('delete', route('two-factor.disable'), {}, { preserveScroll: false }), {
+        confirm: 'Turn off two-factor authentication?',
+        key: () => 'disable',
+        onSuccess: () => {
+            setIsEnabled(false);
+            setPending(false);
+            setCodes(null);
+            setShowCodes(false);
+            setQr(null);
+            setSecret(null);
+        },
+    });
+    const disable = () => disableAction.run();
+
+    const processing = enableAction.pending || confirmAction2fa.pending || regenerateAction.pending || disableAction.pending;
 
     return (
         <AuthenticatedLayout>
