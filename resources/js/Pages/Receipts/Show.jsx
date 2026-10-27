@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import DetailRow from '@/Components/DetailRow';
@@ -18,17 +18,17 @@ export default function Show({ receipt }) {
         <AuthenticatedLayout>
             <Head title={receipt.original_name || 'Receipt'} />
 
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title={receipt.original_name || `Receipt #${receipt.id}`}
-                    subtitle={expense ? `Expense: ${expense.title}` : 'Receipt details'}
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: receipt.original_name || `Receipt #${receipt.id}`,
+                    subtitle: expense ? `Expense: ${expense.title}` : 'Receipt details',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Receipts', href: route('receipts.index') },
                         { label: receipt.original_name || `Receipt #${receipt.id}` },
-                    ]}
-                    actions={
-                        <div className="flex gap-3">
+                    ],
+                    actions: <div className="flex gap-3">
                             <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[receipt.verification_status] || statusColors.pending}`}>
                                 {receipt.verification_status?.replace('_', ' ').toUpperCase() || 'PENDING'}
                             </span>
@@ -38,10 +38,9 @@ export default function Show({ receipt }) {
                             >
                                 <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                             </Link>
-                        </div>
-                    }
-                />
-
+                        </div>,
+                }}
+            >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
                         <section className="panel p-6">
@@ -121,7 +120,7 @@ export default function Show({ receipt }) {
                         </section>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

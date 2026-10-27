@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import StatusBadge from '@/Components/StatusBadge';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
@@ -8,25 +8,24 @@ export default function Show({ user }) {
     return (
         <AuthenticatedLayout>
             <Head title={`${user.first_name} ${user.last_name}`} />
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title={`${user.first_name} ${user.last_name}`}
-                    subtitle="User profile"
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: `${user.first_name} ${user.last_name}`,
+                    subtitle: 'User profile',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Users', href: route('users.index') },
                         { label: `${user.first_name} ${user.last_name}` },
-                    ]}
-                    actions={
-                        <Link
+                    ],
+                    actions: <Link
                             href={route('users.edit', user.id)}
                             className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
                         >
                             <i aria-hidden="true" className="fas fa-edit mr-2"></i>Edit
-                        </Link>
-                    }
-                />
-
+                        </Link>,
+                }}
+            >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-black/50 border border-white/10 rounded-2xl p-6">
                         <h2 className="text-lg font-semibold text-white mb-4">Profile Information</h2>
@@ -76,7 +75,7 @@ export default function Show({ user }) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

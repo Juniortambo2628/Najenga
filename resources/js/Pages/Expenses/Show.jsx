@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { formatCurrency } from '@/Config/currencies';
 import { PAYMENT_LABELS } from '@/Config/expenses';
 import { useState } from 'react';
@@ -109,17 +109,17 @@ export default function Show({ expense }) {
         <AuthenticatedLayout>
             <Head title={expense.title} />
 
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title={expense.title}
-                    subtitle={expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details'}
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: expense.title,
+                    subtitle: expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Expenses', href: route('expenses') },
                         { label: expense.title },
-                    ]}
-                    actions={
-                        <div className="flex gap-3">
+                    ],
+                    actions: <div className="flex gap-3">
                             <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[expense.status] || statusColors.paid}`}>
                                 {expense.status?.toUpperCase()}
                             </span>
@@ -129,10 +129,9 @@ export default function Show({ expense }) {
                             >
                                 <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                             </Link>
-                        </div>
-                    }
-                />
-
+                        </div>,
+                }}
+            >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
                         <section className="panel p-6">
@@ -207,7 +206,7 @@ export default function Show({ expense }) {
                         </section>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

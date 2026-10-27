@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import DetailRow from '@/Components/DetailRow';
 
@@ -21,25 +21,24 @@ export default function Show({ document }) {
         <AuthenticatedLayout>
             <Head title={document.title} />
 
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title={document.title}
-                    subtitle={document.project?.name || 'Document details'}
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: document.title,
+                    subtitle: document.project?.name || 'Document details',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Documents', href: route('documents') },
                         { label: document.title },
-                    ]}
-                    actions={
-                        <Link
+                    ],
+                    actions: <Link
                             href={route('documents.edit', document.id)}
                             className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
                         >
                             <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
-                        </Link>
-                    }
-                />
-
+                        </Link>,
+                }}
+            >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
                         <section className="panel p-6">
@@ -114,7 +113,7 @@ export default function Show({ document }) {
                         </section>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }
