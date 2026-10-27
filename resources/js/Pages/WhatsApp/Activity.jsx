@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 
 const DIRECTION_OPTIONS = [
     { value: 'all', label: 'All' },
@@ -109,18 +109,18 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
         <AuthenticatedLayout>
             <Head title="WhatsApp activity" />
 
-            <div className="max-w-6xl mx-auto space-y-6">
-                <div className="flex items-start justify-between gap-3">
-                    <DashboardHero
-                        title="WhatsApp"
-                        subtitle={isAdmin ? 'All WhatsApp activity across accounts.' : 'Your WhatsApp activity — messages sent to and from Najenga.'}
-                        breadcrumbs={[
-                            { label: 'Home', href: route('home') },
-                            { label: 'Dashboard', href: route('dashboard') },
-                            { label: 'WhatsApp' },
-                        ]}
-                    />
-                    {settingsUrl && (
+            <DashboardPage
+                className="max-w-6xl mx-auto"
+                bodyClassName="space-y-6"
+                hero={{
+                    title: 'WhatsApp',
+                    subtitle: isAdmin ? 'All WhatsApp activity across accounts.' : 'Your WhatsApp activity — messages sent to and from Najenga.',
+                    breadcrumbs: [
+                        { label: 'Home', href: route('home') },
+                        { label: 'Dashboard', href: route('dashboard') },
+                        { label: 'WhatsApp' },
+                    ],
+                    actions: settingsUrl && (
                         <Link
                             href={settingsUrl}
                             className="mt-1 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10"
@@ -128,9 +128,9 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                             <i aria-hidden="true" className="fas fa-cog"></i>
                             Settings
                         </Link>
-                    )}
-                </div>
-
+                    ),
+                }}
+            >
                 {/* Totals */}
                 <div className="grid grid-cols-3 gap-3">
                     {totals.map((t) => (
@@ -341,7 +341,7 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
                         </section>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

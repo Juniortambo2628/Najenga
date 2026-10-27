@@ -14,11 +14,10 @@ import useFilteredItems from '@/Hooks/useFilteredItems';
 import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
 import useHashHighlight from '@/Hooks/useHashHighlight';
-import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
 import PhotoCard from '@/Components/PhotoCard';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import ShareProjectModal from '@/Components/ShareProjectModal';
 
@@ -149,29 +148,29 @@ export default function Photos({ photos = [], projects = [] }) {
         <AuthenticatedLayout>
             <Head title="Photos" />
 
-            <div onClick={closeContextMenu}>
-                <DashboardHero
-                    title="Photos"
-                    subtitle={`${filteredPhotos.length} photo${filteredPhotos.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
-                    breadcrumbs={[
+            <DashboardPage
+                onClick={closeContextMenu}
+                hero={{
+                    title: 'Photos',
+                    subtitle: `${filteredPhotos.length} photo${filteredPhotos.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`,
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Photos' },
-                    ]}
-                />
-                {/* Context Toolbar */}
-                <FloatingToolbar
-                    project={{ projects, currentId: activeProjectId, onChange: setActiveProjectId }}
-                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search photos' }}
-                    view={{
+                    ],
+                }}
+                toolbar={{
+                    project: { projects, currentId: activeProjectId, onChange: setActiveProjectId },
+                    search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search photos' },
+                    view: {
                         current: viewMode,
                         onChange: setViewMode,
                         modes: [
                             { value: 'grid', icon: 'fa-th', label: 'Grid' },
                             { value: 'timeline', icon: 'fa-clock', label: 'Timeline' },
                         ],
-                    }}
-                    actions={[{ id: 'upload', label: 'Upload Photo', icon: 'fa-upload', href: route('photos.create'), variant: 'primary' }]}
-                    selection={{
+                    },
+                    actions: [{ id: 'upload', label: 'Upload Photo', icon: 'fa-upload', href: route('photos.create'), variant: 'primary' }],
+                    selection: {
                         count: selectedCount,
                         total: filteredPhotos.length,
                         onSelectAll: () => selectAll(filteredPhotos.map(p => p.id)),
@@ -180,8 +179,10 @@ export default function Photos({ photos = [], projects = [] }) {
                             { id: 'download', label: 'Download Selected', icon: 'fa-download', onClick: downloadSelectedPhotos },
                             { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: () => deleteSelectedPhotos(`Delete ${selectedCount} items?`) },
                         ],
-                    }}
-                />
+                    },
+                }}
+            >
+                {/* Context Toolbar */}
 
                 {/* Timeline Grouping Options */}
                 {viewMode === 'timeline' && (
@@ -250,7 +251,7 @@ export default function Photos({ photos = [], projects = [] }) {
                         ))}
                     </div>
                 )}
-            </div>
+            </DashboardPage>
 
             {/* Context Menu */}
             {contextMenu && (

@@ -3,8 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import SummaryCards from '@/Components/SummaryCards';
 import Card from '@/Components/Card';
-import DashboardHero from '@/Components/DashboardHero';
-import FloatingToolbar from '@/Components/FloatingToolbar';
+import DashboardPage from '@/Components/DashboardPage';
 import EmptyState from '@/Components/EmptyState';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
@@ -205,37 +204,38 @@ export default function Analytics({
         <AuthenticatedLayout>
             <Head title="Analytics" />
 
-            <div>
-                <DashboardHero
-                    title="Advanced Analytics"
-                    subtitle="Deep insights into your construction project data"
-                    breadcrumbs={[
+            <DashboardPage
+                hero={{
+                    title: 'Advanced Analytics',
+                    subtitle: 'Deep insights into your construction project data',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Analytics' },
-                    ]}
-                />
-
-                {/* Context Toolbar with project filter + period selector */}
-                <FloatingToolbar
-                    project={{ projects, currentId: projectFilter, onChange: (val) => handleContextChange(period, val) }}
-                >
-                    <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
-                        {PERIODS.map((p) => (
-                            <button
-                                key={p.value}
-                                onClick={() => handleContextChange(p.value, projectFilter)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                                    period === p.value
-                                        ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                }`}
-                            >
-                                {p.label}
-                            </button>
-                        ))}
-                    </div>
-                </FloatingToolbar>
-
+                    ],
+                }}
+                toolbar={{
+                    project: { projects, currentId: projectFilter, onChange: (val) => handleContextChange(period, val) },
+                    children: (
+                        <>
+                            <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+                                {PERIODS.map((p) => (
+                                    <button
+                                        key={p.value}
+                                        onClick={() => handleContextChange(p.value, projectFilter)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                                            period === p.value
+                                                ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
+                                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                    >
+                                        {p.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    ),
+                }}
+            >
                 {/* Overview Stats */}
                 <div className="mb-8">
                     <SummaryCards
@@ -359,7 +359,7 @@ export default function Analytics({
                         )}
                     </Card>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

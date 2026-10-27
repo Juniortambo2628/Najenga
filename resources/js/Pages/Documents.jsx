@@ -8,7 +8,6 @@ import ImageAnnotator from '@/Components/ImageAnnotator';
 import { Document as PdfDocument, Page, pdfjs } from 'react-pdf';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Modal from '@/Components/Modal';
@@ -23,7 +22,7 @@ import useFilteredItems from '@/Hooks/useFilteredItems';
 import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
 import useHashHighlight from '@/Hooks/useHashHighlight';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import ShareProjectModal from '@/Components/ShareProjectModal';
 
@@ -186,20 +185,20 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         <AuthenticatedLayout>
             <Head title="Documents" />
 
-            <div onClick={closeContextMenu}>
-                <DashboardHero
-                    title="Documents"
-                    subtitle={`${filteredDocuments.length} document${filteredDocuments.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
-                    breadcrumbs={[
+            <DashboardPage
+                onClick={closeContextMenu}
+                hero={{
+                    title: 'Documents',
+                    subtitle: `${filteredDocuments.length} document${filteredDocuments.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`,
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Documents' },
-                    ]}
-                />
-                {/* Context Toolbar */}
-                <FloatingToolbar
-                    project={{ projects, currentId: activeProjectId, onChange: setActiveProjectId }}
-                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search documents' }}
-                    filters={[
+                    ],
+                }}
+                toolbar={{
+                    project: { projects, currentId: activeProjectId, onChange: setActiveProjectId },
+                    search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search documents' },
+                    filters: [
                         {
                             name: 'type',
                             title: 'Type',
@@ -207,20 +206,20 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             onChange: setTypeFilter,
                             options: types.map(t => ({ value: t, label: t === 'all' ? 'All Types' : t })),
                         },
-                    ]}
-                    view={{
+                    ],
+                    view: {
                         current: viewMode,
                         onChange: setViewMode,
                         modes: [
                             { value: 'grid', icon: 'fa-th-large', label: 'Grid View' },
                             { value: 'list', icon: 'fa-list', label: 'List View' },
                         ],
-                    }}
-                    actions={[
+                    },
+                    actions: [
                         { id: 'upload', label: 'Upload', icon: 'fa-upload', href: route('documents.create'), variant: 'primary' },
                         { id: 'folder', label: 'New Folder', icon: 'fa-folder-plus', onClick: () => setIsNewFolderModalOpen(true) },
-                    ]}
-                    selection={{
+                    ],
+                    selection: {
                         count: selectedCount,
                         total: filteredDocuments.length,
                         onSelectAll: () => selectAll(filteredDocuments.map(d => d.id)),
@@ -229,8 +228,10 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             { id: 'download', label: 'Download Selected', icon: 'fa-download', onClick: downloadSelectedDocuments },
                             { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: deleteSelectedDocuments },
                         ],
-                    }}
-                />
+                    },
+                }}
+            >
+                {/* Context Toolbar */}
 
                 {/* Breadcrumb Navigation */}
                 <div className="flex items-center gap-2 mb-4 text-sm overflow-x-auto pb-1">
@@ -502,7 +503,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                          })}
                     </div>
                 )}
-            </div>
+            </DashboardPage>
 
             {/* Context Menu */}
             {contextMenu && (

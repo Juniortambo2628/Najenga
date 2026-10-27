@@ -1,8 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
-import DashboardHero from '@/Components/DashboardHero';
-import FloatingToolbar from '@/Components/FloatingToolbar';
+import DashboardPage from '@/Components/DashboardPage';
 import EmptyState from '@/Components/EmptyState';
 import StatusBadge from '@/Components/StatusBadge';
 import Modal from '@/Components/Modal';
@@ -225,20 +224,20 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         <AuthenticatedLayout>
             <Head title="Timeline" />
 
-            <div>
-                <DashboardHero
-                    title="Timeline"
-                    subtitle="Track all project activity across milestones, expenses, photos, and documents"
-                    breadcrumbs={[
+            <DashboardPage
+                hero={{
+                    title: 'Timeline',
+                    subtitle: 'Track all project activity across milestones, expenses, photos, and documents',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Timeline' },
-                    ]}
-                />
-
-                <FloatingToolbar
-                    project={{ projects, currentId: filterProject, onChange: (val) => setFilterProject(val) }}
-                    actions={[{ id: 'add', label: 'Add Milestone', icon: 'fa-plus', href: route('timeline.create'), variant: 'primary' }]}
-                />
+                    ],
+                }}
+                toolbar={{
+                    project: { projects, currentId: filterProject, onChange: (val) => setFilterProject(val) },
+                    actions: [{ id: 'add', label: 'Add Milestone', icon: 'fa-plus', href: route('timeline.create'), variant: 'primary' }],
+                }}
+            >
 
                 <StatsBar expenses={expenses} photos={photos} documents={documents} milestones={timelines} />
 
@@ -428,7 +427,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                         </div>
                     )
                 )}
-            </div>
+            </DashboardPage>
 
             <Modal show={isModalOpen} onClose={closeModal} maxWidth="md">
                 <div className="p-8">
