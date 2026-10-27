@@ -87,6 +87,10 @@ class ProjectRoleAuthorizationTest extends TestCase
                 'body' => 'Looks good',
             ])
             ->assertSuccessful();
+
+        // Other members hear about it (this used to 500: the actor arrived as a name).
+        $this->assertSame(1, $this->editor->notifications()->count());
+        $this->assertSame($this->viewer->name, $this->editor->notifications()->first()->data['user_name']);
     }
 
     // Members
