@@ -3,12 +3,12 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
-export default function Register() {
+export default function Register({ email = '', joiningProject = null }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         first_name: '',
         last_name: '',
         username: '',
-        email: '',
+        email: email || '',
         password: '',
         password_confirmation: '',
     });
@@ -31,6 +31,12 @@ export default function Register() {
             <div className="mb-8">
                 <h2 className="text-2xl font-bold text-white mb-1">Sign Up Account</h2>
                 <p className="text-gray-400 text-sm">Enter your personal data to create your account.</p>
+                {joiningProject && (
+                    <p role="status" className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+                        <i aria-hidden="true" className="fas fa-user-plus mr-2" />
+                        Create your account to join <strong>{joiningProject}</strong>.
+                    </p>
+                )}
             </div>
 
             <form onSubmit={submit} className="space-y-4">

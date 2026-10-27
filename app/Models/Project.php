@@ -172,11 +172,16 @@ class Project extends Model
         return $roles;
     }
 
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(ProjectInvitation::class);
+    }
+
     /**
      * The users that belong to the project.
      */
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(User::class)->withPivot('role', 'invited_by', 'invited_at', 'accepted_at')->withTimestamps();
     }
 }

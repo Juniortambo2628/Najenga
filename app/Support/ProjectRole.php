@@ -15,8 +15,11 @@ namespace App\Support;
 final class ProjectRole
 {
     public const OWNER = 'owner';
+
     public const MANAGER = 'manager';
+
     public const EDITOR = 'editor';
+
     public const VIEWER = 'viewer';
 
     /** Every role, most to least capable. */
