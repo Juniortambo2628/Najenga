@@ -1,8 +1,10 @@
 /**
  * One summary figure. With `onClick` the card is a button (e.g. it applies a
- * filter) and `active` marks it pressed (its filter is applied).
+ * filter) and `active` marks it pressed (its filter is applied). `compact`
+ * suits rows of five or six cards: a smaller figure, and no icon on screens
+ * where the cards are too narrow for one.
  */
-export default function StatCard({ icon, label, value, trend, hint, onClick, active = false }) {
+export default function StatCard({ icon, label, value, trend, hint, onClick, active = false, compact = false }) {
     const trendIsPositive = trend > 0;
     const trendIsNegative = trend < 0;
     const trendColor = trendIsPositive ? 'text-emerald-300' : trendIsNegative ? 'text-rose-300' : 'text-white/50';
@@ -17,12 +19,12 @@ export default function StatCard({ icon, label, value, trend, hint, onClick, act
             type={onClick ? 'button' : undefined}
             onClick={onClick}
             aria-pressed={onClick ? active : undefined}
-            className={`panel block p-5 sm:p-6 ${interactive} ${pressed}`}
+            className={`panel block ${compact ? 'p-4 2xl:p-5' : 'p-5 sm:p-6'} ${interactive} ${pressed}`}
         >
             <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                     <p className="mb-2 text-sm text-white/50">{label}</p>
-                    <p className="truncate text-2xl font-semibold tracking-tight text-white sm:text-3xl">{value}</p>
+                    <p className={`truncate font-semibold tracking-tight text-white ${compact ? 'text-xl 2xl:text-2xl' : 'text-2xl sm:text-3xl'}`} title={typeof value === 'string' ? value : undefined}>{value}</p>
                     {hint && <p className="mt-1 truncate text-xs text-white/40" title={hint}>{hint}</p>}
                     {trend !== undefined && trend !== null && (
                         <div className="mt-3 flex items-center gap-1.5">
@@ -32,7 +34,7 @@ export default function StatCard({ icon, label, value, trend, hint, onClick, act
                         </div>
                     )}
                 </div>
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-200/10 bg-rose-950/50">
+                <div className={`h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rose-200/10 bg-rose-950/50 ${compact ? 'flex xl:hidden 2xl:flex' : 'flex'}`}>
                     <i aria-hidden="true" className={`fas ${icon} text-base text-rose-200`} />
                 </div>
             </div>

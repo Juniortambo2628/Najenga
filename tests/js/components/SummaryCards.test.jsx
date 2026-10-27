@@ -47,4 +47,11 @@ describe('SummaryCards', () => {
         rerender(<SummaryCards cards={cards} stackOnPhones />);
         expect(container.firstChild.className).toContain('grid-cols-1 sm:grid-cols-2 xl:grid-cols-4');
     });
+
+    it('uses compact cards for rows of five or six', () => {
+        const cards = [1, 2, 3, 4, 5, 6].map((n) => ({ label: `C${n}`, value: `Ksh ${n}`, icon: 'fa-receipt' }));
+        render(<SummaryCards cards={cards} columns={6} />);
+        expect(screen.getByText('Ksh 1').className).toContain('text-xl');
+        expect(screen.getByText('Ksh 1')).toHaveAttribute('title', 'Ksh 1');
+    });
 });

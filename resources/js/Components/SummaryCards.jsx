@@ -22,11 +22,12 @@ const gridColumns = {
 export default function SummaryCards({ cards = [], columns, stackOnPhones = false }) {
     if (!cards.length) return null;
     let cols = gridColumns[columns ?? Math.min(cards.length, 4)] || gridColumns[4];
+    const compact = (columns ?? cards.length) >= 5;
     if (stackOnPhones) cols = cols.replace(/^grid-cols-2\b/, 'grid-cols-1 sm:grid-cols-2');
 
     return (
         <div className={`grid gap-3 lg:gap-4 ${cols}`}>
-            {cards.map((card) => <StatCard key={card.label} {...card} />)}
+            {cards.map((card) => <StatCard key={card.label} compact={compact} {...card} />)}
         </div>
     );
 }

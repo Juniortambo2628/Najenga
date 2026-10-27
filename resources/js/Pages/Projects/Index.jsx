@@ -2,7 +2,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage, Link, useForm, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import StatusBadge from '@/Components/StatusBadge';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -17,7 +16,7 @@ import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import { CURRENCY_OPTIONS, formatCurrency } from '@/Config/currencies';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Projects({ projects = [] }) {
@@ -264,18 +263,18 @@ export default function Projects({ projects = [] }) {
         <AuthenticatedLayout>
             <Head title="Projects" />
 
-            <div>
-                <DashboardHero
-                    title="Projects"
-                    subtitle={`${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''}`}
-                    breadcrumbs={[
+            <DashboardPage
+                hero={{
+                    title: 'Projects',
+                    subtitle: `${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''}`,
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Projects' },
-                    ]}
-                />
-                <FloatingToolbar
-                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search projects' }}
-                    filters={[
+                    ],
+                }}
+                toolbar={{
+                    search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search projects' },
+                    filters: [
                         {
                             name: 'status',
                             title: 'Status',
@@ -300,28 +299,28 @@ export default function Projects({ projects = [] }) {
                                 { value: 'budget_low', label: 'Budget: Low to High' },
                             ],
                         },
-                    ]}
-                    view={{
+                    ],
+                    view: {
                         current: viewMode,
                         onChange: setViewMode,
                         modes: [
                             { value: 'grid', icon: 'fa-th-large', label: 'Grid' },
                             { value: 'list', icon: 'fa-list', label: 'List' },
                         ],
-                    }}
-                    actions={[
+                    },
+                    actions: [
                         { id: 'new', label: 'New Project', icon: 'fa-plus', href: route('projects.create'), variant: 'primary' },
                         { id: 'export', label: 'Export', icon: 'fa-download', onClick: handleExport },
-                    ]}
-                    selection={{
+                    ],
+                    selection: {
                         count: selectedCount,
                         total: filteredProjects.length,
                         onSelectAll: () => selectAll(filteredProjects.map(p => p.id)),
                         onDeselectAll: deselectAll,
                         actions: [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }],
-                    }}
-                />
-
+                    },
+                }}
+            >
                 {/* Grid/List View */}
                 {filteredProjects.length === 0 ? (
                     <EmptyState
@@ -399,7 +398,7 @@ export default function Projects({ projects = [] }) {
                         ))}
                     </div>
                 )}
-            </div>
+            </DashboardPage>
 
             {/* Share Modal */}
             <ShareProjectModal
