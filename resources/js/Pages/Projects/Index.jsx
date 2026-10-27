@@ -340,7 +340,7 @@ export default function Projects({ projects = [] }) {
                                             <input
                                                 type="checkbox"
                                                 checked={isSelected(project.id)}
-                                                onChange={() => toggleSelection(project.id)}
+                                                onChange={() => toggleSelection(project.id, true)}
                                                 aria-label={`Select ${project.name}`}
                                                 className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                             />
