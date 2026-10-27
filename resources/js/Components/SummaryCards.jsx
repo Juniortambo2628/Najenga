@@ -17,10 +17,12 @@ const gridColumns = {
  * @param {Array}  cards     - [{ label, value, icon, hint?, trend?, onClick?, active? }];
  *                             a card with onClick is a button (e.g. it applies a filter)
  * @param {number} [columns] - Cards per row on wide screens (1–6); defaults to the card count, at most 4
+ * @param {boolean} [stackOnPhones] - One card per row on phones (for wide values such as amounts)
  */
-export default function SummaryCards({ cards = [], columns }) {
+export default function SummaryCards({ cards = [], columns, stackOnPhones = false }) {
     if (!cards.length) return null;
-    const cols = gridColumns[columns ?? Math.min(cards.length, 4)] || gridColumns[4];
+    let cols = gridColumns[columns ?? Math.min(cards.length, 4)] || gridColumns[4];
+    if (stackOnPhones) cols = cols.replace(/^grid-cols-2\b/, 'grid-cols-1 sm:grid-cols-2');
 
     return (
         <div className={`grid gap-3 lg:gap-4 ${cols}`}>

@@ -39,4 +39,12 @@ describe('SummaryCards', () => {
         fireEvent.click(pending);
         expect(onClick).toHaveBeenCalledTimes(1);
     });
+
+    it('stacks one per row on phones when asked', () => {
+        const cards = [1, 2, 3, 4].map((n) => ({ label: `C${n}`, value: n, icon: 'fa-receipt' }));
+        const { container, rerender } = render(<SummaryCards cards={cards} />);
+        expect(container.firstChild.className).toMatch(/(^| )grid-cols-2 xl:grid-cols-4/);
+        rerender(<SummaryCards cards={cards} stackOnPhones />);
+        expect(container.firstChild.className).toContain('grid-cols-1 sm:grid-cols-2 xl:grid-cols-4');
+    });
 });

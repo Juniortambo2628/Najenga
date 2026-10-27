@@ -96,7 +96,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         </div>
                         <span className="hidden text-xs text-white/35 sm:block">A snapshot of your workspace</span>
                     </div>
-                    <SummaryCards cards={statCards} />
+                    <SummaryCards cards={statCards} stackOnPhones />
                 </section>
 
                 <DashboardSection icon="fa-bolt" eyebrow="Keep things moving" title="Quick actions">
