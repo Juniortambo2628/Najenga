@@ -6,15 +6,18 @@ import { useForm, router } from '@inertiajs/react';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
+import useUnsavedChangesGuard from '@/Hooks/useUnsavedChangesGuard';
 
 export default function Edit({ document: doc, projects, folders }) {
-    const { data, setData, patch, processing, errors } = useForm({
+    const { data, setData, patch, processing, errors, isDirty } = useForm({
         title: doc.title || '',
         description: doc.description || '',
         category: doc.document_type || '',
         document_date: doc.document_date || '',
         folder_id: doc.folder_id || '',
     });
+
+    useUnsavedChangesGuard(isDirty);
 
     const handleSubmit = (e) => {
         e.preventDefault();

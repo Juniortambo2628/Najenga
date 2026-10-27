@@ -2,12 +2,15 @@ import ResourceFormPage from '@/Components/ResourceFormPage';
 import FormActions from '@/Components/FormActions';
 import SelectInput from '@/Components/SelectInput';
 import { useForm, router } from '@inertiajs/react';
+import useUnsavedChangesGuard from '@/Hooks/useUnsavedChangesGuard';
 
 export default function Edit({ receipt }) {
-    const { data, setData, patch, processing } = useForm({
+    const { data, setData, patch, processing, isDirty } = useForm({
         verification_status: receipt.verification_status || 'pending',
         needs_verification: receipt.needs_verification || false,
     });
+
+    useUnsavedChangesGuard(isDirty);
 
     const handleSubmit = (e) => {
         e.preventDefault();
