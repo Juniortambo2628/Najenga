@@ -206,6 +206,9 @@ export default function Photos({ photos = [], projects = [] }) {
                         icon="fa-images"
                         title="No photos found"
                         message="Upload photos to your projects to see them here."
+                        noun="photo"
+                        search={searchQuery}
+                        onClear={() => setSearchQuery('')}
                     />
                 ) : viewMode === 'grid' ? (
                     // Grid View

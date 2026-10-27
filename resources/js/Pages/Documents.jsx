@@ -274,6 +274,10 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                         icon="fa-file-alt"
                         title={currentFolderId ? 'This folder is empty' : 'No documents found'}
                         message="Upload documents to your projects to see them here."
+                        noun="document"
+                        search={searchQuery}
+                        filtered={typeFilter !== 'all'}
+                        onClear={() => { setSearchQuery(''); setTypeFilter('all'); }}
                     />
                 ) : viewMode === 'list' ? (
                     <div className="bg-black/50 border border-white/10 rounded-2xl overflow-hidden" onContextMenu={(e) => e.preventDefault()}>

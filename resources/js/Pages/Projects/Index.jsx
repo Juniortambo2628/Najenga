@@ -328,6 +328,10 @@ export default function Projects({ projects = [] }) {
                         title="No projects found"
                         message="Create your first project to get started."
                         action={{ label: 'New Project', onClick: () => router.get(route('projects.create')) }}
+                        noun="project"
+                        search={searchQuery}
+                        filtered={statusFilter !== 'all'}
+                        onClear={() => { setSearchQuery(''); setStatusFilter('all'); }}
                     />
                 ) : (
                     <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>

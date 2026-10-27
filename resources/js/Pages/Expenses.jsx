@@ -236,8 +236,12 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     <EmptyState 
                         icon="fa-receipt" 
                         title="No expenses found" 
-                        message={searchQuery || categoryFilter !== 'all' ? "Try adjusting your filters" : "Start tracking your project expenses"}
-                        action={!searchQuery && categoryFilter === 'all' ? { label: 'Add Expense', onClick: () => router.get(route('expenses.create')) } : null}
+                        message="Start tracking your project expenses"
+                        action={{ label: 'Add Expense', onClick: () => router.get(route('expenses.create')) }}
+                        noun="expense"
+                        search={searchQuery}
+                        filtered={categoryFilter !== 'all'}
+                        onClear={() => { setSearchQuery(''); setCategoryFilter('all'); }}
                     />
                 )}
 
