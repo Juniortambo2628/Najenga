@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\ProjectRole;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -114,24 +116,13 @@ class Project extends Model
     }
 
     /**
-     * Project roles that may change the project and the records under it.
-     * Viewers can read and comment only.
-     */
-    public const EDIT_ROLES = ['owner', 'manager', 'editor'];
-
-    /**
-     * Project roles that may add or remove members.
-     */
-    public const MANAGE_ROLES = ['owner', 'manager'];
-
-    /**
      * The user's role in this project: 'owner' for the client, the pivot role
      * for a member, null for anyone else.
      */
     public function roleFor(User $user): ?string
     {
         if ((int) $this->client_id === (int) $user->id) {
-            return 'owner';
+            return ProjectRole::OWNER;
         }
 
         return $this->users()->where('users.id', $user->id)->value('project_user.role');
@@ -139,7 +130,7 @@ class Project extends Model
 
     public function userCanEdit(User $user): bool
     {
-        return in_array($this->roleFor($user), self::EDIT_ROLES, true);
+        return ProjectRole::canEdit($this->roleFor($user));
     }
 
     /**
@@ -150,7 +141,35 @@ class Project extends Model
     {
         $role = $this->roleFor($user);
 
-        return $role !== null && ! in_array($role, self::EDIT_ROLES, true);
+        return $role !== null && ! ProjectRole::canEdit($role);
+    }
+
+    /**
+     * Projects the user can see: their own (client) and those they are a member of.
+     */
+    public function scopeAccessibleBy(Builder $query, User $user): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('client_id', $user->id)
+            ->orWhereHas('users', fn (Builder $m) => $m->where('users.id', $user->id)));
+    }
+
+    /**
+     * The user's role in every project they can see, keyed by project id.
+     *
+     * @return array<int, string>
+     */
+    public static function rolesFor(User $user): array
+    {
+        $roles = static::query()->where('client_id', $user->id)->pluck('id')
+            ->mapWithKeys(fn ($id) => [$id => ProjectRole::OWNER])
+            ->all();
+
+        foreach ($user->projects()->pluck('project_user.role', 'projects.id') as $id => $role) {
+            $roles[$id] ??= $role;
+        }
+
+        return $roles;
     }
 
     /**
