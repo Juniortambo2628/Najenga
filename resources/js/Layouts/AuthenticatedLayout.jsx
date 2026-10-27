@@ -1,10 +1,56 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 import { navItemsFor } from '@/Config/navigation';
+
+/**
+ * The page title in the navbar. A page with a DashboardHero shows its title
+ * there; once the hero scrolls behind the navbar, a compact copy appears here
+ * (parent breadcrumb, title, back to top). Pages without a hero always show
+ * their fallback heading.
+ */
+export function NavbarTitle({ heading, hero }) {
+    if (!hero) {
+        return <span className="text-white font-semibold hidden md:block truncate">{heading}</span>;
+    }
+    return (
+        <AnimatePresence initial={false}>
+            {!hero.visible && (
+                <motion.div
+                    key="compact-title"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-3 min-w-0"
+                >
+                    <div className="min-w-0 leading-tight">
+                        {hero.parent && (
+                            <p className="hidden sm:block text-[11px] text-gray-400 truncate">
+                                {hero.parent.href
+                                    ? <Link href={hero.parent.href} className="hover:text-white transition">{hero.parent.label}</Link>
+                                    : hero.parent.label}
+                            </p>
+                        )}
+                        <p className="text-white font-semibold truncate">{heading}</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="hidden md:inline text-xs text-gray-400 hover:text-white whitespace-nowrap transition"
+                        title="Back to top"
+                    >
+                        <i aria-hidden="true" className="fas fa-arrow-up mr-1"></i>Top
+                    </button>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
 
 export default function AuthenticatedLayout({ children }) {
     const user = usePage().props.auth.user;
@@ -13,10 +59,19 @@ export default function AuthenticatedLayout({ children }) {
 
     // Page heading is reported by DashboardHero. Keyed on url so a title from
     // the previous page can never leak into the next one while it mounts.
-    const [reported, setReported] = useState({ url: '', title: '' });
-    const setHeading = useCallback((title) => setReported({ url, title }), [url]);
-    const headingContext = useMemo(() => ({ setHeading }), [setHeading]);
-    const heading = reported.url === url ? reported.title : fallbackHeading(component);
+    const [reported, setReported] = useState({ url: '', title: '', hero: null });
+    const setHeading = useCallback(
+        (title) => setReported((r) => (r.url === url ? { ...r, title } : { url, title, hero: null })),
+        [url],
+    );
+    const reportHero = useCallback(
+        (hero) => setReported((r) => (r.url === url ? { ...r, hero } : { url, title: '', hero })),
+        [url],
+    );
+    const headingContext = useMemo(() => ({ setHeading, reportHero }), [setHeading, reportHero]);
+    const current = reported.url === url;
+    const heading = current && reported.title ? reported.title : fallbackHeading(component);
+    const hero = current ? reported.hero : null;
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -85,10 +140,27 @@ export default function AuthenticatedLayout({ children }) {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // The floating toolbar centres itself over the content beside the sidebar.
+    useEffect(() => {
+        document.documentElement.style.setProperty('--sidebar-w', sidebarOpen ? '16rem' : '5rem');
+    }, [sidebarOpen]);
+
+    // Ctrl/⌘+K: search everything (the page's own list search is "/").
+    useEffect(() => {
+        const onKeyDown = (e) => {
+            if (e.key.toLowerCase() !== 'k' || !(e.metaKey || e.ctrlKey)) return;
+            e.preventDefault();
+            document.getElementById('global-search')?.focus();
+        };
+        document.addEventListener('keydown', onKeyDown);
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, []);
+
     const navItems = navItemsFor(user.role);
 
     return (
         <>
+            <MotionConfig reducedMotion="user">
             <PageHeadingContext.Provider value={headingContext}>
             <Toaster position="top-right" />
             <FlashToast />
@@ -98,20 +170,20 @@ export default function AuthenticatedLayout({ children }) {
                 {/* Sidebar Overlay for Mobile */}
                 {sidebarOpen && (
                     <div 
-                        className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+                        className="fixed inset-0 bg-black/50 z-[35] lg:hidden"
                         onClick={() => setSidebarOpen(false)}
                     />
                 )}
 
                 {/* Sidebar */}
                 <aside className={`
-                    fixed inset-y-0 left-0 z-30 h-screen
+                    fixed inset-y-0 left-0 z-40 h-screen
                     bg-[#101112] border-r border-white/[0.08] shadow-2xl flex flex-col
                     transform transition-all duration-300 ease-in-out
                     ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}>
                     {/* Sidebar Brand */}
-                    <Link href={route('home')} className="h-16 flex items-center justify-center border-b border-white/[0.08] flex-shrink-0 hover:bg-white/[0.04] transition px-3">
+                    <Link href={route('home')} className="h-16 flex items-center justify-center flex-shrink-0 hover:bg-white/[0.04] transition px-3">
                         <img 
                             src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp" 
                             alt="Najenga" 
@@ -152,9 +224,10 @@ export default function AuthenticatedLayout({ children }) {
                 {/* Main Content Area */}
                 <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-clip ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
                     {/* Top Navbar */}
-                    <header className="h-16 bg-[#0b0c0d]/90 backdrop-blur-xl border-b border-white/[0.07] flex items-center justify-between px-4 sticky top-0 z-10">
+                    {/* Above everything in the page (sticky toolbars, heroes), so its menus are never covered. */}
+                    <header className="h-16 bg-[#0b0c0d]/90 backdrop-blur-xl flex items-center justify-between px-4 sticky top-0 z-30">
                         {/* Left Side - Toggle & Title */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
                             <button 
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
                                 aria-label={sidebarOpen ? 'Collapse navigation' : 'Expand navigation'}
@@ -163,28 +236,30 @@ export default function AuthenticatedLayout({ children }) {
                             >
                                 <i aria-hidden="true" className="fas fa-bars text-lg"></i>
                             </button>
-                            <span className="text-white font-semibold hidden md:block">{heading}</span>
+                            <NavbarTitle heading={heading} hero={hero} />
                         </div>
 
                         {/* Right Side - Search + User Menu */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
                             {/* Live Search */}
                             <div className="relative" ref={searchRef}>
                                 <form onSubmit={handleSearchSubmit} className="relative" role="search">
-                                    <div className="flex items-center bg-white/5 border border-white/10 rounded-lg">
+                                    <div className="flex items-center bg-white/5 border border-white/10 rounded-lg transition-colors focus-within:border-white/25 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-rose-400">
                                         <i aria-hidden="true" className="fas fa-search text-gray-400 text-xs pl-3"></i>
                                         <input
+                                            id="global-search"
                                             type="text"
                                             aria-label="Search projects, expenses, photos and documents"
                                             value={searchQuery}
                                             onChange={handleSearchChange}
-                                            placeholder="Search..."
-                                            className="bg-transparent text-white text-sm placeholder-gray-400 outline-none py-1.5 px-3 w-48 focus:w-64 transition-all duration-300"
+                                            placeholder="Search everything…"
+                                            title="Search everything (Ctrl+K)"
+                                            className="bg-transparent border-0 rounded-lg text-white text-sm placeholder-gray-400 outline-none focus:ring-0 focus-visible:!outline-none py-1.5 px-3 w-48 focus:w-64 transition-all duration-300"
                                         />
                                     </div>
                                 </form>
                                 {searchOpen && searchResults.length > 0 && (
-                                    <div className="absolute right-0 mt-1 w-80 bg-gray-900 border border-white/10 rounded-xl shadow-2xl z-50 max-h-72 overflow-y-auto">
+                                    <div className="absolute right-0 mt-1 w-80 bg-surface-overlay border border-white/[0.08] rounded-xl shadow-2xl z-50 max-h-72 overflow-y-auto">
                                         {searchResults.map((r) => (
                                             <button
                                                 key={`${r.type}-${r.id}`}
@@ -215,7 +290,7 @@ export default function AuthenticatedLayout({ children }) {
                                     </div>
                                 )}
                                 {searchOpen && searchResults.length === 0 && searchQuery.length >= 2 && (
-                                    <div className="absolute right-0 mt-1 w-80 bg-gray-900 border border-white/10 rounded-xl shadow-2xl z-50 p-3 text-center">
+                                    <div className="absolute right-0 mt-1 w-80 bg-surface-overlay border border-white/[0.08] rounded-xl shadow-2xl z-50 p-3 text-center">
                                         <p className="text-gray-400 text-xs">No results found</p>
                                     </div>
                                 )}
@@ -245,7 +320,7 @@ export default function AuthenticatedLayout({ children }) {
                                             className="fixed inset-0 z-10" 
                                             onClick={() => setUserDropdownOpen(false)}
                                         />
-                                        <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-white/10 rounded-xl shadow-2xl py-2 z-20">
+                                        <div className="absolute right-0 mt-2 w-48 bg-surface-overlay border border-white/[0.08] rounded-xl shadow-2xl py-2 z-20">
                                             <div className="px-4 py-2 border-b border-white/10">
                                                 <p className="text-white font-medium">{user.first_name || user.name} {user.last_name || ''}</p>
                                                 <p className="text-gray-400 text-sm truncate">{user.email}</p>
@@ -274,12 +349,14 @@ export default function AuthenticatedLayout({ children }) {
                     </header>
 
                     {/* Page Content */}
-                    <main id="main-content" tabIndex={-1} className="flex-1 py-8 px-4 overflow-x-clip min-w-0">
+                    {/* Bottom padding keeps the last row clear of the floating toolbar. */}
+                    <main id="main-content" tabIndex={-1} className="flex-1 pt-8 pb-28 lg:pb-24 px-4 overflow-x-clip min-w-0">
                         {children}
                     </main>
                 </div>
             </div>
             </PageHeadingContext.Provider>
+            </MotionConfig>
         </>
     );
 }
