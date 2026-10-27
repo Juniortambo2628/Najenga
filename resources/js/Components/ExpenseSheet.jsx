@@ -891,7 +891,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
 
             {/* Analysis Panel */}
             {showAnalysis && (
-                <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-surface-panel/90 border border-white/[0.08] rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Summary</h4>
                         <div className="space-y-1 text-sm">
@@ -966,7 +966,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
             {/* Paste Preview Modal */}
             {pastePreview && (
                 <Dialog open onClose={() => setPastePreview(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <DialogPanel className="bg-gray-900 border border-white/10 rounded-2xl max-w-3xl w-full mx-4 shadow-2xl">
+                    <DialogPanel className="bg-surface-overlay border border-white/[0.08] rounded-2xl max-w-3xl w-full mx-4 shadow-2xl">
                         <div className="flex justify-between items-center p-4 border-b border-white/10">
                             <DialogTitle as="h3" className="text-lg font-bold text-white">
                                 <i aria-hidden="true" className="fas fa-clipboard-list mr-2 text-yellow-400"></i>
@@ -1034,7 +1034,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
             {/* Receipt Verify Modal */}
             {receiptVerifyRow && (
                 <Dialog open onClose={() => { setReceiptVerifyRow(null); setReceiptData(null); }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-                    <DialogPanel className="bg-gray-900 border border-white/10 rounded-2xl max-w-2xl w-full mx-4 shadow-2xl">
+                    <DialogPanel className="bg-surface-overlay border border-white/[0.08] rounded-2xl max-w-2xl w-full mx-4 shadow-2xl">
                         <div className="flex justify-between items-center p-4 border-b border-white/10">
                             <DialogTitle as="h3" className="text-lg font-bold text-white">
                                 <i aria-hidden="true" className="fas fa-receipt mr-2 text-[#DC143C]"></i>

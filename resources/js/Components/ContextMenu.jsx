@@ -80,7 +80,7 @@ export default function ContextMenu({ options, position, onClose }) {
             ref={menuRef}
             role="menu"
             onKeyDown={handleKeyDown}
-            className="fixed z-50 bg-black border border-white/20 rounded-lg shadow-xl py-2 w-48 overflow-hidden backdrop-blur-md"
+            className="fixed z-50 bg-surface-overlay border border-white/[0.08] rounded-lg shadow-xl py-2 w-48 overflow-hidden backdrop-blur-md"
             style={style}
         >
             {options.map((option, index) => (

@@ -76,7 +76,7 @@ export default function Modal({
                         className={`mb-6 transform overflow-hidden rounded-2xl shadow-2xl transition-all sm:mx-auto sm:w-full ${maxWidthClass} ${
                             hasTabs
                                 ? 'bg-gradient-to-br from-[#1a0508]/95 via-[#120306]/95 to-[#0a0102]/95 backdrop-blur-xl border border-white/[0.06]'
-                                : 'bg-gray-900 border border-white/10'
+                                : 'bg-surface-overlay border border-white/[0.08]'
                         }`}
                     >
                         {hasTabs ? (

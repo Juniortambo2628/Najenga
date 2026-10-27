@@ -77,7 +77,7 @@ export default function NotificationsDropdown() {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <div className="absolute right-0 mt-2 w-80 bg-surface-overlay border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                     <div className="p-4 border-b border-white/10 flex justify-between items-center">
                         <h3 className="text-white font-bold">Notifications</h3>
                         {unreadCount > 0 && (
@@ -96,7 +96,7 @@ export default function NotificationsDropdown() {
                         ) : (
                             notifications.map(notification => (
                                 <div key={notification.id} className="p-4 border-b border-white/5 hover:bg-white/5 transition flex gap-3 relative group">
-                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0 flex items-center justify-center text-xs text-white overflow-hidden">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center text-xs text-white overflow-hidden">
                                         {notification.data.user_avatar ? (
                                             <img loading="lazy" decoding="async"  src={notification.data.user_avatar} alt="" className="w-full h-full object-cover" />
                                         ) : (
