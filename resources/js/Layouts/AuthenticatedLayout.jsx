@@ -5,6 +5,7 @@ import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
 import ConfirmHost from '@/Components/ConfirmHost';
+import { useHasUnsavedChanges } from '@/Utils/unsavedChanges';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 import { navItemsFor } from '@/Config/navigation';
 
@@ -69,6 +70,8 @@ export default function AuthenticatedLayout({ children }) {
         (hero) => setReported((r) => (r.url === url ? { ...r, hero } : { url, title: '', hero })),
         [url],
     );
+    // A page with unsaved edits (useUnsavedChangesGuard) shows a chip in the navbar.
+    const hasUnsaved = useHasUnsavedChanges();
     const headingContext = useMemo(() => ({ setHeading, reportHero }), [setHeading, reportHero]);
     const current = reported.url === url;
     const heading = current && reported.title ? reported.title : fallbackHeading(component);
@@ -239,6 +242,12 @@ export default function AuthenticatedLayout({ children }) {
                                 <i aria-hidden="true" className="fas fa-bars text-lg"></i>
                             </button>
                             <NavbarTitle heading={heading} hero={hero} />
+                            {hasUnsaved && (
+                                <span role="status" className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-200">
+                                    <i aria-hidden="true" className="fas fa-circle-exclamation" />
+                                    Unsaved changes
+                                </span>
+                            )}
                         </div>
 
                         {/* Right Side - Search + User Menu */}

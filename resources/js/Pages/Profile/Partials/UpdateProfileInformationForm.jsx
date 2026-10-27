@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
+import useUnsavedChangesGuard from '@/Hooks/useUnsavedChangesGuard';
 
 export default function UpdateProfileInformation({
     mustVerifyEmail,
@@ -12,16 +13,19 @@ export default function UpdateProfileInformation({
 }) {
     const user = usePage().props.auth.user;
 
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
+    const { data, setData, patch, errors, processing, recentlySuccessful, isDirty, setDefaults } =
         useForm({
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
         });
 
+    useUnsavedChangesGuard(isDirty);
+
     const submit = (e) => {
         e.preventDefault();
-        patch(route('profile.update'));
+        // Saved values become the new baseline, so the form is clean again.
+        patch(route('profile.update'), { onSuccess: () => setDefaults() });
     };
 
     return (

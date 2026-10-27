@@ -5,18 +5,21 @@ import TextInput from '@/Components/TextInput';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
 import { useRef } from 'react';
+import useUnsavedChangesGuard from '@/Hooks/useUnsavedChangesGuard';
 
 export default function UpdatePasswordForm({ className = '' }) {
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
 
     const {
-        data, setData, errors, put, reset, processing, recentlySuccessful,
+        data, setData, errors, put, reset, processing, recentlySuccessful, isDirty,
     } = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
     });
+
+    useUnsavedChangesGuard(isDirty);
 
     const updatePassword = (e) => {
         e.preventDefault();

@@ -3,6 +3,7 @@ import ResourceFormPage from '@/Components/ResourceFormPage';
 import ResourceFormFields from '@/Components/ResourceFormFields';
 import FormActions from '@/Components/FormActions';
 import { computeDefaults } from '@/Config/fieldBuilder';
+import useUnsavedChangesGuard from '@/Hooks/useUnsavedChangesGuard';
 
 export default function ResourceForm({
     title,
@@ -21,6 +22,7 @@ export default function ResourceForm({
 
     const formProps = useForm(defaults);
     const { data, setData, processing, errors } = formProps;
+    useUnsavedChangesGuard(formProps.isDirty);
 
     const handleSubmit = (e) => {
         e.preventDefault();
