@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * The "select rows, press delete" action shared by documents, photos and
- * expenses: identical validation, identical owner-scoped delete, identical
+ * expenses: identical validation, identical owner-scoped delete (skipping rows in projects where the user
+ * is only a viewer), identical
  * response shape — only the model and the noun in the message differ.
  */
 trait BatchDeletes
@@ -27,7 +28,8 @@ trait BatchDeletes
         DB::transaction(function () use ($model, $request, &$deleted) {
             $rows = $model::whereIn('id', $request->input('ids'))
                 ->where('user_id', auth()->id())
-                ->get();
+                ->get()
+                ->filter(fn ($row) => auth()->user()->can('delete', $row));
 
             foreach ($rows as $row) {
                 $model::withoutSyncingToSearch(fn () => $row->delete());

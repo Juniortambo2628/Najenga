@@ -57,8 +57,9 @@ class NewActivityNotification extends Notification
             'body' => $this->body,
             'action_url' => $this->actionUrl,
             'type' => $this->type,
-            'user_name' => $this->user->name,
-            'user_avatar' => $this->user->profile_photo_url ?? null, // Assuming Laravel Jetstream/similar or null
+            // The actor arrives as a User or, from notifyProjectMembers(), as a name.
+            'user_name' => is_object($this->user) ? $this->user->name : $this->user,
+            'user_avatar' => is_object($this->user) ? ($this->user->profile_photo_url ?? null) : null,
         ];
     }
 }

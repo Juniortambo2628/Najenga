@@ -194,6 +194,8 @@ class ReceiptController extends Controller
         );
 
         if ($matchedExpense) {
+            $this->authorize('update', $matchedExpense);
+
             $this->receipts->attachReceiptMedia(
                 $matchedExpense,
                 $request->temp_path,

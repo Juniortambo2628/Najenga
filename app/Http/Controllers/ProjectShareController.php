@@ -23,7 +23,7 @@ class ProjectShareController extends Controller
 
     public function destroy(Project $project, User $user)
     {
-        $this->authorize('update', $project);
+        $this->authorize('share', $project);
 
         $project->users()->detach($user->id);
         return response()->json(['message' => 'User removed from project']);
