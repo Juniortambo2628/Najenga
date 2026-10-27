@@ -3,31 +3,28 @@ import { Head } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
 import { useState } from 'react';
 import axios from 'axios';
-import toast from 'react-hot-toast';
+import useAction from '@/Hooks/useAction';
 
 export default function Settings({ config = {}, diagnostics = [] }) {
     const [phone, setPhone] = useState('');
     const [message, setMessage] = useState('Hello from Najenga!');
-    const [sending, setSending] = useState(false);
     const [result, setResult] = useState(null);
 
-    const submit = async (e) => {
+    const testSend = useAction((data) => axios.post('/whatsapp/settings/test-send', data), {
+        // Meta accepting the request is not the same as WhatsApp delivering
+        // the message — say "queued at Meta" so we don't lie in test mode.
+        success: 'Queued at Meta — check the activity page for delivery status',
+        error: 'Send failed',
+        key: () => 'send',
+        onSuccess: ({ data }) => setResult({ ok: true, data }),
+        onError: (err) => setResult({ ok: false, data: err.response?.data ?? { error: err.message } }),
+    });
+    const sending = testSend.pending;
+
+    const submit = (e) => {
         e.preventDefault();
-        setSending(true);
         setResult(null);
-        try {
-            const { data } = await axios.post('/whatsapp/settings/test-send', { phone, message });
-            setResult({ ok: true, data });
-            // Meta accepting the request is not the same as WhatsApp delivering
-            // the message — say "queued at Meta" so we don't lie in test mode.
-            toast.success('Queued at Meta — check the activity page for delivery status');
-        } catch (err) {
-            const payload = err.response?.data ?? { error: err.message };
-            setResult({ ok: false, data: payload });
-            toast.error(payload.error || 'Send failed');
-        } finally {
-            setSending(false);
-        }
+        testSend.run({ phone, message });
     };
 
     const Status = ({ id, ok, label }) => (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import useAction from '@/Hooks/useAction';
 
 export default function NotificationsDropdown() {
     const [notifications, setNotifications] = useState([]);
@@ -42,25 +43,24 @@ export default function NotificationsDropdown() {
         };
     }, []);
 
-    const markAsRead = async (id) => {
-        try {
-            await axios.post(`/notifications/${id}/read`);
-            setNotifications(notifications.filter(n => n.id !== id));
+    const markRead = useAction((id) => axios.post(`/notifications/${id}/read`), {
+        error: 'Could not mark the notification as read',
+        onSuccess: (res, id) => {
+            setNotifications((list) => list.filter(n => n.id !== id));
             setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (error) {
-            console.error("Failed to mark read", error);
-        }
-    };
+        },
+    });
+    const markAsRead = markRead.run;
 
-    const markAllRead = async () => {
-        try {
-            await axios.post('/notifications/read-all');
+    const markAll = useAction(() => axios.post('/notifications/read-all'), {
+        error: 'Could not mark notifications as read',
+        key: () => 'all',
+        onSuccess: () => {
             setNotifications([]);
             setUnreadCount(0);
-        } catch (error) {
-            console.error("Failed to mark all read", error);
-        }
-    };
+        },
+    });
+    const markAllRead = () => markAll.run();
 
     return (
         <div className="relative" ref={dropdownRef}>

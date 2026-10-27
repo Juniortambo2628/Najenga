@@ -11,6 +11,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import DashboardPage from '@/Components/DashboardPage';
 import { EXPENSE_CATEGORIES } from '@/Config/expenses';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import useAction from '@/Hooks/useAction';
 
 const CATEGORIES = EXPENSE_CATEGORIES;
 
@@ -42,7 +43,7 @@ export default function ReceiptVerification() {
     const [files, setFiles] = useState([]);
     const [queue, setQueue] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(-1);
-    const [processing, setProcessing] = useState(false);
+    const [analyzing, setProcessing] = useState(false);
     const [errors, setErrors] = useState({});
     const [bulkMode, setBulkMode] = useState(false);
 
@@ -253,17 +254,11 @@ export default function ReceiptVerification() {
         }
     };
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-        setProcessing(true);
-        setErrors({});
-
-        try {
-            await axios.post('/receipts/store', {
-                ...formData,
-                temp_path: currentTempPath,
-            }, getAxiosConfig());
-
+    // Saving shows its errors inline (beside the form), not as toasts.
+    const save = useAction((data) => axios.post('/receipts/store', data, getAxiosConfig()), {
+        error: false,
+        key: () => 'save',
+        onSuccess: () => {
             setQueue(prev => prev.map(entry =>
                 entry.id === currentFileId ? { ...entry, status: 'saved' } : entry
             ));
@@ -273,44 +268,26 @@ export default function ReceiptVerification() {
             setCurrentTempPath('');
             setCurrentFileId(null);
 
-            const nextPending = queue.findIndex((e, i) => e.status === 'pending' && e.id !== currentFileId);
+            const nextPending = queue.findIndex((e) => e.status === 'pending' && e.id !== currentFileId);
             if (nextPending >= 0) {
                 selectEntry(nextPending);
             }
-        } catch (error) {
-            const validationErrors = error.response?.data?.errors;
-            if (validationErrors) {
-                setErrors(validationErrors);
-            } else {
-                setErrors({ save: 'Failed to save expense.' });
-            }
-        } finally {
-            setProcessing(false);
-        }
+        },
+        onError: (error) => setErrors(error.response?.data?.errors || { save: 'Failed to save expense.' }),
+    });
+
+    const handleSave = (e) => {
+        e.preventDefault();
+        setErrors({});
+        save.run({ ...formData, temp_path: currentTempPath });
     };
 
-    const handleSaveAll = async () => {
-        setProcessing(true);
-        setErrors({});
-
-        const readyEntries = queue.filter(e => e.status === 'ready');
-        if (readyEntries.length === 0) {
-            setErrors({ save: 'No receipts to save.' });
-            setProcessing(false);
-            return;
-        }
-
-        const expenses = readyEntries.map(e => ({
-            ...e.formData,
-            temp_path: e.result.temp_path,
-            ocr_source: e.result.extracted ? 'local-tesseract' : 'unknown',
-        }));
-
-        try {
-            const response = await axios.post('/receipts/store-bulk', { expenses }, getAxiosConfig());
-
+    const saveAll = useAction((expenses) => axios.post('/receipts/store-bulk', { expenses }, getAxiosConfig()), {
+        error: false,
+        key: () => 'save-all',
+        onSuccess: (response, expenses, readyEntries) => {
             const savedIds = new Set((response.data.saved || []).map(s => s.index));
-            setQueue(prev => prev.map((entry, i) => {
+            setQueue(prev => prev.map((entry) => {
                 if (entry.status === 'ready') {
                     const readyIdx = readyEntries.findIndex(r => r.id === entry.id);
                     if (savedIds.has(readyIdx)) {
@@ -323,11 +300,26 @@ export default function ReceiptVerification() {
             if (response.data.errors?.length > 0) {
                 setErrors({ save: `${response.data.count} saved, ${response.data.errors.length} failed.` });
             }
-        } catch (error) {
-            setErrors({ save: 'Bulk save failed.' });
-        } finally {
-            setProcessing(false);
+        },
+        onError: () => setErrors({ save: 'Bulk save failed.' }),
+    });
+
+    const handleSaveAll = () => {
+        setErrors({});
+
+        const readyEntries = queue.filter(e => e.status === 'ready');
+        if (readyEntries.length === 0) {
+            setErrors({ save: 'No receipts to save.' });
+            return;
         }
+
+        const expenses = readyEntries.map(e => ({
+            ...e.formData,
+            temp_path: e.result.temp_path,
+            ocr_source: e.result.extracted ? 'local-tesseract' : 'unknown',
+        }));
+
+        saveAll.run(expenses, readyEntries);
     };
 
     const selectEntry = (idx) => {
@@ -349,6 +341,8 @@ export default function ReceiptVerification() {
     const pendingCount = queue.filter(e => e.status === 'pending').length;
     const readyCount = queue.filter(e => e.status === 'ready').length;
     const savedCount = queue.filter(e => e.status === 'saved').length;
+
+    const processing = analyzing || save.pending || saveAll.pending;
 
     return (
         <AuthenticatedLayout>

@@ -17,7 +17,7 @@ export default function Edit({ photo, projects }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        router.patch(route('photos.update', photo.id), data, {
+        patch(route('photos.update', photo.id), {
             onSuccess: () => router.visit(route('photos')),
         });
     };

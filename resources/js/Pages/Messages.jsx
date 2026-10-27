@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
+import useAction from '@/Hooks/useAction';
 import { MessageBox, ChatList, Input, Button } from 'react-chat-elements';
 import 'react-chat-elements/dist/main.css';
 
@@ -55,29 +56,28 @@ export default function Messages() {
         }
     };
 
-    const handleSendMessage = async () => {
-        if (!newMessage.trim() || !selectedConversation) return;
+    const send = useAction((conversationId, body) => axios.post(`/conversations/${conversationId}/messages`, { body }), {
+        error: 'Message not sent',
+        key: () => 'send',
+        onSuccess: (response, conversationId) => {
+            setMessages((list) => [...list, response.data]);
 
+            // Update conversation list item last message
+            setConversations((list) => list.map(c => (
+                c.id === conversationId
+                    ? { ...c, last_message: response.data, last_message_at: response.data.created_at }
+                    : c
+            )));
+        },
+        // Give the text back so it can be sent again.
+        onError: (err, conversationId, body) => setNewMessage(body),
+    });
+
+    const handleSendMessage = () => {
+        if (!newMessage.trim() || !selectedConversation) return;
         const body = newMessage;
         setNewMessage('');
-
-        try {
-            const response = await axios.post(`/conversations/${selectedConversation.id}/messages`, {
-                body: body
-            });
-            
-            setMessages([...messages, response.data]);
-            
-            // Update conversation list item last message
-            setConversations(conversations.map(c => {
-                if (c.id === selectedConversation.id) {
-                    return { ...c, last_message: response.data, last_message_at: response.data.created_at };
-                }
-                return c;
-            }));
-        } catch (error) {
-            console.error("Failed to send message", error);
-        }
+        send.run(selectedConversation.id, body);
     };
 
     const chatListData = conversations.map(c => {

@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
-import { router } from '@inertiajs/react';
 import { createPasskey, passkeySupported } from '@/Utils/webauthn';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
-import { confirmAction } from '@/Utils/feedback';
+import useAction, { visit } from '@/Hooks/useAction';
 
 const relativeDate = (iso) => {
     if (!iso) return 'never';
@@ -24,7 +23,6 @@ export default function PasskeysForm({ passkeys = [] }) {
     const [adding, setAdding] = useState(false);
     const [name, setName] = useState('');
     const [error, setError] = useState('');
-    const [busy, setBusy] = useState(false);
 
     const cancel = () => {
         setAdding(false);
@@ -32,37 +30,38 @@ export default function PasskeysForm({ passkeys = [] }) {
         setError('');
     };
 
-    const addPasskey = async (e) => {
+    // The WebAuthn ceremony: server options, the browser's prompt, then register.
+    const register = useAction(async (passkeyName) => {
+        const optsRes = await window.axios.post(route('passkeys.options'));
+        const response = await createPasskey(optsRes.data);
+        return visit('post', route('passkeys.register'), { name: passkeyName, response });
+    }, {
+        error: false, // shown under the form instead
+        key: () => 'register',
+        onSuccess: () => cancel(),
+        onError: (err) => setError(
+            err.errors
+                ? err.errors.response || err.errors.name || 'Could not register passkey.'
+                : err?.message || 'Passkey setup was cancelled.',
+        ),
+    });
+    const busy = register.pending;
+
+    const addPasskey = (e) => {
         e.preventDefault();
         setError('');
         if (!name.trim()) {
             setError('Give this passkey a name (e.g. "MacBook", "Titan key").');
             return;
         }
-        setBusy(true);
-        try {
-            const optsRes = await window.axios.post(route('passkeys.options'));
-            const response = await createPasskey(optsRes.data);
-            router.post(
-                route('passkeys.register'),
-                { name: name.trim(), response },
-                {
-                    preserveScroll: true,
-                    onSuccess: () => cancel(),
-                    onError: (errs) => setError(errs.response || errs.name || 'Could not register passkey.'),
-                    onFinish: () => setBusy(false),
-                },
-            );
-        } catch (err) {
-            setBusy(false);
-            setError(err?.message || 'Passkey setup was cancelled.');
-        }
+        register.run(name.trim());
     };
 
-    const remove = async (passkey) => {
-        if (!(await confirmAction(`Remove passkey "${passkey.name}"?`))) return;
-        router.delete(route('passkeys.destroy', passkey.id), { preserveScroll: true });
-    };
+    const removeAction = useAction((passkey) => visit('delete', route('passkeys.destroy', passkey.id)), {
+        confirm: (passkey) => `Remove passkey "${passkey.name}"?`,
+        key: (passkey) => passkey.id,
+    });
+    const remove = removeAction.run;
 
     return (
         <div className="space-y-4">

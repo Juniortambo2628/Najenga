@@ -6,6 +6,7 @@ import { useState, useRef } from 'react';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import { buttonProps } from '@/Utils/a11y';
+import useAction, { visit } from '@/Hooks/useAction';
 
 export default function FileUploadForm({ title, breadcrumbs, accept, hint, submitLabel, storeRoute, filesKey, projects }) {
     const [files, setFiles] = useState([]);
@@ -18,6 +19,11 @@ export default function FileUploadForm({ title, breadcrumbs, accept, hint, submi
         setFileCount(selected.length);
     };
 
+    const upload = useAction((formData) => visit('post', route(storeRoute), formData, { forceFormData: true }), {
+        key: () => 'upload',
+        onSuccess: () => router.visit(route(storeRoute.replace('.store', ''))),
+    });
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData();
@@ -26,10 +32,7 @@ export default function FileUploadForm({ title, breadcrumbs, accept, hint, submi
         });
         formData.append('project_id', e.target.project_id.value);
 
-        router.post(route(storeRoute), formData, {
-            forceFormData: true,
-            onSuccess: () => router.visit(route(storeRoute.replace('.store', ''))),
-        });
+        upload.run(formData);
     };
 
     return (
@@ -78,7 +81,7 @@ export default function FileUploadForm({ title, breadcrumbs, accept, hint, submi
                 <FormActions
                     cancelHref={route(storeRoute.replace('.store', ''))}
                     submitLabel={submitLabel}
-                    processing={fileCount === 0}
+                    processing={fileCount === 0 || upload.pending}
                     loadingText="Uploading..."
                 />
             </form>

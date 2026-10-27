@@ -1,8 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import DashboardPage from '@/Components/DashboardPage';
+import useAction, { visit } from '@/Hooks/useAction';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
@@ -20,40 +21,38 @@ export default function Edit({ mustVerifyEmail, status, passkeysCount, whatsapp,
     const [codeSent, setCodeSent] = useState(false);
     const [code, setCode] = useState('');
 
+    const toggleNotifications = useAction((enabled) => visit('patch', route('profile.login-notifications'), { enabled }), {
+        key: () => 'notifications',
+        // Undo the optimistic switch when the save fails.
+        onError: (err, enabled) => setLoginNotificationsEnabled(!enabled),
+    });
     const toggleLoginNotifications = (enabled) => {
         setLoginNotificationsEnabled(enabled);
-        router.patch(
-            route('profile.login-notifications'),
-            { enabled },
-            { preserveScroll: true }
-        );
+        toggleNotifications.run(enabled);
     };
 
+    // Validation errors show beside the code field (page props), not as toasts.
+    const sendCode = useAction(() => visit('post', route('profile.whatsapp.send-code')), {
+        error: false,
+        key: () => 'send',
+        onSuccess: () => setCodeSent(true),
+    });
     const sendWhatsAppCode = () => {
         setCode('');
-        router.post(
-            route('profile.whatsapp.send-code'),
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => setCodeSent(true),
-            }
-        );
+        sendCode.run();
     };
 
+    const verifyCode = useAction((value) => visit('post', route('profile.whatsapp.verify'), { code: value }), {
+        error: false,
+        key: () => 'verify',
+        onSuccess: () => {
+            setCodeSent(false);
+            setCode('');
+        },
+    });
     const verifyWhatsAppCode = (e) => {
         e.preventDefault();
-        router.post(
-            route('profile.whatsapp.verify'),
-            { code },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setCodeSent(false);
-                    setCode('');
-                },
-            }
-        );
+        verifyCode.run(code);
     };
 
     return (

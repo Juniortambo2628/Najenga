@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { router, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
-import { confirmAction } from '@/Utils/feedback';
+import useAction, { visit } from '@/Hooks/useAction';
 
 export default function TwoFactorAuthenticationForm({ twoFactor }) {
     const enabled = !!twoFactor?.enabled;
@@ -15,18 +15,14 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
 
     const confirmForm = useForm({ code: '' });
 
-    const startSetup = () => {
-        router.post(route('two-factor.enable'), {}, { preserveScroll: true });
-    };
+    const startSetup = useAction(() => visit('post', route('two-factor.enable')), { key: () => 'enable' });
 
-    const disable = async () => {
-        if (!(await confirmAction('Turn off two-factor authentication?'))) return;
-        router.delete(route('two-factor.disable'), { preserveScroll: true });
-    };
+    const disable = useAction(() => visit('delete', route('two-factor.disable')), {
+        confirm: 'Turn off two-factor authentication?',
+        key: () => 'disable',
+    });
 
-    const cancelPending = () => {
-        router.delete(route('two-factor.disable'), { preserveScroll: true });
-    };
+    const cancelPending = useAction(() => visit('delete', route('two-factor.disable')), { key: () => 'cancel' });
 
     const submitConfirm = (e) => {
         e.preventDefault();
@@ -36,10 +32,10 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
         });
     };
 
-    const regenerate = async () => {
-        if (!(await confirmAction({ title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' }))) return;
-        router.post(route('two-factor.regenerate-recovery-codes'), {}, { preserveScroll: true });
-    };
+    const regenerate = useAction(() => visit('post', route('two-factor.regenerate-recovery-codes')), {
+        confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' },
+        key: () => 'regenerate',
+    });
 
     return (
         <div className="space-y-4">
@@ -58,7 +54,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                         <span className="px-3 py-1 rounded-lg bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
                             Enabled
                         </span>
-                        <DangerButton type="button" onClick={disable}>
+                        <DangerButton type="button" onClick={() => disable.run()} disabled={disable.pending}>
                             Disable
                         </DangerButton>
                     </div>
@@ -67,7 +63,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                         Setup in progress
                     </span>
                 ) : (
-                    <PrimaryButton type="button" onClick={startSetup}>
+                    <PrimaryButton type="button" onClick={() => startSetup.run()} disabled={startSetup.pending}>
                         Enable
                     </PrimaryButton>
                 )}
@@ -112,7 +108,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                             </PrimaryButton>
                             <button
                                 type="button"
-                                onClick={cancelPending}
+                                onClick={() => cancelPending.run()}
                                 className="text-xs text-gray-400 hover:text-white underline"
                             >
                                 Cancel
@@ -137,7 +133,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                         <PrimaryButton type="button" onClick={() => setShowingCodes((s) => !s)}>
                             {showingCodes ? 'Hide' : 'Show'}
                         </PrimaryButton>
-                        <PrimaryButton type="button" onClick={regenerate}>
+                        <PrimaryButton type="button" onClick={() => regenerate.run()} disabled={regenerate.pending}>
                             Regenerate
                         </PrimaryButton>
                     </div>

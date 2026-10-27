@@ -18,7 +18,7 @@ export default function Edit({ document: doc, projects, folders }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        router.patch(route('documents.update', doc.id), data, {
+        patch(route('documents.update', doc.id), {
             onSuccess: () => router.visit(route('documents')),
         });
     };

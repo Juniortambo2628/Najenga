@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import { Head, Link, router } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
+import useAction, { visit } from '@/Hooks/useAction';
 import { useState } from 'react';
 import { usePasskeyRegister } from '@laravel/passkeys/react';
 
@@ -14,11 +15,10 @@ export default function Passkeys({ passkeys }) {
         },
     });
 
-    const remove = (id) => {
-        router.delete(route('passkey.destroy', { passkey: id }), {
-            preserveScroll: true,
-        });
-    };
+    const removeAction = useAction((id) => visit('delete', route('passkey.destroy', { passkey: id })), {
+        confirm: 'Remove this passkey?',
+    });
+    const remove = removeAction.run;
 
     return (
         <AuthenticatedLayout>
