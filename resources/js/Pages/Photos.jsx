@@ -1,6 +1,6 @@
 import ImageAnnotator from '@/Components/ImageAnnotator';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
 import PreviewModal from '@/Components/PreviewModal';
@@ -11,6 +11,7 @@ import useMultiSelect from '@/Hooks/useMultiSelect';
 import useActiveProject from '@/Hooks/useActiveProject';
 import useContextMenu from '@/Hooks/useContextMenu';
 import useFilteredItems from '@/Hooks/useFilteredItems';
+import useAction from '@/Hooks/useAction';
 import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
 import useHashHighlight from '@/Hooks/useHashHighlight';
@@ -109,18 +110,20 @@ export default function Photos({ photos = [], projects = [] }) {
 
     const download = useFileDownload();
 
-    const deleteSelectedPhotos = async (message) => {
-        if (!confirm(message)) return;
-        try {
-            const ids = [...selectedItems];
-            await axios.delete('/photos/batch', { data: { ids } });
-            clearSelection();
-            toast.success('Photos deleted successfully');
-            router.reload({ only: ['photos'] });
-        } catch (e) {
-            toast.error('Failed to delete photos');
-        }
-    };
+    const deletePhotos = useAction((ids) => axios.delete('/photos/batch', { data: { ids } }), {
+        confirm: (ids, message) => message,
+        success: 'Photos deleted successfully',
+        error: 'Failed to delete photos',
+        key: () => 'bulk',
+        only: ['photos'],
+        onSuccess: () => clearSelection(),
+    });
+    const deleteSelectedPhotos = (message) => deletePhotos.run([...selectedItems], message);
+
+    const updatePhoto = useAction((id, fields) => axios.patch(`/photos/${id}`, fields), {
+        success: (res, id, fields) => ('title' in fields ? 'Title updated' : 'Location updated'),
+        error: 'Failed to save the photo',
+    });
 
     const downloadBatch = useBatchDownload();
 
@@ -294,12 +297,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                             const newTitle = e.target.value;
                                             setPreviewPhoto(prev => ({...prev, title: newTitle}));
                                         }}
-                                        onBlur={async () => {
-                                            try {
-                                                await axios.patch(`/photos/${previewPhoto.id}`, { title: previewPhoto.title });
-                                                toast.success('Title updated');
-                                            } catch(e) { console.error(e); }
-                                        }}
+                                        onBlur={() => updatePhoto.run(previewPhoto.id, { title: previewPhoto.title })}
                                         className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-[#8B0000]"
                                     />
                                 </div>
@@ -312,12 +310,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                             type="text" 
                                             value={previewPhoto?.location || ''}
                                             onChange={(e) => setPreviewPhoto(prev => ({...prev, location: e.target.value}))}
-                                            onBlur={async () => {
-                                                try {
-                                                    await axios.patch(`/photos/${previewPhoto.id}`, { location: previewPhoto.location });
-                                                    toast.success('Location updated');
-                                                } catch(e) { console.error(e); }
-                                            }}
+                                            onBlur={() => updatePhoto.run(previewPhoto.id, { location: previewPhoto.location })}
                                             placeholder="Add location..."
                                             className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm focus:border-[#8B0000]"
                                         />

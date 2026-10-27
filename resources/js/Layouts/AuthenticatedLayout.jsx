@@ -4,6 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
+import ConfirmHost from '@/Components/ConfirmHost';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 import { navItemsFor } from '@/Config/navigation';
 
@@ -164,6 +165,7 @@ export default function AuthenticatedLayout({ children }) {
             <PageHeadingContext.Provider value={headingContext}>
             <Toaster position="top-right" />
             <FlashToast />
+            <ConfirmHost />
 
             <a href="#main-content" className="skip-link">Skip to main content</a>
             <div className="min-h-screen bg-[#0b0c0d] flex">

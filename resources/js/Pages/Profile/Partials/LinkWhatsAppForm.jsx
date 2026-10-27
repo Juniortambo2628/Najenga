@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/Utils/feedback';
 
 export default function LinkWhatsAppForm({ whatsapp = {} }) {
     const { wa_id, verified_at, configured } = whatsapp;
@@ -48,7 +49,7 @@ export default function LinkWhatsAppForm({ whatsapp = {} }) {
     };
 
     const unlink = async () => {
-        if (!confirm('Unlink your WhatsApp number?')) return;
+        if (!(await confirmAction('Unlink your WhatsApp number?'))) return;
         try {
             await axios.delete('/profile/whatsapp');
             toast.success('Unlinked');

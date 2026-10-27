@@ -5,6 +5,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
+import { confirmAction } from '@/Utils/feedback';
 
 export default function TwoFactorAuthenticationForm({ twoFactor }) {
     const enabled = !!twoFactor?.enabled;
@@ -18,8 +19,8 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
         router.post(route('two-factor.enable'), {}, { preserveScroll: true });
     };
 
-    const disable = () => {
-        if (!window.confirm('Turn off two-factor authentication?')) return;
+    const disable = async () => {
+        if (!(await confirmAction('Turn off two-factor authentication?'))) return;
         router.delete(route('two-factor.disable'), { preserveScroll: true });
     };
 
@@ -35,8 +36,8 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
         });
     };
 
-    const regenerate = () => {
-        if (!window.confirm('Regenerate recovery codes? Your old codes will stop working.')) return;
+    const regenerate = async () => {
+        if (!(await confirmAction({ title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' }))) return;
         router.post(route('two-factor.regenerate-recovery-codes'), {}, { preserveScroll: true });
     };
 

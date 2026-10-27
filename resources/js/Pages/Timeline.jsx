@@ -13,6 +13,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
+import useAction, { visit } from '@/Hooks/useAction';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
@@ -202,11 +203,12 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         patch(`/timelines/${editingTimeline.id}`, { onSuccess: () => closeModal() });
     }
 
+    const deleteMilestone = useAction((item) => visit('delete', `/timelines/${item.id}`), {
+        confirm: 'Delete this milestone?',
+        key: (item) => item.id,
+    });
     function handleDelete(item) {
-        if (item.type !== 'milestone') return;
-        if (confirm('Are you sure you want to delete this milestone?')) {
-            router.delete(`/timelines/${item.id}`);
-        }
+        if (item.type === 'milestone') deleteMilestone.run(item);
     }
 
     const handleBulkDelete = useBulkDelete({
