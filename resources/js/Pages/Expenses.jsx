@@ -6,11 +6,11 @@ import { rootBreadcrumbs } from '@/Config/navigation';
 const ExpenseSheet = lazy(() => import('@/Components/ExpenseSheet'));
 import ExpenseForm from '@/Components/ExpenseForm';
 import ExpenseDetailModal from '@/Components/ExpenseDetailModal';
-import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Button from '@/Components/Button';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
+import ListPanel from '@/Components/ListPanel';
 import Modal from '@/Components/Modal';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useActiveProject from '@/Hooks/useActiveProject';
@@ -175,24 +175,19 @@ export default function Expenses({ expenses = [], projects = [] }) {
         <AuthenticatedLayout>
             <Head title="Expenses" />
 
-            {/* List view fits the screen on desktops: only the table's rows scroll
-                (header 4rem + main padding 2rem top, 6rem bottom for the toolbar). */}
-            <div
+            {/* List view fits the screen on desktops: only the table's rows scroll. */}
+            <DashboardPage
                 onClick={closeContextMenu}
-                className={viewMode === 'list' && filteredExpenses.length > 0 ? 'fit:h-[calc(100dvh-12rem)] fit:flex fit:flex-col' : ''}
-            >
-                <DashboardHero
-                    title="Expenses"
-                    subtitle={`${filteredExpenses.length} expense${filteredExpenses.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
-                    breadcrumbs={[
-                        ...rootBreadcrumbs(),
-                        { label: 'Expenses' },
-                    ]}
-                />
-                <FloatingToolbar
-                    project={{ projects, currentId: activeProjectId, onChange: setActiveProjectId }}
-                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search expenses' }}
-                    filters={[
+                fill={viewMode === 'list' && filteredExpenses.length > 0}
+                hero={{
+                    title: 'Expenses',
+                    subtitle: `${filteredExpenses.length} expense${filteredExpenses.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`,
+                    breadcrumbs: [...rootBreadcrumbs(), { label: 'Expenses' }],
+                }}
+                toolbar={{
+                    project: { projects, currentId: activeProjectId, onChange: setActiveProjectId },
+                    search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search expenses' },
+                    filters: [
                         {
                             name: 'category',
                             title: 'Category',
@@ -212,20 +207,20 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                 { value: 'amount_low', label: 'Lowest Amount' },
                             ],
                         },
-                    ]}
-                    view={{
+                    ],
+                    view: {
                         current: viewMode,
                         onChange: setViewMode,
                         modes: [
                             { value: 'list', icon: 'fa-list', label: 'List' },
                             { value: 'sheet', icon: 'fa-table', label: 'Spreadsheet' },
                         ],
-                    }}
-                    actions={[
+                    },
+                    actions: [
                         { id: 'add', label: 'Add Expense', icon: 'fa-plus', href: route('expenses.create'), variant: 'primary' },
                         { id: 'export', label: 'Export CSV', icon: 'fa-file-export', onClick: handleExport },
-                    ]}
-                    selection={{
+                    ],
+                    selection: {
                         count: selectedCount,
                         total: filteredExpenses.length,
                         onSelectAll: () => selectAll(filteredExpenses.map(e => e.id)),
@@ -234,9 +229,9 @@ export default function Expenses({ expenses = [], projects = [] }) {
                             { id: 'assign', label: 'Assign to Project', icon: 'fa-folder-open', onClick: () => setIsAssignModalOpen(true) },
                             { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete },
                         ],
-                    }}
-                />
-
+                    },
+                }}
+            >
                 {filteredExpenses.length === 0 && viewMode !== 'sheet' && (
                     <EmptyState 
                         icon="fa-receipt" 
@@ -260,100 +255,100 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         />
                     </Suspense>
                 ) : filteredExpenses.length > 0 ? (
-                    <div className="bg-surface-panel/90 border border-white/[0.08] rounded-2xl overflow-x-auto fit:flex-1 fit:min-h-0 fit:overflow-y-auto overscroll-contain">
-                            <table className="min-w-full text-left text-gray-400">
-                                <thead className="bg-[#111213] text-gray-200 uppercase text-xs font-semibold sticky top-0 z-10">
+                    <ListPanel>
+                        <table className="min-w-full text-left text-gray-400">
+                            <thead className="bg-[#111213] text-gray-200 uppercase text-xs font-semibold sticky top-0 z-10">
+                                <tr>
+                                    <th className="px-6 py-4 w-10">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedCount === filteredExpenses.length && filteredExpenses.length > 0}
+                                            aria-label="Select all expenses"
+                                            onChange={() => selectedCount === filteredExpenses.length ? deselectAll() : selectAll(filteredExpenses.map(e => e.id))}
+                                            className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
+                                        />
+                                    </th>
+                                    <th className="px-6 py-4">Expense Details</th>
+                                    <th className="px-6 py-4">Recipient</th>
+                                    <th className="px-6 py-4">Ref / Method</th>
+                                    <th className="px-6 py-4 text-right">Amount</th>
+                                    <th className="px-6 py-4 text-center">Date & Time</th>
+                                    <th className="px-6 py-4 text-center">Receipt</th>
+                                    <th className="px-6 py-4 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {filteredExpenses.length === 0 ? (
                                     <tr>
-                                        <th className="px-6 py-4 w-10">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedCount === filteredExpenses.length && filteredExpenses.length > 0}
-                                                aria-label="Select all expenses"
-                                                onChange={() => selectedCount === filteredExpenses.length ? deselectAll() : selectAll(filteredExpenses.map(e => e.id))}
-                                                className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
-                                            />
-                                        </th>
-                                        <th className="px-6 py-4">Expense Details</th>
-                                        <th className="px-6 py-4">Recipient</th>
-                                        <th className="px-6 py-4">Ref / Method</th>
-                                        <th className="px-6 py-4 text-right">Amount</th>
-                                        <th className="px-6 py-4 text-center">Date & Time</th>
-                                        <th className="px-6 py-4 text-center">Receipt</th>
-                                        <th className="px-6 py-4 text-center">Action</th>
+                                        <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
+                                            No expenses found matching your criteria.
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {filteredExpenses.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
-                                                No expenses found matching your criteria.
+                                ) : (
+                                    filteredExpenses.map((expense) => (
+                                        <tr key={expense.id} id={`expense-${expense.id}`} className={`hover:bg-white/5 transition cursor-pointer ${isSelected(expense.id) ? 'bg-white/5' : highlightedExpense === String(expense.id) ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-400/50' : ''}`} onClick={() => handleView(expense)}>
+                                            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected(expense.id)}
+                                                    onChange={() => toggleSelection(expense.id, true)}
+                                                    aria-label={`Select ${expense.title || 'expense'}`}
+                                                    className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="block text-white font-medium text-base">{expense.title}</span>
+                                                {expense.purpose && (
+                                                    <span className="block text-xs text-gray-400 mt-1">{expense.purpose}</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm">{expense.recipient || '—'}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-xs">
+                                                    {expense.reference_number && (
+                                                        <span className="block text-gray-300 font-mono">{expense.reference_number}</span>
+                                                    )}
+                                                    <span className="text-gray-400">{expense.payment_method ? (expense.payment_method === 'mobile_money' ? 'M-Pesa' : expense.payment_method) : '—'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right text-white font-mono font-medium">
+                                                KES {Number(expense.amount).toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-center text-sm">
+                                                <span>{expense.expense_date}</span>
+                                                {expense.time && <span className="block text-xs text-gray-400">{expense.time}</span>}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {expense.receipt_url ? (
+                                                    <button
+                                                        onClick={() => setPreviewExpense(expense)}
+                                                        className="text-[#DC143C] hover:text-[rgb(139,0,0)] transition text-sm"
+                                                        title="View receipt"
+                                                    >
+                                                        <i aria-hidden="true" className="fas fa-file-image"></i>
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-gray-400">—</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <button 
+                                                    onClick={(e) => openContextMenu(e, expense)}
+                                                    aria-label={`Actions for ${expense.title || 'expense'}`}
+                                                    aria-haspopup="menu"
+                                                    className="w-8 h-8 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition flex items-center justify-center mx-auto"
+                                                >
+                                                    <i aria-hidden="true" className="fas fa-ellipsis-h"></i>
+                                                </button>
                                             </td>
                                         </tr>
-                                    ) : (
-                                        filteredExpenses.map((expense) => (
-                                            <tr key={expense.id} id={`expense-${expense.id}`} className={`hover:bg-white/5 transition cursor-pointer ${isSelected(expense.id) ? 'bg-white/5' : highlightedExpense === String(expense.id) ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-400/50' : ''}`} onClick={() => handleView(expense)}>
-                                                <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected(expense.id)}
-                                                        onChange={() => toggleSelection(expense.id, true)}
-                                                        aria-label={`Select ${expense.title || 'expense'}`}
-                                                        className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
-                                                    />
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="block text-white font-medium text-base">{expense.title}</span>
-                                                    {expense.purpose && (
-                                                        <span className="block text-xs text-gray-400 mt-1">{expense.purpose}</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm">{expense.recipient || '—'}</td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-xs">
-                                                        {expense.reference_number && (
-                                                            <span className="block text-gray-300 font-mono">{expense.reference_number}</span>
-                                                        )}
-                                                        <span className="text-gray-400">{expense.payment_method ? (expense.payment_method === 'mobile_money' ? 'M-Pesa' : expense.payment_method) : '—'}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right text-white font-mono font-medium">
-                                                    KES {Number(expense.amount).toLocaleString()}
-                                                </td>
-                                                <td className="px-6 py-4 text-center text-sm">
-                                                    <span>{expense.expense_date}</span>
-                                                    {expense.time && <span className="block text-xs text-gray-400">{expense.time}</span>}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    {expense.receipt_url ? (
-                                                        <button
-                                                            onClick={() => setPreviewExpense(expense)}
-                                                            className="text-[#DC143C] hover:text-[rgb(139,0,0)] transition text-sm"
-                                                            title="View receipt"
-                                                        >
-                                                            <i aria-hidden="true" className="fas fa-file-image"></i>
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-gray-400">—</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <button 
-                                                        onClick={(e) => openContextMenu(e, expense)}
-                                                        aria-label={`Actions for ${expense.title || 'expense'}`}
-                                                        aria-haspopup="menu"
-                                                        className="w-8 h-8 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition flex items-center justify-center mx-auto"
-                                                    >
-                                                        <i aria-hidden="true" className="fas fa-ellipsis-h"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                    </div>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </ListPanel>
                 ) : null}
-            </div>
+            </DashboardPage>
             <Modal show={isEditModalOpen} onClose={() => { setIsEditModalOpen(false); setSelectedExpense(null); }} maxWidth="lg">
                 <div className="p-6">
                     <h2 className="text-xl font-bold text-white mb-4">Edit Expense</h2>

@@ -2,7 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
+import ListPanel from '@/Components/ListPanel';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
@@ -11,7 +12,6 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
-import FloatingToolbar from '@/Components/FloatingToolbar';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import { rootBreadcrumbs } from '@/Config/navigation';
@@ -157,56 +157,52 @@ export default function Index({ users }) {
             <Head title="User Management" />
 
             {/* Fits the screen on desktops: only the table's rows scroll. */}
-            <div className={filteredUsers.length > 0 ? 'fit:h-[calc(100dvh-12rem)] fit:flex fit:flex-col' : ''}>
-            <DashboardHero
-                title="User Management"
-                subtitle="Manage platform users and their roles"
-                breadcrumbs={[
-                    ...rootBreadcrumbs(),
-                    { label: 'Users' },
-                ]}
-            />
-
-            <FloatingToolbar
-                search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search users' }}
-                filters={[
-                    {
-                        name: 'role',
-                        title: 'Role',
-                        value: roleFilter,
-                        onChange: setRoleFilter,
-                        options: [
-                            { value: 'all', label: 'All Roles' },
-                            { value: 'admin', label: 'Admin' },
-                            { value: 'manager', label: 'Manager' },
-                            { value: 'client', label: 'Client' },
-                        ],
-                    },
-                    {
-                        name: 'status',
-                        title: 'Status',
-                        value: statusFilter,
-                        onChange: setStatusFilter,
-                        options: [
-                            { value: 'all', label: 'All Statuses' },
-                            { value: 'active', label: 'Active' },
-                            { value: 'inactive', label: 'Inactive' },
-                            { value: 'suspended', label: 'Suspended' },
-                        ],
-                    },
-                ]}
-                actions={[{ id: 'add', label: 'Add User', icon: 'fa-plus', href: route('users.create'), variant: 'primary' }]}
-                selection={{
-                    count: selectedCount,
-                    total: filteredUsers.length,
-                    onSelectAll: () => selectAll(filteredUsers.map(u => u.id)),
-                    onDeselectAll: deselectAll,
-                    actions: [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }],
+            <DashboardPage
+                fill={filteredUsers.length > 0}
+                hero={{
+                    title: 'User Management',
+                    subtitle: 'Manage platform users and their roles',
+                    breadcrumbs: [...rootBreadcrumbs(), { label: 'Users' }],
                 }}
-            />
-
-            <div className="panel overflow-hidden fit:flex-1 fit:min-h-0 fit:flex fit:flex-col">
-                <div className="overflow-x-auto fit:flex-1 fit:min-h-0 fit:overflow-y-auto overscroll-contain">
+                toolbar={{
+                    search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search users' },
+                    filters: [
+                        {
+                            name: 'role',
+                            title: 'Role',
+                            value: roleFilter,
+                            onChange: setRoleFilter,
+                            options: [
+                                { value: 'all', label: 'All Roles' },
+                                { value: 'admin', label: 'Admin' },
+                                { value: 'manager', label: 'Manager' },
+                                { value: 'client', label: 'Client' },
+                            ],
+                        },
+                        {
+                            name: 'status',
+                            title: 'Status',
+                            value: statusFilter,
+                            onChange: setStatusFilter,
+                            options: [
+                                { value: 'all', label: 'All Statuses' },
+                                { value: 'active', label: 'Active' },
+                                { value: 'inactive', label: 'Inactive' },
+                                { value: 'suspended', label: 'Suspended' },
+                            ],
+                        },
+                    ],
+                    actions: [{ id: 'add', label: 'Add User', icon: 'fa-plus', href: route('users.create'), variant: 'primary' }],
+                    selection: {
+                        count: selectedCount,
+                        total: filteredUsers.length,
+                        onSelectAll: () => selectAll(filteredUsers.map(u => u.id)),
+                        onDeselectAll: deselectAll,
+                        actions: [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }],
+                    },
+                }}
+            >
+                <ListPanel>
                     <table className="w-full text-left">
                         <thead className="sticky top-0 z-10 bg-surface-panel">
                             <tr className="border-b border-white/10">
@@ -285,9 +281,8 @@ export default function Index({ users }) {
                             )}
                         </tbody>
                     </table>
-                </div>
-            </div>
-            </div>
+                </ListPanel>
+            </DashboardPage>
 
             {/* Edit User Modal (Tabbed) */}
             <Modal
