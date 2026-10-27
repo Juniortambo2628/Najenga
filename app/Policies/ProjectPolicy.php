@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Support\ProjectRole;
 
 class ProjectPolicy
 {
@@ -26,7 +27,7 @@ class ProjectPolicy
      */
     public function share(User $user, Project $project): bool
     {
-        return in_array($project->roleFor($user), Project::MANAGE_ROLES, true);
+        return ProjectRole::canManage($project->roleFor($user));
     }
 
     public function delete(User $user, Project $project): bool

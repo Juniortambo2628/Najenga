@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Project;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -55,6 +57,9 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                // Every project the user can see, with their role in it: the
+                // navbar project switcher and useRole() read this.
+                'projects' => fn () => $request->user() ? $this->projectsFor($request->user()) : [],
             ],
             // 24 controllers call ->with('success'|...)-> with no consumer until
             // this was added - see Components/FlashToast.jsx.
@@ -64,5 +69,23 @@ class HandleInertiaRequests extends Middleware
                 'status' => $session?->get('status'),
             ],
         ];
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, role: string}>
+     */
+    private function projectsFor(User $user): array
+    {
+        $roles = Project::rolesFor($user);
+
+        return Project::whereIn('id', array_keys($roles))
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Project $project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'role' => $roles[$project->id],
+            ])
+            ->all();
     }
 }
