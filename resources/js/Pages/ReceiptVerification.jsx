@@ -8,7 +8,7 @@ import InputError from '@/Components/InputError';
 import SelectInput from '@/Components/SelectInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { EXPENSE_CATEGORIES } from '@/Config/expenses';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
@@ -354,16 +354,17 @@ export default function ReceiptVerification() {
         <AuthenticatedLayout>
             <Head title="Receipt Verification" />
 
-            <div className="max-w-7xl mx-auto">
-                <DashboardHero
-                    title="Receipt Verification"
-                    subtitle="Upload and verify receipts with OCR"
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-7xl mx-auto"
+                hero={{
+                    title: 'Receipt Verification',
+                    subtitle: 'Upload and verify receipts with OCR',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Receipt Verification' },
-                    ]}
-                />
-
+                    ],
+                }}
+            >
                 {queue.length > 0 && (
                     <div className="flex items-center gap-3 text-sm text-gray-400 mb-6">
                         <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">{pendingCount} pending</span>
@@ -711,7 +712,7 @@ export default function ReceiptVerification() {
                         )}
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

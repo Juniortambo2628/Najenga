@@ -2,7 +2,7 @@ import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { useEffect, useState } from 'react';
 
 export default function TwoFactor({ enabled, pending: initialPending }) {
@@ -112,17 +112,18 @@ export default function TwoFactor({ enabled, pending: initialPending }) {
         <AuthenticatedLayout>
             <Head title="Two-Factor Authentication" />
 
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title="Two-Factor Authentication"
-                    subtitle="Add an extra layer of security to your account"
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: 'Two-Factor Authentication',
+                    subtitle: 'Add an extra layer of security to your account',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Settings', href: route('profile.edit') },
                         { label: 'Two-Factor Authentication' },
-                    ]}
-                />
-
+                    ],
+                }}
+            >
                 <div className="space-y-6">
                     <section className="panel p-6">
                         <header className="mb-6 flex items-center justify-between">
@@ -320,7 +321,7 @@ export default function TwoFactor({ enabled, pending: initialPending }) {
                         </Link>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

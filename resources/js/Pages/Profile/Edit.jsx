@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
@@ -60,16 +60,17 @@ export default function Edit({ mustVerifyEmail, status, passkeysCount, whatsapp,
         <AuthenticatedLayout>
             <Head title="Settings" />
 
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title="Settings"
-                    subtitle="Manage your account settings and preferences"
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: 'Settings',
+                    subtitle: 'Manage your account settings and preferences',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Settings' },
-                    ]}
-                />
-
+                    ],
+                }}
+            >
                 <div className="space-y-6">
                     {/* Profile Information */}
                     <section className="panel p-6">
@@ -233,7 +234,7 @@ export default function Edit({ mustVerifyEmail, status, passkeysCount, whatsapp,
                         <DeleteUserForm />
                     </section>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

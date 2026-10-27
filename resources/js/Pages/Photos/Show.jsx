@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
 export default function Show({ photo }) {
@@ -8,17 +8,17 @@ export default function Show({ photo }) {
         <AuthenticatedLayout>
             <Head title={photo.title} />
 
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title={photo.title}
-                    subtitle={photo.project?.name || 'Photo details'}
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: photo.title,
+                    subtitle: photo.project?.name || 'Photo details',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Photos', href: route('photos') },
                         { label: photo.title },
-                    ]}
-                    actions={
-                        <div className="flex gap-3">
+                    ],
+                    actions: <div className="flex gap-3">
                             {photo.is_featured && (
                                 <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
                                     <i aria-hidden="true" className="fas fa-star mr-1"></i>Featured
@@ -30,10 +30,9 @@ export default function Show({ photo }) {
                             >
                                 <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
                             </Link>
-                        </div>
-                    }
-                />
-
+                        </div>,
+                }}
+            >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
                         <section className="panel p-6">
@@ -104,7 +103,7 @@ export default function Show({ photo }) {
                         </section>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

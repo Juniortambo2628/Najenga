@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import { Head, Link, router } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { useState } from 'react';
 import { usePasskeyRegister } from '@laravel/passkeys/react';
 
@@ -24,17 +24,18 @@ export default function Passkeys({ passkeys }) {
         <AuthenticatedLayout>
             <Head title="Passkeys" />
 
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title="Passkeys"
-                    subtitle="Sign in with biometrics or security keys"
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: 'Passkeys',
+                    subtitle: 'Sign in with biometrics or security keys',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Settings', href: route('profile.edit') },
                         { label: 'Passkeys' },
-                    ]}
-                />
-
+                    ],
+                }}
+            >
                 <div className="space-y-6">
                     <section className="panel p-6">
                         <header className="mb-6">
@@ -137,7 +138,7 @@ export default function Passkeys({ passkeys }) {
                         </Link>
                     </div>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

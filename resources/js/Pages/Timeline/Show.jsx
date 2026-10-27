@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import StatusBadge from '@/Components/StatusBadge';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
@@ -8,25 +8,24 @@ export default function Show({ timeline }) {
     return (
         <AuthenticatedLayout>
             <Head title={timeline.title} />
-            <div className="max-w-4xl mx-auto">
-                <DashboardHero
-                    title={timeline.title}
-                    subtitle="Milestone details"
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-4xl mx-auto"
+                hero={{
+                    title: timeline.title,
+                    subtitle: 'Milestone details',
+                    breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Timeline', href: route('timeline') },
                         { label: timeline.title },
-                    ]}
-                    actions={
-                        <Link
+                    ],
+                    actions: <Link
                             href={route('timeline.edit', timeline.id)}
                             className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
                         >
                             <i aria-hidden="true" className="fas fa-edit mr-2"></i>Edit
-                        </Link>
-                    }
-                />
-
+                        </Link>,
+                }}
+            >
                 <div className="bg-black/50 border border-white/10 rounded-2xl p-6">
                     <dl className="space-y-4 text-sm">
                         <div className="flex justify-between">
@@ -53,7 +52,7 @@ export default function Show({ timeline }) {
                         )}
                     </dl>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

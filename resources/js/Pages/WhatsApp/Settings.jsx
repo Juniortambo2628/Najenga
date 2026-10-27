@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -41,18 +41,20 @@ export default function Settings({ config = {}, diagnostics = [] }) {
         <AuthenticatedLayout>
             <Head title="WhatsApp Settings" />
 
-            <div className="max-w-6xl mx-auto space-y-6">
-                <DashboardHero
-                    title="WhatsApp Integration"
-                    subtitle="Meta WhatsApp Cloud API — configuration & test"
-                    breadcrumbs={[
+            <DashboardPage
+                className="max-w-6xl mx-auto"
+                bodyClassName="space-y-6"
+                hero={{
+                    title: 'WhatsApp Integration',
+                    subtitle: 'Meta WhatsApp Cloud API — configuration & test',
+                    breadcrumbs: [
                         { label: 'Home', href: route('home') },
                         { label: 'Dashboard', href: route('dashboard') },
                         { label: 'WhatsApp', href: route('whatsapp') },
                         { label: 'Settings' },
-                    ]}
-                />
-
+                    ],
+                }}
+            >
                 {config.test_mode && (
                     <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-100 flex items-start gap-3">
                         <i aria-hidden="true" className="fas fa-flask mt-0.5 text-yellow-300"></i>
@@ -246,7 +248,7 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                         </div>
                     )}
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }

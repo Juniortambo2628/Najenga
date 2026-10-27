@@ -1,21 +1,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import DashboardHero from '@/Components/DashboardHero';
+import DashboardPage from '@/Components/DashboardPage';
 import Card from '@/Components/Card';
 
 export default function ResourceFormPage({ title, breadcrumbs, children }) {
     return (
         <AuthenticatedLayout>
             <Head title={title} />
-            <div className="max-w-3xl mx-auto">
-                <DashboardHero
-                    title={title}
-                    breadcrumbs={breadcrumbs}
-                />
+            <DashboardPage
+                className="max-w-3xl mx-auto"
+                hero={{
+                    title,
+                    breadcrumbs,
+                }}
+            >
                 <Card className="p-8">
                     {children}
                 </Card>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }
