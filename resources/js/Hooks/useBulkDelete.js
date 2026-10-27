@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/Utils/feedback';
 
 function plural(noun, n) {
     return n === 1 ? noun : `${noun}s`;
@@ -23,7 +24,7 @@ function plural(noun, n) {
 export default function useBulkDelete({ selected, noun, path, onDone, reload = [] }) {
     return async function handleBulkDelete() {
         const ids = [...selected];
-        if (!confirm(`Delete ${ids.length} ${plural(noun, ids.length)}?`)) return;
+        if (!(await confirmAction(`Delete ${ids.length} ${plural(noun, ids.length)}?`))) return;
 
         let failed = 0;
         for (const id of ids) {

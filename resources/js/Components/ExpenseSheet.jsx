@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { EXPENSE_CATEGORIES, PAYMENT_LABELS, PAYMENT_METHOD_VALUES } from '@/Config/expenses';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import { confirmAction } from '@/Utils/feedback';
 
 ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
 
@@ -700,9 +701,9 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
         toast.success(`Exported ${data.length} rows to XLSX`);
     }, []);
 
-    const handleDeleteSelected = useCallback(() => {
+    const handleDeleteSelected = useCallback(async () => {
         if (selectedRows.length === 0) return;
-        if (!confirm(`Delete ${selectedRows.length} selected row(s)?`)) return;
+        if (!(await confirmAction(`Delete ${selectedRows.length} selected row${selectedRows.length !== 1 ? 's' : ''}?`))) return;
         const ids = new Set(selectedRows.map(r => r._rowId));
         setRowData(prev => prev.filter(r => !ids.has(r._rowId)));
         setSelectedRows([]);

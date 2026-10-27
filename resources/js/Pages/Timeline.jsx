@@ -16,6 +16,7 @@ import useBulkDelete from '@/Hooks/useBulkDelete';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import { confirmAction } from '@/Utils/feedback';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -202,9 +203,9 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
         patch(`/timelines/${editingTimeline.id}`, { onSuccess: () => closeModal() });
     }
 
-    function handleDelete(item) {
+    async function handleDelete(item) {
         if (item.type !== 'milestone') return;
-        if (confirm('Are you sure you want to delete this milestone?')) {
+        if (await confirmAction('Delete this milestone?')) {
             router.delete(`/timelines/${item.id}`);
         }
     }

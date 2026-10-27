@@ -9,6 +9,7 @@ import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import DetailRow from '@/Components/DetailRow';
+import { confirmAction } from '@/Utils/feedback';
 
 function ReceiptSection({ expense, onUpdate }) {
     const [uploading, setUploading] = useState(false);
@@ -36,7 +37,7 @@ function ReceiptSection({ expense, onUpdate }) {
     };
 
     const handleRemove = async () => {
-        if (!confirm('Remove this receipt?')) return;
+        if (!(await confirmAction('Remove this receipt?'))) return;
         try {
             await axios.delete(`/expenses/${expense.id}/receipt`);
             setPreviewUrl(null);

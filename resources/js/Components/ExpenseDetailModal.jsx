@@ -12,6 +12,7 @@ import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import DetailRow from '@/Components/DetailRow';
+import { confirmAction } from '@/Utils/feedback';
 
 function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors, projects, onSave, onCancel, saving, onStartEdit }) {
     const handleChange = (field) => (e) => {
@@ -175,7 +176,7 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
     }, [expense?.id, onReceiptUpdate]);
 
     const handleRemove = async () => {
-        if (!confirm('Remove this receipt?')) return;
+        if (!(await confirmAction('Remove this receipt?'))) return;
         try {
             await axios.delete(`/expenses/${expense.id}/receipt`);
             setPreviewUrl(null);

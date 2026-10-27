@@ -21,6 +21,7 @@ import { exportToCSV } from '@/Utils/exportToCSV';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import { confirmAction } from '@/Utils/feedback';
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [previewExpense, setPreviewExpense] = useState(null);
@@ -126,8 +127,8 @@ export default function Expenses({ expenses = [], projects = [] }) {
         router.reload({ only: ['expenses'] });
     }, []);
 
-    const handleDelete = (expense) => {
-        if (confirm(`Are you sure you want to delete "${expense.title}"?`)) {
+    const handleDelete = async (expense) => {
+        if (await confirmAction(`Delete "${expense.title}"?`)) {
             router.delete(`/expenses/${expense.id}`, {
                 preserveScroll: true,
                 onSuccess: () => closeContextMenu()
@@ -142,7 +143,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
     ];
 
     const handleBulkDelete = async () => {
-        if (!confirm(`Delete ${selectedCount} expense${selectedCount !== 1 ? 's' : ''}?`)) return;
+        if (!(await confirmAction(`Delete ${selectedCount} expense${selectedCount !== 1 ? 's' : ''}?`))) return;
         const ids = [...selectedItems];
         try {
             const res = await axios.delete('/expenses/batch', { data: { ids } });

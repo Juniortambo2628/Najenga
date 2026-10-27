@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import { MentionsInput, Mention } from 'react-mentions';
+import { confirmAction } from '@/Utils/feedback';
 
 const mentionStyle = {
     control: {
@@ -181,7 +182,7 @@ export default function CommentsSection({ type, id, projectId }) {
     };
 
     const handleDelete = async (commentId) => {
-        if (!confirm('Are you sure you want to delete this comment?')) return;
+        if (!(await confirmAction('Delete this comment?'))) return;
         try {
             await axios.delete(`/comments/${commentId}`);
             

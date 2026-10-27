@@ -25,6 +25,7 @@ import useHashHighlight from '@/Hooks/useHashHighlight';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import ShareProjectModal from '@/Components/ShareProjectModal';
+import { confirmAction } from '@/Utils/feedback';
 
 // Configure PDF worker (served locally, no CDN round-trip)
 pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
@@ -154,7 +155,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
         { label: 'Move to Folder', icon: 'fa-folder-open', action: () => openMoveModal(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: async () => {
-            if (confirm(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
+            if (await confirmAction(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)) {
                 try {
                     const ids = [...selectedItems];
                     await axios.delete('/documents/batch', { data: { ids } });
@@ -169,7 +170,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
     ];
 
     const deleteSelectedDocuments = async () => {
-        if (!confirm(`Delete ${selectedCount} items?`)) return;
+        if (!(await confirmAction(`Delete ${selectedCount} items?`))) return;
         try {
             const ids = [...selectedItems];
             await axios.delete('/documents/batch', { data: { ids } });
@@ -301,7 +302,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     </div>
                                     <button
                                         aria-label={`Delete folder ${folder.name}`}
-                                        onClick={(e) => { e.stopPropagation(); if (confirm(`Delete folder "${folder.name}"? Documents inside will be moved to root.`)) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
+                                        onClick={async (e) => { e.stopPropagation(); if (await confirmAction({ title: `Delete folder "${folder.name}"?`, message: 'Documents inside will be moved to the top level.', confirmLabel: 'Delete' })) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
                                         className="p-2 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                                     >
                                         <i aria-hidden="true" className="fas fa-trash text-xs"></i>
@@ -383,7 +384,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     </h4>
                                     <button
                                         aria-label={`Delete folder ${folder.name}`}
-                                        onClick={(e) => { e.stopPropagation(); if (confirm(`Delete folder "${folder.name}"?`)) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
+                                        onClick={async (e) => { e.stopPropagation(); if (await confirmAction({ title: `Delete folder "${folder.name}"?`, message: 'Documents inside will be moved to the top level.', confirmLabel: 'Delete' })) router.delete(`/folders/${folder.id}`, { preserveScroll: true }); }}
                                         className="p-1.5 rounded-lg text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
                                     >
                                         <i aria-hidden="true" className="fas fa-trash text-xs"></i>

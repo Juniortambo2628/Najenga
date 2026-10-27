@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DashboardPage from '@/Components/DashboardPage';
+import { confirmAction } from '@/Utils/feedback';
 
 const DIRECTION_OPTIONS = [
     { value: 'all', label: 'All' },
@@ -79,11 +80,11 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
         setFilter({ q });
     };
 
-    const onDelete = (m) => {
+    const onDelete = async (m) => {
         const suffix = m.filed
             ? ` This will also delete the linked ${m.filed.kind}.`
             : '';
-        if (!window.confirm(`Delete this ${m.direction} message?${suffix}`)) return;
+        if (!(await confirmAction({ title: `Delete this ${m.direction} message?`, message: suffix.trim() || undefined, confirmLabel: 'Delete' }))) return;
         router.delete(route('whatsapp.activity.destroy', m.id), {
             preserveScroll: true,
             preserveState: true,

@@ -15,6 +15,7 @@ import StatusBadge from '@/Components/StatusBadge';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import { confirmAction } from '@/Utils/feedback';
 
 export default function Index({ users }) {
     const [showEditModal, setShowEditModal] = useState(false);
@@ -67,8 +68,8 @@ export default function Index({ users }) {
         });
     };
 
-    const handleDelete = (user) => {
-        if (confirm(`Delete ${user.first_name} ${user.last_name}?`)) {
+    const handleDelete = async (user) => {
+        if (await confirmAction(`Delete ${user.first_name} ${user.last_name}?`)) {
             router.delete(`/users/${user.id}`);
         }
     };

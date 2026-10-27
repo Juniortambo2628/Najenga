@@ -20,6 +20,7 @@ import PhotoCard from '@/Components/PhotoCard';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import ShareProjectModal from '@/Components/ShareProjectModal';
+import { confirmAction } from '@/Utils/feedback';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -110,7 +111,7 @@ export default function Photos({ photos = [], projects = [] }) {
     const download = useFileDownload();
 
     const deleteSelectedPhotos = async (message) => {
-        if (!confirm(message)) return;
+        if (!(await confirmAction(message))) return;
         try {
             const ids = [...selectedItems];
             await axios.delete('/photos/batch', { data: { ids } });

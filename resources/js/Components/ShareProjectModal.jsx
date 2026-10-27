@@ -7,6 +7,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/Utils/feedback';
 
 const ROLE_COLORS = {
     editor: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -35,7 +36,7 @@ export default function ShareProjectModal({ show, onClose, project, teamMembers 
     };
 
     const handleRemoveMember = async (userId) => {
-        if (!confirm('Remove this member from the project?')) return;
+        if (!(await confirmAction('Remove this member from the project?'))) return;
         try {
             await axios.delete(`/projects/${project.id}/share/${userId}`);
             toast.success('Member removed');

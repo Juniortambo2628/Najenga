@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
+import { confirmAction } from '@/Utils/feedback';
 
 const relativeDate = (iso) => {
     if (!iso) return 'never';
@@ -58,8 +59,8 @@ export default function PasskeysForm({ passkeys = [] }) {
         }
     };
 
-    const remove = (passkey) => {
-        if (!window.confirm(`Remove passkey "${passkey.name}"?`)) return;
+    const remove = async (passkey) => {
+        if (!(await confirmAction(`Remove passkey "${passkey.name}"?`))) return;
         router.delete(route('passkeys.destroy', passkey.id), { preserveScroll: true });
     };
 
