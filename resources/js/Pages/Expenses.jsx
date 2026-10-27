@@ -296,7 +296,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                     <input
                                                         type="checkbox"
                                                         checked={isSelected(expense.id)}
-                                                        onChange={() => toggleSelection(expense.id)}
+                                                        onChange={() => toggleSelection(expense.id, true)}
                                                         aria-label={`Select ${expense.title || 'expense'}`}
                                                         className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                                     />
