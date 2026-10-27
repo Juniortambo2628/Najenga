@@ -4,8 +4,13 @@
 
 /* Custom theme colors matching legacy Najenga design */
 @layer base {
+    /* No sideways scrolling. "clip", not "hidden": hidden made <body> a
+       scroll container of its own, so every sticky element (the navbar,
+       table headers) stuck to a box that never scrolls and scrolled away.
+       "hidden" stays first only for browsers without "clip". */
     html, body {
-        @apply overflow-x-hidden;
+        overflow-x: hidden;
+        overflow-x: clip;
         max-width: 100vw;
     }
 

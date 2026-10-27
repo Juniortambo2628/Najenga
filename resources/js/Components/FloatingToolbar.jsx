@@ -200,7 +200,9 @@ export default function FloatingToolbar({ search, project, filters = [], view, a
     const narrowed = !!search?.value || countActiveFilters(filters) > 0 || !!project?.currentId;
 
     // Fixed to the content area: centred over it beside the sidebar on large screens.
-    const position = 'fixed z-40 bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:bottom-6 left-1/2 lg:left-[calc(50%_+_var(--sidebar-w,16rem)_/_2)] transition-[left] duration-300';
+    // Above page content (z-10 sticky table headers), below the navbar (z-30) and
+    // the mobile sidebar and its overlay, so an open sidebar covers it.
+    const position = 'fixed z-[25] bottom-[max(0.75rem,env(safe-area-inset-bottom))] sm:bottom-6 left-1/2 lg:left-[calc(50%_+_var(--sidebar-w,16rem)_/_2)] transition-[left] duration-300';
     // Centred with framer-motion's x, not a translate class: motion writes an
     // inline transform that would wipe out Tailwind's.
     const centre = { x: '-50%' };
