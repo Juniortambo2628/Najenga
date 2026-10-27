@@ -50,3 +50,19 @@ describe('DashboardPage', () => {
         expect(container.firstChild.className).toContain('fit:h-[calc(100dvh-12rem)]');
     });
 });
+
+describe('DashboardPage side panel', () => {
+    it('renders the panel beside the content and on phones', () => {
+        render(
+            <DashboardPage
+                hero={{ title: 'Documents' }}
+                panel={{ title: 'Folders', items: [{ id: 'all', label: 'All files' }], activeId: 'all' }}
+            >
+                <p>Files</p>
+            </DashboardPage>,
+        );
+        // Desktop aside and the phone chip bar both name the panel.
+        expect(screen.getByRole('complementary', { name: 'Folders' })).toBeInTheDocument();
+        expect(screen.getAllByRole('button', { name: /All files/ })).toHaveLength(2);
+    });
+});
