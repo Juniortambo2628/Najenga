@@ -48,6 +48,12 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
 // that lands on the host root and 404s. url() keeps the install base.
 Route::get('/home', fn () => redirect()->to(url('/dashboard'), 301));
 
+// The link in an invitation email. Works signed out: guests sign in or up
+// first and join right after (App\Listeners\AcceptPendingInvitation).
+Route::get('/invitations/{invitation}/accept', [\App\Http\Controllers\ProjectInvitationController::class, 'accept'])
+    ->middleware('signed')
+    ->name('invitations.accept');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Projects
     Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects');
@@ -62,6 +68,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Project Sharing
     Route::post('/projects/{project}/share', [\App\Http\Controllers\ProjectShareController::class, 'store'])->name('projects.share.store');
     Route::delete('/projects/{project}/share/{user}', [\App\Http\Controllers\ProjectShareController::class, 'destroy'])->name('projects.share.destroy');
+    Route::get('/projects/{project}/members', [\App\Http\Controllers\ProjectInvitationController::class, 'index'])->name('projects.members');
+    Route::post('/projects/{project}/invitations', [\App\Http\Controllers\ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
+    Route::post('/projects/{project}/invitations/{invitation}/resend', [\App\Http\Controllers\ProjectInvitationController::class, 'resend'])->name('projects.invitations.resend');
+    Route::delete('/projects/{project}/invitations/{invitation}', [\App\Http\Controllers\ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');
 
     // Expenses
     Route::get('/expenses', [\App\Http\Controllers\ExpenseController::class, 'index'])->name('expenses');

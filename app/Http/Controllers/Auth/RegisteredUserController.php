@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ProjectInvitation;
 use App\Models\User;
+use App\Services\ProjectInvitations;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,9 +20,16 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Auth/Register');
+        // Arriving from a project invitation: suggest the invited address.
+        $pending = $request->session()->get(ProjectInvitations::SESSION_KEY);
+        $invitation = $pending ? ProjectInvitation::with('project:id,name')->find($pending['id']) : null;
+
+        return Inertia::render('Auth/Register', [
+            'email' => $invitation?->email ?? $request->query('email'),
+            'joiningProject' => $invitation?->project?->name,
+        ]);
     }
 
     /**
@@ -50,6 +59,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 }

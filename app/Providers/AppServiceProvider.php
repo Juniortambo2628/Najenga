@@ -43,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(\Illuminate\Auth\Events\Logout::class, \App\Listeners\LogAuthentication::class);
         Event::listen(\Illuminate\Auth\Events\Registered::class, \App\Listeners\LogAuthentication::class);
         Event::listen(\Illuminate\Auth\Events\Failed::class, \App\Listeners\LogAuthentication::class);
+        Event::listen(\Illuminate\Auth\Events\Login::class, \App\Listeners\AcceptPendingInvitation::class);
+        Event::listen(\Illuminate\Auth\Events\Registered::class, \App\Listeners\AcceptPendingInvitation::class);
 
         $this->app->singleton(\App\Services\ReceiptParser::class);
     }
