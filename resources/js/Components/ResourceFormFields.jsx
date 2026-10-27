@@ -88,7 +88,10 @@ function renderField(field, data, setData, errors) {
 }
 
 export default function ResourceFormFields({ schema, data, setData, errors }) {
-    return schema.map((item) => {
+    // Schemas mix plain field objects with field() builders; group() converts
+    // its own fields, so only top-level builders need it here.
+    return schema.map((entry) => {
+        const item = typeof entry?.toSchema === 'function' ? entry.toSchema() : entry;
         if (item._isGroup) {
             const fieldCount = item.fields.length;
             const gridClass = fieldCount === 2 ? 'md:grid-cols-2' : fieldCount === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2';
