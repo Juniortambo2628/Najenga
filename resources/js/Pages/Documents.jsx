@@ -8,11 +8,9 @@ import ImageAnnotator from '@/Components/ImageAnnotator';
 import { Document as PdfDocument, Page, pdfjs } from 'react-pdf';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import ContextToolbar from '@/Components/ContextToolbar';
+import FloatingToolbar from '@/Components/FloatingToolbar';
 import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
-import SearchFilterBar from '@/Components/SearchFilterBar';
-import BulkActions from '@/Components/BulkActions';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
@@ -171,6 +169,19 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         }},
     ];
 
+    const deleteSelectedDocuments = async () => {
+        if (!confirm(`Delete ${selectedCount} items?`)) return;
+        try {
+            const ids = [...selectedItems];
+            await axios.delete('/documents/batch', { data: { ids } });
+            clearSelection();
+            toast.success(`${ids.length} document${ids.length !== 1 ? 's' : ''} deleted`);
+            router.reload({ only: ['documents'] });
+        } catch (e) {
+            toast.error('Failed to delete documents');
+        }
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Documents" />
@@ -185,68 +196,41 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     ]}
                 />
                 {/* Context Toolbar */}
-                <ContextToolbar
-                    projects={projects}
-                    currentProjectId={activeProjectId}
-                    onProjectChange={setActiveProjectId}
-                    pageTitle="Documents"
-                    pageSubtitle={`${filteredDocuments.length} document${filteredDocuments.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`}
-                    selectedCount={selectedCount}
-                    bulkActions={
-                        <>
-                            <button className="text-white hover:text-gray-200" title="Download Selected" aria-label="Download selected" onClick={downloadSelectedDocuments}><i aria-hidden="true" className="fas fa-download"></i></button>
-                            <button className="text-white hover:text-gray-200" aria-label="Delete selected" onClick={async () => {
-                                if (confirm(`Delete ${selectedCount} items?`)) {
-                                    try {
-                                        const ids = [...selectedItems];
-                                        await axios.delete('/documents/batch', { data: { ids } });
-                                        clearSelection();
-                                        toast.success(`${ids.length} document${ids.length !== 1 ? 's' : ''} deleted`);
-                                        router.reload({ only: ['documents'] });
-                                    } catch (e) {
-                                        toast.error('Failed to delete documents');
-                                    }
-                                }
-                            }}><i aria-hidden="true" className="fas fa-trash"></i></button>
-                            <button className="text-white hover:text-gray-200" aria-label="Clear selection" onClick={clearSelection}><i aria-hidden="true" className="fas fa-times"></i></button>
-                        </>
-                    }
-                    actions={
-                        <>
-                            <button
-                                onClick={() => setIsNewFolderModalOpen(true)}
-                                className="px-4 py-2 bg-white/5 border border-white/10 text-gray-300 rounded-xl hover:bg-white/10 transition text-sm font-medium"
-                            >
-                                <i aria-hidden="true" className="fas fa-folder-plus mr-1"></i> New Folder
-                            </button>
-                            <PrimaryButton as="link" href={route('documents.create')}>
-                                <i className="fas fa-upload"></i> Upload
-                            </PrimaryButton>
-                        </>
-                    }
-                >
-                    <div className="flex items-center gap-3 flex-wrap">
-                        <BulkActions
-                            selectedCount={selectedCount}
-                            totalCount={filteredDocuments.length}
-                            onSelectAll={() => selectAll(filteredDocuments.map(d => d.id))}
-                            onDeselectAll={deselectAll}
-                        />
-                        <SearchFilterBar
-                            searchValue={searchQuery}
-                            onSearchChange={setSearchQuery}
-                            filters={[
-                                { name: 'type', value: typeFilter, onChange: setTypeFilter, label: 'All Types', options: types.map(t => ({ value: t, label: t })) },
-                            ]}
-                            viewMode={viewMode}
-                            onViewModeChange={setViewMode}
-                            viewModeOptions={[
-                                { value: 'grid', icon: 'fa-th-large', title: 'Grid View' },
-                                { value: 'list', icon: 'fa-list', title: 'List View' },
-                            ]}
-                        />
-                    </div>
-                </ContextToolbar>
+                <FloatingToolbar
+                    project={{ projects, currentId: activeProjectId, onChange: setActiveProjectId }}
+                    search={{ value: searchQuery, onChange: setSearchQuery, placeholder: 'Search documents' }}
+                    filters={[
+                        {
+                            name: 'type',
+                            title: 'Type',
+                            value: typeFilter,
+                            onChange: setTypeFilter,
+                            options: types.map(t => ({ value: t, label: t === 'all' ? 'All Types' : t })),
+                        },
+                    ]}
+                    view={{
+                        current: viewMode,
+                        onChange: setViewMode,
+                        modes: [
+                            { value: 'grid', icon: 'fa-th-large', label: 'Grid View' },
+                            { value: 'list', icon: 'fa-list', label: 'List View' },
+                        ],
+                    }}
+                    actions={[
+                        { id: 'upload', label: 'Upload', icon: 'fa-upload', href: route('documents.create'), variant: 'primary' },
+                        { id: 'folder', label: 'New Folder', icon: 'fa-folder-plus', onClick: () => setIsNewFolderModalOpen(true) },
+                    ]}
+                    selection={{
+                        count: selectedCount,
+                        total: filteredDocuments.length,
+                        onSelectAll: () => selectAll(filteredDocuments.map(d => d.id)),
+                        onDeselectAll: deselectAll,
+                        actions: [
+                            { id: 'download', label: 'Download Selected', icon: 'fa-download', onClick: downloadSelectedDocuments },
+                            { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: deleteSelectedDocuments },
+                        ],
+                    }}
+                />
 
                 {/* Breadcrumb Navigation */}
                 <div className="flex items-center gap-2 mb-4 text-sm overflow-x-auto pb-1">
