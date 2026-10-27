@@ -234,7 +234,7 @@ export default function Index({ users }) {
                                         <input
                                             type="checkbox"
                                             checked={isSelected(user.id)}
-                                            onChange={() => toggleSelection(user.id)}
+                                            onChange={() => toggleSelection(user.id, true)}
                                             aria-label={`Select ${user.name}`}
                                             className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                         />
