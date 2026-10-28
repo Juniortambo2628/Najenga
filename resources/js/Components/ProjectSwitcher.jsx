@@ -61,9 +61,9 @@ export default function ProjectSwitcher() {
                         <>
                             <MenuSeparator className="my-1 h-px bg-white/10" />
                             <MenuItem>
-                                <Link href={route('projects.show', active.id)} className={itemClass}>
-                                    <i aria-hidden="true" className="fas fa-arrow-up-right-from-square w-4 text-gray-500" />
-                                    Open {active.name}
+                                <Link href={route('overview')} className={itemClass}>
+                                    <i aria-hidden="true" className="fas fa-compass w-4 text-gray-500" />
+                                    Overview of {active.name}
                                 </Link>
                             </MenuItem>
                             <MenuItem>

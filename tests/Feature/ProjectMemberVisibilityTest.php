@@ -61,7 +61,7 @@ class ProjectMemberVisibilityTest extends TestCase
         $this->actingAs($viewer)->get('/timeline')
             ->assertInertia(fn (Assert $page) => $page->has('timelines', 1)->has('expenses', 1));
 
-        $this->actingAs($viewer)->get('/projects')
+        $this->actingAs($viewer)->get('/overview')
             ->assertInertia(fn (Assert $page) => $page
                 ->has('projects', 1)
                 ->where('projects.0.id', $this->project->id)

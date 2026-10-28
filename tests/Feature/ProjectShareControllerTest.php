@@ -98,7 +98,8 @@ class ProjectShareControllerTest extends TestCase
 
         $this->actingAs($this->collaborator)
             ->get("/projects/{$this->project->id}")
-            ->assertOk();
+            // A project's page is its overview, with the project picked.
+            ->assertRedirect("/overview?project={$this->project->id}");
     }
 
     public function test_collaborator_with_editor_role_can_update_project(): void

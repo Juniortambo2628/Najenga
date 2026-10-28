@@ -81,6 +81,7 @@ export const TEST_ROUTES = {
     'profile.update': '/profile',
     'profile.whatsapp.send-code': '/profile/whatsapp/send-code',
     'profile.whatsapp.verify': '/profile/whatsapp/verify',
+    'overview': '/overview',
     'projects': '/projects',
     'projects.create': '/projects/create',
     'projects.destroy': '/projects/{project}',

@@ -25,7 +25,7 @@ vi.mock('@/Layouts/AuthenticatedLayout', () => ({ default: ({ children }) => <di
 vi.mock('@/Components/SharePanel', () => ({ default: () => null }));
 
 import Photos from '../../../resources/js/Pages/Photos';
-import ProjectShow from '../../../resources/js/Pages/Projects/Show';
+import Overview from '../../../resources/js/Pages/Overview';
 import DocumentShow from '../../../resources/js/Pages/Documents/Show';
 import PhotoShow from '../../../resources/js/Pages/Photos/Show';
 import { editableProjects } from '../../../resources/js/Hooks/useVisibleActions';
@@ -64,18 +64,28 @@ describe('pages as a viewer', () => {
         expect(screen.queryByRole('menuitem', { name: /Delete/ })).toBeNull();
     });
 
-    it('Project page: no Edit button, and the team button only shows the team', () => {
-        const project = { id: 9, name: 'Ruiru flats', status: 'active', users: [], budget: 0, currency: 'KES' };
-        render(<ProjectShow project={project} photos={[]} expenses={[]} documents={[]} auth={page.props.auth} />);
-        expect(screen.queryByRole('link', { name: /Edit/ })).toBeNull();
-        expect(screen.getByRole('button', { name: 'See the team' })).toBeInTheDocument();
+    const overviewProject = (id, name, role, extra = {}) => ({
+        id, name, status: 'active', location: null, budget: 0, spent: 0, currency: 'KES', my_role: role, can_delete: role === 'owner',
+        counts: { expenses: 0, photos: 0, documents: 0, milestones: 0 }, members: [], recent: { expenses: [], photos: [], documents: [] }, ...extra,
+    });
+    const overviewProjects = [overviewProject(7, 'Kitengela site', 'owner'), overviewProject(9, 'Ruiru flats', 'viewer')];
+
+    it('Overview: a project you only view has no Edit or Delete, and Members only shows the team', () => {
+        act(() => setActiveProjectId(9));
+        render(<Overview projects={overviewProjects} />);
+        const toolbar = screen.getByRole('toolbar', { name: 'Page tools' });
+        expect(within(toolbar).queryByRole('link', { name: /Edit Project/ })).toBeNull();
+        expect(within(toolbar).queryByRole('button', { name: /Delete Project/ })).toBeNull();
+        expect(within(toolbar).getByRole('button', { name: /Members/ })).toBeInTheDocument();
     });
 
-    it('Project page: the owner gets Edit and can add people', () => {
-        const project = { id: 7, name: 'Kitengela site', status: 'active', users: [], budget: 0, currency: 'KES' };
-        render(<ProjectShow project={project} photos={[]} expenses={[]} documents={[]} auth={page.props.auth} />);
-        expect(screen.getByRole('link', { name: /Edit/ })).toHaveAttribute('href', '/projects/7/edit');
-        expect(screen.getByRole('button', { name: 'Add team member' })).toBeInTheDocument();
+    it('Overview: the owner gets Edit, Share and Delete', () => {
+        act(() => setActiveProjectId(7));
+        render(<Overview projects={overviewProjects} />);
+        const toolbar = screen.getByRole('toolbar', { name: 'Page tools' });
+        expect(within(toolbar).getByRole('link', { name: /Edit Project/ })).toHaveAttribute('href', '/projects/7/edit');
+        expect(within(toolbar).getByRole('button', { name: /Share/ })).toBeInTheDocument();
+        expect(within(toolbar).getByRole('button', { name: /Delete Project/ })).toBeInTheDocument();
     });
 
     it('Document and photo pages: Edit only when the server says you can', () => {

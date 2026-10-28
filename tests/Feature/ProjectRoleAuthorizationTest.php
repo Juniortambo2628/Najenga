@@ -78,7 +78,8 @@ class ProjectRoleAuthorizationTest extends TestCase
     {
         $this->actingAs($this->viewer)
             ->get("/projects/{$this->project->id}")
-            ->assertOk();
+            // A project's page is its overview, with the project picked.
+            ->assertRedirect("/overview?project={$this->project->id}");
 
         $this->actingAs($this->viewer)
             ->postJson('/comments', [

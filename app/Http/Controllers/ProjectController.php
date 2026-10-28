@@ -14,16 +14,74 @@ class ProjectController extends Controller
 {
     use RespondsWithModel;
 
+    /**
+     * The old projects list: the overview (and its project switcher) took
+     * its place.
+     */
     public function index()
     {
-        $user = auth()->user();
+        return redirect()->route('overview');
+    }
+
+    /**
+     * Overview: every project you can see, with what's in it. The page shows
+     * the project picked in the navbar switcher, or all of them side by side.
+     */
+    public function overview(Request $request)
+    {
+        $user = $request->user();
         $roles = Project::rolesFor($user);
 
-        return \Inertia\Inertia::render('Projects/Index', [
-            'projects' => Project::accessibleBy($user)
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->each(fn (Project $project) => $project->setAttribute('my_role', $roles[$project->id] ?? null)),
+        $projects = Project::accessibleBy($user)
+            ->with('users:id,first_name,last_name,email')
+            ->withCount(['photos', 'documents', 'timelines', 'expenses'])
+            ->withSum('expenses as spent', 'amount')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (Project $project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'description' => $project->description,
+                'status' => $project->status,
+                'location' => $project->location,
+                'start_date' => $project->start_date?->format('Y-m-d'),
+                'end_date' => $project->end_date?->format('Y-m-d'),
+                'budget' => (float) $project->budget,
+                'currency' => $project->currency ?? 'KES',
+                'spent' => (float) $project->spent,
+                'my_role' => $roles[$project->id] ?? null,
+                'can_delete' => $user->can('delete', $project),
+                'counts' => [
+                    'expenses' => $project->expenses_count,
+                    'photos' => $project->photos_count,
+                    'documents' => $project->documents_count,
+                    'milestones' => $project->timelines_count,
+                ],
+                'members' => $project->users->map(fn ($member) => [
+                    'id' => $member->id,
+                    'name' => trim("{$member->first_name} {$member->last_name}") ?: $member->email,
+                    'role' => $member->pivot->role,
+                ])->values(),
+                'recent' => [
+                    'expenses' => $project->expenses()->latest('expense_date')->latest('id')->take(5)
+                        ->get(['id', 'title', 'amount', 'currency', 'expense_date'])
+                        ->map(fn ($e) => [
+                            'id' => $e->id,
+                            'title' => $e->title,
+                            'amount' => (float) $e->amount,
+                            'currency' => $e->currency,
+                            'date' => $e->expense_date?->format('Y-m-d'),
+                        ]),
+                    'photos' => $project->photos()->latest()->take(6)->get()
+                        ->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'thumb_url' => $p->thumb_url]),
+                    'documents' => $project->documents()->latest()->take(5)->get(['id', 'title', 'document_type']),
+                ],
+            ]);
+
+        return \Inertia\Inertia::render('Overview', [
+            'projects' => $projects,
+            // /overview?project=ID (old project links) picks that project.
+            'focus' => $request->integer('project') ?: null,
         ]);
     }
 
@@ -44,19 +102,14 @@ class ProjectController extends Controller
         return $this->respondOrRedirect($request, 'Project created successfully', response()->json($project, 201));
     }
 
+    /**
+     * A project's page is its overview now: open it with the project picked.
+     */
     public function show(Project $project)
     {
         $this->authorize('view', $project);
 
-        $totalExpenses = $project->expenses()->sum('amount');
-
-        return \Inertia\Inertia::render('Projects/Show', [
-            'project' => $project->load(['client', 'users']),
-            'photos' => $project->photos()->latest()->take(6)->get(),
-            'expenses' => $project->expenses()->latest()->take(5)->get(),
-            'totalExpenses' => (float) $totalExpenses,
-            'documents' => $project->documents()->latest()->take(5)->get(),
-        ]);
+        return redirect()->route('overview', ['project' => $project->id]);
     }
 
     public function edit(Project $project)

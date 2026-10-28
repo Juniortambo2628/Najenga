@@ -6,13 +6,13 @@ export default function Create() {
         <ResourceForm
             title="Create New Project"
             breadcrumbs={[
-                { label: 'Projects', href: route('projects') },
+                { label: 'Overview', href: route('overview') },
                 { label: 'Create' },
             ]}
             schema={PROJECT_FIELDS}
             method="post"
             action={route('projects.store')}
-            cancelHref={route('projects')}
+            cancelHref={route('overview')}
             initialData={{ status: 'planning', currency: 'KES' }}
         />
     );

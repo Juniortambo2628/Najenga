@@ -44,11 +44,11 @@ describe('ProjectSwitcher', () => {
         expect(window.localStorage.getItem('najenga.activeProject')).toBe('7');
     });
 
-    it('offers the project page and sharing for the picked project', () => {
+    it('offers the overview and sharing for the picked project', () => {
         act(() => setActiveProjectId(7));
         render(<ProjectSwitcher />);
         fireEvent.click(screen.getByRole('button', { name: /Change project/ }));
-        expect(screen.getByRole('menuitem', { name: 'Open Kitengela site' })).toHaveAttribute('href', '/projects/7');
+        expect(screen.getByRole('menuitem', { name: 'Overview of Kitengela site' })).toHaveAttribute('href', '/overview');
         fireEvent.click(screen.getByRole('menuitem', { name: 'Share…' }));
         expect(screen.getByRole('dialog')).toHaveTextContent('Members of Kitengela site');
     });
