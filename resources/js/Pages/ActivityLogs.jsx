@@ -87,28 +87,28 @@ export default function ActivityLogs({ tab = 'changes', changes, logs }) {
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="border-b border-white/10 bg-white/5">
-                                        <th className="px-6 py-4 text-sm font-semibold text-white">Date</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-white">Action</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-white">Description</th>
-                                        <th className="px-6 py-4 text-sm font-semibold text-white">IP Address</th>
+                                        <th className="px-4 py-2.5 text-xs font-semibold text-white">Date</th>
+                                        <th className="px-4 py-2.5 text-xs font-semibold text-white">Action</th>
+                                        <th className="px-4 py-2.5 text-xs font-semibold text-white">Description</th>
+                                        <th className="px-4 py-2.5 text-xs font-semibold text-white">IP Address</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {logs.data.length === 0 ? (
                                         <tr>
-                                            <td colSpan="4" className="px-6 py-12 text-center italic text-gray-400">
+                                            <td colSpan="4" className="px-4 py-10 text-center italic text-gray-400">
                                                 No activity logs found.
                                             </td>
                                         </tr>
                                     ) : (
                                         logs.data.map((log) => (
                                             <tr key={log.id} className="transition hover:bg-white/5">
-                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-300">{new Date(log.created_at).toLocaleString()}</td>
-                                                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                                                <td className="whitespace-nowrap px-4 py-2.5 text-sm text-gray-300">{new Date(log.created_at).toLocaleString()}</td>
+                                                <td className="whitespace-nowrap px-4 py-2.5 text-sm">
                                                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${actionTone(log.action)}`}>{log.action}</span>
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-300">{log.description}</td>
-                                                <td className="px-6 py-4 font-mono text-sm text-gray-400">{log.ip_address}</td>
+                                                <td className="px-4 py-2.5 text-sm text-gray-300">{log.description}</td>
+                                                <td className="px-4 py-2.5 font-mono text-sm text-gray-400">{log.ip_address}</td>
                                             </tr>
                                         ))
                                     )}

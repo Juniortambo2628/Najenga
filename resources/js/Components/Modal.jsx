@@ -86,7 +86,7 @@ export default function Modal({
                                     {title && (
                                         <div className="px-6 pt-7 pb-5">
                                             {subtitle && (
-                                                <p className="text-[11px] font-bold tracking-widest text-[#DC143C] uppercase mb-1.5">{subtitle}</p>
+                                                <p className="text-[11px] font-bold text-[#DC143C] capitalize mb-1.5">{subtitle}</p>
                                             )}
                                             <DialogTitle as="h3" className="text-lg font-bold text-white leading-tight">{title}</DialogTitle>
                                         </div>

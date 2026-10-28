@@ -13,6 +13,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import DetailRow from '@/Components/DetailRow';
 import useAction from '@/Hooks/useAction';
+import titleCase from '@/Utils/titleCase';
 
 function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors, projects, onSave, onCancel, saving, onStartEdit }) {
     const handleChange = (field) => (e) => {
@@ -34,8 +35,8 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                     </PrimaryButton>
                 </div>
                 <div className="grid grid-cols-2 gap-5">
-                    <DetailRow label="Title" value={expense?.title} />
-                    <DetailRow label="Recipient" value={expense?.recipient} />
+                    <DetailRow label="Title" value={titleCase(expense?.title)} />
+                    <DetailRow label="Recipient" value={titleCase(expense?.recipient)} />
                 </div>
                 <div className="grid grid-cols-3 gap-5">
                     <DetailRow label="Amount" value={expense ? formatCurrency(expense.amount) : '—'} mono />
@@ -53,7 +54,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                 </div>
                 {expense?.description && (
                     <div>
-                        <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">Description</span>
+                        <span className="text-[11px] font-bold text-gray-400 capitalize">Description</span>
                         <p className="mt-1 text-sm text-gray-300 whitespace-pre-wrap">{expense.description}</p>
                     </div>
                 )}

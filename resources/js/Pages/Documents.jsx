@@ -423,7 +423,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                     <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-xl">
                                         <i aria-hidden="true" className="fas fa-folder-open text-4xl text-white"></i>
                                     </div>
-                                    <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Folder</span>
+                                    <span className="text-[11px] capitalize text-gray-400 font-bold">Folder</span>
                                 </div>
                                 <div className="p-4 bg-black/20 border-t border-white/5 flex items-center justify-between">
                                     <h4 className="text-white font-semibold truncate group-hover:text-amber-400 transition" title={folder.name}>
@@ -479,7 +479,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                                              <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl bg-gradient-to-br from-red-500 to-red-700">
                                                                  <i aria-hidden="true" className="fas fa-file-pdf text-3xl text-white"></i>
                                                              </div>
-                                                             <span className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">PDF</span>
+                                                             <span className="text-[11px] capitalize text-gray-600 font-bold">PDF</span>
                                                         </div>
                                                     }
                                                 >
@@ -500,7 +500,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                                          isExcel ? 'fa-file-excel' : isDoc ? 'fa-file-word' : 'fa-file-alt'
                                                      } text-3xl text-white`}></i>
                                                  </div>
-                                                 <span className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                                                 <span className="text-[11px] capitalize text-gray-400 font-bold">
                                                      {doc.file_path.split('.').pop()}
                                                  </span>
                                             </div>
@@ -631,7 +631,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             <h3 className="text-lg font-bold text-white mb-4">Details</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label htmlFor="documents-title" className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Title</label>
+                                    <label htmlFor="documents-title" className="text-gray-400 text-xs capitalize block mb-1">Title</label>
                                     <input id="documents-title" 
                                         type="text" 
                                         value={previewDoc?.title || ''}
@@ -643,11 +643,11 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <span className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Type</span>
+                                        <span className="text-gray-400 text-xs capitalize block mb-1">Type</span>
                                         <span className="text-gray-300 text-xs font-mono bg-white/5 px-2 py-1 rounded inline-block">{previewDoc?.document_type}</span>
                                     </div>
                                     <div>
-                                        <span className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Date</span>
+                                        <span className="text-gray-400 text-xs capitalize block mb-1">Date</span>
                                         <span className="text-gray-300 text-xs">{previewDoc?.document_date}</span>
                                     </div>
                                 </div>

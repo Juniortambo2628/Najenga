@@ -78,7 +78,7 @@ function DonutChart({ data, labelKey, valueKey }) {
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
                         <div className="text-white font-bold text-lg">{data.length}</div>
-                        <div className="text-gray-400 text-[10px] uppercase">items</div>
+                        <div className="text-gray-400 text-[11px] capitalize">items</div>
                     </div>
                 </div>
             </div>
@@ -129,7 +129,7 @@ function InsightCard({ insight }) {
                     <i aria-hidden="true" className={`fas ${insight.icon} text-sm ${insight.severity === 'warning' ? 'text-yellow-400' : insight.severity === 'success' ? 'text-green-400' : 'text-blue-400'}`}></i>
                 </div>
                 <div className="min-w-0">
-                    <h4 className="text-gray-400 text-xs uppercase tracking-wider mb-0.5">{insight.title}</h4>
+                    <h4 className="text-gray-400 text-xs capitalize mb-0.5">{insight.title}</h4>
                     <p className="text-white font-bold">{insight.value}</p>
                     <p className="text-gray-400 text-xs mt-0.5 truncate">{insight.detail}</p>
                 </div>

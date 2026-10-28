@@ -178,7 +178,7 @@ export default function SharePanel({ show, onClose, project }) {
                         )}
 
                         <section aria-labelledby="share-members-heading">
-                            <h3 id="share-members-heading" className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            <h3 id="share-members-heading" className="mb-2 text-xs font-semibold capitalize text-gray-500">
                                 Members · {state.members.length}
                             </h3>
                             <ul className="divide-y divide-white/5 rounded-2xl border border-white/10">
@@ -237,7 +237,7 @@ export default function SharePanel({ show, onClose, project }) {
 
                         {state.invitations.length > 0 && (
                             <section aria-labelledby="share-invites-heading">
-                                <h3 id="share-invites-heading" className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                <h3 id="share-invites-heading" className="mb-2 text-xs font-semibold capitalize text-gray-500">
                                     Pending invitations · {state.invitations.length}
                                 </h3>
                                 <ul className="divide-y divide-white/5 rounded-2xl border border-white/10">

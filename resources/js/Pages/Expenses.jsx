@@ -20,6 +20,7 @@ import useHashHighlight from '@/Hooks/useHashHighlight';
 import useAction, { visit } from '@/Hooks/useAction';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import { formatCurrency } from '@/Config/currencies';
+import titleCase from '@/Utils/titleCase';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
@@ -295,9 +296,9 @@ export default function Expenses({ expenses = [], projects = [] }) {
                 ) : filteredExpenses.length > 0 ? (
                     <ListPanel>
                         <table className="min-w-full text-left text-gray-400">
-                            <thead className="bg-[#111213] text-gray-200 uppercase text-xs font-semibold sticky top-0 z-10">
+                            <thead className="bg-[#111213] text-gray-300 text-xs font-semibold sticky top-0 z-10">
                                 <tr>
-                                    <th className="px-6 py-4 w-10">
+                                    <th className="px-4 py-2.5 w-10">
                                         <input
                                             type="checkbox"
                                             checked={selectedCount === filteredExpenses.length && filteredExpenses.length > 0}
@@ -306,26 +307,26 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                             className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                         />
                                     </th>
-                                    <th className="px-6 py-4">Expense Details</th>
-                                    <th className="px-6 py-4">Recipient</th>
-                                    <th className="px-6 py-4">Ref / Method</th>
-                                    <th className="px-6 py-4 text-right">Amount</th>
-                                    <th className="px-6 py-4 text-center">Date & Time</th>
-                                    <th className="px-6 py-4 text-center">Receipt</th>
-                                    <th className="px-6 py-4 text-center">Action</th>
+                                    <th className="px-4 py-2.5">Expense Details</th>
+                                    <th className="px-4 py-2.5">Recipient</th>
+                                    <th className="px-4 py-2.5">Ref / Method</th>
+                                    <th className="px-4 py-2.5 text-right">Amount</th>
+                                    <th className="px-4 py-2.5 text-center">Date & Time</th>
+                                    <th className="px-4 py-2.5 text-center">Receipt</th>
+                                    <th className="px-4 py-2.5 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
                                 {filteredExpenses.length === 0 ? (
                                     <tr>
-                                        <td colSpan="8" className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan="8" className="px-4 py-10 text-center text-gray-400">
                                             No expenses found matching your criteria.
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredExpenses.map((expense) => (
                                         <tr key={expense.id} id={`expense-${expense.id}`} className={`hover:bg-white/5 transition cursor-pointer ${isSelected(expense.id) ? 'bg-white/5' : highlightedExpense === String(expense.id) ? 'bg-amber-500/10 ring-1 ring-inset ring-amber-400/50' : ''}`} onClick={() => handleView(expense)}>
-                                            <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                                            <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
                                                 <input
                                                     type="checkbox"
                                                     checked={isSelected(expense.id)}
@@ -334,14 +335,14 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                     className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                                 />
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <span className="block text-white font-medium text-base">{expense.title}</span>
+                                            <td className="px-4 py-2.5">
+                                                <span className="block text-white font-medium text-sm">{titleCase(expense.title)}</span>
                                                 {expense.purpose && (
-                                                    <span className="block text-xs text-gray-400 mt-1">{expense.purpose}</span>
+                                                    <span className="block text-xs text-gray-400 mt-0.5">{expense.purpose}</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 text-sm">{expense.recipient || '—'}</td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-2.5 text-sm">{titleCase(expense.recipient) || '—'}</td>
+                                            <td className="px-4 py-2.5">
                                                 <div className="text-xs">
                                                     {expense.reference_number && (
                                                         <span className="block text-gray-300 font-mono">{expense.reference_number}</span>
@@ -349,14 +350,14 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                     <span className="text-gray-400">{expense.payment_method ? (expense.payment_method === 'mobile_money' ? 'M-Pesa' : expense.payment_method) : '—'}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-right text-white font-mono font-medium">
+                                            <td className="px-4 py-2.5 text-right text-sm text-white font-mono font-medium whitespace-nowrap">
                                                 KES {Number(expense.amount).toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 text-center text-sm">
+                                            <td className="px-4 py-2.5 text-center text-sm whitespace-nowrap">
                                                 <span>{expense.expense_date}</span>
                                                 {expense.time && <span className="block text-xs text-gray-400">{expense.time}</span>}
                                             </td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-4 py-2.5 text-center">
                                                 {expense.receipt_url ? (
                                                     <button
                                                         onClick={() => setPreviewExpense(expense)}
@@ -369,12 +370,12 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                     <span className="text-gray-400">—</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 text-center">
+                                            <td className="px-4 py-2.5 text-center">
                                                 <button 
                                                     onClick={(e) => openContextMenu(e, expense)}
                                                     aria-label={`Actions for ${expense.title || 'expense'}`}
                                                     aria-haspopup="menu"
-                                                    className="w-8 h-8 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition flex items-center justify-center mx-auto"
+                                                    className="w-7 h-7 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition flex items-center justify-center mx-auto"
                                                 >
                                                     <i aria-hidden="true" className="fas fa-ellipsis-h"></i>
                                                 </button>
@@ -452,7 +453,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     <DialogPanel className="bg-surface-overlay border border-white/[0.08] rounded-2xl max-w-2xl w-full mx-4 overflow-hidden shadow-2xl">
                         <div className="flex justify-between items-center p-4 border-b border-white/10">
                             <DialogTitle as="h3" className="text-lg font-bold text-white">
-                                {previewExpense.reference_number || 'Receipt'} — {previewExpense.recipient || previewExpense.title}
+                                {previewExpense.reference_number || 'Receipt'} — {titleCase(previewExpense.recipient || previewExpense.title)}
                             </DialogTitle>
                             <button onClick={() => setPreviewExpense(null)} aria-label="Close preview" className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
                                 <i aria-hidden="true" className="fas fa-times"></i>

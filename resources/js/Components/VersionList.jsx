@@ -92,7 +92,7 @@ export default function VersionList({ versions, showType = true, canRestore = ()
                 return (
                     <li key={version.id}>
                         {header && (
-                            <h3 className="sticky top-0 z-10 bg-surface-overlay/95 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-gray-500 backdrop-blur">
+                            <h3 className="sticky top-0 z-10 bg-surface-overlay/95 pb-1 pt-3 text-[11px] font-bold capitalize text-gray-500 backdrop-blur">
                                 {header}
                             </h3>
                         )}

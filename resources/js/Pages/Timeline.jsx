@@ -19,6 +19,7 @@ import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
 import useVisibleActions, { editableProjects } from '@/Hooks/useVisibleActions';
+import titleCase from '@/Utils/titleCase';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -61,9 +62,9 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
                                 {item.title}
                             </Link>
                         ) : (
-                            <h3 className="text-xl font-semibold text-white">{item.title}</h3>
+                            <h3 className="text-xl font-semibold text-white">{titleCase(item.title)}</h3>
                         )}
-                        <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full bg-white/5 ${config.textColor}`}>
+                        <span className={`text-[11px] capitalize font-bold px-2 py-0.5 rounded-full bg-white/5 ${config.textColor}`}>
                             {item.type}
                         </span>
                     </div>
@@ -130,7 +131,7 @@ function StatsBar({ expenses, photos, documents, milestones }) {
                 <div key={s.label} className="bg-surface-panel/90 border border-white/[0.08] rounded-xl p-4 text-center">
                     <i aria-hidden="true" className={`fas ${s.icon} ${s.color} text-lg mb-1`}></i>
                     <div className="text-white font-bold text-lg">{s.value}</div>
-                    <div className="text-gray-400 text-xs uppercase tracking-wider">{s.label}</div>
+                    <div className="text-gray-400 text-xs capitalize">{s.label}</div>
                 </div>
             ))}
         </div>
@@ -340,7 +341,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                             <i aria-hidden="true" className="fas fa-receipt text-white text-sm"></i>
                                         </div>
                                         <div>
-                                            <h4 className="text-white font-medium">{expense.title}</h4>
+                                            <h4 className="text-white font-medium">{titleCase(expense.title)}</h4>
                                             <div className="flex items-center gap-3 text-sm text-gray-400">
                                                 <span>{expense.date}</span>
                                                 <span>{expense.project_name}</span>

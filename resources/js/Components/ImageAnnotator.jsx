@@ -416,7 +416,7 @@ export default function ImageAnnotator({ resource, type }) {
                 </div>
             </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-[10px] uppercase tracking-[0.2em] pointer-events-none select-none z-50 bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-[11px] capitalize pointer-events-none select-none z-50 bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm">
                 Drag to Annotate • Click to Edit
             </div>
         </div>

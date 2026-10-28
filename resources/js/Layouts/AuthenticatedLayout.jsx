@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import ProjectSwitcher from '@/Components/ProjectSwitcher';
+import NavbarShare from '@/Components/NavbarShare';
 import HistoryDrawer from '@/Components/HistoryDrawer';
 import Tour, { startTour } from '@/Components/Tour';
 import { AlsoHere, OnlineAvatars } from '@/Components/OnlinePeople';
@@ -215,7 +216,7 @@ export default function AuthenticatedLayout({ children }) {
                 {/* Sidebar */}
                 <aside data-tour="sidebar" className={`
                     fixed inset-y-0 left-0 z-40 h-screen
-                    bg-[#101112] border-r border-white/[0.08] shadow-2xl flex flex-col
+                    bg-[#170d0f] bg-gradient-to-b from-[#1c0f12] to-[#120a0b] border-r border-rose-950/40 shadow-2xl flex flex-col
                     transform transition-all duration-300 ease-in-out
                     ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}>
@@ -228,7 +229,7 @@ export default function AuthenticatedLayout({ children }) {
                         <img
                             src="/Najenga-logos/Najenga-Logo-trimmed.webp"
                             alt="Najenga"
-                            className={`object-contain transition-all duration-300 ${sidebarOpen ? 'h-24 w-full max-w-[11.5rem]' : 'h-10 w-14'}`}
+                            className={`object-contain transition-all duration-300 ${sidebarOpen ? 'h-20 w-full max-w-[9.5rem]' : 'h-9 w-12'}`}
                         />
                     </Link>
 
@@ -237,7 +238,7 @@ export default function AuthenticatedLayout({ children }) {
                         {navSections.map((section, index) => (
                             <div key={section.title || index} className={index > 0 ? 'mt-4' : ''}>
                                 {section.title && sidebarOpen && (
-                                    <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">{section.title}</p>
+                                    <p className="mb-1 px-3 text-xs font-semibold capitalize text-white/45">{section.title}</p>
                                 )}
                                 {section.title && !sidebarOpen && <div aria-hidden="true" className="mx-3 mb-2 h-px bg-white/10" />}
                                 <ul className="space-y-0.5" aria-label={section.title}>
@@ -391,6 +392,10 @@ export default function AuthenticatedLayout({ children }) {
                                 <i aria-hidden="true" className="fas fa-clock-rotate-left" />
                             </button>
                             <HistoryDrawer show={historyOpen} onClose={closeHistory} />
+
+                            <div data-tour="share">
+                                <NavbarShare />
+                            </div>
 
                             <div data-tour="notifications">
                                 <NotificationsDropdown />

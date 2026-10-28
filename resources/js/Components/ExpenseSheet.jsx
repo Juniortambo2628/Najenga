@@ -894,7 +894,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
             {showAnalysis && (
                 <div className="bg-surface-panel/90 border border-white/[0.08] rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Summary</h4>
+                        <h4 className="text-xs font-semibold text-gray-400 capitalize mb-2">Summary</h4>
                         <div className="space-y-1 text-sm">
                             <div className="flex justify-between"><span className="text-gray-400">Total Rows</span><span className="text-white font-mono">{rowData.length}</span></div>
                             <div className="flex justify-between"><span className="text-gray-400">Saved</span><span className="text-green-400 font-mono">{rowData.filter(r => r.id).length}</span></div>
@@ -903,7 +903,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         </div>
                     </div>
                     <div>
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">By Category</h4>
+                        <h4 className="text-xs font-semibold text-gray-400 capitalize mb-2">By Category</h4>
                         <div className="space-y-1 text-xs max-h-40 overflow-y-auto">
                             {categoryBreakdown.map(([cat, data]) => (
                                 <div key={cat} className="flex justify-between">
@@ -914,7 +914,7 @@ export default function ExpenseSheet({ expenses, projects = [], defaultProjectId
                         </div>
                     </div>
                     <div>
-                        <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">By Payment Method</h4>
+                        <h4 className="text-xs font-semibold text-gray-400 capitalize mb-2">By Payment Method</h4>
                         <div className="space-y-1 text-xs max-h-40 overflow-y-auto">
                             {paymentBreakdown.map(([method, data]) => (
                                 <div key={method} className="flex justify-between">

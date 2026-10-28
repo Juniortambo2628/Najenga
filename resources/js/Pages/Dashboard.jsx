@@ -5,6 +5,7 @@ import StatusBadge from '@/Components/StatusBadge';
 import EmptyState from '@/Components/EmptyState';
 import DashboardHero from '@/Components/DashboardHero';
 import { formatCurrency } from '@/Config/currencies';
+import titleCase from '@/Utils/titleCase';
 
 const QUICK_ACTIONS = [
     { href: 'expenses.create', icon: 'circle-plus', label: 'Add expense', description: 'Record a project cost' },
@@ -36,7 +37,7 @@ function DashboardSection({ icon, eyebrow, title, href, actionLabel, children })
                         <i aria-hidden="true" className={`fas ${icon}`} />
                     </span>
                     <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">{eyebrow}</p>
+                        <p className="text-[11px] font-semibold capitalize text-white/40">{eyebrow}</p>
                         <h2 className="truncate text-base font-semibold text-white sm:text-lg">{title}</h2>
                     </div>
                 </div>
@@ -91,7 +92,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                 <section aria-labelledby="dashboard-overview-heading">
                     <div className="mb-4 flex items-end justify-between gap-4">
                         <div>
-                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-rose-300">Workspace overview</p>
+                            <p className="mb-1 text-[11px] font-semibold capitalize text-rose-300">Workspace overview</p>
                             <h2 id="dashboard-overview-heading" className="text-lg font-semibold text-white">Your projects at a glance</h2>
                         </div>
                         <span className="hidden text-xs text-white/35 sm:block">A snapshot of your workspace</span>
@@ -116,7 +117,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                                         <div className="flex min-w-0 items-center gap-3">
                                             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.05] text-sm text-white/55"><i aria-hidden="true" className="fas fa-receipt" /></span>
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-medium text-white">{expense.title}</p>
+                                                <p className="truncate text-sm font-medium text-white">{titleCase(expense.title)}</p>
                                                 <p className="truncate text-xs text-white/45">{expense.project_name}</p>
                                             </div>
                                         </div>
