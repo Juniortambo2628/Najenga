@@ -13,7 +13,6 @@ use App\Models\User;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class RevisionsTest extends TestCase
@@ -27,10 +26,6 @@ class RevisionsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Enforce foreign keys as MySQL does (the SQLite test database runs without them).
-        if (DB::getDriverName() === 'sqlite') {
-            DB::statement('PRAGMA foreign_keys = ON');
-        }
 
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
