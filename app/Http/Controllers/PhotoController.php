@@ -21,9 +21,8 @@ class PhotoController extends Controller
     use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, BatchDownloads, RespondsWithModel;
     public function index()
     {
-        $userId = auth()->id();
         return Inertia::render('Photos', [
-            'photos' => Photo::where('user_id', $userId)
+            'photos' => Photo::visibleTo(auth()->user())
                 ->with('project:id,name')
                 ->orderByRaw('COALESCE(taken_at, photo_date, created_at) DESC')
                 ->orderByDesc('id')

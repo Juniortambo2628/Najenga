@@ -27,9 +27,7 @@ class ReceiptController extends Controller
 
     public function index()
     {
-        $receipts = \App\Models\Receipt::whereHas('expense', function ($q) {
-            $q->where('user_id', auth()->id());
-        })->orderBy('created_at', 'desc')->get();
+        $receipts = \App\Models\Receipt::whereHas('expense', fn ($q) => $q->visibleTo(auth()->user()))->orderBy('created_at', 'desc')->get();
 
         return \Inertia\Inertia::render('Receipts/Index', [
             'receipts' => $receipts,

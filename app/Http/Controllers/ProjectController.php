@@ -16,10 +16,14 @@ class ProjectController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
+        $roles = Project::rolesFor($user);
+
         return \Inertia\Inertia::render('Projects/Index', [
-            'projects' => Project::where('client_id', auth()->id())
+            'projects' => Project::accessibleBy($user)
                 ->orderBy('created_at', 'desc')
                 ->get()
+                ->each(fn (Project $project) => $project->setAttribute('my_role', $roles[$project->id] ?? null)),
         ]);
     }
 

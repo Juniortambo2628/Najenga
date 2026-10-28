@@ -22,9 +22,9 @@ class DocumentController extends Controller
     use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, BatchDownloads, RespondsWithModel;
     public function index()
     {
-        $userId = auth()->id();
+        $user = auth()->user();
         return Inertia::render('Documents', [
-            'documents' => Document::where('user_id', $userId)
+            'documents' => Document::visibleTo($user)
                 ->with('project:id,name')
                 ->orderBy('created_at', 'desc')
                 ->get()
@@ -43,7 +43,7 @@ class DocumentController extends Controller
                     'folder_id' => $d->folder_id,
                 ]),
             'folders' => \App\Models\Folder::whereIn('project_id',
-                    Project::where('client_id', $userId)->pluck('id')
+                    Project::accessibleBy($user)->pluck('id')
                 )
                 ->with('children')
                 ->get()
@@ -140,7 +140,7 @@ class DocumentController extends Controller
             'document' => $document,
             'projects' => $this->getClientProjects(),
             'folders' => \App\Models\Folder::whereIn('project_id',
-                Project::where('client_id', auth()->id())->pluck('id')
+                Project::accessibleBy(auth()->user())->pluck('id')
             )->get(['id', 'name', 'parent_id', 'project_id']),
         ]);
     }

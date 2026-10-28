@@ -7,6 +7,7 @@ use App\Models\Expense;
 use App\Models\Photo;
 use App\Models\Project;
 use App\Models\ProjectTimeline;
+use App\Models\User;
 use App\Services\StatsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -32,21 +33,21 @@ class AnalyticsController extends Controller
 
         $cacheKey = "analytics:{$userId}:" . md5(json_encode([$projectId, $startDate, $endDate, $period]));
         $payload = Cache::remember($cacheKey, now()->addMinutes(5), fn () => $this->buildPayload(
-            $userId, $projectId, $startDate, $endDate, $period
+            $user, $projectId, $startDate, $endDate, $period
         ));
 
         return Inertia::render('Analytics', $payload);
     }
 
-    private function buildPayload($userId, $projectId, $startDate, $endDate, $period): array
+    private function buildPayload(User $user, $projectId, $startDate, $endDate, $period): array
     {
 
         // Base queries
-        $expenseQuery = Expense::where('user_id', $userId);
-        $photoQuery = Photo::where('user_id', $userId);
-        $docQuery = Document::where('user_id', $userId);
-        $projectQuery = Project::where('client_id', $userId);
-        $timelineQuery = ProjectTimeline::whereHas('project', fn ($q) => $q->where('client_id', $userId));
+        $expenseQuery = Expense::visibleTo($user);
+        $photoQuery = Photo::visibleTo($user);
+        $docQuery = Document::visibleTo($user);
+        $projectQuery = Project::accessibleBy($user);
+        $timelineQuery = ProjectTimeline::whereHas('project', fn ($q) => $q->accessibleBy($user));
 
         if ($projectId) {
             $expenseQuery->where('project_id', $projectId);
@@ -133,7 +134,7 @@ class AnalyticsController extends Controller
             ]);
 
         // Daily expenses for the last 30 days (for sparkline)
-        $dailyExpenses = Expense::where('user_id', $userId)
+        $dailyExpenses = Expense::visibleTo($user)
             ->where('expense_date', '>=', Carbon::now()->subDays(30))
             ->select(
                 DB::raw('DATE(expense_date) as expense_day'),
@@ -174,7 +175,7 @@ class AnalyticsController extends Controller
             ]);
 
         // Project-level summary
-        $projects = Project::where('client_id', $userId)
+        $projects = Project::accessibleBy($user)
             ->withCount(['expenses', 'photos', 'documents'])
             ->get();
 
@@ -198,7 +199,7 @@ class AnalyticsController extends Controller
         $avgExpense = (clone $expenseQuery)->avg('amount');
 
         // Expense frequency (avg per day over the period)
-        $firstExpenseDate = Expense::where('user_id', $userId)->min('expense_date');
+        $firstExpenseDate = Expense::visibleTo($user)->min('expense_date');
         $daysSinceFirst = $firstExpenseDate ? Carbon::parse($firstExpenseDate)->diffInDays(now()) : 1;
         $expenseFrequency = $daysSinceFirst > 0 ? round($totalExpenses / $daysSinceFirst, 2) : 0;
 
@@ -264,7 +265,7 @@ class AnalyticsController extends Controller
             'documentsByType' => $documentsByType,
             'milestoneStatusBreakdown' => $milestoneStatusBreakdown,
             'insights' => $insights,
-            'projects' => Project::where('client_id', $userId)->get(['id', 'name']),
+            'projects' => Project::accessibleBy($user)->get(['id', 'name']),
         ];
     }
 

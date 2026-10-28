@@ -2,41 +2,42 @@
 
 namespace App\Traits;
 
+use App\Support\ProjectRole;
+
 trait BelongsToProjectPolicy
 {
     /**
-     * Check if the user is the client of the parent project.
+     * The user's role in the model's project, or null when not a member.
      */
-    protected function userIsProjectClient($user, $model): bool
+    protected function projectRole($user, $model): ?string
     {
-        return (int) optional($model->project)->client_id === (int) $user->id;
+        return optional($model->project)->roleFor($user);
     }
 
     /**
-     * Authorize view if user is the project client.
+     * Authorize view for every member of the parent project.
      *
-     * Mirrors update() deliberately: ProjectTimelineController::index scopes
-     * with whereHas('project', client_id = user), so a direct URL may never
-     * reveal more than the list already does.
+     * Mirrors ProjectTimelineController::index, which lists the timelines of
+     * every project the user can see (Project::accessibleBy).
      */
     public function view($user, $model): bool
     {
-        return $this->userIsProjectClient($user, $model);
+        return $this->projectRole($user, $model) !== null;
     }
 
     /**
-     * Authorize update if user is the project client.
+     * Authorize update for the project's owner, managers and editors.
      */
     public function update($user, $model): bool
     {
-        return $this->userIsProjectClient($user, $model);
+        return ProjectRole::canEdit($this->projectRole($user, $model));
     }
 
     /**
-     * Authorize delete if user is the project client.
+     * Authorize delete for the project's owner, managers and editors.
      */
     public function delete($user, $model): bool
     {
-        return $this->userIsProjectClient($user, $model);
+        return ProjectRole::canEdit($this->projectRole($user, $model));
     }
 }

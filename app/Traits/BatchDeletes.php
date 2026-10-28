@@ -27,7 +27,7 @@ trait BatchDeletes
 
         DB::transaction(function () use ($model, $request, &$deleted) {
             $rows = $model::whereIn('id', $request->input('ids'))
-                ->where('user_id', auth()->id())
+                ->visibleTo(auth()->user())
                 ->get()
                 ->filter(fn ($row) => auth()->user()->can('delete', $row));
 

@@ -18,16 +18,14 @@ class ProjectTimelineController extends Controller
 
     public function index(Request $request)
     {
-        $userId = auth()->id();
         $projectId = $request->input('project_id');
 
-        $timelines = ProjectTimeline::whereHas('project', function ($q) use ($userId) {
-            $q->where('client_id', $userId);
-        });
+        $user = $request->user();
+        $timelines = ProjectTimeline::whereHas('project', fn ($q) => $q->accessibleBy($user));
 
-        $expenses = Expense::where('user_id', $userId)->with('project:id,name');
-        $photos = Photo::where('user_id', $userId)->with('project:id,name');
-        $documents = Document::where('user_id', $userId)->with('project:id,name');
+        $expenses = Expense::visibleTo($user)->with('project:id,name');
+        $photos = Photo::visibleTo($user)->with('project:id,name');
+        $documents = Document::visibleTo($user)->with('project:id,name');
 
         if ($projectId) {
             $timelines->where('project_id', $projectId);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\VisibleToProjectMembers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Photo extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Searchable;
+    use HasFactory, InteractsWithMedia, Searchable, VisibleToProjectMembers;
 
     protected $fillable = [
         'project_id',

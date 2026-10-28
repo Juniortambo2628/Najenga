@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Support\ProjectRole;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 trait BelongsToUserPolicy
@@ -17,28 +18,41 @@ trait BelongsToUserPolicy
     }
 
     /**
-     * Check the user owns the model and is not a viewer of its project.
+     * The user's role in the model's project, or null (no project, or not a member).
+     */
+    protected function projectRole($user, $model): ?string
+    {
+        return optional($model->project)->roleFor($user);
+    }
+
+    /**
+     * Owners, managers and editors of the project change every record under
+     * it; anyone else only their own, and never as a viewer of its project.
      */
     protected function userCanChange($user, $model): bool
     {
-        return $this->userOwns($user, $model)
-            && ! optional($model->project)->isReadOnlyFor($user);
+        $role = $this->projectRole($user, $model);
+
+        if (ProjectRole::canEdit($role)) {
+            return true;
+        }
+
+        return $this->userOwns($user, $model) && $role === null;
     }
 
     /**
-     * Authorize view if user owns the model.
+     * Authorize view for the owner and every member of the model's project.
      *
-     * Mirrors update() deliberately: DocumentController::index and
-     * PhotoController::index both scope to where('user_id', ...), so a direct
-     * URL may never reveal more than the list already does.
+     * Mirrors the lists (scopeVisibleTo), so a direct URL never reveals more
+     * than the list already does.
      */
     public function view($user, $model): bool
     {
-        return $this->userOwns($user, $model);
+        return $this->userOwns($user, $model) || $this->projectRole($user, $model) !== null;
     }
 
     /**
-     * Authorize update if user owns the model and can edit its project.
+     * Authorize update if the user can change the model (see userCanChange).
      */
     public function update($user, $model): bool
     {
@@ -46,7 +60,7 @@ trait BelongsToUserPolicy
     }
 
     /**
-     * Authorize delete if user owns the model and can edit its project.
+     * Authorize delete if the user can change the model (see userCanChange).
      */
     public function delete($user, $model): bool
     {

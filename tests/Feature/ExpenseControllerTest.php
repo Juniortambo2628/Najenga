@@ -126,7 +126,7 @@ class ExpenseControllerTest extends TestCase
     {
         $expense = Expense::factory()->create([
             'user_id' => $this->otherUser->id,
-            'project_id' => $this->project->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
         ]);
 
         $this->actingAs($this->user)
@@ -152,7 +152,7 @@ class ExpenseControllerTest extends TestCase
     {
         $expense = Expense::factory()->create([
             'user_id' => $this->otherUser->id,
-            'project_id' => $this->project->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
         ]);
 
         $this->actingAs($this->user)
@@ -249,7 +249,7 @@ class ExpenseControllerTest extends TestCase
     {
         $expense = Expense::factory()->create([
             'user_id' => $this->otherUser->id,
-            'project_id' => $this->project->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
         ]);
 
         $this->actingAs($this->user)
