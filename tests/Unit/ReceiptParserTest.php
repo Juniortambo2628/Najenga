@@ -29,6 +29,23 @@ class ReceiptParserTest extends TestCase
         $this->assertNull($data['purpose']);
     }
 
+    public function test_bank_to_mpesa_transfer_message(): void
+    {
+        $text = "Dear Daniel Onyango Obam, your MPESA transfer of KES. 150000.00 to Stephen Ojiambo Egesa (254703406205) has been processed successfully. MPESA ref number UICI066GHQ. NCBA, Go for it.";
+        $data = $this->parser->parse($text);
+
+        $this->assertEquals(150000.0, $data['total']);
+        $this->assertEquals('Stephen Ojiambo Egesa', $data['recipient']);
+        $this->assertEquals('UICI066GHQ', $data['reference_number']);
+    }
+
+    public function test_a_word_after_ref_is_not_taken_for_the_code(): void
+    {
+        $data = $this->parser->parse('Ref number pending. Transaction UGGSG3I38V confirmed.');
+
+        $this->assertEquals('UGGSG3I38V', $data['reference_number']);
+    }
+
     public function test_sent_to_receipt(): void
     {
         $text = 'Ksh 218,400.00 sent to JOHN DOE for account 123456 has been confirmed';

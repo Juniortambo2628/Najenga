@@ -16,7 +16,12 @@ const actionClass = {
     danger: 'border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200',
 };
 
-/** One toolbar action: a button, or an Inertia link when it has `href`. */
+/** An action's link: Inertia's, or a plain one for a file to download. */
+function ActionLink({ action, ...props }) {
+    return action.download ? <a href={action.href} download {...props} /> : <Link href={action.href} {...props} />;
+}
+
+/** One toolbar action: a button, or a link when it has `href`. */
 function Action({ action, compact }) {
     const className = `inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed ${actionClass[action.variant || 'secondary']}`;
     const content = (
@@ -26,7 +31,7 @@ function Action({ action, compact }) {
         </>
     );
     return action.href ? (
-        <Link href={action.href} className={className} title={action.label} aria-label={action.label}>{content}</Link>
+        <ActionLink action={action} className={className} title={action.label} aria-label={action.label}>{content}</ActionLink>
     ) : (
         <button type="button" onClick={action.onClick} disabled={action.disabled} className={className} title={action.label} aria-label={action.label}>
             {content}
@@ -190,7 +195,7 @@ function MoreMenu({ actions }) {
                                 </>
                             );
                             return action.href ? (
-                                <Link key={action.id} href={action.href} className={className} onClick={() => setOpen(false)}>{content}</Link>
+                                <ActionLink key={action.id} action={action} className={className} onClick={() => setOpen(false)}>{content}</ActionLink>
                             ) : (
                                 <button key={action.id} type="button" disabled={action.disabled} className={className} onClick={() => { setOpen(false); action.onClick?.(); }}>
                                     {content}
@@ -215,7 +220,7 @@ const Divider = () => <div aria-hidden="true" className="hidden sm:block w-px h-
  * @param {Array}  [filters]   [{ name, label, title?, value, onChange, options: [{ value, label }], defaultValue? }]
  *                             — shown in a Filters panel with a count of active ones (sort orders too)
  * @param {object} [view]      { modes: [{ value, icon, label? }], current, onChange }
- * @param {Array}  [actions]   [{ id, label, icon, onClick | href, variant: primary|secondary|danger, disabled? }]
+ * @param {Array}  [actions]   [{ id, label, icon, onClick | href, download? (href is a file), variant: primary|secondary|danger, disabled? }]
  *                             — the first two (four without search/filters) show; the rest go under More
  * @param {object} [selection] { count, total, onSelectAll, onDeselectAll, actions } — while count > 0
  *                             the toolbar shows the selection and its actions instead

@@ -284,8 +284,11 @@ class ReceiptController extends Controller
     {
         $this->authorize('view', $receipt);
 
+        $receipt->load('expense.project:id,name');
+
         return \Inertia\Inertia::render('Receipts/Show', [
-            'receipt' => $receipt->load('expense'),
+            'receipt' => $receipt,
+            'fileUrl' => $receipt->expense?->getFirstMediaUrl('receipt') ?: null,
         ]);
     }
 
@@ -305,6 +308,16 @@ class ReceiptController extends Controller
         $receipt->update($request->validated());
 
         return redirect()->back()->with('success', 'Receipt updated successfully');
+    }
+
+    /** Read the receipt again, with the current parser (and OCR, if it was never read). */
+    public function readAgain(\App\Models\Receipt $receipt)
+    {
+        $this->authorize('update', $receipt);
+
+        return $this->receipts->readAgain($receipt)
+            ? redirect()->back()->with('success', 'Receipt read again')
+            : redirect()->back()->with('error', "Couldn't read this receipt");
     }
 
     public function destroy(\App\Models\Receipt $receipt)

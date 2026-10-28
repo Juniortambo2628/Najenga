@@ -167,9 +167,53 @@ class ReceiptProcessingService
     }
 
     /**
+     * Read a stored receipt again: parse the text OCR already gave, or, when
+     * there is none (it was never read), run OCR over its file first.
+     * Returns false when there is nothing to read.
+     */
+    public function readAgain(Receipt $receipt): bool
+    {
+        $text = (string) $receipt->extracted_text;
+        $ocr = null;
+
+        if (trim($text) === '') {
+            $media = $receipt->expense?->getFirstMedia('receipt');
+            if (!$media || !is_file($media->getPath())) {
+                return false;
+            }
+
+            $result = $this->ocr->extractText($media->getPath());
+            if (!($result['success'] ?? false)) {
+                Log::error('OCR failed for receipt: ' . ($result['message'] ?? 'unknown'));
+
+                return false;
+            }
+            $text = $result['text'] ?? '';
+            $ocr = $result;
+        }
+
+        $parsed = $this->parser->parse($text);
+
+        // Every field comes from this reading, so a wrong one from before doesn't linger.
+        $receipt->update([
+            'ocr_data'             => $parsed,
+            'extracted_text'       => $text,
+            'extracted_amount'     => $parsed['total'],
+            'extracted_date'       => $parsed['date'],
+            'extracted_merchant'   => $parsed['merchant'] ?? $parsed['recipient'],
+            'extracted_receipt_id' => $parsed['reference_number'],
+            'ocr_confidence'       => $ocr['confidence'] ?? $receipt->ocr_confidence,
+            'ocr_provider'         => $ocr['source'] ?? $receipt->ocr_provider,
+            'processed_at'         => now(),
+        ]);
+
+        return true;
+    }
+
+    /**
      * Write the receipts row that mirrors the expense's first receipt media.
      */
-    protected function recordReceipt(Expense $expense, ?array $ocr = null, string $originalName = ''): ?Receipt
+    public function recordReceipt(Expense $expense, ?array $ocr = null, string $originalName = ''): ?Receipt
     {
         $media = $expense->getFirstMedia('receipt');
 

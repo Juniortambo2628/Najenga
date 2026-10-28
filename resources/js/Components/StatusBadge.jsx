@@ -9,6 +9,8 @@ const STATUS_STYLES = {
     cancelled: 'bg-red-500/10 text-red-400',
     rejected: 'bg-red-500/10 text-red-400',
     paid: 'bg-green-500/10 text-green-400',
+    verified: 'bg-green-500/10 text-green-400',
+    auto_verified: 'bg-blue-500/10 text-blue-400',
 };
 
 function formatStatus(status) {

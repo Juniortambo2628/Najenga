@@ -21,8 +21,8 @@ class ReceiptParser
         $lines = explode("\n", $normalized);
         $fullText = implode(' ', $lines);
 
-        // 1. Amount: "KES 90,000.00" or "Ksh 218,400.00" or "218400.00 sent to"
-        if (preg_match('/(?:Ksh|KES|UGX|USD|\$|EUR|GBP)\s*([\d,]+\.?\d{0,2})/i', $fullText, $m)) {
+        // 1. Amount: "KES 90,000.00", "Ksh 218,400.00", "KES. 150000.00" or "218400.00 sent to"
+        if (preg_match('/(?:Ksh|KES|UGX|USD|\$|EUR|GBP)\.?\s*(\d[\d,]*\.?\d{0,2})/i', $fullText, $m)) {
             $data['total'] = (float) str_replace(',', '', $m[1]);
         } elseif (preg_match('/([\d,]+\.\d{2})\s*(?:sent|paid)\s/i', $fullText, $m)) {
             $data['total'] = (float) str_replace(',', '', $m[1]);
@@ -30,6 +30,9 @@ class ReceiptParser
 
         // 2. Recipient: text after "paid to" or "sent to"
         if (preg_match('/(?:paid|sent)\s+to\s+(.+?)(?:\s*\(|\s+for\s+account|\s+has\s+been|\s+on\s+)/i', $fullText, $m)) {
+            $data['recipient'] = trim($m[1]);
+        } elseif (preg_match('/transfer\s+of\s+.+?\s+to\s+(.+?)(?:\s*\(|\s+has\s+been|\s+on\s+)/i', $fullText, $m)) {
+            // Bank-to-M-Pesa: "your MPESA transfer of KES. 150000.00 to Jane Doe (2547…) has been processed"
             $data['recipient'] = trim($m[1]);
         } elseif (preg_match('/(?:paid|sent)\s+to\s+(.+?)(?:\s*,|\s+Ref)/i', $fullText, $m)) {
             $data['recipient'] = trim($m[1]);
@@ -62,8 +65,9 @@ class ReceiptParser
             $data['time'] = trim($m[1]);
         }
 
-        // 5. Reference: "Ref: UGGSG3I38V" or "ref XXXXXXXX"
-        if (preg_match('/ref(?:erence)?[:\s]+([A-Z0-9]{6,20})/i', $fullText, $m)) {
+        // 5. Reference: "Ref: UGGSG3I38V", "ref XXXXXXXX" or "ref number UICI066GHQ".
+        // A code has a digit in it, so the words after "ref" aren't taken for one.
+        if (preg_match('/\bref(?:erence)?(?:\s*(?:number|no\.?|#))?[:\s]+((?=[A-Z]*\d)[A-Z0-9]{6,20})\b/i', $fullText, $m)) {
             $data['reference_number'] = strtoupper($m[1]);
         } elseif (preg_match('/\b([A-Z0-9]{10,20})\b/', $fullText, $m)) {
             $data['reference_number'] = $m[1];

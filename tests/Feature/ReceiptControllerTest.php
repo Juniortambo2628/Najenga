@@ -256,4 +256,78 @@ class ReceiptControllerTest extends TestCase
 
         $this->assertDatabaseCount('receipts', 0);
     }
+
+    public function test_reading_a_receipt_again_uses_its_stored_text(): void
+    {
+        $expense = Expense::factory()->create(['user_id' => $this->user->id]);
+        $receipt = Receipt::factory()->create([
+            'expense_id' => $expense->id,
+            'extracted_text' => 'your MPESA transfer of KES. 150000.00 to Stephen Ojiambo Egesa (254703406205) has been processed successfully. MPESA ref number UICI066GHQ.',
+            'extracted_receipt_id' => 'NUMBER',
+            'extracted_amount' => null,
+        ]);
+        $ocr = $this->createMock(\App\Services\OcrService::class);
+        $ocr->expects($this->never())->method('extractText');
+        $this->app->instance(\App\Services\OcrService::class, $ocr);
+
+        $this->actingAs($this->user)
+            ->from("/receipts/{$receipt->id}")
+            ->post("/receipts/{$receipt->id}/read-again")
+            ->assertRedirect("/receipts/{$receipt->id}")
+            ->assertSessionHas('success');
+
+        $receipt->refresh();
+        $this->assertSame('UICI066GHQ', $receipt->extracted_receipt_id);
+        $this->assertEquals(150000, $receipt->extracted_amount);
+        $this->assertSame('Stephen Ojiambo Egesa', $receipt->extracted_merchant);
+    }
+
+    public function test_a_receipt_never_read_is_read_from_its_file(): void
+    {
+        Storage::fake('public');
+        $expense = Expense::factory()->create(['user_id' => $this->user->id]);
+        $expense->addMedia(\Illuminate\Http\UploadedFile::fake()->image('slip.jpg'))->toMediaCollection('receipt');
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id, 'extracted_text' => null]);
+        $ocr = $this->createMock(\App\Services\OcrService::class);
+        $ocr->expects($this->once())->method('extractText')
+            ->willReturn(['success' => true, 'text' => 'KES 2,500.00 paid to HARDWARE LTD on 12/10/26 Ref: TJ4AB12CDE', 'confidence' => 0.91, 'source' => 'cloud-ocr-space']);
+        $this->app->instance(\App\Services\OcrService::class, $ocr);
+
+        $this->actingAs($this->user)->post("/receipts/{$receipt->id}/read-again")->assertSessionHas('success');
+
+        $receipt->refresh();
+        $this->assertEquals(2500, $receipt->extracted_amount);
+        $this->assertSame('TJ4AB12CDE', $receipt->extracted_receipt_id);
+        $this->assertSame('cloud-ocr-space', $receipt->ocr_provider);
+    }
+
+    public function test_reading_a_receipt_with_no_text_or_file_says_so(): void
+    {
+        $expense = Expense::factory()->create(['user_id' => $this->user->id]);
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id, 'extracted_text' => null]);
+
+        $this->actingAs($this->user)->post("/receipts/{$receipt->id}/read-again")->assertSessionHas('error');
+    }
+
+    public function test_user_cannot_read_another_users_receipt_again(): void
+    {
+        $expense = Expense::factory()->create(['user_id' => User::factory()->create()->id]);
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id]);
+
+        $this->actingAs($this->user)->post("/receipts/{$receipt->id}/read-again")->assertForbidden();
+    }
+
+    public function test_the_receipt_page_gets_the_file_and_the_expense(): void
+    {
+        Storage::fake('public');
+        $expense = Expense::factory()->create(['user_id' => $this->user->id]);
+        $expense->addMedia(\Illuminate\Http\UploadedFile::fake()->image('slip.jpg'))->toMediaCollection('receipt');
+        $receipt = Receipt::factory()->create(['expense_id' => $expense->id]);
+
+        $this->actingAs($this->user)
+            ->get("/receipts/{$receipt->id}")
+            ->assertInertia(fn ($page) => $page->component('Receipts/Show')
+                ->where('receipt.expense.id', $expense->id)
+                ->where('fileUrl', fn ($url) => str_contains($url, 'slip')));
+    }
 }
