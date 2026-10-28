@@ -77,7 +77,7 @@ class ProjectTimelineController extends Controller
     public function create()
     {
         return Inertia::render('Timeline/Create', [
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
         ]);
     }
 
@@ -112,7 +112,7 @@ class ProjectTimelineController extends Controller
 
         return Inertia::render('Timeline/Edit', [
             'timeline' => $timeline,
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
         ]);
     }
 

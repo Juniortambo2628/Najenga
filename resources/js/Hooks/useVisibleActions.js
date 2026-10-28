@@ -5,6 +5,14 @@ import useRole from '@/Hooks/useRole';
 
 const EDIT = ['owner', 'manager', 'editor'];
 
+/**
+ * Projects a form may file a record under: not those where the person is a
+ * viewer. (Pages list every project they can see, with the role in each.)
+ */
+export function editableProjects(projects = []) {
+    return projects.filter((project) => !project.role || EDIT.includes(project.role));
+}
+
 /** Keep only the actions a read-only person may use: those marked `readOnly`. */
 export function visibleActions(actions, canEdit) {
     return canEdit ? actions : actions.filter((action) => action.readOnly);

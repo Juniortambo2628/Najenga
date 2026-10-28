@@ -22,7 +22,7 @@ import { exportToCSV } from '@/Utils/exportToCSV';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
-import useVisibleActions from '@/Hooks/useVisibleActions';
+import useVisibleActions, { editableProjects } from '@/Hooks/useVisibleActions';
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [previewExpense, setPreviewExpense] = useState(null);
@@ -57,6 +57,8 @@ export default function Expenses({ expenses = [], projects = [] }) {
     });
 
     const activeProject = useActiveProject(projects, activeProjectId);
+    // Forms on this page (spreadsheet, edit, assign) only offer projects you can edit.
+    const formProjects = useMemo(() => editableProjects(projects), [projects]);
 
     // Extract unique categories for filter
     const categories = useMemo(() => {
@@ -249,7 +251,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     }>
                         <ExpenseSheet
                             expenses={filteredExpenses}
-                            projects={projects}
+                            projects={formProjects}
                             defaultProjectId={activeProjectId}
                         />
                     </Suspense>
@@ -353,7 +355,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     <h2 className="text-xl font-bold text-white mb-4">Edit Expense</h2>
                     <ExpenseForm
                         expense={selectedExpense}
-                        projects={projects}
+                        projects={formProjects}
                         onSubmit={(formData) => {
                             editForm.setData(formData);
                             editForm.patch(`/expenses/${selectedExpense.id}`, {
@@ -382,7 +384,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#8B0000] cursor-pointer"
                     >
                         <option value="">No project</option>
-                        {projects.map((p) => (
+                        {formProjects.map((p) => (
                             <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                     </select>
@@ -435,7 +437,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                 show={!!detailExpense}
                 onClose={() => setDetailExpense(null)}
                 expense={detailExpense}
-                projects={projects}
+                projects={formProjects}
                 onUpdate={handleDetailUpdate}
             />
         </AuthenticatedLayout>

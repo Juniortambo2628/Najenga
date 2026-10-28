@@ -26,6 +26,9 @@ vi.mock('@/Components/SharePanel', () => ({ default: () => null }));
 
 import Photos from '../../../resources/js/Pages/Photos';
 import ProjectShow from '../../../resources/js/Pages/Projects/Show';
+import DocumentShow from '../../../resources/js/Pages/Documents/Show';
+import PhotoShow from '../../../resources/js/Pages/Photos/Show';
+import { editableProjects } from '../../../resources/js/Hooks/useVisibleActions';
 import { setActiveProjectId } from '../../../resources/js/Utils/activeProject';
 
 const photo = (id, projectId, title) => ({
@@ -73,5 +76,22 @@ describe('pages as a viewer', () => {
         render(<ProjectShow project={project} photos={[]} expenses={[]} documents={[]} auth={page.props.auth} />);
         expect(screen.getByRole('link', { name: /Edit/ })).toHaveAttribute('href', '/projects/7/edit');
         expect(screen.getByRole('button', { name: 'Add team member' })).toBeInTheDocument();
+    });
+
+    it('Document and photo pages: Edit only when the server says you can', () => {
+        const document = { id: 4, title: 'Site plan', project: { name: 'Ruiru flats' }, mime_type: 'application/pdf', created_at: '2026-10-01T08:00:00Z' };
+        const { unmount } = render(<DocumentShow document={document} can={{ update: false }} />);
+        expect(screen.queryByRole('link', { name: /Edit/ })).toBeNull();
+        unmount();
+        render(<DocumentShow document={document} can={{ update: true }} />);
+        expect(screen.getAllByRole('link', { name: /Edit/ }).length).toBeGreaterThan(0);
+
+        const photo = { id: 5, title: 'Slab', project: { name: 'Ruiru flats' }, photo_url: '/p.jpg', created_at: '2026-10-01T08:00:00Z' };
+        render(<PhotoShow photo={photo} can={{ update: false }} />);
+        expect(screen.queryByRole('link', { name: /Edit Photo/ })).toBeNull();
+    });
+
+    it("forms only offer projects you can edit", () => {
+        expect(editableProjects(page.props.auth.projects).map((p) => p.name)).toEqual(['Kitengela site']);
     });
 });

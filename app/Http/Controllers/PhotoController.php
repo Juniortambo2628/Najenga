@@ -45,7 +45,7 @@ class PhotoController extends Controller
     public function create()
     {
         return Inertia::render('Photos/Create', [
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
             'uploadLimits' => [
                 'maxFiles' => max(1, min((int) config('photos.upload_batch_size'), (int) ini_get('max_file_uploads') ?: 20)),
                 'maxBytes' => $this->iniBytes('post_max_size'),
@@ -179,6 +179,7 @@ class PhotoController extends Controller
         return Inertia::render('Photos/Show', [
             'photo' => $photo->load('project:id,name')
                 ->append('photo_url', 'thumb_url', 'preview_url'),
+            'can' => ['update' => auth()->user()->can('update', $photo)],
         ]);
     }
 
@@ -188,7 +189,7 @@ class PhotoController extends Controller
 
         return Inertia::render('Photos/Edit', [
             'photo' => $photo,
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
         ]);
     }
 

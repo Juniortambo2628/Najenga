@@ -18,7 +18,7 @@ import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
-import useVisibleActions from '@/Hooks/useVisibleActions';
+import useVisibleActions, { editableProjects } from '@/Hooks/useVisibleActions';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -461,7 +461,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                         <div>
                             <InputLabel htmlFor="timeline-project-id" value="Project" />
                             <SelectInput id="timeline-project-id" aria-invalid={!!errors.project_id} aria-describedby={errors.project_id ? 'timeline-project-id-error' : undefined} value={data.project_id} onChange={(e) => setData('project_id', e.target.value)} placeholder="Select a project" className="mt-1 block w-full">
-                                {projects.map((p) => (
+                                {editableProjects(projects).map((p) => (
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </SelectInput>

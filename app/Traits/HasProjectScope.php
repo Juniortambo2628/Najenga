@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\Project;
+use App\Support\ProjectRole;
 
 trait HasProjectScope
 {
@@ -23,6 +24,17 @@ trait HasProjectScope
                 'name' => $project->name,
                 'role' => $roles[$project->id] ?? null,
             ])
+            ->values();
+    }
+
+    /**
+     * The projects a create or edit form may file a record under: those
+     * where the user is owner, manager or editor (not a viewer).
+     */
+    protected function getEditableProjects()
+    {
+        return $this->getClientProjects()
+            ->filter(fn (array $project) => ProjectRole::canEdit($project['role']))
             ->values();
     }
 }
