@@ -14,7 +14,7 @@ import usePresenceHeartbeat from '@/Hooks/usePresenceHeartbeat';
 import { useBadges } from '@/Utils/presence';
 import { closeHistory, openHistory, useHistoryOpen } from '@/Utils/historyDrawer';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
-import { navItemsFor } from '@/Config/navigation';
+import { navSectionsFor } from '@/Config/navigation';
 
 /**
  * The page title in the navbar. A page with a DashboardHero shows its title
@@ -66,6 +66,16 @@ export const isDesktop = () => typeof window === 'undefined' || !window.matchMed
 
 /** "/expenses/12" or a full URL -> "expenses": the key of a sidebar page's change badge. */
 const sectionOf = (href) => new URL(href, window.location.origin).pathname.split('/').filter(Boolean)[0] || 'dashboard';
+
+/**
+ * Is the sidebar entry `href` the page at `url` (or one under it)? route()
+ * gives full URLs and Inertia's url is a path, so compare paths.
+ */
+export const isCurrent = (url, href) => {
+    const path = new URL(url, window.location.origin).pathname;
+    const target = new URL(href, window.location.origin).pathname;
+    return path === target || path.startsWith(target + '/');
+};
 
 export default function AuthenticatedLayout({ children }) {
     const user = usePage().props.auth.user;
@@ -181,7 +191,7 @@ export default function AuthenticatedLayout({ children }) {
         return () => document.removeEventListener('keydown', onKeyDown);
     }, []);
 
-    const navItems = navItemsFor(user.role);
+    const navSections = navSectionsFor(user.role);
 
     return (
         <>
@@ -210,52 +220,70 @@ export default function AuthenticatedLayout({ children }) {
                     ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}>
                     {/* Sidebar Brand */}
-                    <Link href={route('home')} className="h-16 flex items-center justify-center flex-shrink-0 hover:bg-white/[0.04] transition px-3">
-                        <img 
-                            src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp" 
-                            alt="Najenga" 
-                            className="h-10 w-10 object-contain flex-shrink-0"
+                    <Link
+                        href={route('home')}
+                        aria-label="Najenga home"
+                        className={`flex flex-shrink-0 items-center justify-center transition hover:bg-white/[0.04] ${sidebarOpen ? 'px-6 pb-4 pt-6' : 'px-2 py-4'}`}
+                    >
+                        <img
+                            src="/Najenga-logos/Najenga-Logo-trimmed.webp"
+                            alt="Najenga"
+                            className={`object-contain transition-all duration-300 ${sidebarOpen ? 'h-24 w-full max-w-[11.5rem]' : 'h-10 w-14'}`}
                         />
                     </Link>
 
-                    {/* Navigation */}
-                    <nav aria-label="Main" className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5 custom-scrollbar">
-                        {navItems.map((item) => {
-                            const isActive = url === item.href || url.startsWith(item.href + '/');
-                            const changes = isActive ? 0 : badges[sectionOf(item.href)] ?? 0;
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={`
-                                        flex items-center border border-transparent px-3 py-2 rounded-xl transition-all text-sm
-                                        ${isActive
-                                            ? 'bg-white/[0.08] border-white/[0.08] text-white font-semibold'
-                                            : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
-                                        }
-                                        ${sidebarOpen ? 'gap-2.5' : 'justify-center'}
-                                    `}
-                                    title={!sidebarOpen ? item.name : undefined}
-                                    aria-label={!sidebarOpen || changes ? `${item.name}${changes ? `, ${changes} new change${changes === 1 ? '' : 's'}` : ''}` : undefined}
-                                    aria-current={isActive ? 'page' : undefined}
-                                >
-                                    <span className="relative">
-                                        <i aria-hidden="true" className={`fas ${item.icon} w-5 text-center`}></i>
-                                        {changes > 0 && !sidebarOpen && (
-                                            <span aria-hidden="true" className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#DC143C]" />
-                                        )}
-                                    </span>
-                                    <span className={`transition-opacity duration-300 whitespace-nowrap overflow-hidden ${sidebarOpen ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 hidden'}`}>
-                                        {item.name}
-                                    </span>
-                                    {changes > 0 && sidebarOpen && (
-                                        <span aria-hidden="true" title={`${changes} new since you last looked`} className="ml-auto rounded-full bg-[#DC143C]/20 px-1.5 py-0.5 text-[10px] font-semibold text-rose-200">
-                                            {changes >= 99 ? '99+' : changes}
-                                        </span>
-                                    )}
-                                </Link>
-                            );
-                        })}
+                    {/* Navigation, grouped */}
+                    <nav aria-label="Main" className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar">
+                        {navSections.map((section, index) => (
+                            <div key={section.title || index} className={index > 0 ? 'mt-4' : ''}>
+                                {section.title && sidebarOpen && (
+                                    <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">{section.title}</p>
+                                )}
+                                {section.title && !sidebarOpen && <div aria-hidden="true" className="mx-3 mb-2 h-px bg-white/10" />}
+                                <ul className="space-y-0.5" aria-label={section.title}>
+                                    {section.items.map((item) => {
+                                        const isActive = isCurrent(url, item.href);
+                                        const changes = isActive ? 0 : badges[sectionOf(item.href)] ?? 0;
+                                        return (
+                                            <li key={item.name}>
+                                                <Link
+                                                    href={item.href}
+                                                    className={`
+                                                        flex items-center border border-transparent px-3 py-2 rounded-xl transition-all text-sm
+                                                        ${isActive
+                                                            ? 'bg-white/[0.08] border-white/[0.08] text-white font-semibold'
+                                                            : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
+                                                        }
+                                                        ${sidebarOpen ? 'gap-2.5' : 'justify-center'}
+                                                    `}
+                                                    title={!sidebarOpen ? item.name : undefined}
+                                                    aria-label={!sidebarOpen || changes ? `${item.name}${changes ? `, ${changes} new change${changes === 1 ? '' : 's'}` : ''}` : undefined}
+                                                    aria-current={isActive ? 'page' : undefined}
+                                                >
+                                                    <span className="relative">
+                                                        <i aria-hidden="true" className={`fas ${item.icon} w-5 text-center`}></i>
+                                                        {changes > 0 && !sidebarOpen && (
+                                                            <span aria-hidden="true" className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#DC143C]" />
+                                                        )}
+                                                    </span>
+                                                    <span className={`transition-opacity duration-300 whitespace-nowrap overflow-hidden ${sidebarOpen ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 hidden'}`}>
+                                                        {item.name}
+                                                    </span>
+                                                    {changes > 0 && sidebarOpen && (
+                                                        <span aria-hidden="true" title={`${changes} new since you last looked`} className="ml-auto rounded-full bg-[#DC143C]/20 px-1.5 py-0.5 text-[10px] font-semibold text-rose-200">
+                                                            {changes >= 99 ? '99+' : changes}
+                                                        </span>
+                                                    )}
+                                                    {isActive && sidebarOpen && !changes && (
+                                                        <span aria-hidden="true" className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#DC143C]" />
+                                                    )}
+                                                </Link>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
+                        ))}
                     </nav>
                 </aside>
 

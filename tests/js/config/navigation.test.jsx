@@ -12,6 +12,7 @@ vi.mock('@inertiajs/react', () => ({
 import {
     NAV_ITEMS,
     navItemsFor,
+    navSectionsFor,
     rootBreadcrumbs,
 } from '../../../resources/js/Config/navigation';
 import Breadcrumb from '../../../resources/js/Components/Breadcrumb';
@@ -86,5 +87,22 @@ describe('Breadcrumb', () => {
             <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Projects' }]} />
         );
         expect(container.querySelectorAll('.fa-chevron-right')).toHaveLength(1);
+    });
+});
+
+describe('navSectionsFor', () => {
+    it('groups the sidebar under headings, starting with an untitled section', () => {
+        const sections = navSectionsFor('admin');
+        expect(sections[0].title).toBeUndefined();
+        expect(sections[0].items.map((i) => i.name)).toEqual(['Dashboard', 'Projects']);
+        expect(sections.slice(1).every((s) => s.title)).toBe(true);
+        expect(sections.flatMap((s) => s.items)).toHaveLength(NAV_ITEMS.length);
+    });
+
+    it('drops items, and emptied sections, a role cannot use', () => {
+        const items = navSectionsFor('staff').flatMap((s) => s.items.map((i) => i.name));
+        expect(items).not.toContain('Users');
+        expect(items).toContain('Activity Logs');
+        expect(navSectionsFor('staff').every((s) => s.items.length > 0)).toBe(true);
     });
 });
