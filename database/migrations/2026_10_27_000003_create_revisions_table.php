@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\ForeignKeyColumn;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -23,8 +24,10 @@ return new class extends Migration
         Schema::create('revisions', function (Blueprint $table) {
             $table->id();
             $table->morphs('revisionable');
-            $table->foreignId('project_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            ForeignKeyColumn::add($table, 'project_id', 'projects')->nullable();
+            $table->foreign('project_id')->references('id')->on('projects')->nullOnDelete();
+            ForeignKeyColumn::add($table, 'user_id', 'users')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
             $table->string('event', 16); // created | updated | deleted | restored
             $table->json('before')->nullable();
             $table->json('after')->nullable();
