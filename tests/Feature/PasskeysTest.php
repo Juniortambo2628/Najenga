@@ -173,7 +173,7 @@ class PasskeysTest extends TestCase
                 ->where('passkeys.0.name', 'SURFACE'));
 
         $this->actingAs($user)
-            ->get(route('profile.edit'))
+            ->get(route('settings'))
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('passkeysCount', 1));
     }

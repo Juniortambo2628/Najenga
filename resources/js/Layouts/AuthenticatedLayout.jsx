@@ -261,7 +261,7 @@ export default function AuthenticatedLayout({ children }) {
                                                     aria-current={isActive ? 'page' : undefined}
                                                 >
                                                     <span className="relative">
-                                                        <i aria-hidden="true" className={`fas ${item.icon} w-5 text-center`}></i>
+                                                        <i aria-hidden="true" className={`${item.brand ? 'fab' : 'fas'} ${item.icon} w-5 text-center`}></i>
                                                         {changes > 0 && !sidebarOpen && (
                                                             <span aria-hidden="true" className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#DC143C]" />
                                                         )}
@@ -425,8 +425,8 @@ export default function AuthenticatedLayout({ children }) {
                                             <Link href={route('home')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
                                                 <i aria-hidden="true" className="fas fa-home w-5"></i>Home
                                             </Link>
-                                            <Link href={route('profile.edit')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
-                                                <i aria-hidden="true" className="fas fa-user w-5"></i>Profile
+                                            <Link href={route('settings')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
+                                                <i aria-hidden="true" className="fas fa-gear w-5"></i>Settings
                                             </Link>
                                             <button
                                                 type="button"
