@@ -18,6 +18,7 @@ import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
+import useVisibleActions from '@/Hooks/useVisibleActions';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -68,7 +69,7 @@ function TimelineItem({ item, onEdit, onDelete, isSelected, onToggle }) {
                     </div>
                     <div className="flex items-center gap-2">
                         {item.status && <StatusBadge status={item.status} />}
-                        {item.type === 'milestone' && (
+                        {item.type === 'milestone' && onEdit && (
                             <>
                                 <button onClick={() => onEdit(item)} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition" title="Edit">
                                     <i aria-hidden="true" className="fas fa-pen text-sm"></i>
@@ -141,6 +142,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTimeline, setEditingTimeline] = useState(null);
     const [filterProject] = useActiveProjectId();
+    const { canEdit, visible, canEditRecord } = useVisibleActions();
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
 
     const { data, setData, patch, processing, errors, reset } = useForm({
@@ -237,7 +239,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     ],
                 }}
                 toolbar={{
-                    actions: [{ id: 'add', label: 'Add Milestone', icon: 'fa-plus', href: route('timeline.create'), variant: 'primary' }],
+                    actions: visible([{ id: 'add', label: 'Add Milestone', icon: 'fa-plus', href: route('timeline.create'), variant: 'primary' }]),
                 }}
             >
 
@@ -290,7 +292,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-stream"
                             title="No activity yet"
                             message="Add milestones, expenses, photos, or documents to see them on the timeline"
-                            action={{ label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) }}
+                            action={canEdit ? { label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) } : undefined}
                         />
                     ) : (
                         <div className="relative">
@@ -300,7 +302,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                     <TimelineItem
                                         key={`${item.type}-${item.id}`}
                                         item={item}
-                                        onEdit={openModal}
+                                        onEdit={canEditRecord(item) ? openModal : undefined}
                                         onDelete={handleDelete}
                                         isSelected={isSelected(item.id)}
                                         onToggle={toggleSelection}
@@ -315,7 +317,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             icon="fa-flag"
                             title="No milestones yet"
                             message="Add milestones to track your project progress"
-                            action={{ label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) }}
+                            action={canEdit ? { label: 'Add Milestone', onClick: () => router.get(route('timeline.create')) } : undefined}
                         />
                     ) : (
                         <div className="relative">
@@ -325,7 +327,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                                     <TimelineItem
                                         key={item.id}
                                         item={{ ...item, type: 'milestone' }}
-                                        onEdit={openModal}
+                                        onEdit={canEditRecord(item) ? openModal : undefined}
                                         onDelete={handleDelete}
                                         isSelected={isSelected(item.id)}
                                         onToggle={toggleSelection}

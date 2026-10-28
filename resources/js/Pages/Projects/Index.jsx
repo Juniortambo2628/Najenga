@@ -19,6 +19,10 @@ import { CURRENCY_OPTIONS, formatCurrency } from '@/Config/currencies';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
+// A project's own role decides its buttons (projects carry my_role).
+const CAN_EDIT = ['owner', 'manager', 'editor'];
+const CAN_MANAGE = ['owner', 'manager'];
+
 export default function Projects({ projects = [] }) {
     const { auth } = usePage().props;
     const [viewMode, setViewMode] = useState('grid');
@@ -317,7 +321,10 @@ export default function Projects({ projects = [] }) {
                         total: filteredProjects.length,
                         onSelectAll: () => selectAll(filteredProjects.map(p => p.id)),
                         onDeselectAll: deselectAll,
-                        actions: [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }],
+                        // Only owners delete a project.
+                        actions: [...selectedItems].every((id) => projects.find((p) => p.id === id)?.my_role === 'owner')
+                            ? [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }]
+                            : [],
                     },
                 }}
             >
@@ -350,17 +357,21 @@ export default function Projects({ projects = [] }) {
                                             <StatusBadge status={project.status} />
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => openEditModal(project)}
-                                                className="text-gray-400 hover:text-white transition p-2"
-                                                title="Edit Project"
-                                            >
-                                                <i aria-hidden="true" className="fas fa-edit"></i>
-                                            </button>
+                                            {CAN_EDIT.includes(project.my_role) && (
+                                                <button
+                                                    onClick={() => openEditModal(project)}
+                                                    className="text-gray-400 hover:text-white transition p-2"
+                                                    title="Edit Project"
+                                                    aria-label={`Edit ${project.name}`}
+                                                >
+                                                    <i aria-hidden="true" className="fas fa-edit"></i>
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => setSharingProject(project)}
                                                 className="text-gray-400 hover:text-white transition p-2"
-                                                title="Share Project"
+                                                title={CAN_MANAGE.includes(project.my_role) ? 'Share Project' : 'Members'}
+                                                aria-label={`${CAN_MANAGE.includes(project.my_role) ? 'Share' : 'Members of'} ${project.name}`}
                                             >
                                                 <i aria-hidden="true" className="fas fa-share-alt"></i>
                                             </button>
