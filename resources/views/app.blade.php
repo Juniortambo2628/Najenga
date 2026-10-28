@@ -14,8 +14,8 @@
 
         <!-- Fonts (async: never blocks first paint) -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" media="print" onload="this.media='all'">
-        <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap"></noscript>
+        <link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|manrope:200,300,400,500&display=swap" media="print" onload="this.media='all'">
+        <noscript><link rel="stylesheet" href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|manrope:200,300,400,500&display=swap"></noscript>
 
         <!-- Font Awesome (self-hosted: no cdnjs request, no SRI to keep in sync) -->
         <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css" media="print" onload="this.media='all'">
