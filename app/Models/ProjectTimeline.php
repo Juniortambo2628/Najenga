@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\RecordsRevisions;
+use App\Models\Concerns\TrashedForThirtyDays;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProjectTimeline extends Model
 {
-    use HasFactory, RecordsRevisions;
+    use HasFactory, RecordsRevisions, TrashedForThirtyDays;
 
     protected $table = 'project_timelines';
 

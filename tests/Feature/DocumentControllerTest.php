@@ -84,7 +84,7 @@ class DocumentControllerTest extends TestCase
             ->delete("/documents/{$document->id}")
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('documents', ['id' => $document->id]);
+        $this->assertSoftDeleted('documents', ['id' => $document->id]);
     }
 
     public function test_user_cannot_delete_other_users_document(): void

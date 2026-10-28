@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\RecordsRevisions;
+use App\Models\Concerns\TrashedForThirtyDays;
 use App\Support\ProjectRole;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
-    use HasFactory, RecordsRevisions;
+    use HasFactory, RecordsRevisions, TrashedForThirtyDays;
+
+    /** Records under a project, trashed and restored with it. */
+    private const CHILDREN = ['photos', 'documents', 'expenses', 'timelines'];
 
     protected $fillable = [
         'name',
@@ -40,10 +44,28 @@ class Project extends Model
             }
         });
 
+        // A project's records go to the trash with it and come back with it.
+        // Deleted for good (after 30 days in the trash), they go through their
+        // models so their files are removed too.
         static::deleting(function (Project $project) {
-            $project->photos->each->delete();
-            $project->documents->each->delete();
-            $project->expenses->each->delete();
+            foreach (self::CHILDREN as $relation) {
+                if ($project->isForceDeleting()) {
+                    $project->{$relation}()->withTrashed()->get()->each->forceDelete();
+                } else {
+                    $project->{$relation}->each->delete();
+                }
+            }
+        });
+
+        static::restoring(function (Project $project) {
+            // Only what was trashed along with the project, not records
+            // deleted on their own before it.
+            $at = $project->deleted_at;
+            foreach (self::CHILDREN as $relation) {
+                $project->{$relation}()->onlyTrashed()
+                    ->whereBetween('deleted_at', [$at->copy()->subMinute(), $at->copy()->addMinute()])
+                    ->get()->each->restore();
+            }
         });
     }
 

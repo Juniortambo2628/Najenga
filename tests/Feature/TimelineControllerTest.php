@@ -145,7 +145,7 @@ class TimelineControllerTest extends TestCase
             ->delete("/timelines/{$timeline->id}")
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('project_timelines', ['id' => $timeline->id]);
+        $this->assertSoftDeleted('project_timelines', ['id' => $timeline->id]);
     }
 
     public function test_user_cannot_delete_other_users_timeline(): void

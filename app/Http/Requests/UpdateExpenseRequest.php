@@ -31,7 +31,7 @@ class UpdateExpenseRequest extends FormRequest
             'title' => 'sometimes|required|string|max:255',
             'amount' => 'sometimes|required|numeric|min:0',
             'category' => 'sometimes|nullable|string',
-            'project_id' => 'sometimes|nullable|exists:projects,id',
+            'project_id' => 'sometimes|nullable|exists:projects,id,deleted_at,NULL',
             'expense_date' => 'sometimes|required|date',
             'description' => 'nullable|string',
             'payment_method' => 'nullable|string',

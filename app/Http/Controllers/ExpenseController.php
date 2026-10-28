@@ -126,7 +126,7 @@ class ExpenseController extends Controller
         $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'integer|exists:expenses,id',
-            'project_id' => 'nullable|integer|exists:projects,id',
+            'project_id' => 'nullable|integer|exists:projects,id,deleted_at,NULL',
         ]);
 
         $projectId = $request->input('project_id');

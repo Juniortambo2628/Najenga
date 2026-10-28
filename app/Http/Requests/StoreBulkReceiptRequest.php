@@ -40,7 +40,7 @@ class StoreBulkReceiptRequest extends FormRequest
             'expenses.*.reference_number'=> 'nullable|string',
             'expenses.*.purpose'         => 'nullable|string',
             'expenses.*.category'        => 'nullable|string',
-            'expenses.*.project_id'      => 'nullable|exists:projects,id',
+            'expenses.*.project_id'      => 'nullable|exists:projects,id,deleted_at,NULL',
             'expenses.*.temp_path'       => 'required|string',
         ];
     }

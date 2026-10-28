@@ -85,7 +85,7 @@ class PhotoControllerTest extends TestCase
             ->delete("/photos/{$photo->id}")
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('photos', ['id' => $photo->id]);
+        $this->assertSoftDeleted('photos', ['id' => $photo->id]);
     }
 
     public function test_user_cannot_delete_other_users_photo(): void

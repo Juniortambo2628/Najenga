@@ -141,7 +141,7 @@ class ReceiptControllerTest extends TestCase
             ->delete("/receipts/{$receipt->id}")
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('receipts', ['id' => $receipt->id]);
+        $this->assertSoftDeleted('receipts', ['id' => $receipt->id]);
     }
 
     public function test_user_cannot_delete_other_users_receipt(): void
