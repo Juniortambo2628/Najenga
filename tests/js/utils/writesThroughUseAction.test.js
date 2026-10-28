@@ -12,6 +12,7 @@ const ALLOWED_FILES = [
     'Hooks/useBulkDelete.js', // the per-item bulk delete; confirms and toasts like useAction
     'Hooks/useBatchDownload.js', // POSTs to build a ZIP; a download, not a change
     'Hooks/usePresenceHeartbeat.js', // a silent background heartbeat, no change to show or confirm
+    'Components/Tour.jsx', // records that the tour was finished; nothing to show or confirm
     'Pages/Photos/Create.jsx', // batched upload with its own progress and per-batch errors
     'Pages/Auth/', // signed-out pages: login, register, password reset
 ];

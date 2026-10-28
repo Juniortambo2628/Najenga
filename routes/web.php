@@ -70,6 +70,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/projects/{project}/members', [\App\Http\Controllers\ProjectMemberController::class, 'index'])->name('projects.members');
     Route::patch('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'update'])->name('projects.members.update');
     Route::delete('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    // The dashboard tour: finished or skipped, for this account.
+    Route::post('/tour/complete', [\App\Http\Controllers\TourController::class, 'complete'])->name('tour.complete');
+
     // Who is online (Phase 14.1): a heartbeat every 20s per visible tab, plus page changes.
     Route::post('/presence/heartbeat', [\App\Http\Controllers\PresenceController::class, 'heartbeat'])->middleware('throttle:30,1')->name('presence.heartbeat');
 

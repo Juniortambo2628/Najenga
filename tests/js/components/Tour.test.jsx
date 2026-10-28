@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 
+const axiosMock = vi.hoisted(() => ({ post: vi.fn(() => Promise.resolve({})) }));
+vi.mock('axios', () => ({ default: axiosMock }));
+
 import Tour, { shouldAutoStart, startTour, TOUR_STEPS } from '../../../resources/js/Components/Tour';
 
 const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString();
@@ -19,6 +22,7 @@ function Shell({ withSidebar = true }) {
 }
 
 beforeEach(() => {
+    axiosMock.post.mockClear();
     try {
         localStorage.clear();
     } catch {
@@ -42,6 +46,23 @@ describe('Tour', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Skip tour' }));
         expect(screen.queryByRole('dialog')).toBeNull();
         expect(shouldAutoStart(user)).toBe(false);
+        // Remembered on the account, not in this browser.
+        expect(axiosMock.post).toHaveBeenCalledWith('/tour/complete');
+    });
+
+    it('never starts by itself once the account has finished it, on any browser', () => {
+        const user = { id: 9, created_at: daysAgo(1), tour_completed_at: daysAgo(1) };
+        expect(shouldAutoStart(user)).toBe(false);
+        render(<><Shell /><Tour user={user} autoStart /></>);
+        expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it("carries over a finish this browser remembered before the account did", () => {
+        localStorage.setItem('najenga.tour.done.11', '1');
+        render(<><Shell /><Tour user={{ id: 11, created_at: daysAgo(1), tour_completed_at: null }} autoStart /></>);
+        expect(screen.queryByRole('dialog')).toBeNull();
+        expect(axiosMock.post).toHaveBeenCalledWith('/tour/complete');
+        expect(localStorage.getItem('najenga.tour.done.11')).toBeNull();
     });
 
     it('walks through the stops, back and forth, and finishes', () => {

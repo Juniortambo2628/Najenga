@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
 
 /** The tour's stops: an element marked data-tour="…", or none for a centred card. */
 export const TOUR_STEPS = [
@@ -14,19 +15,34 @@ export const TOUR_STEPS = [
 /** New accounts (created this many days ago or less) get the tour once, by themselves. */
 const NEW_ACCOUNT_DAYS = 14;
 
-const doneKey = (userId) => `najenga.tour.done.${userId}`;
+/** Before the account remembered it, this browser did (najenga.tour.done.<id>). */
+const legacyKey = (userId) => `najenga.tour.done.${userId}`;
 
-export function tourDone(userId) {
+function legacyDone(userId) {
     try {
-        return localStorage.getItem(doneKey(userId)) === '1';
+        return localStorage.getItem(legacyKey(userId)) === '1';
     } catch {
-        return true; // no storage: don't pester on every page
+        return false;
     }
 }
 
-function markDone(userId) {
+// Finished during this visit: the page's user prop updates on the next visit.
+const finishedNow = new Set();
+
+/** Whether this account has finished (or skipped) the tour. */
+export function tourDone(user) {
+    return !!user?.tour_completed_at || finishedNow.has(user?.id) || legacyDone(user?.id);
+}
+
+/** Remember on the account that the tour is done (and drop the old browser flag). */
+function markDone(user) {
+    if (!user?.id) return;
+    finishedNow.add(user.id);
+    axios.post(route('tour.complete')).catch(() => {
+        // Offline: it may start once more next time, nothing worse.
+    });
     try {
-        localStorage.setItem(doneKey(userId), '1');
+        localStorage.removeItem(legacyKey(user.id));
     } catch {
         /* storage unavailable */
     }
@@ -34,7 +50,7 @@ function markDone(userId) {
 
 /** Whether a new account should see the tour now. */
 export function shouldAutoStart(user) {
-    if (!user?.id || tourDone(user.id)) return false;
+    if (!user?.id || tourDone(user)) return false;
     const created = user.created_at ? new Date(user.created_at) : null;
     return !!created && Date.now() - created.getTime() <= NEW_ACCOUNT_DAYS * 86_400_000;
 }
@@ -80,7 +96,9 @@ export default function Tour({ user, autoStart = false }) {
     const step = steps[Math.min(index, steps.length - 1)];
 
     useEffect(() => {
-        if (autoStart && shouldAutoStart(user)) startTour();
+        // Finished in this browser before the account remembered it: carry it over.
+        if (user?.id && !user.tour_completed_at && legacyDone(user.id)) markDone(user);
+        else if (autoStart && shouldAutoStart(user)) startTour();
     }, [autoStart, user]);
 
     useEffect(() => {
@@ -88,9 +106,9 @@ export default function Tour({ user, autoStart = false }) {
     }, [isOpen]);
 
     const finish = useCallback(() => {
-        markDone(user?.id);
+        markDone(user);
         stopTour();
-    }, [user?.id]);
+    }, [user]);
 
     useLayoutEffect(() => {
         if (!isOpen || !step) return undefined;
