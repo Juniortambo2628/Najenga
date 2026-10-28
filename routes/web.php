@@ -71,6 +71,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/projects/{project}/members', [\App\Http\Controllers\ProjectMemberController::class, 'index'])->name('projects.members');
     Route::patch('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'update'])->name('projects.members.update');
     Route::delete('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    // Version history (Phase 13.4)
+    Route::get('/history', [\App\Http\Controllers\HistoryController::class, 'index'])->name('history.index');
+    Route::get('/history/{type}/{id}', [\App\Http\Controllers\HistoryController::class, 'record'])->whereNumber('id')->name('history.record');
+    Route::post('/history/versions/{revision}/restore', [\App\Http\Controllers\HistoryController::class, 'restore'])->name('history.restore');
+    Route::get('/projects/{project}/history', [\App\Http\Controllers\HistoryController::class, 'project'])->name('projects.history');
+
     Route::post('/projects/{project}/invitations', [\App\Http\Controllers\ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
     Route::post('/projects/{project}/invitations/{invitation}/resend', [\App\Http\Controllers\ProjectInvitationController::class, 'resend'])->name('projects.invitations.resend');
     Route::delete('/projects/{project}/invitations/{invitation}', [\App\Http\Controllers\ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');

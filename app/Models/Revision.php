@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -180,6 +183,95 @@ class Revision extends Model
         $latest->save();
 
         return $latest;
+    }
+
+    /** Record types with history, by the short name the API and the UI use. */
+    public const TYPES = [
+        'project' => Project::class,
+        'expense' => Expense::class,
+        'receipt' => Receipt::class,
+        'document' => Document::class,
+        'photo' => Photo::class,
+        'milestone' => ProjectTimeline::class,
+    ];
+
+    /** The short type name of this version's record (see TYPES). */
+    public function type(): ?string
+    {
+        $class = Relation::getMorphedModel($this->revisionable_type) ?? $this->revisionable_type;
+
+        return array_search($class, self::TYPES, true) ?: null;
+    }
+
+    /**
+     * The record this version belongs to, trashed or not; null once it is
+     * deleted for good.
+     */
+    public function subject(): ?Model
+    {
+        $class = self::TYPES[$this->type()] ?? null;
+
+        return $class ? $class::withTrashed()->find($this->revisionable_id) : null;
+    }
+
+    /** The fields this version brings back: after the change, or before a deletion. */
+    public function snapshot(): ?array
+    {
+        return $this->event === 'deleted' ? $this->before : $this->after;
+    }
+
+    public function isRestorable(): bool
+    {
+        return $this->type() !== null && $this->snapshot() !== null;
+    }
+
+    /**
+     * Make the record look as it did in this version: the fields after the
+     * change, or for a deletion the record as it was before it. A trashed
+     * record is brought back first; one deleted for good is recreated with
+     * its old id. Recorded as a "restored" version.
+     */
+    public function restoreVersion(): Model
+    {
+        if (! $this->isRestorable()) {
+            throw new \RuntimeException('This version cannot be restored.');
+        }
+
+        $class = self::TYPES[$this->type()];
+        $values = Arr::except($this->snapshot(), self::NOISE);
+
+        return DB::transaction(fn () => self::restoring(function () use ($class, $values) {
+            $model = $class::withTrashed()->find($this->revisionable_id);
+
+            if (! $model) {
+                $model = new $class;
+                $model->setRawAttributes($values);
+                $model->save();
+
+                return $model;
+            }
+
+            // Raw values, as stored: casts (dates, JSON) must not apply twice.
+            $model->setRawAttributes(array_merge($model->getAttributes(), Arr::except($values, [$model->getKeyName()])));
+
+            // One save either way, so at most one "restored" version; back from
+            // the trash with no field changed, the save alone records none.
+            $latest = self::max('id');
+            $model->trashed() ? $model->restore() : $model->save();
+            if (self::max('id') === $latest) {
+                self::create([
+                    'revisionable_type' => $model->getMorphClass(),
+                    'revisionable_id' => $model->getKey(),
+                    'project_id' => $model->revisionProjectId(),
+                    'user_id' => auth()->id(),
+                    'event' => 'restored',
+                    'after' => $model->getAttributes(),
+                    'batch' => self::batchId(),
+                ]);
+            }
+
+            return $model;
+        }));
     }
 
     /** The changed fields with short before/after values, for the history list. */
