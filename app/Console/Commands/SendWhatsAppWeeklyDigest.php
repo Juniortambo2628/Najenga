@@ -32,7 +32,8 @@ class SendWhatsAppWeeklyDigest extends Command
         $sent = 0;
         foreach ($userIds as $id) {
             $user = User::find($id);
-            if (! $user || ! $user->email) {
+            // No email, or the digest turned off in Settings.
+            if (! $user || ! $user->email || ! $user->preference('weekly_digest')) {
                 continue;
             }
 

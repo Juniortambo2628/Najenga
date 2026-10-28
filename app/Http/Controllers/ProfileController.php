@@ -18,6 +18,9 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    /** The currencies the app formats (resources/js/Config/currencies.js). */
+    private const CURRENCIES = ['KES', 'USD', 'EUR', 'GBP', 'UGX', 'TZS', 'NGN', 'ZAR'];
+
     /**
      * Display the user's profile form.
      */
@@ -69,6 +72,8 @@ class ProfileController extends Controller
                     && (bool) config('services.meta.whatsapp_phone_number_id'),
             ],
             'twoFactor' => $twoFactor,
+            'preferences' => $user->allPreferences(),
+            'section' => $request->query('section'),
         ]);
     }
 
@@ -85,7 +90,24 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('settings');
+    }
+
+    /**
+     * Save the Settings page's preferences (only the keys sent).
+     */
+    public function updatePreferences(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'currency' => ['sometimes', 'string', \Illuminate\Validation\Rule::in(self::CURRENCIES)],
+            'activity_notifications' => ['sometimes', 'boolean'],
+            'weekly_digest' => ['sometimes', 'boolean'],
+        ]);
+
+        $user = $request->user();
+        $user->forceFill(['preferences' => array_merge($user->preferences ?? [], $validated)])->save();
+
+        return back()->with('success', 'Preferences saved.');
     }
 
     /**

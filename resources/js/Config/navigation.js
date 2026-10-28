@@ -32,7 +32,7 @@ export const NAV_SECTIONS = [
         title: 'Communication',
         items: [
             { name: 'Messages', href: route('messages'), icon: 'fa-comment-alt' },
-            { name: 'WhatsApp', href: route('whatsapp'), icon: 'fa-whatsapp' },
+            { name: 'WhatsApp', href: route('whatsapp'), icon: 'fa-whatsapp', brand: true },
         ],
     },
     {
@@ -45,7 +45,7 @@ export const NAV_SECTIONS = [
     },
     {
         title: 'Account',
-        items: [{ name: 'Profile', href: route('profile.edit'), icon: 'fa-user' }],
+        items: [{ name: 'Settings', href: route('settings'), icon: 'fa-gear' }],
     },
 ];
 

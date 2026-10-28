@@ -103,7 +103,7 @@ export default function TwoFactor({ enabled, pending: initialPending }) {
                     subtitle: 'Add an extra layer of security to your account',
                     breadcrumbs: [
                         ...rootBreadcrumbs(),
-                        { label: 'Settings', href: route('profile.edit') },
+                        { label: 'Settings', href: route('settings') },
                         { label: 'Two-Factor Authentication' },
                     ],
                 }}
@@ -298,7 +298,7 @@ export default function TwoFactor({ enabled, pending: initialPending }) {
 
                     <div>
                         <Link
-                            href={route('profile.edit')}
+                            href={route('settings')}
                             className="text-sm text-gray-400 hover:text-white transition"
                         >
                             &larr; Back to settings

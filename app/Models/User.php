@@ -46,6 +46,30 @@ class User extends Authenticatable implements PasskeyUser
     ];
 
     /**
+     * What each preference is until the user changes it on the Settings page.
+     */
+    public const PREFERENCE_DEFAULTS = [
+        // New expenses start in this currency.
+        'currency' => 'KES',
+        // In-app notifications when someone changes a project you're on.
+        'activity_notifications' => true,
+        // The weekly email summing up what came in on WhatsApp.
+        'weekly_digest' => true,
+    ];
+
+    /** One preference, or its default. */
+    public function preference(string $key): mixed
+    {
+        return ($this->preferences ?? [])[$key] ?? self::PREFERENCE_DEFAULTS[$key] ?? null;
+    }
+
+    /** Every preference, defaults filled in. */
+    public function allPreferences(): array
+    {
+        return array_merge(self::PREFERENCE_DEFAULTS, array_intersect_key($this->preferences ?? [], self::PREFERENCE_DEFAULTS));
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -56,6 +80,7 @@ class User extends Authenticatable implements PasskeyUser
             'email_verified_at' => 'datetime',
             'seen_at' => 'datetime',
             'tour_completed_at' => 'datetime',
+            'preferences' => 'array',
             'whatsapp_verified_at' => 'datetime',
             'password' => 'hashed',
             'login_notifications_enabled' => 'boolean',

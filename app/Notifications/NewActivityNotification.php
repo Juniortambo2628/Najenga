@@ -42,6 +42,11 @@ class NewActivityNotification extends Notification
      */
     public function via(object $notifiable): array
     {
+        // Off for people who turned activity notifications off in Settings.
+        if ($notifiable instanceof \App\Models\User && ! $notifiable->preference('activity_notifications')) {
+            return [];
+        }
+
         return ['database'];
     }
 
