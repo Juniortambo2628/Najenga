@@ -10,6 +10,7 @@ import FlashToast from '@/Components/FlashToast';
 import ConfirmHost from '@/Components/ConfirmHost';
 import { useHasUnsavedChanges } from '@/Utils/unsavedChanges';
 import usePresenceHeartbeat from '@/Hooks/usePresenceHeartbeat';
+import { useBadges } from '@/Utils/presence';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 import { navItemsFor } from '@/Config/navigation';
 
@@ -58,6 +59,9 @@ export function NavbarTitle({ heading, hero }) {
     );
 }
 
+/** "/expenses/12" or a full URL -> "expenses": the key of a sidebar page's change badge. */
+const sectionOf = (href) => new URL(href, window.location.origin).pathname.split('/').filter(Boolean)[0] || 'dashboard';
+
 export default function AuthenticatedLayout({ children }) {
     const user = usePage().props.auth.user;
     const url = usePage().url;
@@ -77,6 +81,7 @@ export default function AuthenticatedLayout({ children }) {
     // A page with unsaved edits (useUnsavedChangesGuard) shows a chip in the navbar.
     const hasUnsaved = useHasUnsavedChanges();
     usePresenceHeartbeat();
+    const badges = useBadges();
     const headingContext = useMemo(() => ({ setHeading, reportHero }), [setHeading, reportHero]);
     const current = reported.url === url;
     const heading = current && reported.title ? reported.title : fallbackHeading(component);
@@ -206,6 +211,7 @@ export default function AuthenticatedLayout({ children }) {
                     <nav aria-label="Main" className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5 custom-scrollbar">
                         {navItems.map((item) => {
                             const isActive = url === item.href || url.startsWith(item.href + '/');
+                            const changes = isActive ? 0 : badges[sectionOf(item.href)] ?? 0;
                             return (
                                 <Link
                                     key={item.name}
@@ -219,13 +225,23 @@ export default function AuthenticatedLayout({ children }) {
                                         ${sidebarOpen ? 'gap-2.5' : 'justify-center'}
                                     `}
                                     title={!sidebarOpen ? item.name : undefined}
-                                    aria-label={!sidebarOpen ? item.name : undefined}
+                                    aria-label={!sidebarOpen || changes ? `${item.name}${changes ? `, ${changes} new change${changes === 1 ? '' : 's'}` : ''}` : undefined}
                                     aria-current={isActive ? 'page' : undefined}
                                 >
-                                    <i aria-hidden="true" className={`fas ${item.icon} w-5 text-center`}></i>
+                                    <span className="relative">
+                                        <i aria-hidden="true" className={`fas ${item.icon} w-5 text-center`}></i>
+                                        {changes > 0 && !sidebarOpen && (
+                                            <span aria-hidden="true" className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#DC143C]" />
+                                        )}
+                                    </span>
                                     <span className={`transition-opacity duration-300 whitespace-nowrap overflow-hidden ${sidebarOpen ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 hidden'}`}>
                                         {item.name}
                                     </span>
+                                    {changes > 0 && sidebarOpen && (
+                                        <span aria-hidden="true" title={`${changes} new since you last looked`} className="ml-auto rounded-full bg-[#DC143C]/20 px-1.5 py-0.5 text-[10px] font-semibold text-rose-200">
+                                            {changes >= 99 ? '99+' : changes}
+                                        </span>
+                                    )}
                                 </Link>
                             );
                         })}

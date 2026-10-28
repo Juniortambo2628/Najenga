@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import axios from 'axios';
-import { setOnline } from '@/Utils/presence';
+import { setBadges, setOnline } from '@/Utils/presence';
 
 export const HEARTBEAT_MS = 20_000;
 
@@ -19,6 +19,7 @@ export default function usePresenceHeartbeat() {
             try {
                 const { data } = await axios.post(route('presence.heartbeat'), { page: window.location.pathname });
                 setOnline(data.online);
+                setBadges(data.badges);
             } catch {
                 // Offline or signed out: try again on the next beat.
             }
