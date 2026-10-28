@@ -25,7 +25,7 @@ export default function ProjectSwitcher() {
             <Menu as="div" className="relative min-w-0">
                 <MenuButton
                     aria-label={`Project: ${active ? active.name : 'All projects'}. Change project`}
-                    className="flex min-w-0 max-w-[11rem] items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-gray-200 transition hover:border-white/20 hover:text-white sm:max-w-[16rem]"
+                    className="flex min-w-0 max-w-[8.5rem] items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-gray-200 transition hover:border-white/20 hover:text-white sm:max-w-[16rem]"
                 >
                     <i aria-hidden="true" className="fas fa-diagram-project text-xs text-[#DC143C]" />
                     <span className="truncate">{active ? active.name : 'All projects'}</span>

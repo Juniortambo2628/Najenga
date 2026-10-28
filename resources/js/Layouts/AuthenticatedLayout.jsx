@@ -60,6 +60,9 @@ export function NavbarTitle({ heading, hero }) {
     );
 }
 
+/** lg and up: the sidebar is a column beside the page, not an overlay over it. */
+export const isDesktop = () => typeof window === 'undefined' || !window.matchMedia || window.matchMedia('(min-width: 1024px)').matches;
+
 /** "/expenses/12" or a full URL -> "expenses": the key of a sidebar page's change badge. */
 const sectionOf = (href) => new URL(href, window.location.origin).pathname.split('/').filter(Boolean)[0] || 'dashboard';
 
@@ -87,7 +90,10 @@ export default function AuthenticatedLayout({ children }) {
     const current = reported.url === url;
     const heading = current && reported.title ? reported.title : fallbackHeading(component);
     const hero = current ? reported.hero : null;
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    // Open on desktops; on phones and tablets (below lg) it would cover the
+    // page, so it starts closed. Pages render their own layout, so every page
+    // change starts afresh.
+    const [sidebarOpen, setSidebarOpen] = useState(isDesktop);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const historyOpen = useHistoryOpen();
     const [searchQuery, setSearchQuery] = useState('');
@@ -141,6 +147,8 @@ export default function AuthenticatedLayout({ children }) {
             if (e.key !== 'Escape') return;
             setUserDropdownOpen(false);
             setSearchOpen(false);
+            // The phone sidebar is an overlay: Escape closes it too.
+            if (!isDesktop()) setSidebarOpen(false);
         };
         document.addEventListener('keydown', onKeyDown);
         return () => document.removeEventListener('keydown', onKeyDown);
@@ -255,7 +263,7 @@ export default function AuthenticatedLayout({ children }) {
                     {/* Above everything in the page (sticky toolbars, heroes), so its menus are never covered. */}
                     <header className="h-16 bg-[#0b0c0d]/90 backdrop-blur-xl flex items-center justify-between px-4 sticky top-0 z-30">
                         {/* Left Side - Toggle & Title */}
-                        <div className="flex items-center gap-4 min-w-0">
+                        <div className="flex items-center gap-1.5 sm:gap-4 min-w-0">
                             <button 
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
                                 aria-label={sidebarOpen ? 'Collapse navigation' : 'Expand navigation'}
@@ -276,9 +284,13 @@ export default function AuthenticatedLayout({ children }) {
                         </div>
 
                         {/* Right Side - Search + User Menu */}
-                        <div className="flex items-center gap-4 min-w-0">
+                        <div className="flex items-center gap-1.5 sm:gap-4 min-w-0">
                             {/* Live Search */}
-                            <div className="relative" ref={searchRef}>
+                            {/* Phones: the search page instead of the inline box. */}
+                            <Link href={route('search')} aria-label="Search" className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white sm:hidden">
+                                <i aria-hidden="true" className="fas fa-search" />
+                            </Link>
+                            <div className="relative hidden sm:block" ref={searchRef}>
                                 <form onSubmit={handleSearchSubmit} className="relative" role="search">
                                     <div className="flex items-center bg-white/5 border border-white/10 rounded-lg transition-colors focus-within:border-white/25 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-rose-400">
                                         <i aria-hidden="true" className="fas fa-search text-gray-400 text-xs pl-3"></i>
@@ -357,13 +369,13 @@ export default function AuthenticatedLayout({ children }) {
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                     aria-expanded={userDropdownOpen}
                                     aria-label={`Account menu for ${user.first_name || user.name || 'user'}`}
-                                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 transition"
+                                    className="flex items-center gap-2 sm:gap-3 px-1.5 sm:px-3 py-2 rounded-lg text-gray-300 hover:bg-white/10 transition"
                                 >
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center">
                                         <i aria-hidden="true" className="fas fa-user text-white text-sm"></i>
                                     </div>
                                     <span className="hidden lg:block">{user.first_name || user.name || 'User'} {user.last_name || ''}</span>
-                                    <i aria-hidden="true" className="fas fa-chevron-down text-xs"></i>
+                                    <i aria-hidden="true" className="fas fa-chevron-down text-xs hidden sm:inline"></i>
                                 </button>
 
                                 {userDropdownOpen && (
