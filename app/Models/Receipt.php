@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsRevisions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Receipt extends Model
 {
-    use HasFactory;
+    use HasFactory, RecordsRevisions;
 
     protected $fillable = [
         'expense_id',
@@ -43,6 +44,18 @@ class Receipt extends Model
             'extracted_amount' => 'decimal:2',
             'extracted_date' => 'date',
         ];
+    }
+
+    /** A receipt's versions belong to its expense's project. */
+    public function revisionProjectId(): ?int
+    {
+        return $this->expense()->value('project_id');
+    }
+
+    /** OCR bookkeeping alone isn't a change worth a version. */
+    public function revisionIgnored(): array
+    {
+        return ['processed_at'];
     }
 
     /**

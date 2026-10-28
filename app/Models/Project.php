@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsRevisions;
 use App\Support\ProjectRole;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
-    use HasFactory;
+    use HasFactory, RecordsRevisions;
 
     protected $fillable = [
         'name',
@@ -153,6 +154,12 @@ class Project extends Model
         $role = $this->roleFor($user);
 
         return $role !== null && ! ProjectRole::canEdit($role);
+    }
+
+    /** A project's versions belong to its own history. */
+    public function revisionProjectId(): ?int
+    {
+        return $this->getKey();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsRevisions;
 use App\Traits\VisibleToProjectMembers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Photo extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Searchable, VisibleToProjectMembers;
+    use HasFactory, InteractsWithMedia, Searchable, VisibleToProjectMembers, RecordsRevisions;
 
     protected $fillable = [
         'project_id',
