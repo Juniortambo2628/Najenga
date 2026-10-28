@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import useSavedViews from '@/Hooks/useSavedViews';
+import { promptAction } from '@/Utils/feedback';
 
 /** How many filters are set to something other than their default (the first option, or `defaultValue`). */
 export function countActiveFilters(filters = []) {
@@ -47,7 +49,56 @@ function useDismiss(ref, open, close) {
     }, [ref, open, close]);
 }
 
-function FiltersMenu({ filters }) {
+/** The page's filters (and search) as a saved view stores them. */
+const snapshot = (filters, search) => ({
+    filters: Object.fromEntries(filters.map((f) => [f.name, f.value])),
+    search: search?.value ?? '',
+});
+
+/** Saved views of this page's filters, kept per page in this browser. */
+function SavedViews({ filters, search, onApplied }) {
+    const { views, saveView, deleteView } = useSavedViews(`najenga.views.${window.location.pathname}`);
+
+    const apply = (view) => {
+        filters.forEach((f) => {
+            const value = view.state.filters?.[f.name];
+            if (value !== undefined && f.options.some((o) => String(o.value) === String(value))) f.onChange(value);
+        });
+        if (search && typeof view.state.search === 'string') search.onChange(view.state.search);
+        onApplied();
+    };
+
+    const save = async () => {
+        const name = await promptAction({ title: 'Save this view', label: 'Name', placeholder: 'e.g. Pending cement receipts', confirmLabel: 'Save view' });
+        if (name) saveView(name, snapshot(filters, search));
+    };
+
+    return (
+        <div className="space-y-1.5 border-t border-white/10 pt-3">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">Saved views</span>
+            {views.length > 0 && (
+                <ul className="space-y-1">
+                    {views.map((view) => (
+                        <li key={view.id} className="flex items-center gap-1">
+                            <button type="button" onClick={() => apply(view)} className="min-w-0 flex-1 truncate rounded-lg px-2 py-1 text-left text-sm text-gray-200 hover:bg-white/5 hover:text-white">
+                                {view.name}
+                            </button>
+                            <button type="button" onClick={() => deleteView(view.id)} aria-label={`Delete view ${view.name}`} className="rounded-lg p-1 text-gray-500 hover:bg-white/5 hover:text-rose-300">
+                                <i aria-hidden="true" className="fas fa-xmark text-xs" />
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+            <button type="button" onClick={save} className="text-xs font-semibold text-gray-300 transition hover:text-white">
+                <i aria-hidden="true" className="fas fa-bookmark mr-1.5" />
+                Save current view…
+            </button>
+        </div>
+    );
+}
+
+function FiltersMenu({ filters, search }) {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
     useDismiss(ref, open, () => setOpen(false));
@@ -97,6 +148,7 @@ function FiltersMenu({ filters }) {
                                 Reset filters
                             </button>
                         )}
+                        <SavedViews filters={filters} search={search} onApplied={() => setOpen(false)} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -264,7 +316,7 @@ export default function FloatingToolbar({ search, filters = [], view, actions = 
                                         <kbd className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:block rounded border border-white/15 px-1.5 text-[10px] text-gray-400">/</kbd>
                                     </div>
                                 )}
-                                {filters.length > 0 && <FiltersMenu filters={filters} />}
+                                {filters.length > 0 && <FiltersMenu filters={filters} search={search} />}
                                 {view && view.modes?.length > 1 && (
                                     <div className="flex gap-1 rounded-xl border border-white/10 bg-black/30 p-1">
                                         {view.modes.map((mode) => (
