@@ -34,9 +34,7 @@ class HistoryController extends Controller
 
         $query = Revision::query()
             ->when($validated['type'] ?? null, fn (Builder $q, string $type) => $q->where('revisionable_type', (new (Revision::TYPES[$type]))->getMorphClass()))
-            ->where(fn (Builder $q) => $q
-                ->whereIn('project_id', Project::accessibleBy($user)->select('id'))
-                ->orWhere(fn (Builder $own) => $own->whereNull('project_id')->where('user_id', $user->id)));
+            ->visibleTo($user);
 
         if ($projectId = $validated['project_id'] ?? null) {
             $this->authorize('view', Project::findOrFail($projectId));
@@ -86,7 +84,7 @@ class HistoryController extends Controller
         $this->authorize('update', $subject);
 
         $record = $revision->restoreVersion($undo);
-        $label = self::label($revision->snapshot($undo)) ?? "{$revision->type()} #{$record->getKey()}";
+        $label = Revision::label($revision->snapshot($undo)) ?? "{$revision->type()} #{$record->getKey()}";
 
         ActivityLogger::log(
             "{$revision->type()}.restored",
@@ -104,30 +102,6 @@ class HistoryController extends Controller
     {
         $page = $query->with('user')->latest('id')->paginate(self::PER_PAGE);
 
-        return response()->json($page->through(fn (Revision $revision) => [
-            'id' => $revision->id,
-            'event' => $revision->event,
-            'type' => $revision->type(),
-            'record_id' => $revision->revisionable_id,
-            'project_id' => $revision->project_id,
-            'label' => self::label($revision->after ?? $revision->before),
-            'user' => $revision->user ? ['id' => $revision->user->id, 'name' => $revision->user->name] : null,
-            'at' => $revision->updated_at->toIso8601String(),
-            'changes' => $revision->diff(),
-            'restorable' => $revision->isRestorable(),
-            'undoable' => $revision->event === 'updated' && $revision->isRestorable(true),
-        ]));
-    }
-
-    /** A record's human name from its fields. */
-    private static function label(?array $fields): ?string
-    {
-        foreach (['name', 'title', 'original_name', 'filename'] as $field) {
-            if (filled($fields[$field] ?? null)) {
-                return (string) $fields[$field];
-            }
-        }
-
-        return null;
+        return response()->json($page->through(fn (Revision $revision) => $revision->toHistory()));
     }
 }
