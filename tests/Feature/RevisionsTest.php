@@ -60,7 +60,7 @@ class RevisionsTest extends TestCase
 
     public function test_quick_edits_by_one_person_merge_into_one_version(): void
     {
-        $milestone = ProjectTimeline::factory()->create(['project_id' => $this->project->id, 'title' => 'Foundation', 'status' => 'pending']);
+        $milestone = ProjectTimeline::factory()->create(['project_id' => $this->project->id, 'title' => 'Foundation', 'status' => 'pending', 'priority' => 'low']);
         $milestone->update(['title' => 'Foundation slab']);
         $this->travel(5)->minutes();
         $milestone->update(['status' => 'in_progress']);
