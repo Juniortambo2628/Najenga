@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\RecordsRevisions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProjectTimeline extends Model
 {
-    use HasFactory;
+    use HasFactory, RecordsRevisions;
 
     protected $table = 'project_timelines';
 

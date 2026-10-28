@@ -39,6 +39,10 @@ class AppServiceProvider extends ServiceProvider
         // lines are the only registration path for LogAuthentication. Discovery
         // would also match its union type-hinted handle() and register it a
         // second time, double-firing every auth notification.
+        // Migrations and seeders don't write version history.
+        Event::listen(\Illuminate\Database\Events\MigrationsStarted::class, fn () => \App\Models\Revision::pause());
+        Event::listen(\Illuminate\Database\Events\MigrationsEnded::class, fn () => \App\Models\Revision::resume());
+
         Event::listen(\Illuminate\Auth\Events\Login::class, \App\Listeners\LogAuthentication::class);
         Event::listen(\Illuminate\Auth\Events\Logout::class, \App\Listeners\LogAuthentication::class);
         Event::listen(\Illuminate\Auth\Events\Registered::class, \App\Listeners\LogAuthentication::class);
