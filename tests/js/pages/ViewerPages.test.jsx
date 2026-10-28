@@ -1,0 +1,77 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, within, act } from '@testing-library/react';
+
+// A viewer of "Ruiru flats" and owner of "Kitengela site".
+const page = vi.hoisted(() => ({
+    props: {
+        auth: {
+            user: { id: 1, role: 'client' },
+            projects: [
+                { id: 7, name: 'Kitengela site', role: 'owner' },
+                { id: 9, name: 'Ruiru flats', role: 'viewer' },
+            ],
+        },
+        flash: {},
+    },
+    url: '/photos',
+}));
+vi.mock('@inertiajs/react', () => ({
+    Head: () => null,
+    Link: ({ href, children, ...rest }) => <a href={href} {...rest}>{children}</a>,
+    usePage: () => page,
+    router: { visit: vi.fn(), reload: vi.fn(), get: vi.fn(), delete: vi.fn(), on: () => () => {} },
+}));
+vi.mock('@/Layouts/AuthenticatedLayout', () => ({ default: ({ children }) => <div>{children}</div> }));
+vi.mock('@/Components/SharePanel', () => ({ default: () => null }));
+
+import Photos from '../../../resources/js/Pages/Photos';
+import ProjectShow from '../../../resources/js/Pages/Projects/Show';
+import { setActiveProjectId } from '../../../resources/js/Utils/activeProject';
+
+const photo = (id, projectId, title) => ({
+    id, title, project_id: projectId, project_name: projectId === 9 ? 'Ruiru flats' : 'Kitengela site',
+    file_path: `/storage/${id}.jpg`, thumb_url: `/storage/${id}.jpg`, photo_date: 'Oct 01, 2026', original_name: `${id}.jpg`,
+});
+const photos = [photo(1, 9, 'Ruiru slab'), photo(2, 7, 'Kitengela wall')];
+
+beforeEach(() => act(() => setActiveProjectId(null)));
+
+describe('pages as a viewer', () => {
+    it('Photos: no upload, delete or bulk delete in a project you only view', () => {
+        act(() => setActiveProjectId(9));
+        render(<Photos photos={photos} projects={page.props.auth.projects} />);
+
+        const toolbar = screen.getByRole('toolbar', { name: 'Page tools' });
+        expect(within(toolbar).queryByRole('link', { name: /Upload Photo/ })).toBeNull();
+
+        fireEvent.contextMenu(screen.getByText('Ruiru slab'));
+        expect(screen.getByRole('menuitem', { name: /Download/ })).toBeInTheDocument();
+        expect(screen.queryByRole('menuitem', { name: /Delete/ })).toBeNull();
+    });
+
+    it("Photos: under all projects, each photo follows its own project's role", () => {
+        render(<Photos photos={photos} projects={page.props.auth.projects} />);
+        expect(within(screen.getByRole('toolbar', { name: 'Page tools' })).getByRole('link', { name: /Upload Photo/ })).toBeInTheDocument();
+
+        fireEvent.contextMenu(screen.getByText('Kitengela wall'));
+        expect(screen.getByRole('menuitem', { name: /Delete/ })).toBeInTheDocument();
+        fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+
+        fireEvent.contextMenu(screen.getByText('Ruiru slab'));
+        expect(screen.queryByRole('menuitem', { name: /Delete/ })).toBeNull();
+    });
+
+    it('Project page: no Edit button, and the team button only shows the team', () => {
+        const project = { id: 9, name: 'Ruiru flats', status: 'active', users: [], budget: 0, currency: 'KES' };
+        render(<ProjectShow project={project} photos={[]} expenses={[]} documents={[]} auth={page.props.auth} />);
+        expect(screen.queryByRole('link', { name: /Edit/ })).toBeNull();
+        expect(screen.getByRole('button', { name: 'See the team' })).toBeInTheDocument();
+    });
+
+    it('Project page: the owner gets Edit and can add people', () => {
+        const project = { id: 7, name: 'Kitengela site', status: 'active', users: [], budget: 0, currency: 'KES' };
+        render(<ProjectShow project={project} photos={[]} expenses={[]} documents={[]} auth={page.props.auth} />);
+        expect(screen.getByRole('link', { name: /Edit/ })).toHaveAttribute('href', '/projects/7/edit');
+        expect(screen.getByRole('button', { name: 'Add team member' })).toBeInTheDocument();
+    });
+});

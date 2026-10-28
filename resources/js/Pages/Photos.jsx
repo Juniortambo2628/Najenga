@@ -22,6 +22,7 @@ import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import SharePanel from '@/Components/SharePanel';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
+import useVisibleActions from '@/Hooks/useVisibleActions';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -137,12 +138,14 @@ export default function Photos({ photos = [], projects = [] }) {
         }
     };
 
+    const { visible, canEditRecord } = useVisibleActions();
+
     const contextMenuOptions = [
-        { label: 'Preview', icon: 'fa-eye', action: () => setPreviewPhoto(contextMenu?.target) },
-        { label: 'Download', icon: 'fa-download', action: () =>
+        { label: 'Preview', icon: 'fa-eye', readOnly: true, action: () => setPreviewPhoto(contextMenu?.target) },
+        { label: 'Download', icon: 'fa-download', readOnly: true, action: () =>
             download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
         },
-        { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
+        { label: 'Share', icon: 'fa-share-alt', readOnly: true, action: () => shareProjectFor(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: () =>
             deleteSelectedPhotos(`Delete ${selectedCount > 1 ? `${selectedCount} items` : 'this item'}?`)
         },
@@ -172,16 +175,16 @@ export default function Photos({ photos = [], projects = [] }) {
                             { value: 'timeline', icon: 'fa-clock', label: 'Timeline' },
                         ],
                     },
-                    actions: [{ id: 'upload', label: 'Upload Photo', icon: 'fa-upload', href: route('photos.create'), variant: 'primary' }],
+                    actions: visible([{ id: 'upload', label: 'Upload Photo', icon: 'fa-upload', href: route('photos.create'), variant: 'primary' }]),
                     selection: {
                         count: selectedCount,
                         total: filteredPhotos.length,
                         onSelectAll: () => selectAll(filteredPhotos.map(p => p.id)),
                         onDeselectAll: deselectAll,
-                        actions: [
-                            { id: 'download', label: 'Download Selected', icon: 'fa-download', onClick: downloadSelectedPhotos },
+                        actions: visible([
+                            { id: 'download', label: 'Download Selected', icon: 'fa-download', readOnly: true, onClick: downloadSelectedPhotos },
                             { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: () => deleteSelectedPhotos(`Delete ${selectedCount} items?`) },
-                        ],
+                        ]),
                     },
                 }}
             >
@@ -262,7 +265,7 @@ export default function Photos({ photos = [], projects = [] }) {
             {/* Context Menu */}
             {contextMenu && (
                 <ContextMenu 
-                    options={contextMenuOptions} 
+                    options={visible(contextMenuOptions, canEditRecord(contextMenu.target))} 
                     position={{ x: contextMenu.x, y: contextMenu.y }} 
                     onClose={closeContextMenu} 
                 />

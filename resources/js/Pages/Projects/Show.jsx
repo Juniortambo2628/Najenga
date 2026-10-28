@@ -3,9 +3,11 @@ import SharePanel from '@/Components/SharePanel';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency } from '@/Config/currencies';
+import useRole from '@/Hooks/useRole';
 
 export default function Show({ project, photos, expenses, totalExpenses = 0, documents, auth }) {
     const [showShareModal, setShowShareModal] = useState(false);
+    const { canEdit, canManage } = useRole(project.id);
 
     const teamMembers = project.users || [];
 
@@ -37,9 +39,11 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                         }`}>
                             {project.status?.replace('_', ' ').toUpperCase()}
                         </div>
-                        <Link href={route('projects.edit', project.id)} className="px-5 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center">
-                            <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
-                        </Link>
+                        {canEdit && (
+                            <Link href={route('projects.edit', project.id)} className="px-5 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center">
+                                <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -79,9 +83,10 @@ export default function Show({ project, photos, expenses, totalExpenses = 0, doc
                             <button
                                 onClick={() => setShowShareModal(true)}
                                 className="w-8 h-8 rounded-full bg-white/[0.06] border-2 border-black flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-white/10 transition"
-                                title="Add team member"
+                                title={canManage ? 'Add team member' : 'See the team'}
+                                aria-label={canManage ? 'Add team member' : 'See the team'}
                             >
-                                <i aria-hidden="true" className="fas fa-plus"></i>
+                                <i aria-hidden="true" className={`fas ${canManage ? 'fa-plus' : 'fa-users'}`}></i>
                             </button>
                         </div>
                     </div>

@@ -22,6 +22,7 @@ import { exportToCSV } from '@/Utils/exportToCSV';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
+import useVisibleActions from '@/Hooks/useVisibleActions';
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [previewExpense, setPreviewExpense] = useState(null);
@@ -134,8 +135,10 @@ export default function Expenses({ expenses = [], projects = [] }) {
     });
     const handleDelete = deleteExpense.run;
 
+    const { canEdit, visible, canEditRecord } = useVisibleActions();
+
     const contextMenuOptions = [
-        { label: 'View', icon: 'fa-eye', action: () => handleView(contextMenu?.target) },
+        { label: 'View', icon: 'fa-eye', readOnly: true, action: () => handleView(contextMenu?.target) },
         { label: 'Edit', icon: 'fa-edit', action: () => handleEdit(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: () => handleDelete(contextMenu?.target) },
     ];
@@ -202,24 +205,25 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     view: {
                         current: viewMode,
                         onChange: setViewMode,
-                        modes: [
-                            { value: 'list', icon: 'fa-list', label: 'List' },
+                        // The spreadsheet edits in place: not for viewers.
+                        modes: visible([
+                            { value: 'list', icon: 'fa-list', label: 'List', readOnly: true },
                             { value: 'sheet', icon: 'fa-table', label: 'Spreadsheet' },
-                        ],
+                        ]),
                     },
-                    actions: [
+                    actions: visible([
                         { id: 'add', label: 'Add Expense', icon: 'fa-plus', href: route('expenses.create'), variant: 'primary' },
-                        { id: 'export', label: 'Export CSV', icon: 'fa-file-export', onClick: handleExport },
-                    ],
+                        { id: 'export', label: 'Export CSV', icon: 'fa-file-export', readOnly: true, onClick: handleExport },
+                    ]),
                     selection: {
                         count: selectedCount,
                         total: filteredExpenses.length,
                         onSelectAll: () => selectAll(filteredExpenses.map(e => e.id)),
                         onDeselectAll: deselectAll,
-                        actions: [
+                        actions: visible([
                             { id: 'assign', label: 'Assign to Project', icon: 'fa-folder-open', onClick: () => setIsAssignModalOpen(true) },
                             { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete },
-                        ],
+                        ]),
                     },
                 }}
             >
@@ -228,7 +232,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         icon="fa-receipt" 
                         title="No expenses found" 
                         message="Start tracking your project expenses"
-                        action={{ label: 'Add Expense', onClick: () => router.get(route('expenses.create')) }}
+                        action={canEdit ? { label: 'Add Expense', onClick: () => router.get(route('expenses.create')) } : undefined}
                         noun="expense"
                         search={searchQuery}
                         filtered={categoryFilter !== 'all'}
@@ -237,7 +241,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                 )}
 
                 {/* Expenses List / Sheet */}
-                {viewMode === 'sheet' ? (
+                {viewMode === 'sheet' && canEdit ? (
                     <Suspense fallback={
                         <div className="flex items-center justify-center py-20">
                             <div className="text-gray-400 text-sm">Loading spreadsheet...</div>
@@ -397,7 +401,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
             {/* Context Menu */}
             {contextMenu && (
                 <ContextMenu 
-                    options={contextMenuOptions} 
+                    options={visible(contextMenuOptions, canEditRecord(contextMenu.target))} 
                     position={{ x: contextMenu.x, y: contextMenu.y }} 
                     onClose={closeContextMenu} 
                 />

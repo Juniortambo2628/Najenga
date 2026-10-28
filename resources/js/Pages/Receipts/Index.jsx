@@ -6,6 +6,7 @@ import ListPanel from '@/Components/ListPanel';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import useVisibleActions from '@/Hooks/useVisibleActions';
 
 const STATUS_STYLES = {
     verified: 'bg-green-500/10 text-green-400 border-green-500/20',
@@ -25,6 +26,7 @@ const STATUS_OPTIONS = [
 const statusOf = (receipt) => receipt.verification_status || 'pending';
 
 export default function Index({ receipts = [] }) {
+    const { visible } = useVisibleActions();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
@@ -78,13 +80,13 @@ export default function Index({ receipts = [] }) {
                             ],
                         },
                     ],
-                    actions: [{ id: 'verify', label: 'Verify Receipt', icon: 'fa-receipt', href: route('receipt.verification'), variant: 'primary' }],
+                    actions: visible([{ id: 'verify', label: 'Verify Receipt', icon: 'fa-receipt', href: route('receipt.verification'), variant: 'primary' }]),
                     selection: {
                         count: selectedCount,
                         total: filteredReceipts.length,
                         onSelectAll: () => selectAll(filteredReceipts.map((r) => r.id)),
                         onDeselectAll: deselectAll,
-                        actions: [{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }],
+                        actions: visible([{ id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: handleBulkDelete }]),
                     },
                 }}
             >

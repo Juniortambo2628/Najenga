@@ -27,6 +27,7 @@ import { rootBreadcrumbs } from '@/Config/navigation';
 import SharePanel from '@/Components/SharePanel';
 import useAction, { visit } from '@/Hooks/useAction';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
+import useVisibleActions from '@/Hooks/useVisibleActions';
 
 // Configure PDF worker (served locally, no CDN round-trip)
 pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
@@ -177,12 +178,14 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         error: 'Failed to save the title',
     });
 
+    const { canEdit, visible, canEditRecord } = useVisibleActions();
+
     const contextMenuOptions = [
-        { label: 'Preview', icon: 'fa-eye', action: () => setPreviewDoc(contextMenu?.target) },
-        { label: 'Download', icon: 'fa-download', action: () =>
+        { label: 'Preview', icon: 'fa-eye', readOnly: true, action: () => setPreviewDoc(contextMenu?.target) },
+        { label: 'Download', icon: 'fa-download', readOnly: true, action: () =>
             download(contextMenu?.target.file_path, contextMenu?.target.original_name || 'download')
         },
-        { label: 'Share', icon: 'fa-share-alt', action: () => shareProjectFor(contextMenu?.target) },
+        { label: 'Share', icon: 'fa-share-alt', readOnly: true, action: () => shareProjectFor(contextMenu?.target) },
         { label: 'Move to Folder', icon: 'fa-folder-open', action: () => openMoveModal(contextMenu?.target) },
         { label: 'Delete', icon: 'fa-trash', danger: true, action: () => deleteDocuments.run([...selectedItems]) },
     ];
@@ -222,19 +225,19 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                             { value: 'list', icon: 'fa-list', label: 'List View' },
                         ],
                     },
-                    actions: [
+                    actions: visible([
                         { id: 'upload', label: 'Upload', icon: 'fa-upload', href: route('documents.create'), variant: 'primary' },
                         { id: 'folder', label: 'New Folder', icon: 'fa-folder-plus', onClick: () => setIsNewFolderModalOpen(true) },
-                    ],
+                    ]),
                     selection: {
                         count: selectedCount,
                         total: filteredDocuments.length,
                         onSelectAll: () => selectAll(filteredDocuments.map(d => d.id)),
                         onDeselectAll: deselectAll,
-                        actions: [
-                            { id: 'download', label: 'Download Selected', icon: 'fa-download', onClick: downloadSelectedDocuments },
+                        actions: visible([
+                            { id: 'download', label: 'Download Selected', icon: 'fa-download', readOnly: true, onClick: downloadSelectedDocuments },
                             { id: 'delete', label: 'Delete Selected', icon: 'fa-trash', variant: 'danger', onClick: deleteSelectedDocuments },
-                        ],
+                        ]),
                     },
                 }}
             >
@@ -271,7 +274,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                         icon="fa-file-alt" 
                         title="No documents yet" 
                         message="Upload documents to keep them organized"
-                        action={{ label: 'Upload Document', onClick: () => router.get(route('documents.create')) }}
+                        action={canEdit ? { label: 'Upload Document', onClick: () => router.get(route('documents.create')) } : undefined}
                     />
                 )}
 
@@ -519,7 +522,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
             {/* Context Menu */}
             {contextMenu && (
                 <ContextMenu 
-                    options={contextMenuOptions} 
+                    options={visible(contextMenuOptions, canEditRecord(contextMenu.target))} 
                     position={{ x: contextMenu.x, y: contextMenu.y }} 
                     onClose={closeContextMenu} 
                 />
@@ -595,8 +598,9 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                         type="text" 
                                         value={previewDoc?.title || ''}
                                         onChange={(e) => setPreviewDoc(prev => ({...prev, title: e.target.value}))}
-                                        onBlur={() => updateTitle.run(previewDoc)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-[#8B0000]"
+                                        onBlur={() => canEditRecord(previewDoc) && updateTitle.run(previewDoc)}
+                                        readOnly={!canEditRecord(previewDoc)}
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-[#8B0000] read-only:opacity-70"
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
