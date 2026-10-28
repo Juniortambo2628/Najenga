@@ -1,58 +1,51 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import DashboardPage from '@/Components/DashboardPage';
-import StatusBadge from '@/Components/StatusBadge';
-import { rootBreadcrumbs } from '@/Config/navigation';
+import DetailPage, { DetailText } from '@/Components/DetailPage';
+import StatusBadge, { formatStatus } from '@/Components/StatusBadge';
+import formatDate, { shortDate, yearOf } from '@/Utils/formatDate';
 
-export default function Show({ timeline }) {
+const DAY = 24 * 60 * 60 * 1000;
+
+/** How long a milestone runs, in days (to today while it has no end). */
+export function milestoneDays(start, end, today = new Date()) {
+    if (!start) return null;
+    const days = Math.round((new Date(end || today) - new Date(start)) / DAY) + 1;
+    return days > 0 ? days : null;
+}
+
+/** One milestone: its dates and length as summary cards, the rest beneath. */
+export default function Show({ timeline, can = {} }) {
+    const days = milestoneDays(timeline.start_date, timeline.end_date);
+    const status = timeline.status ? formatStatus(timeline.status) : '—';
+
     return (
         <AuthenticatedLayout>
-            <Head title={timeline.title} />
-            <DashboardPage
-                className="max-w-4xl mx-auto"
-                hero={{
-                    title: timeline.title,
-                    subtitle: 'Milestone details',
-                    breadcrumbs: [
-                        ...rootBreadcrumbs(),
-                        { label: 'Timeline', href: route('timeline') },
-                        { label: timeline.title },
+            <DetailPage
+                title={timeline.title}
+                subtitle={timeline.project?.name || 'Milestone'}
+                parent={{ label: 'Timeline', href: route('timeline') }}
+                badges={timeline.status && <StatusBadge status={timeline.status} />}
+                summary={[
+                    { label: 'Status', value: status, icon: 'fa-flag' },
+                    { label: 'Starts', value: shortDate(timeline.start_date) || '—', icon: 'fa-play', hint: yearOf(timeline.start_date) || undefined },
+                    { label: 'Ends', value: shortDate(timeline.end_date) || 'Ongoing', icon: 'fa-flag-checkered', hint: yearOf(timeline.end_date) || undefined },
+                    { label: 'Length', value: days ? `${days} day${days === 1 ? '' : 's'}` : '—', icon: 'fa-hourglass-half', hint: timeline.end_date ? undefined : 'So far' },
+                ]}
+                details={{
+                    title: 'Milestone',
+                    icon: 'fa-timeline',
+                    rows: [
+                        { label: 'Project', value: timeline.project?.name },
+                        { label: 'Status', value: status },
+                        { label: 'Start date', value: formatDate(timeline.start_date) },
+                        { label: 'End date', value: formatDate(timeline.end_date) || 'Ongoing' },
                     ],
-                    actions: <Link
-                            href={route('timeline.edit', timeline.id)}
-                            className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
-                        >
-                            <i aria-hidden="true" className="fas fa-edit mr-2"></i>Edit
-                        </Link>,
+                    content: <DetailText title="Description">{timeline.description}</DetailText>,
                 }}
-            >
-                <div className="bg-black/50 border border-white/10 rounded-2xl p-6">
-                    <dl className="space-y-4 text-sm">
-                        <div className="flex justify-between">
-                            <dt className="text-gray-400">Project</dt>
-                            <dd className="text-gray-300">{timeline.project?.name ?? 'N/A'}</dd>
-                        </div>
-                        <div className="flex justify-between">
-                            <dt className="text-gray-400">Status</dt>
-                            <dd><StatusBadge status={timeline.status} /></dd>
-                        </div>
-                        <div className="flex justify-between">
-                            <dt className="text-gray-400">Start Date</dt>
-                            <dd className="text-gray-300">{timeline.start_date}</dd>
-                        </div>
-                        <div className="flex justify-between">
-                            <dt className="text-gray-400">End Date</dt>
-                            <dd className="text-gray-300">{timeline.end_date ?? 'Ongoing'}</dd>
-                        </div>
-                        {timeline.description && (
-                            <div>
-                                <dt className="text-gray-400 mb-1">Description</dt>
-                                <dd className="text-gray-300 whitespace-pre-wrap">{timeline.description}</dd>
-                            </div>
-                        )}
-                    </dl>
-                </div>
-            </DashboardPage>
+                actions={[
+                    can.update && { id: 'edit', label: 'Edit Milestone', icon: 'fa-pen', href: route('timeline.edit', timeline.id), variant: 'primary' },
+                    timeline.project_id && { id: 'project', label: 'Open Project', icon: 'fa-folder', href: route('projects.show', timeline.project_id) },
+                ].filter(Boolean)}
+            />
         </AuthenticatedLayout>
     );
 }

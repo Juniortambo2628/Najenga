@@ -94,6 +94,7 @@ class ProjectTimelineController extends Controller
 
         return Inertia::render('Timeline/Show', [
             'timeline' => $timeline->load('project:id,name'),
+            'can' => ['update' => auth()->user()->can('update', $timeline)],
         ]);
     }
 

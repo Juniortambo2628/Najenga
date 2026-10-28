@@ -1,211 +1,146 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, router } from '@inertiajs/react';
-import DashboardPage from '@/Components/DashboardPage';
-import { formatCurrency } from '@/Config/currencies';
-import { PAYMENT_LABELS } from '@/Config/expenses';
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
-import { rootBreadcrumbs } from '@/Config/navigation';
-import DetailRow from '@/Components/DetailRow';
+import DetailPage, { DetailText } from '@/Components/DetailPage';
+import FilePreview from '@/Components/FilePreview';
+import StatusBadge from '@/Components/StatusBadge';
+import { formatCurrency, formatCurrencyCompact } from '@/Config/currencies';
+import { PAYMENT_LABELS } from '@/Config/expenses';
 import useAction from '@/Hooks/useAction';
 import titleCase from '@/Utils/titleCase';
+import formatDate, { shortDate, yearOf } from '@/Utils/formatDate';
 
-function ReceiptSection({ expense, onUpdate }) {
-    const [previewUrl, setPreviewUrl] = useState(expense?.receipt_url || null);
+const RECEIPT_STATUS = { pending: 'To check', verified: 'Verified', auto_verified: 'Auto-verified', rejected: 'Rejected' };
 
-    const upload = useAction((file) => {
-        const formData = new FormData();
-        formData.append('receipt', file);
-        return axios.post(`/expenses/${expense.id}/receipt`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-    }, {
-        success: (res) => (res.data.success ? 'Receipt uploaded' : null),
-        error: 'Upload failed',
-        key: () => 'upload',
-        onSuccess: (res) => {
-            if (!res.data.success) return;
-            setPreviewUrl(res.data.receipt_url);
-            if (onUpdate) onUpdate();
-        },
+/** Drop or pick a receipt for an expense that has none. */
+function ReceiptDrop({ onFile, uploading }) {
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop: (files) => files[0] && onFile(files[0]),
+        accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.webp'], 'application/pdf': ['.pdf'] },
+        maxFiles: 1,
     });
-    const uploading = upload.pending;
-    const onDrop = (acceptedFiles) => {
-        if (acceptedFiles.length > 0) upload.run(acceptedFiles[0]);
-    };
 
+    return (
+        <div
+            {...getRootProps()}
+            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 text-center transition-colors fit:h-full ${isDragActive ? 'border-[#8B0000] bg-[#8B0000]/10' : 'border-white/20 hover:border-[#8B0000]/50 hover:bg-white/5'}`}
+        >
+            <input {...getInputProps()} aria-label="Receipt file" />
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/5">
+                <i aria-hidden="true" className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'} text-2xl text-white/40`} />
+            </span>
+            <p className="font-medium text-white">{uploading ? 'Uploading…' : isDragActive ? 'Drop the receipt here…' : 'Drag & drop a receipt, or click to choose one'}</p>
+            <p className="text-xs text-gray-400">JPG, PNG, WebP or PDF, up to 10MB</p>
+        </div>
+    );
+}
+
+/**
+ * One expense: its receipt fills the page (drop one in when it has none),
+ * the figures are summary cards, and the details sit in the side panel.
+ */
+export default function Show({ expense, can = {} }) {
+    const [receiptUrl, setReceiptUrl] = useState(expense.receipt_url || null);
+    const title = titleCase(expense.title);
+    const receipt = expense.receipt;
+    const reload = () => router.reload({ only: ['expense'] });
+
+    const upload = useAction(
+        (file) => {
+            const formData = new FormData();
+            formData.append('receipt', file);
+            return axios.post(`/expenses/${expense.id}/receipt`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        },
+        {
+            success: (res) => (res.data.success ? 'Receipt uploaded' : null),
+            error: 'Upload failed',
+            key: () => 'upload',
+            onSuccess: (res) => {
+                if (!res.data.success) return;
+                setReceiptUrl(res.data.receipt_url);
+                reload();
+            },
+        },
+    );
     const remove = useAction(() => axios.delete(`/expenses/${expense.id}/receipt`), {
         confirm: 'Remove this receipt?',
         success: 'Receipt removed',
         error: 'Failed to remove receipt',
         onSuccess: () => {
-            setPreviewUrl(null);
-            if (onUpdate) onUpdate();
+            setReceiptUrl(null);
+            reload();
         },
     });
-    const handleRemove = () => remove.run();
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.webp'], 'application/pdf': ['.pdf'] },
-        maxFiles: 1,
-    });
-
-    if (previewUrl) {
-        return (
-            <div className="space-y-4">
-                <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center min-h-[300px]">
-                    {previewUrl.endsWith('.pdf') ? (
-                        <iframe src={previewUrl} className="w-full h-[400px]" title="Receipt" />
-                    ) : (
-                        <img loading="lazy" decoding="async"  src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
-                    )}
-                </div>
-                <div className="flex justify-end gap-2">
-                    <button onClick={handleRemove} className="px-4 py-2 text-xs text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition">
-                        <i aria-hidden="true" className="fas fa-trash mr-1"></i>Remove
-                    </button>
-                    <label className="px-4 py-2 text-xs text-white bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition cursor-pointer">
-                        <i aria-hidden="true" className="fas fa-exchange-alt mr-1"></i>Replace
-                        <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { if (e.target.files?.[0]) onDrop([e.target.files[0]]); e.target.value = ''; }} />
-                    </label>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors duration-300 ${isDragActive ? 'border-[#8B0000] bg-[#8B0000]/10' : 'border-white/20 hover:border-[#8B0000]/50 hover:bg-white/5'}`}
-        >
-            <input {...getInputProps()} />
-            <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center">
-                    <i aria-hidden="true" className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-cloud-upload-alt'} text-2xl text-white/40`}></i>
-                </div>
-                <p className="text-white font-medium">
-                    {uploading ? 'Uploading...' : isDragActive ? 'Drop receipt here...' : 'Drag & drop a receipt, or click to select'}
-                </p>
-                <p className="text-gray-400 text-xs">JPG, PNG, WebP, or PDF — max 10MB</p>
-            </div>
-        </div>
-    );
-}
-
-export default function Show({ expense }) {
-    const [receiptUrl, setReceiptUrl] = useState(expense?.receipt_url || null);
-
-    const statusColors = {
-        paid: 'bg-green-500/10 text-green-400 border-green-500/20',
-        pending: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-        draft: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-        rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
-    };
+    const date = [formatDate(expense.expense_date), expense.time].filter(Boolean).join(' · ');
 
     return (
         <AuthenticatedLayout>
-            <Head title={titleCase(expense.title)} />
-
-            <DashboardPage
-                className="max-w-4xl mx-auto"
-                hero={{
-                    title: titleCase(expense.title),
-                    subtitle: expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details',
-                    breadcrumbs: [
-                        ...rootBreadcrumbs(),
-                        { label: 'Expenses', href: route('expenses') },
-                        { label: titleCase(expense.title) },
-                    ],
-                    actions: <div className="flex gap-3">
-                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize border ${statusColors[expense.status] || statusColors.paid}`}>
-                                {expense.status}
-                            </span>
-                            <Link
-                                href={route('expenses.edit', expense.id)}
-                                className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                            >
-                                <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
-                            </Link>
-                        </div>,
+            <DetailPage
+                title={title}
+                subtitle={expense.project?.name || 'Expense'}
+                parent={{ label: 'Expenses', href: route('expenses') }}
+                badges={expense.status && <StatusBadge status={expense.status} />}
+                summary={[
+                    { label: 'Amount', value: formatCurrencyCompact(expense.amount, expense.currency), icon: 'fa-coins', hint: formatCurrency(expense.amount, expense.currency) },
+                    { label: 'Paid on', value: shortDate(expense.expense_date) || '—', icon: 'fa-calendar-day', hint: [yearOf(expense.expense_date), expense.time].filter(Boolean).join(' · ') || undefined },
+                    { label: 'Paid by', value: expense.payment_method ? PAYMENT_LABELS[expense.payment_method] || titleCase(expense.payment_method) : '—', icon: 'fa-wallet', hint: expense.reference_number || undefined },
+                    { label: 'Receipt', value: receiptUrl ? (receipt ? RECEIPT_STATUS[receipt.verification_status] || 'Attached' : 'Attached') : 'None', icon: 'fa-file-invoice', hint: receiptUrl ? undefined : 'Add one below' },
+                ]}
+                main={{
+                    title: 'Receipt',
+                    icon: 'fa-file-invoice',
+                    actions: can.update && receiptUrl && (
+                        <div className="flex shrink-0 gap-2">
+                            <label className="cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white transition hover:bg-white/10">
+                                <i aria-hidden="true" className="fas fa-exchange-alt mr-1" />
+                                Replace
+                                <input
+                                    type="file"
+                                    accept="image/*,.pdf"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        if (e.target.files?.[0]) upload.run(e.target.files[0]);
+                                        e.target.value = '';
+                                    }}
+                                />
+                            </label>
+                            <button type="button" onClick={() => remove.run()} className="rounded-lg border border-red-500/20 px-3 py-1.5 text-xs text-red-400 transition hover:bg-red-500/10">
+                                <i aria-hidden="true" className="fas fa-trash mr-1" />
+                                Remove
+                            </button>
+                        </div>
+                    ),
                 }}
+                details={{
+                    icon: 'fa-receipt',
+                    subtitle: date || undefined,
+                    rows: [
+                        { label: 'Paid to', value: titleCase(expense.recipient) },
+                        { label: 'Category', value: expense.category },
+                        { label: 'Reference', value: expense.reference_number, mono: true },
+                        { label: 'Purpose', value: expense.purpose },
+                        { label: 'Project', value: expense.project?.name },
+                        { label: 'Added', value: formatDate(expense.created_at) },
+                        { label: 'Last changed', value: formatDate(expense.updated_at) },
+                    ],
+                    content: <DetailText title="Description">{expense.description}</DetailText>,
+                }}
+                actions={[
+                    can.update && { id: 'edit', label: 'Edit Expense', icon: 'fa-pen', href: route('expenses.edit', expense.id), variant: 'primary' },
+                    receipt && { id: 'receipt', label: 'Check Receipt', icon: 'fa-file-invoice', href: route('receipts.show', receipt.id) },
+                    receiptUrl && { id: 'download', label: 'Download Receipt', icon: 'fa-download', href: receiptUrl, download: true },
+                    expense.project_id && { id: 'project', label: 'Open Project', icon: 'fa-folder', href: route('projects.show', expense.project_id) },
+                ].filter(Boolean)}
             >
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Details</h3>
-                            <div className="grid grid-cols-2 gap-5">
-                                <DetailRow label="Amount" value={formatCurrency(expense.amount, expense.currency)} mono />
-                                <DetailRow label="Category" value={expense.category} />
-                                <DetailRow label="Payment Method" value={expense.payment_method ? (PAYMENT_LABELS[expense.payment_method] || expense.payment_method) : null} />
-                                <DetailRow label="Recipient" value={titleCase(expense.recipient)} />
-                                <DetailRow label="Date" value={expense.expense_date} mono />
-                                <DetailRow label="Time" value={expense.time} mono />
-                                <DetailRow label="Reference" value={expense.reference_number} mono />
-                                <DetailRow label="Purpose" value={expense.purpose} />
-                            </div>
-                            {expense.description && (
-                                <div className="mt-5 pt-5 border-t border-white/10">
-                                    <span className="text-[11px] font-bold text-gray-400 capitalize">Description</span>
-                                    <p className="mt-2 text-sm text-gray-300 whitespace-pre-wrap">{expense.description}</p>
-                                </div>
-                            )}
-                        </section>
-
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Receipt</h3>
-                            <ReceiptSection expense={expense} onUpdate={() => router.reload({ only: ['expense'] })} />
-                        </section>
-                    </div>
-
-                    <div className="space-y-8">
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Summary</h3>
-                            <dl className="space-y-4 text-sm">
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Created</dt>
-                                    <dd className="text-gray-300">{expense.created_at ? new Date(expense.created_at).toLocaleDateString() : '—'}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Updated</dt>
-                                    <dd className="text-gray-300">{expense.updated_at ? new Date(expense.updated_at).toLocaleDateString() : '—'}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">ID</dt>
-                                    <dd className="text-gray-300 font-mono text-xs">#{expense.id}</dd>
-                                </div>
-                            </dl>
-                        </section>
-
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
-                            <div className="space-y-3">
-                                <Link
-                                    href={route('expenses.edit', expense.id)}
-                                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                >
-                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Expense
-                                </Link>
-                                <Link
-                                    href={route('expenses')}
-                                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                >
-                                    <i aria-hidden="true" className="fas fa-list text-[#DC143C]"></i> Back to Expenses
-                                </Link>
-                                {expense.project_id && (
-                                    <Link
-                                        href={route('projects.show', expense.project_id)}
-                                        className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                    >
-                                        <i aria-hidden="true" className="fas fa-folder text-[#DC143C]"></i> View Project
-                                    </Link>
-                                )}
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </DashboardPage>
+                {receiptUrl || !can.update ? (
+                    <FilePreview url={receiptUrl} name={`Receipt for ${title}`} empty={{ icon: 'fa-file-invoice', title: 'No receipt', message: 'No receipt is attached to this expense.' }} />
+                ) : (
+                    <ReceiptDrop onFile={(file) => upload.run(file)} uploading={upload.pending} />
+                )}
+            </DetailPage>
         </AuthenticatedLayout>
     );
 }

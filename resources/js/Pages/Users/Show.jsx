@@ -1,81 +1,44 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import DashboardPage from '@/Components/DashboardPage';
-import StatusBadge from '@/Components/StatusBadge';
-import { rootBreadcrumbs } from '@/Config/navigation';
+import DetailPage from '@/Components/DetailPage';
+import StatusBadge, { formatStatus } from '@/Components/StatusBadge';
+import formatDate from '@/Utils/formatDate';
 
-export default function Show({ user }) {
+/** One person: what they've added as summary cards, their profile beneath. */
+export default function Show({ user, can = {} }) {
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.name || user.email;
+
     return (
         <AuthenticatedLayout>
-            <Head title={`${user.first_name} ${user.last_name}`} />
-            <DashboardPage
-                className="max-w-4xl mx-auto"
-                hero={{
-                    title: `${user.first_name} ${user.last_name}`,
-                    subtitle: 'User profile',
-                    breadcrumbs: [
-                        ...rootBreadcrumbs(),
-                        { label: 'Users', href: route('users.index') },
-                        { label: `${user.first_name} ${user.last_name}` },
+            <DetailPage
+                title={name}
+                subtitle={user.email}
+                parent={{ label: 'Users', href: route('users.index') }}
+                badges={
+                    <div className="flex gap-2">
+                        {user.role && <StatusBadge status={user.role} />}
+                        {user.status && <StatusBadge status={user.status} />}
+                    </div>
+                }
+                summary={[
+                    { label: 'Projects', value: user.projects_count ?? 0, icon: 'fa-folder' },
+                    { label: 'Expenses', value: user.expenses_count ?? 0, icon: 'fa-receipt' },
+                    { label: 'Photos', value: user.photos_count ?? 0, icon: 'fa-image' },
+                    { label: 'Documents', value: user.documents_count ?? 0, icon: 'fa-file-lines' },
+                ]}
+                details={{
+                    title: 'Profile',
+                    icon: 'fa-id-card',
+                    rows: [
+                        { label: 'Email', value: user.email },
+                        { label: 'Username', value: user.username },
+                        { label: 'Phone', value: user.phone, mono: true },
+                        { label: 'Role', value: user.role && formatStatus(user.role) },
+                        { label: 'Status', value: user.status && formatStatus(user.status) },
+                        { label: 'Joined', value: formatDate(user.created_at) },
                     ],
-                    actions: <Link
-                            href={route('users.edit', user.id)}
-                            className="px-4 py-2 bg-white/5 border border-white/10 text-white rounded-xl hover:bg-white/10 transition"
-                        >
-                            <i aria-hidden="true" className="fas fa-edit mr-2"></i>Edit
-                        </Link>,
                 }}
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-black/50 border border-white/10 rounded-2xl p-6">
-                        <h2 className="text-lg font-semibold text-white mb-4">Profile Information</h2>
-                        <dl className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                                <dt className="text-gray-400">Email</dt>
-                                <dd className="text-gray-300">{user.email}</dd>
-                            </div>
-                            <div className="flex justify-between">
-                                <dt className="text-gray-400">Username</dt>
-                                <dd className="text-gray-300">{user.username}</dd>
-                            </div>
-                            <div className="flex justify-between">
-                                <dt className="text-gray-400">Phone</dt>
-                                <dd className="text-gray-300">{user.phone ?? 'N/A'}</dd>
-                            </div>
-                            <div className="flex justify-between">
-                                <dt className="text-gray-400">Role</dt>
-                                <dd><StatusBadge status={user.role} /></dd>
-                            </div>
-                            <div className="flex justify-between">
-                                <dt className="text-gray-400">Status</dt>
-                                <dd><StatusBadge status={user.status} /></dd>
-                            </div>
-                        </dl>
-                    </div>
-
-                    <div className="bg-black/50 border border-white/10 rounded-2xl p-6">
-                        <h2 className="text-lg font-semibold text-white mb-4">Activity Summary</h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="text-center p-4 bg-white/5 rounded-xl">
-                                <div className="text-2xl font-bold text-white">{user.projects_count ?? 0}</div>
-                                <div className="text-sm text-gray-400">Projects</div>
-                            </div>
-                            <div className="text-center p-4 bg-white/5 rounded-xl">
-                                <div className="text-2xl font-bold text-white">{user.expenses_count ?? 0}</div>
-                                <div className="text-sm text-gray-400">Expenses</div>
-                            </div>
-                            <div className="text-center p-4 bg-white/5 rounded-xl">
-                                <div className="text-2xl font-bold text-white">{user.photos_count ?? 0}</div>
-                                <div className="text-sm text-gray-400">Photos</div>
-                            </div>
-                            <div className="text-center p-4 bg-white/5 rounded-xl">
-                                <div className="text-2xl font-bold text-white">{user.documents_count ?? 0}</div>
-                                <div className="text-sm text-gray-400">Documents</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </DashboardPage>
+                actions={[can.update && { id: 'edit', label: 'Edit User', icon: 'fa-pen', href: route('users.edit', user.id), variant: 'primary' }].filter(Boolean)}
+            />
         </AuthenticatedLayout>
     );
 }

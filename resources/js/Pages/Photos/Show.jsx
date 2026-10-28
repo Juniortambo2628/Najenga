@@ -1,114 +1,46 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import DashboardPage from '@/Components/DashboardPage';
-import { rootBreadcrumbs } from '@/Config/navigation';
+import DetailPage, { DetailText } from '@/Components/DetailPage';
+import FilePreview from '@/Components/FilePreview';
+import formatDate from '@/Utils/formatDate';
 
+/** One photo: the picture fills the page, its details sit in the side panel. */
 export default function Show({ photo, can = {} }) {
     return (
         <AuthenticatedLayout>
-            <Head title={photo.title} />
-
-            <DashboardPage
-                className="max-w-4xl mx-auto"
-                hero={{
-                    title: photo.title,
-                    subtitle: photo.project?.name || 'Photo details',
-                    breadcrumbs: [
-                        ...rootBreadcrumbs(),
-                        { label: 'Photos', href: route('photos') },
-                        { label: photo.title },
+            <DetailPage
+                title={photo.title}
+                subtitle={photo.project?.name || 'Photo'}
+                parent={{ label: 'Photos', href: route('photos') }}
+                badges={
+                    photo.is_featured && (
+                        <span className="rounded-full bg-yellow-500/10 px-2.5 py-0.5 text-xs font-medium text-yellow-400">
+                            <i aria-hidden="true" className="fas fa-star mr-1" />
+                            Featured
+                        </span>
+                    )
+                }
+                main={{ title: 'Photo', icon: 'fa-image' }}
+                details={{
+                    icon: 'fa-image',
+                    subtitle: formatDate(photo.photo_date) || undefined,
+                    rows: [
+                        { label: 'Project', value: photo.project?.name },
+                        { label: 'Category', value: photo.category },
+                        { label: 'Location', value: photo.location },
+                        { label: 'Taken', value: formatDate(photo.photo_date) },
+                        { label: 'Added', value: formatDate(photo.created_at) },
                     ],
-                    actions: <div className="flex gap-3">
-                            {photo.is_featured && (
-                                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                                    <i aria-hidden="true" className="fas fa-star mr-1"></i>Featured
-                                </span>
-                            )}
-                            {/* Viewers of the project see the photo, not its Edit. */}
-                            {can.update && (
-                                <Link
-                                    href={route('photos.edit', photo.id)}
-                                    className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                                >
-                                    <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
-                                </Link>
-                            )}
-                        </div>,
+                    content: <DetailText title="Description">{photo.description}</DetailText>,
                 }}
+                actions={[
+                    // Viewers of the project see the photo, not its Edit.
+                    can.update && { id: 'edit', label: 'Edit Photo', icon: 'fa-pen', href: route('photos.edit', photo.id), variant: 'primary' },
+                    photo.photo_url && { id: 'download', label: 'Download', icon: 'fa-download', href: photo.photo_url, download: true },
+                    photo.project_id && { id: 'project', label: 'Open Project', icon: 'fa-folder', href: route('projects.show', photo.project_id) },
+                ].filter(Boolean)}
             >
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Photo</h3>
-                            {photo.photo_url ? (
-                                <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center">
-                                    <img loading="lazy" decoding="async" 
-                                        src={photo.preview_url || photo.photo_url}
-                                        alt={photo.title}
-                                        className="max-w-full max-h-[600px] object-contain"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
-                                    <i aria-hidden="true" className="fas fa-image text-3xl text-gray-400"></i>
-                                    <p className="text-sm">No image available</p>
-                                </div>
-                            )}
-                        </section>
-
-                        {photo.description && (
-                            <section className="panel p-6">
-                                <h3 className="text-lg font-bold text-white mb-4">Description</h3>
-                                <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{photo.description}</p>
-                            </section>
-                        )}
-                    </div>
-
-                    <div className="space-y-8">
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Details</h3>
-                            <dl className="space-y-4 text-sm">
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Category</dt>
-                                    <dd className="text-gray-300">{photo.category || '—'}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Location</dt>
-                                    <dd className="text-gray-300">{photo.location || '—'}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Date</dt>
-                                    <dd className="text-gray-300 font-mono">{photo.photo_date || '—'}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Created</dt>
-                                    <dd className="text-gray-300">{photo.created_at ? new Date(photo.created_at).toLocaleDateString() : '—'}</dd>
-                                </div>
-                            </dl>
-                        </section>
-
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
-                            <div className="space-y-3">
-                                {can.update && (
-                                    <Link
-                                        href={route('photos.edit', photo.id)}
-                                        className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                    >
-                                        <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Photo
-                                    </Link>
-                                )}
-                                <Link
-                                    href={route('photos')}
-                                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                >
-                                    <i aria-hidden="true" className="fas fa-list text-[#DC143C]"></i> Back to Photos
-                                </Link>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </DashboardPage>
+                <FilePreview url={photo.preview_url || photo.photo_url} mime="image/jpeg" name={photo.title} empty={{ icon: 'fa-image', title: 'No image', message: "This photo's file is missing." }} />
+            </DetailPage>
         </AuthenticatedLayout>
     );
 }
