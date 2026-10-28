@@ -20,6 +20,8 @@ export default {
             },
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                // Large, light headlines on the public pages (as Naoa's).
+                display: ['Manrope', 'Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 // The dashboard's near-black surfaces, darkest to lightest:

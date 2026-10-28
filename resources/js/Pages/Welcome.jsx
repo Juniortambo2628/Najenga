@@ -1,243 +1,356 @@
-import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
-import HeroSection from '@/Components/Landing/HeroSection';
-import ScrollReveal from '@/Components/Landing/ScrollReveal';
-import GlassButton from '@/Components/Landing/GlassButton';
+import { Head } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import MarketingNav from '@/Components/Landing/MarketingNav';
+import MarketingFooter from '@/Components/Landing/MarketingFooter';
+import SectionNav, { SECTION_OFFSET } from '@/Components/Landing/SectionNav';
+import FeatureExplorer from '@/Components/Landing/FeatureExplorer';
+import FaqSection from '@/Components/Landing/FaqSection';
+import { Container, Eyebrow, ImageCard, Photo, PillLink, SectionHeading } from '@/Components/Landing/ui';
 
-const FEATURES = [
-    { icon: 'fa-receipt', title: 'Smart receipts', subtitle: 'AI-powered OCR', description: 'Turn receipts into organized expense records with less manual entry.', image: '/Najenga-backgrounds/pexels-artbovich-7031408.webp', details: ['Capture receipt information', 'Review extracted expense details', 'Keep expenses connected to a project'] },
-    { icon: 'fa-camera', title: 'Progress photos', subtitle: 'Visual project records', description: 'Keep site photos, annotations, and project updates together.', image: '/Najenga-backgrounds/pexels-clement-proust-363898785-31763541.webp', details: ['Organize photos by project', 'Annotate important details', 'Follow visual updates in the timeline'] },
-    { icon: 'fa-chart-line', title: 'Project analytics', subtitle: 'Clear reporting', description: 'Understand spending and project progress at a glance.', image: '/Najenga-backgrounds/pexels-d-goug-211350543-38210397.webp', details: ['Review project activity', 'See expenses in context', 'Make progress easier to communicate'] },
-    { icon: 'fa-users', title: 'Team collaboration', subtitle: 'Shared workspace', description: 'Keep your team and clients aligned around the same project.', image: '/Najenga-backgrounds/pexels-kelly-28964416.webp', details: ['Keep project conversations together', 'Share updates with the right people', 'Give teams a common project view'] },
-    { icon: 'fa-file-lines', title: 'Project documents', subtitle: 'Organized files', description: 'Find the plans, records, and files each project needs.', image: '/Najenga-backgrounds/pexels-ninobur-16803023.webp', details: ['Keep documents with their project', 'Find important files in one place', 'Pair records with project updates'] },
-    { icon: 'fa-mobile-screen', title: 'Work anywhere', subtitle: 'Mobile ready', description: 'Check project information from site or office.', image: '/Najenga-backgrounds/pexels-vip-foto-8491089.webp', details: ['Open project information on site', 'Add updates as work happens', 'Keep key records close at hand'] },
+const BG = '/Najenga-backgrounds';
+
+/** The numbers under the hero. */
+const FACTS = [
+    ['5', 'kinds of record in one place, from receipts to milestones'],
+    ['4', 'roles, so everyone gets the right say'],
+    ['8', 'currencies, the Kenyan shilling first'],
+    ['1', 'WhatsApp number to send receipts and photos to'],
 ];
 
-const BENEFITS = [
-    { icon: 'fa-clock', title: 'Spend less time on admin', description: 'Bring receipts, project records, and updates into one workflow.' },
-    { icon: 'fa-scale-balanced', title: 'Keep budgets visible', description: 'Record expenses as work happens and keep project costs in view.' },
-    { icon: 'fa-eye', title: 'Make progress easy to see', description: 'Use photos and timelines to share a clear view of work on site.' },
-    { icon: 'fa-lock', title: 'Keep project work together', description: 'Give your team one place for the information projects rely on.' },
+/** The bar of sections under the hero. */
+const SECTIONS = [
+    { id: 'journey', label: 'How it works' },
+    { id: 'inside', label: 'Inside Najenga' },
+    { id: 'who', label: 'Who it’s for' },
+    { id: 'together', label: 'Build together' },
+    { id: 'safe', label: 'Kept safe' },
+    { id: 'faq', label: 'Questions' },
 ];
 
-const WORKFLOW = [
-    { number: '01', icon: 'fa-folder-plus', title: 'Set up a project', description: 'Give the work a home for its people, schedule, and records.' },
-    { number: '02', icon: 'fa-camera', title: 'Keep the site in view', description: 'Add photos, notes, and updates as the work moves forward.' },
-    { number: '03', icon: 'fa-chart-pie', title: 'Review the details', description: 'Bring expenses and progress together when it is time to report.' },
+/** A build, start to finish, each step pointing at where Najenga helps. */
+const JOURNEY = [
+    { title: 'Set up the project', text: 'Its budget, location and dates, and the people involved: the owner, the contractor, the site manager, the family.', link: 'Roles & sharing', href: '#together' },
+    { title: 'Pay for the work', text: 'Log every payment as it happens: M-Pesa, bank or cash. Forward a receipt on WhatsApp and Najenga reads it for you.', link: 'Money', href: '#inside' },
+    { title: 'Watch it go up', text: 'Photos dated from the camera, notes pinned on them, and milestones on one timeline — even when you can’t be on site.', link: 'Site', href: '#inside' },
+    { title: 'Keep the paperwork', text: 'Plans, permits, contracts and quotes in folders, with the project they belong to. Search finds any of them.', link: 'Files', href: '#inside' },
+    { title: 'Hand over with confidence', text: 'Every cost, photo and change on record, with who made it and when. Nothing to reconstruct at the end.', link: 'Insight', href: '#inside' },
+];
+
+/** The "Inside Najenga" explorer. */
+const FEATURE_GROUPS = [
+    {
+        id: 'money',
+        eyebrow: 'Money',
+        title: 'Every shilling, accounted for',
+        summary: 'Record costs as they happen — in a form, in a spreadsheet view, or by sending the receipt on WhatsApp. Najenga reads the receipt, you confirm it, and each cost lands in its project and category.',
+        points: ['Receipts read for you, then checked by a person', 'M-Pesa codes, bank references and cash in one list', 'Totals by category, and receipts still missing'],
+        stats: [['8', 'currencies'], ['3', 'ways to record a cost'], ['1', 'list of every payment']],
+        image: `${BG}/pexels-curtis-adams-1694007-7027840.webp`,
+        screen: '/marketing/expenses.webp',
+    },
+    {
+        id: 'site',
+        eyebrow: 'Site',
+        title: 'The site, week by week',
+        summary: 'Upload photos from site or send them on WhatsApp. Najenga dates each one from the camera, flags the ones it had to guess, and keeps them with their project.',
+        points: ['Dates read from the photo itself', 'Pin notes and drawings on a photo', 'Milestones and progress on one timeline'],
+        stats: [['Day', 'to year timeline views'], ['Pins', 'drawn on photos'], ['Zip', 'download a batch']],
+        image: `${BG}/pexels-d-goug-211350543-38210397.webp`,
+    },
+    {
+        id: 'files',
+        eyebrow: 'Files',
+        title: 'Plans and paperwork, where you left them',
+        summary: 'Drawings, permits, contracts and quotes in folders for each project. Preview them in the browser, talk about them in comments, and find any of them from the search bar.',
+        points: ['Folders for each project', 'PDFs and images open in the browser', 'Comments beside every document'],
+        stats: [['Folders', 'inside folders'], ['PDF', 'preview in place'], ['⌘K', 'search everything']],
+        image: `${BG}/pexels-expect-best-79873-323776.webp`,
+    },
+    {
+        id: 'team',
+        eyebrow: 'Team',
+        title: 'The right say for everyone',
+        summary: 'Invite people by email and choose what they can do: run the project, change records, or only look. See who else is working on the same page, and undo a mistake from the version history.',
+        points: ['Owner, manager, editor and viewer roles', 'Who’s online, and what changed since you looked', 'Every change kept, and restorable'],
+        stats: [['4', 'roles'], ['7', 'days to accept an invite'], ['1', 'click to restore']],
+        image: `${BG}/pexels-40037226-7667625.webp`,
+    },
+    {
+        id: 'insight',
+        eyebrow: 'Insight',
+        title: 'Know where the project stands',
+        summary: 'Each project’s overview shows its budget used, latest work and team. Analytics and activity logs show the rest, and a weekly email sums up what came in on WhatsApp.',
+        points: ['Budget used, at a glance', 'Spending by category and over time', 'A weekly summary in your inbox'],
+        stats: [['%', 'of budget used'], ['Weekly', 'WhatsApp summary'], ['CSV', 'export any list']],
+        image: `${BG}/pexels-ninobur-16787444.webp`,
+        screen: '/marketing/overview.webp',
+    },
+];
+
+const SAFETY = [
+    { icon: 'fa-fingerprint', title: 'Passkeys', text: 'Sign in with your fingerprint, face or a security key.' },
+    { icon: 'fa-shield-halved', title: 'Two-factor sign-in', text: 'A code from your authenticator app as well as your password.' },
+    { icon: 'fa-envelope-open-text', title: 'Emailed codes', text: 'Forgot your password on site? A one-time code works instead.' },
+    { icon: 'fa-bell', title: 'New-device alerts', text: 'An email whenever your account is opened somewhere new.' },
+    { icon: 'fa-user-lock', title: 'Only who you invite', text: 'Projects are private. Each person sees only the projects they’re on.' },
+    { icon: 'fa-clock-rotate-left', title: 'Nothing lost', text: 'Deleted by mistake? Restore it, with the history of every change.' },
 ];
 
 const FAQS = [
-    { question: 'What is Najenga?', answer: 'Najenga is a construction project management workspace for keeping project activity, records, and teams organized.' },
-    { question: 'What can I keep with a project?', answer: 'Projects can bring together timelines, expenses, receipts, photos, documents, and updates.' },
-    { question: 'Can I record work from a phone?', answer: 'The interface is designed to work across screen sizes, so you can access project information from site or office.' },
-    { question: 'How do I get started?', answer: 'Create an account, set up your first project, and invite the people who need to follow the work.' },
+    { q: 'What is Najenga?', a: 'A workspace for construction projects: what was spent and on what, how the site is coming along, the paperwork, and who is doing what. “Najenga” is Kiswahili for “I’m building”.' },
+    { q: 'Who is it for?', a: 'Anyone with a build to keep track of: people building their own home (often from far away), contractors and site managers running several sites, and the people who pay for, check and approve the work.' },
+    { q: 'Can I send receipts and photos on WhatsApp?', a: 'Yes. Link your WhatsApp number in Settings, then send receipts and site photos to Najenga’s number. Receipts are read for you and wait as drafts for you to check; photos go to the project.' },
+    { q: 'Who can see my project?', a: 'Only the people you invite. Each gets a role — owner, manager, editor or viewer — that decides whether they can change things or only look. Everyone else sees nothing.' },
+    { q: 'I deleted something by mistake. Can I get it back?', a: 'Yes. Every change is kept in the version history, with who made it and when. Open the history, find the version you want and restore it.' },
+    { q: 'I run several sites. Does Najenga handle that?', a: 'Yes. Pick a project in the switcher at the top and every page shows just that one; pick “All projects” to see them side by side.' },
+    { q: 'Does it work on my phone?', a: 'Yes. Najenga works in any modern browser, on a phone on site as well as on a computer in the office. Nothing to install.' },
+    { q: 'How do I start?', a: 'Create an account, set up your first project with its budget, and invite the people who should follow it. It takes a few minutes.' },
 ];
 
-function SectionHeading({ eyebrow, title, description, className = '' }) {
+/** "About Najenga" panel overlapping the bottom of the hero. */
+function HeroPanel() {
     return (
-        <div className={`mb-10 flex flex-col gap-4 md:mb-12 md:flex-row md:items-end md:justify-between ${className}`}>
-            <div className="max-w-2xl">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-rose-300">{eyebrow}</p>
-                <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">{title}</h2>
+        <div className="grid gap-4 rounded-[2rem] bg-white/85 p-4 shadow-[0_40px_90px_-40px_rgba(26,21,20,0.6)] backdrop-blur-xl sm:p-5 lg:grid-cols-4">
+            <div className="flex flex-col justify-between rounded-3xl bg-gradient-to-br from-white to-[#F4F1EE] p-6 sm:p-8 lg:col-span-2">
+                <Eyebrow>About Najenga</Eyebrow>
+                <h2 className="mt-6 font-display text-4xl font-light leading-[1.02] tracking-tight text-[#1A1514] sm:text-5xl">
+                    One build,
+                    <br />
+                    every detail.
+                </h2>
+                <p className="mt-6 max-w-md text-sm leading-relaxed text-[#5E5450]">
+                    “Najenga” is Kiswahili for “I’m building”. From the first bag of cement to the keys in your hand, Najenga keeps the money, the site, the paperwork and the people in one calm place.
+                </p>
             </div>
-            {description && <p className="max-w-md text-sm leading-7 text-white/55 md:text-base">{description}</p>}
+            {[
+                { href: '#who', icon: 'fa-house', title: 'For homeowners', text: 'Follow your build from anywhere, and know where every shilling went.' },
+                { href: '#who', icon: 'fa-helmet-safety', title: 'For contractors', text: 'Every site, crew and client under one sign-in.' },
+            ].map((card) => (
+                <a key={card.title} href={card.href} className="group flex min-h-[14rem] flex-col justify-between rounded-3xl border border-[#EFE8E2] bg-white p-6 transition-shadow hover:shadow-[0_20px_50px_-30px_rgba(26,21,20,0.5)]">
+                    <div className="flex items-start justify-between">
+                        <h3 className="font-display text-2xl font-normal leading-tight text-[#1A1514]">{card.title}</h3>
+                        <i aria-hidden="true" className="fas fa-arrow-up-right-from-square text-sm text-[#B3122E] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    </div>
+                    <div>
+                        <i aria-hidden="true" className={`fas ${card.icon} text-[#D4A7A0]`} />
+                        <p className="mt-3 text-sm leading-relaxed text-[#5E5450]">{card.text}</p>
+                    </div>
+                </a>
+            ))}
+            <ImageCard
+                image={`${BG}/pexels-kelly-28964416.webp`}
+                title="Every receipt, read for you"
+                text="Send it on WhatsApp; check what Najenga read; it’s filed."
+                href="#inside"
+                className="min-h-[18rem] lg:col-span-3"
+            />
+            <ImageCard image={`${BG}/pexels-clement-proust-363898785-31763541.webp`} title="The site, week by week" text="Photos dated from the camera." href="#inside" className="min-h-[18rem]" />
         </div>
     );
 }
 
-function FeatureCard({ feature, index, active, onClick }) {
+/** The full-bleed photo hero with the About panel overlapping its bottom edge. */
+function Hero({ auth }) {
+    const signedIn = !!auth?.user;
     return (
-        <button type="button" onClick={onClick} aria-pressed={active} className={`group relative isolate flex min-h-[22rem] w-full flex-col justify-between overflow-hidden rounded-3xl border text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 ${active ? 'border-rose-200/50' : 'border-white/10 hover:border-white/25'}`}>
-            <img src={feature.image} alt="" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-            <div className={`absolute inset-0 -z-10 transition-colors duration-300 ${active ? 'bg-gradient-to-t from-black via-black/40 to-black/5' : 'bg-gradient-to-t from-black/95 via-black/55 to-black/15'}`} />
-            <div className="flex w-full items-center justify-between p-5 sm:p-7">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/30 text-rose-200 backdrop-blur-md"><i aria-hidden="true" className={`fas ${feature.icon}`} /></span>
-                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/20 text-white transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:bg-white group-hover:text-black"><i aria-hidden="true" className="fas fa-arrow-up-right-from-square text-xs" /></span>
+        <section className="relative">
+            <div className="relative isolate flex min-h-[100svh] flex-col justify-center overflow-hidden pb-56 pt-32 text-white sm:pb-64">
+                <Photo src={`${BG}/pexels-vip-foto-8491089.webp`} position="center 40%" eager className="-z-20" />
+                <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#140F0E]/75 via-[#140F0E]/45 to-[#140F0E]/70" />
+                <Container>
+                    <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mx-auto max-w-5xl text-center">
+                        <Eyebrow light>Construction project management</Eyebrow>
+                        <h1 className="mt-5 font-display text-[2.75rem] font-extralight leading-[1.02] tracking-tight text-white sm:text-7xl lg:text-[6.25rem]">
+                            <span className="block">Build it right.</span>
+                            <span className="block">
+                                Keep every <span className="font-light text-rose-200">shilling</span> in sight.
+                            </span>
+                        </h1>
+                        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg">
+                            What was spent and on what, how the site is coming along, the plans and permits, and who is doing what — for every project, on your phone or in the office.
+                        </p>
+                        <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+                            <PillLink href={signedIn ? route('dashboard') : route('register')} variant="light" size="lg">
+                                {signedIn ? 'Open your dashboard' : 'Start your first project'}
+                            </PillLink>
+                            <PillLink href="#inside" variant="glass" size="lg" arrow>
+                                See what’s inside
+                            </PillLink>
+                        </div>
+                    </motion.div>
+                </Container>
             </div>
-            <div className="w-full p-5 pt-12 sm:p-7 sm:pt-16">
-                <p className="mb-2 text-xs font-medium uppercase tracking-[0.16em] text-white/65">{feature.subtitle}</p>
-                <h3 className="mb-2 text-2xl font-semibold text-white sm:text-3xl">{feature.title}</h3>
-                <p className="max-w-md text-sm leading-6 text-white/70">{feature.description}</p>
-                <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-white/75">Explore feature <i aria-hidden="true" className="fas fa-arrow-right text-[10px] transition group-hover:translate-x-1" /></span>
-            </div>
-            <span className="absolute right-6 top-1/2 -z-10 text-8xl font-semibold tracking-tighter text-white/[0.06]">0{index + 1}</span>
-        </button>
+            <Container className="relative z-10 -mt-44 sm:-mt-52">
+                <HeroPanel />
+            </Container>
+        </section>
     );
 }
 
+/** Najenga's front page, laid out after Naoa's. */
 export default function Welcome({ auth }) {
-    const [activeFeature, setActiveFeature] = useState(0);
-    const feature = FEATURES[activeFeature];
-
-    const exploreFeature = (index) => {
-        setActiveFeature(index);
-        document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
+    const signedIn = !!auth?.user;
     return (
-        <main className="min-h-screen overflow-hidden bg-[#0b0c0d] text-white">
+        <div className="min-h-screen bg-[#F4F1EE] text-[#1A1514]">
             <Head title="Najenga | Construction project management" />
-            <HeroSection auth={auth} />
+            <MarketingNav auth={auth} />
 
-            <section id="platform" className="scroll-mt-24 px-4 py-20 sm:px-8 lg:px-12 lg:py-28">
-                <div className="mx-auto max-w-7xl">
-                    <ScrollReveal>
-                        <SectionHeading
-                            eyebrow="One connected workspace"
-                            title="Every part of your project has a place."
-                            description="From the first receipt to the latest site photo, keep the details of your construction work organized and easy to follow. Select a card to take a closer look."
-                        />
-                    </ScrollReveal>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {FEATURES.map((item, index) => (
-                            <ScrollReveal key={item.title} delay={Math.min(index * 0.05, 0.2)}>
-                                <FeatureCard feature={item} index={index} active={activeFeature === index} onClick={() => exploreFeature(index)} />
-                            </ScrollReveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            <main id="main-content">
+                <Hero auth={auth} />
 
-            <section id="explore" className="scroll-mt-8 border-y border-white/[0.07] bg-[#111213] px-4 py-20 sm:px-8 lg:px-12 lg:py-28">
-                <div className="mx-auto max-w-7xl">
-                    <ScrollReveal>
-                        <SectionHeading
-                            eyebrow="Inside Najenga"
-                            title="Choose a tool. See where it fits."
-                            description="Explore how the parts of Najenga support the everyday work of a construction project."
-                        />
-                    </ScrollReveal>
-                    <div className="grid gap-5 lg:grid-cols-[17rem_1fr] lg:gap-8">
-                        <div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0" role="group" aria-label="Choose a Najenga feature">
-                            {FEATURES.map((item, index) => (
-                                <button key={item.title} type="button" aria-pressed={activeFeature === index} onClick={() => setActiveFeature(index)} className={`flex shrink-0 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition lg:w-full ${activeFeature === index ? 'border-rose-300/30 bg-rose-950/40 text-white' : 'border-transparent text-white/55 hover:border-white/10 hover:bg-white/[0.04] hover:text-white'}`}>
-                                    <i aria-hidden="true" className={`fas ${item.icon} w-4 text-center ${activeFeature === index ? 'text-rose-200' : 'text-white/45'}`} />
-                                    <span className="whitespace-nowrap">{item.title}</span>
-                                    <i aria-hidden="true" className={`fas fa-arrow-right ml-auto hidden text-xs lg:inline ${activeFeature === index ? 'text-rose-200' : 'text-white/25'}`} />
-                                </button>
+                <section aria-label="Najenga in numbers" className="py-24">
+                    <Container>
+                        <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-[#E2D9D2] lg:grid-cols-4">
+                            {FACTS.map(([value, label]) => (
+                                <div key={label} className="flex flex-col-reverse justify-end bg-[#F4F1EE] p-6 sm:p-8">
+                                    <dt className="mt-2 text-sm text-[#5E5450]">{label}</dt>
+                                    <dd className="font-display text-5xl font-extralight tracking-tight text-[#1A1514] sm:text-6xl">{value}</dd>
+                                </div>
                             ))}
+                        </dl>
+                    </Container>
+                </section>
+
+                <SectionNav sections={SECTIONS} />
+
+                <section id="journey" className={`${SECTION_OFFSET} pt-24`}>
+                    <Container>
+                        <SectionHeading
+                            eyebrow="Najenga — “I’m building”"
+                            title="From the first bag of cement to the keys in your hand"
+                            text="A build is months of payments, deliveries, photos and paperwork, with people coming and going. Najenga keeps each step on record, so nobody has to remember it."
+                        />
+                        <ol className="mt-14 grid gap-4 md:grid-cols-5">
+                            {JOURNEY.map((step, i) => (
+                                <li key={step.title} className="flex flex-col rounded-3xl bg-white p-6">
+                                    <span aria-hidden="true" className="font-display text-4xl font-extralight text-[#D4A7A0]">{String(i + 1).padStart(2, '0')}</span>
+                                    <h3 className="mt-3 text-base font-semibold text-[#1A1514]">{step.title}</h3>
+                                    <p className="mt-2 flex-1 text-sm leading-relaxed text-[#5E5450]">{step.text}</p>
+                                    <a href={step.href} className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#B3122E] hover:text-[#1A1514]">
+                                        {step.link} <i aria-hidden="true" className="fas fa-arrow-right text-[9px]" />
+                                    </a>
+                                </li>
+                            ))}
+                        </ol>
+                    </Container>
+                </section>
+
+                <section id="inside" className={`${SECTION_OFFSET} py-24`}>
+                    <Container>
+                        <SectionHeading eyebrow="Inside Najenga" title="Everything a build needs" text="Pick an area to see what it does for you." />
+                        <div className="mt-14">
+                            <FeatureExplorer groups={FEATURE_GROUPS} />
                         </div>
-                        <div key={feature.title} aria-live="polite" className="grid overflow-hidden rounded-3xl border border-white/10 bg-[#18191a] lg:min-h-[27rem] lg:grid-cols-2">
-                            <div className="relative min-h-64 lg:min-h-full">
-                                <img src={feature.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
-                                <span className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-black/35 px-3 py-1.5 text-xs text-white/80 backdrop-blur">{feature.subtitle}</span>
+                    </Container>
+                </section>
+
+                <section id="who" className={`${SECTION_OFFSET} py-24`}>
+                    <Container>
+                        <SectionHeading eyebrow="Who it’s for" title="For the people paying — and the people building" />
+                        <div className="mt-14 grid gap-5 lg:grid-cols-2">
+                            <ImageCard
+                                image={`${BG}/pexels-artbovich-7031607.webp`}
+                                tags={['Homeowners', 'Building from afar']}
+                                title="See your house go up, wherever you are"
+                                text="Photos from site each week, every payment with its receipt, and the plans in one place — so you can follow the build from Nairobi, Mombasa or abroad."
+                                className="min-h-[32rem]"
+                                titleClass="text-3xl sm:text-5xl"
+                            />
+                            <ImageCard
+                                image={`${BG}/pexels-40037226-7667625.webp`}
+                                tags={['Contractors', 'Site managers']}
+                                title="Run every site from one place"
+                                text="Each project with its crew, budget and paperwork. Switch between sites in a tap, and show clients exactly where their money went."
+                                className="min-h-[32rem]"
+                                titleClass="text-3xl sm:text-5xl"
+                            />
+                        </div>
+                        <ImageCard
+                            image={`${BG}/pexels-ninobur-16803023.webp`}
+                            position="center 30%"
+                            tags={['WhatsApp', 'No app to install']}
+                            title="Send it on WhatsApp. Najenga files it."
+                            text="A receipt, a delivery note, a photo of the slab: send it to Najenga’s number from the phone you already use. Receipts are read for you and wait for your check."
+                            className="mt-5 min-h-[24rem]"
+                            titleClass="text-3xl sm:text-5xl"
+                        />
+                    </Container>
+                </section>
+
+                <section id="together" className={`${SECTION_OFFSET} py-24`}>
+                    <Container className="grid items-center gap-12 lg:grid-cols-12">
+                        <div className="lg:col-span-5">
+                            <SectionHeading
+                                eyebrow="Build together"
+                                title="Everyone on the project. Nothing lost."
+                                text="Invite the owner, the contractor and the site team with the right say each. See who’s working on what, catch up on what changed since you last looked, and undo any mistake."
+                                align="left"
+                            />
+                            <ul className="mt-8 space-y-3 text-sm text-[#3A2F2C]">
+                                {['Invitations by email, with a role each', 'Who’s online, on which page', 'Version history, with one-click restore'].map((point) => (
+                                    <li key={point} className="flex gap-3">
+                                        <i aria-hidden="true" className="fas fa-check mt-1 text-xs text-[#B3122E]" />
+                                        {point}
+                                    </li>
+                                ))}
+                            </ul>
+                            <PillLink href={signedIn ? route('dashboard') : route('register')} variant="outline" className="mt-8" arrow>
+                                {signedIn ? 'Open your dashboard' : 'Start a project'}
+                            </PillLink>
+                        </div>
+                        <div className="lg:col-span-7">
+                            <div className="overflow-hidden rounded-[1.75rem] border border-[#E2D9D2] bg-[#140F0E] p-2 shadow-[0_40px_80px_-40px_rgba(26,21,20,0.7)]">
+                                <img src="/marketing/overview.webp" alt="A project's overview in Najenga: its budget used, latest expenses and team" loading="lazy" className="w-full rounded-[1.35rem]" />
                             </div>
-                            <div className="flex flex-col justify-center p-6 sm:p-9 lg:p-10">
-                                <span className="mb-6 flex h-12 w-12 items-center justify-center rounded-full bg-rose-950/70 text-lg text-rose-200"><i aria-hidden="true" className={`fas ${feature.icon}`} /></span>
-                                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-rose-300">Feature 0{activeFeature + 1}</p>
-                                <h3 className="text-2xl font-semibold text-white sm:text-3xl">{feature.title}</h3>
-                                <p className="mt-3 text-sm leading-7 text-white/55">{feature.description}</p>
-                                <ul className="mt-6 space-y-3">
-                                    {feature.details.map((detail) => <li key={detail} className="flex items-start gap-3 text-sm text-white/75"><i aria-hidden="true" className="fas fa-check mt-1 text-xs text-rose-300" /><span>{detail}</span></li>)}
-                                </ul>
-                                <Link href={auth?.user ? route('dashboard') : route('register')} className="mt-8 inline-flex w-fit items-center gap-2 text-sm font-semibold text-white transition hover:text-rose-200">{auth?.user ? 'Open your dashboard' : 'Get started with Najenga'} <i aria-hidden="true" className="fas fa-arrow-right text-xs" /></Link>
+                        </div>
+                    </Container>
+                </section>
+
+                <section id="safe" className={`${SECTION_OFFSET} py-24`}>
+                    <Container>
+                        <div className="overflow-hidden rounded-[2rem] bg-[#140F0E] p-6 text-white sm:p-10 lg:p-14">
+                            <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
+                                <h2 className="font-display text-5xl font-light leading-[1.02] tracking-tight sm:text-6xl">Your project, kept safe</h2>
+                                <p className="max-w-md text-white/70">Money and contracts deserve more than a password. Najenga gives every account modern ways to sign in, and keeps every record’s history.</p>
+                            </div>
+                            <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {SAFETY.map((item) => (
+                                    <div key={item.title} className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+                                        <i aria-hidden="true" className={`fas ${item.icon} text-rose-300`} />
+                                        <h3 className="mt-4 font-semibold">{item.title}</h3>
+                                        <p className="mt-1 text-sm leading-relaxed text-white/60">{item.text}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-                    </div>
-                </div>
-            </section>
+                    </Container>
+                </section>
 
-            <section id="workflow" className="scroll-mt-24 px-4 py-20 sm:px-8 lg:px-12 lg:py-28">
-                <div className="mx-auto max-w-7xl">
-                    <ScrollReveal>
-                        <SectionHeading eyebrow="From site to summary" title="A project rhythm your whole team can follow." description="Keep the day-to-day details moving through one clear, shared process." />
-                    </ScrollReveal>
-                    <div className="grid gap-3 md:grid-cols-3">
-                        {WORKFLOW.map((step, index) => (
-                            <ScrollReveal key={step.number} delay={index * 0.08}>
-                                <article className="h-full rounded-2xl border border-white/[0.08] bg-white/[0.025] p-6 transition hover:-translate-y-1 hover:border-rose-300/25 hover:bg-white/[0.04] sm:p-8">
-                                    <div className="mb-10 flex items-center justify-between"><span className="text-sm font-medium tracking-[0.18em] text-rose-200">{step.number}</span><i aria-hidden="true" className={`fas ${step.icon} text-lg text-white/45`} /></div>
-                                    <h3 className="mb-3 text-xl font-semibold text-white">{step.title}</h3>
-                                    <p className="text-sm leading-6 text-white/50">{step.description}</p>
-                                    {index < WORKFLOW.length - 1 && <div className="mt-8 hidden items-center gap-2 text-xs text-white/25 md:flex"><span className="h-px flex-1 bg-white/10" /><i aria-hidden="true" className="fas fa-arrow-right" /></div>}
-                                </article>
-                            </ScrollReveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                <FaqSection items={FAQS} text={<>Something else? <a href="mailto:najenga-info@okjtech.co.ke" className="text-[#B3122E] underline underline-offset-4">Talk to our team.</a></>} />
 
-            <section id="why-najenga" className="scroll-mt-24 border-y border-white/[0.07] bg-[#111213] px-4 py-20 sm:px-8 lg:px-12 lg:py-28">
-                <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center lg:gap-20">
-                    <ScrollReveal>
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-rose-300">Built for the work</p>
-                        <h2 className="max-w-xl text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">A clearer picture of every project.</h2>
-                        <p className="mt-5 max-w-lg text-base leading-7 text-white/55">Construction moves quickly. Najenga brings the day-to-day records into one view, so your team can spend more time moving work forward.</p>
-                        <div className="mt-8"><GlassButton href={route('register')} variant="brand" className="px-6 py-3 text-sm shadow-none">Explore Najenga <i aria-hidden="true" className="fas fa-arrow-right text-xs" /></GlassButton></div>
-                    </ScrollReveal>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        {BENEFITS.map((benefit, index) => (
-                            <ScrollReveal key={benefit.title} delay={index * 0.06}>
-                                <article className="h-full rounded-2xl border border-white/[0.08] bg-white/[0.025] p-5 transition hover:border-rose-300/30 hover:bg-white/[0.04] sm:p-6">
-                                    <span className="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-rose-950/70 text-rose-200"><i aria-hidden="true" className={`fas ${benefit.icon}`} /></span>
-                                    <h3 className="mb-2 font-semibold text-white">{benefit.title}</h3>
-                                    <p className="text-sm leading-6 text-white/50">{benefit.description}</p>
-                                </article>
-                            </ScrollReveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            <section id="questions" className="scroll-mt-24 px-4 py-20 sm:px-8 lg:px-12 lg:py-28">
-                <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
-                    <ScrollReveal>
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-rose-300">Questions</p>
-                        <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">A few things to know.</h2>
-                        <p className="mt-4 max-w-sm text-sm leading-7 text-white/50">Have another question? <a href="mailto:najenga-info@okjtech.co.ke" className="text-white/80 underline decoration-white/25 underline-offset-4 hover:text-white">Talk to our team.</a></p>
-                    </ScrollReveal>
-                    <div className="space-y-2">
-                        {FAQS.map((item, index) => (
-                            <ScrollReveal key={item.question} delay={Math.min(index * 0.05, 0.15)}>
-                                <details className="group rounded-2xl border border-white/[0.08] bg-white/[0.025] open:border-white/15 open:bg-white/[0.04]">
-                                    <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-sm font-medium text-white marker:hidden sm:p-6 sm:text-base [&::-webkit-details-marker]:hidden">
-                                        {item.question}
-                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/55 transition group-open:rotate-45 group-open:bg-rose-950/70 group-open:text-rose-100"><i aria-hidden="true" className="fas fa-plus text-xs" /></span>
-                                    </summary>
-                                    <p className="max-w-2xl px-5 pb-5 text-sm leading-7 text-white/55 sm:px-6 sm:pb-6">{item.answer}</p>
-                                </details>
-                            </ScrollReveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            <section id="get-started" className="px-4 pb-20 sm:px-8 lg:px-12 lg:pb-28">
-                <div className="relative isolate mx-auto max-w-7xl overflow-hidden rounded-3xl border border-white/10 bg-[#191a1b]">
-                    <img src="/Najenga-backgrounds/pexels-40037226-7667625.webp" alt="Construction project underway" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-40" />
-                    <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b0c0d] via-[#0b0c0d]/85 to-[#0b0c0d]/30" />
-                    <div className="grid gap-8 p-7 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-end lg:p-14">
-                        <div className="max-w-2xl">
-                            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-rose-300">Your project, in view</p>
-                            <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">Build with a clearer view of the work.</h2>
-                            <p className="mt-4 max-w-xl text-sm leading-7 text-white/60 sm:text-base">Bring project updates, spending, and documentation into a workspace designed for construction teams.</p>
+                <section className="pb-24">
+                    <Container>
+                        <div className="relative isolate overflow-hidden rounded-[2rem] px-6 py-16 text-center text-white sm:px-12 sm:py-20">
+                            <Photo src={`${BG}/pexels-artbovich-7031607.webp`} className="-z-20" />
+                            <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#8B0000]/90 via-[#140F0E]/85 to-[#140F0E]/90" />
+                            <h2 className="mx-auto max-w-3xl font-display text-4xl font-light leading-[1.05] tracking-tight sm:text-6xl">Start your build with a clear view of it.</h2>
+                            <p className="mx-auto mt-5 max-w-xl text-white/80">Set up your first project in a few minutes, and invite the people who should follow it.</p>
+                            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+                                <PillLink href={signedIn ? route('dashboard') : route('register')} variant="light" size="lg">
+                                    {signedIn ? 'Open your dashboard' : 'Get started'}
+                                </PillLink>
+                                {!signedIn && (
+                                    <PillLink href={route('login')} variant="glass" size="lg">
+                                        Sign in
+                                    </PillLink>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex flex-wrap gap-3">
-                            <GlassButton href={auth?.user ? route('dashboard') : route('register')} variant="brand" className="px-6 py-3 text-sm shadow-none">{auth?.user ? 'Open dashboard' : 'Get started'}</GlassButton>
-                            {!auth?.user && <GlassButton href={route('login')} variant="ghost" className="px-6 py-3 text-sm shadow-none">Sign in</GlassButton>}
-                        </div>
-                    </div>
-                </div>
-            </section>
+                    </Container>
+                </section>
+            </main>
 
-            <footer className="border-t border-white/[0.07] bg-[#080909] px-4 py-10 sm:px-8 lg:px-12">
-                <div className="mx-auto flex max-w-7xl flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="max-w-sm">
-                        <Link href={route('home')} aria-label="Najenga home" className="inline-flex"><img src="/Najenga-logos/Najenga-Logo-header-footer-logo-transparent.webp" alt="Najenga" loading="lazy" className="h-12 w-auto" /></Link>
-                        <p className="mt-3 text-sm leading-6 text-white/45">Construction project management by OKJ Technologies.</p>
-                    </div>
-                    <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-white/55">
-                        <a href="#platform" className="transition hover:text-white">Platform</a>
-                        <a href="#explore" className="transition hover:text-white">Explore tools</a>
-                        <a href="#questions" className="transition hover:text-white">Questions</a>
-                        <a href="mailto:najenga-info@okjtech.co.ke" className="transition hover:text-white">Contact</a>
-                        <Link href={route('login')} className="transition hover:text-white">Sign in</Link>
-                        <Link href={route('privacy')} className="transition hover:text-white">Privacy</Link>
-                    </nav>
-                </div>
-                <div className="mx-auto mt-8 max-w-7xl border-t border-white/[0.07] pt-5 text-xs text-white/35">© {new Date().getFullYear()} Najenga by OKJ Technologies</div>
-            </footer>
-        </main>
+            <MarketingFooter auth={auth} />
+        </div>
     );
 }
