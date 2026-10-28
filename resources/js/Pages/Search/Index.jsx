@@ -1,121 +1,135 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState, useCallback } from 'react';
-import TextInput from '@/Components/TextInput';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import DashboardPage from '@/Components/DashboardPage';
+import EmptyState from '@/Components/EmptyState';
+import { rootBreadcrumbs } from '@/Config/navigation';
+
+const TYPES = [
+    { value: 'document', label: 'Documents', icon: 'fa-file-lines' },
+    { value: 'photo', label: 'Photos', icon: 'fa-image' },
+    { value: 'expense', label: 'Expenses', icon: 'fa-receipt' },
+];
 
 const TYPE_LABELS = { document: 'Document', photo: 'Photo', expense: 'Expense' };
 
+/** The side panel's views: everything, or one kind of record. One applies at a time. */
+export function searchViews(totals = {}, results = []) {
+    return [
+        { id: 'all', label: 'All results', icon: 'fa-layer-group', count: results.length },
+        ...TYPES.map((t) => ({ id: t.value, label: t.label, icon: t.icon, count: totals[`${t.value}s`] })),
+    ];
+}
+
+/** Which kind of record the server's filter amounts to. */
+export function activeType(type = null) {
+    return type && TYPES.some((t) => t.value === type) ? type : 'all';
+}
+
 export default function SearchIndex({ query = '', type = null, results = [], totals = {} }) {
     const [q, setQ] = useState(query);
+    const firstRender = useRef(true);
 
-    const handleSubmit = useCallback((e) => {
-        e.preventDefault();
-        router.get(route('search'), { q, type });
-    }, [q, type]);
+    // The toolbar's search asks the server once typing pauses, like the
+    // other search pages; the panel's views change the kind right away.
+    const search = useCallback(
+        (nextQ, nextType) =>
+            router.get(
+                route('search'),
+                { q: nextQ, type: nextType || undefined },
+                { preserveState: true, preserveScroll: true, replace: true },
+            ),
+        [],
+    );
 
-    const handleTypeFilter = useCallback((newType) => {
-        router.get(route('search'), { q, type: newType });
+    useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return undefined;
+        }
+        const timer = setTimeout(() => search(q, type), 350);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the text changes
     }, [q]);
+
+    const pickType = (id) => search(q, id === 'all' ? '' : id);
+
+    const clear = () => {
+        setQ('');
+        search('', '');
+    };
 
     return (
         <AuthenticatedLayout>
             <Head title="Search" />
-            <div className="max-w-5xl mx-auto px-4 py-6">
-                <h1 className="text-3xl font-bold text-white mb-2">Search</h1>
-                <p className="text-gray-400 text-sm mb-6">Search across all your documents, photos, and expenses</p>
 
-                <form onSubmit={handleSubmit} className="mb-6">
-                    <div className="flex gap-3 items-end">
-                        <div className="flex-1">
-                            <InputLabel htmlFor="search-search-query" value="Search query" />
-                            <TextInput
-                                id="search-search-query"
-                                value={q}
-                                onChange={(e) => setQ(e.target.value)}
-                                placeholder="Type to search..."
-                                className="mt-1 block w-full"
-                                autoFocus
-                            />
-                       </div>
-                        <PrimaryButton type="submit">Search</PrimaryButton>
-                   </div>
-               </form>
-
-                {query && (
-                    <div className="flex items-center gap-2 mb-6 flex-wrap">
-                        <span className="text-xs text-gray-400 capitalize mr-2">Filter</span>
-                        <button
-                            onClick={() => handleTypeFilter(null)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${!type ? 'bg-[#8B0000] text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                        >
-                            All ({results.length})
-                       </button>
-                        <button
-                            onClick={() => handleTypeFilter('document')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${type === 'document' ? 'bg-blue-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                        >
-                            Documents ({totals.documents || 0})
-                       </button>
-                        <button
-                            onClick={() => handleTypeFilter('photo')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${type === 'photo' ? 'bg-pink-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                        >
-                            Photos ({totals.photos || 0})
-                       </button>
-                        <button
-                            onClick={() => handleTypeFilter('expense')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${type === 'expense' ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                        >
-                            Expenses ({totals.expenses || 0})
-                       </button>
-                   </div>
-                )}
-
+            <DashboardPage
+                hero={{
+                    title: 'Search',
+                    subtitle: 'Every document, photo and expense in one place.',
+                    breadcrumbs: [...rootBreadcrumbs(), { label: 'Search' }],
+                }}
+                toolbar={{
+                    search: { value: q, onChange: setQ, placeholder: 'Search documents, photos and expenses' },
+                }}
+                panel={{
+                    id: 'search',
+                    title: 'Kinds',
+                    icon: 'fa-magnifying-glass',
+                    subtitle: 'Narrow the results',
+                    items: searchViews(totals, results),
+                    activeId: activeType(type),
+                    onChange: pickType,
+                }}
+            >
                 {!query && (
-                    <div className="bg-black/40 border border-white/10 rounded-2xl p-12 text-center">
-                        <p className="text-gray-400">Type a query above to search across all your content</p>
-                   </div>
+                    <EmptyState
+                        icon="fa-magnifying-glass"
+                        title="Start typing to search"
+                        message="Look through every document, photo and expense across your projects. Results appear as you type."
+                    />
                 )}
 
                 {query && results.length === 0 && (
-                    <div className="bg-black/40 border border-white/10 rounded-2xl p-12 text-center">
-                        <p className="text-gray-400">No results for "{query}".</p>
-                   </div>
+                    <EmptyState
+                        noun="result"
+                        search={query}
+                        filtered={Boolean(type)}
+                        onClear={clear}
+                    />
                 )}
 
                 {results.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {results.map((r) => (
                             <a
                                 key={`${r.type}-${r.id}`}
                                 href={r.url}
-                                className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden hover:border-[#8B0000]/50 transition block"
+                                className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 transition hover:border-rose-500/30 hover:bg-white/[0.04] block"
                             >
                                 <div className="aspect-video bg-white/5 relative overflow-hidden flex items-center justify-center">
                                     {r.thumb_url ? (
-                                        <img loading="lazy" decoding="async"  src={r.thumb_url} alt={r.title} className="w-full h-full object-cover" />
+                                        <img loading="lazy" decoding="async" src={r.thumb_url} alt={r.title} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="text-gray-400 text-3xl">[{r.type}]</div>
                                     )}
                                     <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] capitalize font-bold bg-black/60 text-white border border-white/10">
                                         {TYPE_LABELS[r.type] || r.type}
-                                   </span>
-                               </div>
+                                    </span>
+                                </div>
                                 <div className="p-4">
                                     <h3 className="text-white font-semibold truncate mb-1">{r.title}</h3>
                                     {r.subtitle && <p className="text-gray-400 text-sm truncate mb-2">{r.subtitle}</p>}
                                     <div className="flex items-center justify-between text-xs text-gray-400">
                                         <span>{r.date}</span>
                                         {r.amount != null && <span className="text-emerald-400 font-mono">KES {Number(r.amount).toLocaleString()}</span>}
-                                   </div>
-                               </div>
-                           </a>
+                                    </div>
+                                </div>
+                            </a>
                         ))}
-                   </div>
+                    </div>
                 )}
-           </div>
-       </AuthenticatedLayout>
+            </DashboardPage>
+        </AuthenticatedLayout>
     );
 }
