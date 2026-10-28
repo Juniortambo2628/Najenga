@@ -123,3 +123,22 @@ About 45 commits.
 - Collaborators online appear within 20s; sidebar badges match unseen
   changes.
 - Gates green: PHP tests, JS tests, build.
+
+## Status
+
+Shipped, one PR per step, all merged to `main` (October 2026):
+
+| Phase | PRs |
+|---|---|
+| 12.1 security fix | #36 |
+| 10 One page layout | #37–#39 |
+| 11 One way to save | #40–#43 |
+| 12 Sharing and roles | #44 (schema), #45–#47, #48 (members see shared records), #49 (navbar project switcher), #50 |
+| 13 Version history | #51–#55 |
+| 14 Who is online | #56–#59 (14.5, Reverb, left for later as planned) |
+| 15 Finish and polish | #60 (mobile), #61 (saved views), #62 (tour), #63 (visual tests) |
+
+Visual regression tests: `npm run test:visual` locally (`-- -u` writes new
+baselines). On GitHub the "Visual" workflow runs them on PRs and on `main`
+without blocking deploys; tick "update" on a manual run to remake the
+baselines after an intended change to the look.
