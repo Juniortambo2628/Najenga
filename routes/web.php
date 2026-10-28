@@ -56,6 +56,7 @@ Route::get('/invitations/{invitation}/accept', [\App\Http\Controllers\ProjectInv
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Projects
+    Route::get('/overview', [\App\Http\Controllers\ProjectController::class, 'overview'])->name('overview');
     Route::get('/projects', [\App\Http\Controllers\ProjectController::class, 'index'])->name('projects');
     Route::get('/projects/create', [\App\Http\Controllers\ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [\App\Http\Controllers\ProjectController::class, 'store'])->name('projects.store');

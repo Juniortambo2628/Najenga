@@ -48,7 +48,7 @@ describe('navItemsFor', () => {
         const names = navItemsFor('staff').map((i) => i.name);
         expect(names).not.toContain('Analytics');
         expect(names).not.toContain('Users');
-        expect(names).toContain('Projects');
+        expect(names).toContain('Overview');
         expect(names).toContain('Dashboard');
     });
 });
@@ -94,7 +94,7 @@ describe('navSectionsFor', () => {
     it('groups the sidebar under headings, starting with an untitled section', () => {
         const sections = navSectionsFor('admin');
         expect(sections[0].title).toBeUndefined();
-        expect(sections[0].items.map((i) => i.name)).toEqual(['Dashboard', 'Projects']);
+        expect(sections[0].items.map((i) => i.name)).toEqual(['Dashboard', 'Overview']);
         expect(sections.slice(1).every((s) => s.title)).toBe(true);
         expect(sections.flatMap((s) => s.items)).toHaveLength(NAV_ITEMS.length);
     });

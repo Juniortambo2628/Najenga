@@ -37,7 +37,29 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($this->user)
             ->get('/projects')
-            ->assertOk();
+            ->assertRedirect('/overview');
+    }
+
+    public function test_the_overview_lists_each_project_with_its_spending_counts_and_team(): void
+    {
+        $project = Project::factory()->create(['client_id' => $this->user->id, 'budget' => 1000, 'currency' => 'KES']);
+        \App\Models\Expense::factory()->count(2)->create(['project_id' => $project->id, 'user_id' => $this->user->id, 'amount' => 150]);
+        Project::factory()->create(['client_id' => $this->otherUser->id]);
+
+        $this->actingAs($this->user)
+            ->get("/overview?project={$project->id}")
+            ->assertOk()
+            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+                ->component('Overview')
+                ->where('focus', $project->id)
+                ->has('projects', 1)
+                ->where('projects.0.id', $project->id)
+                ->where('projects.0.spent', 300)
+                ->where('projects.0.counts.expenses', 2)
+                ->where('projects.0.my_role', 'owner')
+                ->where('projects.0.can_delete', true)
+                ->has('projects.0.recent.expenses', 2)
+                ->where('projects.0.members.0.role', 'owner'));
     }
 
     public function test_user_can_create_project(): void
@@ -80,7 +102,8 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($this->user)
             ->get("/projects/{$project->id}")
-            ->assertOk();
+            // A project's page is its overview, with the project picked.
+            ->assertRedirect("/overview?project={$project->id}");
     }
 
     public function test_user_cannot_view_other_users_private_project(): void
@@ -248,7 +271,8 @@ class ProjectControllerTest extends TestCase
 
         $this->actingAs($this->user)
             ->get("/projects/{$project->id}")
-            ->assertOk();
+            // A project's page is its overview, with the project picked.
+            ->assertRedirect("/overview?project={$project->id}");
     }
 
     public function test_project_users_endpoint(): void

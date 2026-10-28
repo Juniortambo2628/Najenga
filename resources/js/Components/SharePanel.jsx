@@ -86,7 +86,7 @@ export default function SharePanel({ show, onClose, project }) {
         error: 'Could not leave the project',
         onSuccess: () => {
             onClose();
-            router.visit(route('projects'));
+            router.visit(route('overview'));
         },
     });
 

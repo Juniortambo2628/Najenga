@@ -9,7 +9,7 @@ export const NAV_SECTIONS = [
     {
         items: [
             { name: 'Dashboard', href: route('dashboard'), icon: 'fa-tachometer-alt' },
-            { name: 'Projects', href: route('projects'), icon: 'fa-project-diagram' },
+            { name: 'Overview', href: route('overview'), icon: 'fa-compass' },
         ],
     },
     {

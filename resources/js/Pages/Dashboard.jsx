@@ -127,7 +127,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         )}
                     </DashboardSection>
 
-                    <DashboardSection icon="fa-diagram-project" eyebrow="Work in progress" title="Your projects" href={route('projects')} actionLabel="All projects">
+                    <DashboardSection icon="fa-diagram-project" eyebrow="Work in progress" title="Your projects" href={route('overview')} actionLabel="Overview">
                         {recentProjects.length === 0 ? (
                             <EmptyState compact icon="fa-diagram-project" title="No projects yet" message="Create your first project to give your team a shared place to plan the work." />
                         ) : (

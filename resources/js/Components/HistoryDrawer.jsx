@@ -14,7 +14,7 @@ export const PAGE_TYPES = {
     Documents: { type: 'document', label: 'Documents' },
     Timeline: { type: 'milestone', label: 'Timeline' },
     'Receipts/Index': { type: 'receipt', label: 'Receipts' },
-    'Projects/Index': { type: 'project', label: 'Projects' },
+    Overview: { type: 'project', label: 'Projects' },
 };
 
 /**

@@ -29,3 +29,19 @@ export function formatCurrency(amount, currency = 'KES') {
         return `${info.symbol} ${num.toLocaleString()}`;
     }
 }
+
+/** A short amount for tight spaces: "KES 197.5K", "$1.2M". */
+export function formatCurrencyCompact(amount, currency = 'KES') {
+    const info = CURRENCIES[currency] || CURRENCIES.KES;
+    const num = Number(amount) || 0;
+    try {
+        return new Intl.NumberFormat(info.locale, {
+            style: 'currency',
+            currency,
+            notation: 'compact',
+            maximumFractionDigits: 1,
+        }).format(num);
+    } catch {
+        return formatCurrency(num, currency);
+    }
+}
