@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
+const page = vi.hoisted(() => ({ component: 'Profile/Edit', props: { auth: { projects: [] } } }));
 vi.mock('@inertiajs/react', () => ({
+    usePage: () => page,
     Link: ({ href, children, ...rest }) => (
         <a href={href} {...rest}>
             {children}
@@ -77,5 +79,30 @@ describe('DashboardPage classes', () => {
         );
         expect(container.firstChild.className).toContain('max-w-6xl');
         expect(screen.getByText('A').parentElement.className).toContain('space-y-6');
+    });
+});
+
+describe('DashboardPage activity panel', () => {
+    it('gives list pages without a panel the Activity panel, collapsed to a rail', () => {
+        page.component = 'Expenses';
+        try {
+            localStorage.clear();
+        } catch {
+            /* storage unavailable */
+        }
+        const { rerender } = render(<DashboardPage hero={{ title: 'Expenses' }}><p>Rows</p></DashboardPage>);
+        expect(screen.getByRole('button', { name: 'Show Activity' })).toBeInTheDocument();
+
+        rerender(<DashboardPage hero={{ title: 'Expenses' }} panel={false}><p>Rows</p></DashboardPage>);
+        expect(screen.queryByRole('button', { name: 'Show Activity' })).toBeNull();
+
+        rerender(<DashboardPage hero={{ title: 'Expenses' }} panel={{ title: 'Folders', items: [{ id: 'all', label: 'All files' }] }}><p>Rows</p></DashboardPage>);
+        expect(screen.queryByRole('button', { name: 'Show Activity' })).toBeNull();
+        page.component = 'Profile/Edit';
+    });
+
+    it('leaves other pages alone', () => {
+        render(<DashboardPage hero={{ title: 'Profile' }}><p>Form</p></DashboardPage>);
+        expect(screen.queryByRole('button', { name: 'Show Activity' })).toBeNull();
     });
 });
