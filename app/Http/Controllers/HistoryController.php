@@ -20,16 +20,20 @@ class HistoryController extends Controller
 {
     private const PER_PAGE = 20;
 
-    /** Versions of every record of one type the user can see, e.g. the Expenses page. */
+    /**
+     * Versions of every record the user can see, or of one type (e.g. the
+     * Expenses page), optionally within one project.
+     */
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'type' => ['required', Rule::in(array_keys(Revision::TYPES))],
+            'type' => ['nullable', Rule::in(array_keys(Revision::TYPES))],
             'project_id' => ['nullable', 'integer'],
         ]);
         $user = $request->user();
 
-        $query = Revision::where('revisionable_type', (new (Revision::TYPES[$validated['type']]))->getMorphClass())
+        $query = Revision::query()
+            ->when($validated['type'] ?? null, fn (Builder $q, string $type) => $q->where('revisionable_type', (new (Revision::TYPES[$type]))->getMorphClass()))
             ->where(fn (Builder $q) => $q
                 ->whereIn('project_id', Project::accessibleBy($user)->select('id'))
                 ->orWhere(fn (Builder $own) => $own->whereNull('project_id')->where('user_id', $user->id)));
@@ -66,10 +70,14 @@ class HistoryController extends Controller
         return $this->page($record->revisions()->getQuery());
     }
 
-    /** Bring a record back to how it was in this version (or back from the trash). */
+    /**
+     * Bring a record back to how it was in this version (or back from the
+     * trash); with `undo`, to how it was before this change.
+     */
     public function restore(Request $request, Revision $revision): JsonResponse
     {
-        abort_unless($revision->isRestorable(), 422, 'This version cannot be restored.');
+        $undo = $request->boolean('undo');
+        abort_unless($revision->isRestorable($undo), 422, 'This version cannot be restored.');
 
         // A record deleted for good is recreated under its project: that
         // project's edit rights decide.
@@ -77,8 +85,8 @@ class HistoryController extends Controller
         abort_unless($subject, 403);
         $this->authorize('update', $subject);
 
-        $record = $revision->restoreVersion();
-        $label = self::label($revision->snapshot()) ?? "{$revision->type()} #{$record->getKey()}";
+        $record = $revision->restoreVersion($undo);
+        $label = self::label($revision->snapshot($undo)) ?? "{$revision->type()} #{$record->getKey()}";
 
         ActivityLogger::log(
             "{$revision->type()}.restored",
@@ -107,6 +115,7 @@ class HistoryController extends Controller
             'at' => $revision->updated_at->toIso8601String(),
             'changes' => $revision->diff(),
             'restorable' => $revision->isRestorable(),
+            'undoable' => $revision->event === 'updated' && $revision->isRestorable(true),
         ]));
     }
 

@@ -3,6 +3,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import ProjectSwitcher from '@/Components/ProjectSwitcher';
+import HistoryDrawer from '@/Components/HistoryDrawer';
 import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
 import ConfirmHost from '@/Components/ConfirmHost';
@@ -79,6 +80,7 @@ export default function AuthenticatedLayout({ children }) {
     const hero = current ? reported.hero : null;
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searchOpen, setSearchOpen] = useState(false);
@@ -310,6 +312,18 @@ export default function AuthenticatedLayout({ children }) {
                             </div>
 
                             {/* Notifications */}
+                            {/* Version history of the records on this page */}
+                            <button
+                                type="button"
+                                onClick={() => setHistoryOpen(true)}
+                                aria-label="Version history"
+                                title="Version history"
+                                className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                            >
+                                <i aria-hidden="true" className="fas fa-clock-rotate-left" />
+                            </button>
+                            <HistoryDrawer show={historyOpen} onClose={() => setHistoryOpen(false)} />
+
                             <NotificationsDropdown />
 
                             {/* User Dropdown */}
