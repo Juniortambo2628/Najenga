@@ -107,3 +107,36 @@ describe('FloatingToolbar', () => {
         expect(screen.getByRole('searchbox', { name: 'Search expenses' })).toHaveFocus();
     });
 });
+
+describe('FloatingToolbar saved views', () => {
+    it('saves the filters and search as a named view, and applies it later', async () => {
+        const feedback = await import('../../../resources/js/Utils/feedback');
+        vi.spyOn(feedback, 'promptAction').mockResolvedValue('Pending only');
+        try {
+            localStorage.clear();
+        } catch {
+            /* storage unavailable */
+        }
+        const onStatus = vi.fn();
+        const onSearch = vi.fn();
+        const filters = [{ name: 'status', label: 'Status', value: 'pending', onChange: onStatus, options: [{ value: 'all', label: 'All' }, { value: 'pending', label: 'Pending' }] }];
+        const search = { value: 'cement', onChange: onSearch, placeholder: 'Search' };
+
+        const { unmount } = render(<FloatingToolbar filters={filters} search={search} />);
+        fireEvent.click(screen.getByRole('button', { name: /Filters/ }));
+        fireEvent.click(screen.getByRole('button', { name: /Save current view/ }));
+        expect(await screen.findByRole('button', { name: 'Pending only' })).toBeInTheDocument();
+        unmount();
+
+        // Later, with other filters: applying the view puts them back.
+        render(<FloatingToolbar filters={[{ ...filters[0], value: 'all' }]} search={{ ...search, value: '' }} />);
+        fireEvent.click(screen.getByRole('button', { name: /Filters/ }));
+        fireEvent.click(screen.getByRole('button', { name: 'Pending only' }));
+        expect(onStatus).toHaveBeenLastCalledWith('pending');
+        expect(onSearch).toHaveBeenLastCalledWith('cement');
+
+        fireEvent.click(screen.getByRole('button', { name: /Filters/ }));
+        fireEvent.click(screen.getByRole('button', { name: 'Delete view Pending only' }));
+        expect(screen.queryByRole('button', { name: 'Pending only' })).toBeNull();
+    });
+});
