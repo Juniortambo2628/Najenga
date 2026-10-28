@@ -16,11 +16,11 @@ const STATUS_STYLES = {
 };
 
 const STATUS_OPTIONS = [
-    { value: 'all', label: 'All Statuses' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'verified', label: 'Verified' },
-    { value: 'auto_verified', label: 'Auto-verified' },
-    { value: 'rejected', label: 'Rejected' },
+    { value: 'all', label: 'All receipts', icon: 'fa-layer-group' },
+    { value: 'pending', label: 'Waiting for a check', icon: 'fa-hourglass-half' },
+    { value: 'verified', label: 'Verified', icon: 'fa-circle-check' },
+    { value: 'auto_verified', label: 'Auto-verified', icon: 'fa-wand-magic-sparkles' },
+    { value: 'rejected', label: 'Rejected', icon: 'fa-circle-xmark' },
 ];
 
 const statusOf = (receipt) => receipt.verification_status || 'pending';
@@ -65,10 +65,27 @@ export default function Index({ receipts = [] }) {
                     subtitle: `${filteredReceipts.length} receipt${filteredReceipts.length !== 1 ? 's' : ''}`,
                     breadcrumbs: [...rootBreadcrumbs(), { label: 'Receipts' }],
                 }}
+                panel={{
+                    id: 'receipts',
+                    title: 'Checks',
+                    icon: 'fa-file-invoice-dollar',
+                    subtitle: `${receipts.filter((r) => statusOf(r) === 'pending').length} waiting for a check`,
+                    items: STATUS_OPTIONS.map((option) => ({
+                        id: option.value,
+                        label: option.label,
+                        icon: option.icon,
+                        group: option.value === 'all' ? undefined : 'Status',
+                        count: option.value === 'all' ? receipts.length : receipts.filter((r) => statusOf(r) === option.value).length,
+                    })),
+                    activeId: statusFilter,
+                    onChange: (id) => {
+                        setStatusFilter(id);
+                        clear();
+                    },
+                }}
                 toolbar={{
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search receipts' },
                     filters: [
-                        { name: 'status', title: 'Status', value: statusFilter, onChange: setStatusFilter, options: STATUS_OPTIONS },
                         {
                             name: 'sort',
                             title: 'Sort by',

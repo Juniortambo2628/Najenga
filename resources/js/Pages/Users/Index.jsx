@@ -16,6 +16,20 @@ import useBulkDelete from '@/Hooks/useBulkDelete';
 import useAction, { visit } from '@/Hooks/useAction';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
+/** The People panel's views: everyone, by role, by status; each with its count. */
+export function userViews(users) {
+    const counted = (item) => ({ ...item, count: users.filter(item.match).length });
+    return [
+        counted({ id: 'all', label: 'Everyone', icon: 'fa-users', match: () => true }),
+        counted({ id: 'role:admin', group: 'Role', label: 'Admins', icon: 'fa-user-shield', match: (u) => u.role === 'admin' }),
+        counted({ id: 'role:manager', group: 'Role', label: 'Managers', icon: 'fa-user-tie', match: (u) => u.role === 'manager' }),
+        counted({ id: 'role:client', group: 'Role', label: 'Clients', icon: 'fa-user', match: (u) => u.role === 'client' }),
+        counted({ id: 'status:active', group: 'Status', label: 'Active', icon: 'fa-circle-check', match: (u) => u.status === 'active' }),
+        counted({ id: 'status:inactive', group: 'Status', label: 'Inactive', icon: 'fa-circle-pause', match: (u) => u.status === 'inactive' }),
+        counted({ id: 'status:suspended', group: 'Status', label: 'Suspended', icon: 'fa-ban', match: (u) => u.status === 'suspended' }),
+    ];
+}
+
 export default function Index({ users }) {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
@@ -29,18 +43,18 @@ export default function Index({ users }) {
     const [errors, setErrors] = useState({});
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
     const [searchQuery, setSearchQuery] = useState('');
-    const [roleFilter, setRoleFilter] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [view, setView] = useState('all');
+    const views = useMemo(() => userViews(users), [users]);
+    const currentView = views.find((v) => v.id === view) ?? views[0];
 
     const filteredUsers = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
         return users.filter((user) => (
-            (roleFilter === 'all' || user.role === roleFilter)
-            && (statusFilter === 'all' || user.status === statusFilter)
+            currentView.match(user)
             && (!q || [user.first_name, user.last_name, user.username, user.email]
                 .some((field) => field?.toLowerCase().includes(q)))
         ));
-    }, [users, searchQuery, roleFilter, statusFilter]);
+    }, [users, searchQuery, currentView]);
 
     const resetForm = () => {
         setForm({ first_name: '', last_name: '', email: '', role: 'client', password: '' });
@@ -167,34 +181,20 @@ export default function Index({ users }) {
                     subtitle: 'Manage platform users and their roles',
                     breadcrumbs: [...rootBreadcrumbs(), { label: 'Users' }],
                 }}
+                panel={{
+                    id: 'users',
+                    title: 'People',
+                    icon: 'fa-users-cog',
+                    subtitle: `${users.filter((u) => u.status === 'active').length} of ${users.length} active`,
+                    items: views.map(({ match, ...item }) => item),
+                    activeId: currentView.id,
+                    onChange: (id) => {
+                        setView(id);
+                        clearSelection();
+                    },
+                }}
                 toolbar={{
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search users' },
-                    filters: [
-                        {
-                            name: 'role',
-                            title: 'Role',
-                            value: roleFilter,
-                            onChange: setRoleFilter,
-                            options: [
-                                { value: 'all', label: 'All Roles' },
-                                { value: 'admin', label: 'Admin' },
-                                { value: 'manager', label: 'Manager' },
-                                { value: 'client', label: 'Client' },
-                            ],
-                        },
-                        {
-                            name: 'status',
-                            title: 'Status',
-                            value: statusFilter,
-                            onChange: setStatusFilter,
-                            options: [
-                                { value: 'all', label: 'All Statuses' },
-                                { value: 'active', label: 'Active' },
-                                { value: 'inactive', label: 'Inactive' },
-                                { value: 'suspended', label: 'Suspended' },
-                            ],
-                        },
-                    ],
                     actions: [{ id: 'add', label: 'Add User', icon: 'fa-plus', href: route('users.create'), variant: 'primary' }],
                     selection: {
                         count: selectedCount,

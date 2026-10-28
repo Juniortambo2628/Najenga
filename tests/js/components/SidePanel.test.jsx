@@ -27,6 +27,25 @@ describe('SidePanelAside', () => {
         expect(config.onChange).toHaveBeenCalledWith('b');
     });
 
+    it('shows a heading before each group, and an unsaved-changes dot', () => {
+        render(
+            <SidePanelAside
+                panel={panel({
+                    items: [
+                        { id: 'all', label: 'Everything' },
+                        { id: 'x', label: 'Ex', group: 'Kind' },
+                        { id: 'y', label: 'Why', group: 'Kind', dot: true },
+                        { id: 'z', label: 'Zed', group: 'Other' },
+                    ],
+                    activeId: 'all',
+                })}
+            />,
+        );
+        expect(screen.getAllByText('Kind')).toHaveLength(1);
+        expect(screen.getByText('Other')).toBeInTheDocument();
+        expect(screen.getByLabelText('Unsaved changes')).toBeInTheDocument();
+    });
+
     it('collapses to a rail and remembers it', () => {
         const { unmount } = render(<SidePanelAside panel={panel()} />);
         fireEvent.click(screen.getByRole('button', { name: 'Hide Sections' }));

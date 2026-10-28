@@ -8,7 +8,9 @@ import { AnimatePresence, motion } from 'framer-motion';
  *
  *   panel = {
  *     title, icon? (Font Awesome class, e.g. 'fa-layer-group'), subtitle?,
- *     items?: [{ id, label, description?, icon?, badge? (number), count? (number) }],
+ *     items?: [{ id, label, description?, icon?, badge? (number), count? (number),
+ *               group? (string: a heading before the first item of each group),
+ *               dot? (bool: e.g. unsaved changes), muted? (bool) }],
  *     activeId?, onChange?(id)   — a section switcher; the page renders the active section
  *     content?: ReactNode        — tools or a list under the switcher
  *     footer?: ReactNode         — help text at the bottom (desktop only)
@@ -43,6 +45,9 @@ function Badge({ item }) {
             </span>
         );
     }
+    if (item.dot) {
+        return <span className="ml-auto h-2 w-2 shrink-0 rounded-full bg-amber-400" aria-label="Unsaved changes" />;
+    }
     if (item.count != null) {
         return <span className="ml-auto shrink-0 text-xs tabular-nums text-white/40">{item.count}</span>;
     }
@@ -70,10 +75,14 @@ export function SidePanelNav({ panel, onPicked }) {
     return (
         <nav aria-label={panel.title}>
             <ul className="space-y-0.5">
-                {items.map((item) => {
+                {items.map((item, index) => {
                     const active = item.id === activeId;
+                    const groupStart = item.group && item.group !== items[index - 1]?.group;
                     return (
                         <li key={item.id}>
+                            {groupStart && (
+                                <p className={`px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/35 ${index > 0 ? 'pt-3' : ''}`}>{item.group}</p>
+                            )}
                             <button
                                 type="button"
                                 aria-current={active ? 'true' : undefined}
@@ -81,13 +90,17 @@ export function SidePanelNav({ panel, onPicked }) {
                                     onChange?.(item.id);
                                     onPicked?.(item.id);
                                 }}
-                                className={`flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left text-sm transition ${
-                                    active ? 'bg-rose-500/10 text-white' : 'text-white/70 hover:bg-white/5 hover:text-white'
+                                className={`flex w-full items-center gap-3 rounded-xl border px-2 py-2 text-left text-sm transition ${
+                                    active ? 'border-rose-400/20 bg-rose-500/10 text-white' : 'border-transparent text-white/70 hover:bg-white/5 hover:text-white'
                                 }`}
                             >
-                                {item.icon && <i aria-hidden="true" className={`fas ${item.icon} mt-0.5 w-4 shrink-0 text-center ${active ? 'text-rose-300' : 'text-white/40'}`} />}
+                                {item.icon && (
+                                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${active ? 'bg-white/10' : 'bg-white/[0.04]'}`}>
+                                        <i aria-hidden="true" className={`fas ${item.icon} text-xs ${active ? 'text-rose-300' : 'text-white/45'}`} />
+                                    </span>
+                                )}
                                 <span className="min-w-0 flex-1">
-                                    <span className="block truncate font-medium">{item.label}</span>
+                                    <span className={`block truncate font-medium ${item.muted && !active ? 'text-white/40' : ''}`}>{item.label}</span>
                                     {item.description && <span className="block truncate text-xs text-white/40">{item.description}</span>}
                                 </span>
                                 <Badge item={item} />
@@ -131,7 +144,7 @@ function SidePanelRail({ panel, onExpand }) {
                         className={`relative rounded-lg p-2 text-xs ${active ? 'bg-rose-500/10 text-rose-200' : 'text-white/50 hover:bg-white/5'}`}
                     >
                         {item.icon ? <i aria-hidden="true" className={`fas ${item.icon}`} /> : item.label.slice(0, 2)}
-                        {item.badge > 0 && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-400" />}
+                        {(item.badge > 0 || item.dot) && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-rose-400" />}
                     </button>
                 );
             })}
@@ -158,7 +171,7 @@ export function SidePanelAside({ panel }) {
         <aside
             aria-label={panel.title}
             data-side-panel="expanded"
-            className="hidden lg:flex w-80 shrink-0 flex-col self-start overflow-hidden rounded-2xl border border-white/[0.08] bg-surface-panel lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6.5rem)] fit:max-h-full fit:self-stretch"
+            className="hidden lg:flex w-72 2xl:w-80 shrink-0 flex-col self-start overflow-hidden rounded-2xl border border-white/[0.08] bg-surface-panel lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6.5rem)] fit:max-h-full fit:self-stretch"
         >
             <div className="shrink-0 border-b border-white/[0.08] p-4 pb-3">
                 <PanelHeader panel={panel}>
@@ -213,7 +226,7 @@ function ChipRow({ panel, onPicked }) {
                         {item.icon && <i aria-hidden="true" className={`fas ${item.icon} text-xs`} />}
                         <span className="max-w-[14rem] truncate">{item.label}</span>
                         {item.count != null && <span className="tabular-nums opacity-60">{item.count}</span>}
-                        {item.badge > 0 && <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-rose-400" />}
+                        {(item.badge > 0 || item.dot) && <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-rose-400" />}
                     </button>
                 );
             })}

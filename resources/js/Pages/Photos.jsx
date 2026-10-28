@@ -24,6 +24,39 @@ import SharePanel from '@/Components/SharePanel';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
 import useVisibleActions from '@/Hooks/useVisibleActions';
 
+/** Dates the camera (or a person) gave; everything else was worked out from the file. */
+const EXACT_SOURCES = ['exif', 'manual'];
+
+/** The Library panel's views: everything, by when taken, by how sure the date is; each with its count. */
+export function photoViews(photos, now = new Date()) {
+    const taken = (p) => new Date(p.photo_date);
+    const thisMonth = (p) => taken(p).getFullYear() === now.getFullYear() && taken(p).getMonth() === now.getMonth();
+    const thisYear = (p) => taken(p).getFullYear() === now.getFullYear();
+    const counted = (item) => ({ ...item, count: photos.filter(item.match).length });
+    return [
+        counted({ id: 'all', label: 'All photos', icon: 'fa-images', match: () => true }),
+        counted({ id: 'this-month', group: 'Taken', label: 'This month', icon: 'fa-calendar-day', match: thisMonth }),
+        counted({ id: 'this-year', group: 'Taken', label: 'Earlier this year', icon: 'fa-calendar', match: (p) => thisYear(p) && !thisMonth(p) }),
+        counted({ id: 'older', group: 'Taken', label: 'Before this year', icon: 'fa-box-archive', match: (p) => !thisYear(p) }),
+        counted({
+            id: 'exact',
+            group: 'Date',
+            label: 'From the camera',
+            description: 'Or set by hand',
+            icon: 'fa-camera',
+            match: (p) => EXACT_SOURCES.includes(p.date_source),
+        }),
+        counted({
+            id: 'estimated',
+            group: 'Date',
+            label: 'Worth checking',
+            description: 'Worked out from the file',
+            icon: 'fa-circle-question',
+            match: (p) => !EXACT_SOURCES.includes(p.date_source),
+        }),
+    ];
+}
+
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeProjectId] = useActiveProjectId();
@@ -52,7 +85,14 @@ export default function Photos({ photos = [], projects = [] }) {
     const activeProject = useActiveProject(projects, activeProjectId);
     const highlightedPhoto = useHashHighlight('photo-');
 
-    const filteredPhotos = useFilteredItems(photos, {
+    // The side panel's views (and their counts) cover the picked project.
+    const [view, setView] = useState('all');
+    const inProject = useFilteredItems(photos, { projectId: activeProjectId });
+    const views = useMemo(() => photoViews(inProject), [inProject]);
+    const currentView = views.find((v) => v.id === view) ?? views[0];
+    const viewPhotos = useMemo(() => photos.filter(currentView.match), [photos, currentView]);
+
+    const filteredPhotos = useFilteredItems(viewPhotos, {
         projectId: activeProjectId,
         searchQuery,
         searchFields: ['title', 'project_name'],
@@ -165,6 +205,19 @@ export default function Photos({ photos = [], projects = [] }) {
                         { label: 'Photos' },
                     ],
                 }}
+                panel={{
+                    id: 'photos',
+                    title: 'Library',
+                    icon: 'fa-images',
+                    subtitle: `${inProject.length} photo${inProject.length === 1 ? '' : 's'}${activeProject ? ` in ${activeProject.name}` : ' in all projects'}`,
+                    items: views.map(({ match, ...item }) => item),
+                    activeId: currentView.id,
+                    onChange: (id) => {
+                        setView(id);
+                        clearSelection();
+                    },
+                    footer: 'Dates come from the camera where a photo has them; otherwise from its file or folder name, or when it was uploaded.',
+                }}
                 toolbar={{
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search photos' },
                     view: {
@@ -214,7 +267,11 @@ export default function Photos({ photos = [], projects = [] }) {
                         message="Upload photos to your projects to see them here."
                         noun="photo"
                         search={searchQuery}
-                        onClear={() => setSearchQuery('')}
+                        filtered={currentView.id !== 'all'}
+                        onClear={() => {
+                            setSearchQuery('');
+                            setView('all');
+                        }}
                     />
                 ) : viewMode === 'grid' ? (
                     // Grid View

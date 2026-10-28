@@ -27,15 +27,15 @@ beforeEach(() => {
 });
 
 describe('Receipts', () => {
-    it('searches and filters by status from the toolbar', () => {
+    it('searches from the toolbar and filters by status from the side panel', () => {
         render(<Receipts receipts={receipts} />);
         fireEvent.change(screen.getByRole('searchbox', { name: 'Search receipts' }), { target: { value: 'cement' } });
         expect(screen.getByText('cement-1.jpg')).toBeInTheDocument();
         expect(screen.queryByText('mpesa-3.jpg')).toBeNull();
 
         fireEvent.change(screen.getByRole('searchbox', { name: 'Search receipts' }), { target: { value: '' } });
-        fireEvent.click(screen.getByRole('button', { name: /Filters/ }));
-        fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'auto_verified' } });
+        const panel = screen.getByRole('complementary', { name: 'Checks' });
+        fireEvent.click(within(panel).getByRole('button', { name: /Auto-verified/ }));
         expect(screen.getByText('hardware-2.jpg')).toBeInTheDocument();
         expect(screen.queryByText('cement-1.jpg')).toBeNull();
     });

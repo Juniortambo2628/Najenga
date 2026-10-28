@@ -19,10 +19,46 @@ import useFilteredItems from '@/Hooks/useFilteredItems';
 import useHashHighlight from '@/Hooks/useHashHighlight';
 import useAction, { visit } from '@/Hooks/useAction';
 import { exportToCSV } from '@/Utils/exportToCSV';
+import { formatCurrency } from '@/Config/currencies';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
 import useVisibleActions, { editableProjects } from '@/Hooks/useVisibleActions';
+
+const CATEGORY_ICONS = {
+    materials: 'fa-cubes',
+    labor: 'fa-hard-hat',
+    labour: 'fa-hard-hat',
+    equipment: 'fa-tools',
+    transport: 'fa-truck',
+    utilities: 'fa-bolt',
+    permits: 'fa-stamp',
+    professional: 'fa-user-tie',
+    general: 'fa-receipt',
+};
+
+const capitalise = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+
+/** The Spending panel's views: everything, by receipt, by category; each with its count. */
+export function expenseViews(expenses) {
+    const counted = (item) => ({ ...item, count: expenses.filter(item.match).length });
+    const categories = [...new Set(expenses.map((e) => e.category).filter(Boolean))].sort();
+    return [
+        counted({ id: 'all', label: 'All expenses', icon: 'fa-layer-group', match: () => true }),
+        counted({ id: 'no-receipt', group: 'Receipts', label: 'Missing a receipt', icon: 'fa-file-circle-exclamation', match: (e) => !e.receipt_url }),
+        counted({ id: 'has-receipt', group: 'Receipts', label: 'Receipt attached', icon: 'fa-file-circle-check', match: (e) => !!e.receipt_url }),
+        ...categories.map((category) =>
+            counted({ id: `category:${category}`, group: 'Category', label: capitalise(category), icon: CATEGORY_ICONS[category.toLowerCase()] || 'fa-tag', match: (e) => e.category === category }),
+        ),
+    ];
+}
+
+/** "KES 120,000 across 6 expenses"; just the count when currencies are mixed. */
+export function spendingSummary(expenses, total) {
+    const count = `${expenses.length} expense${expenses.length === 1 ? '' : 's'}`;
+    const currencies = new Set(expenses.map((e) => e.currency || 'KES'));
+    return currencies.size === 1 ? `${formatCurrency(total, [...currencies][0])} across ${count}` : count;
+}
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [previewExpense, setPreviewExpense] = useState(null);
@@ -32,7 +68,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
     const [activeProjectId] = useActiveProjectId();
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [view, setView] = useState('all');
     const [sortBy, setSortBy] = useState('date_desc');
     
     // Selection State
@@ -60,16 +96,12 @@ export default function Expenses({ expenses = [], projects = [] }) {
     // Forms on this page (spreadsheet, edit, assign) only offer projects you can edit.
     const formProjects = useMemo(() => editableProjects(projects), [projects]);
 
-    // Extract unique categories for filter
-    const categories = useMemo(() => {
-        const unique = new Set(expenses.map(e => e.category));
-        return ['all', ...Array.from(unique)];
-    }, [expenses]);
+    // The side panel's views (and their counts) cover the picked project.
+    const inProject = useFilteredItems(expenses, { projectId: activeProjectId });
+    const views = useMemo(() => expenseViews(inProject), [inProject]);
+    const currentView = views.find((v) => v.id === view) ?? views[0];
 
-    const categoryFiltered = useMemo(
-        () => (categoryFilter === 'all' ? expenses : expenses.filter(e => e.category === categoryFilter)),
-        [expenses, categoryFilter]
-    );
+    const categoryFiltered = useMemo(() => expenses.filter(currentView.match), [expenses, currentView]);
 
     const sortExpenses = useMemo(() => (a, b) => {
         if (sortBy === 'date_desc') return new Date(b.expense_date) - new Date(a.expense_date);
@@ -181,16 +213,21 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     subtitle: `${filteredExpenses.length} expense${filteredExpenses.length !== 1 ? 's' : ''}${activeProject ? ` in ${activeProject.name}` : ''}`,
                     breadcrumbs: [...rootBreadcrumbs(), { label: 'Expenses' }],
                 }}
+                panel={{
+                    id: 'expenses',
+                    title: 'Spending',
+                    icon: 'fa-wallet',
+                    subtitle: spendingSummary(filteredExpenses, totalAmount),
+                    items: views.map(({ match, ...item }) => item),
+                    activeId: currentView.id,
+                    onChange: (id) => {
+                        setView(id);
+                        clearSelection();
+                    },
+                }}
                 toolbar={{
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search expenses' },
                     filters: [
-                        {
-                            name: 'category',
-                            title: 'Category',
-                            value: categoryFilter,
-                            onChange: setCategoryFilter,
-                            options: categories.map(c => ({ value: c, label: c === 'all' ? 'All Categories' : c })),
-                        },
                         {
                             name: 'sort',
                             title: 'Sort by',
@@ -237,8 +274,8 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         action={canEdit ? { label: 'Add Expense', onClick: () => router.get(route('expenses.create')) } : undefined}
                         noun="expense"
                         search={searchQuery}
-                        filtered={categoryFilter !== 'all'}
-                        onClear={() => { setSearchQuery(''); setCategoryFilter('all'); }}
+                        filtered={view !== 'all'}
+                        onClear={() => { setSearchQuery(''); setView('all'); }}
                     />
                 )}
 

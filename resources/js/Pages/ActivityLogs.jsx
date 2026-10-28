@@ -1,14 +1,16 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
 import EmptyState from '@/Components/EmptyState';
 import VersionList from '@/Components/VersionList';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
 const TABS = [
-    { id: 'changes', label: 'Changes', icon: 'fa-clock-rotate-left' },
-    { id: 'account', label: 'Sign-ins & account', icon: 'fa-user-shield' },
+    { id: 'changes', label: 'Changes', description: 'Who changed what in your projects', icon: 'fa-clock-rotate-left' },
+    { id: 'account', label: 'Sign-ins & account', description: 'Your sign-ins and security events', icon: 'fa-user-shield' },
 ];
+
+const tabUrl = (id) => (id === 'changes' ? route('activity.logs') : `${route('activity.logs')}?tab=${id}`);
 
 const actionTone = (action) =>
     action.includes('create') || action.includes('add')
@@ -59,23 +61,15 @@ export default function ActivityLogs({ tab = 'changes', changes, logs }) {
                     subtitle: 'Who changed what in your projects, and your sign-ins',
                     breadcrumbs: [...rootBreadcrumbs(), { label: 'Activity Logs' }],
                 }}
+                panel={{
+                    id: 'activity-logs',
+                    title: 'Logs',
+                    icon: 'fa-history',
+                    items: TABS,
+                    activeId: tab,
+                    onChange: (id) => id !== tab && router.get(tabUrl(id), {}, { preserveScroll: true }),
+                }}
             >
-                <div role="tablist" aria-label="Activity" className="mb-4 inline-flex gap-1 rounded-xl border border-white/10 bg-white/5 p-1">
-                    {TABS.map((t) => (
-                        <Link
-                            key={t.id}
-                            href={t.id === 'changes' ? route('activity.logs') : `${route('activity.logs')}?tab=${t.id}`}
-                            role="tab"
-                            aria-selected={tab === t.id}
-                            preserveScroll
-                            className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${tab === t.id ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white' : 'text-gray-400 hover:text-white'}`}
-                        >
-                            <i aria-hidden="true" className={`fas ${t.icon} text-xs`} />
-                            {t.label}
-                        </Link>
-                    ))}
-                </div>
-
                 {tab === 'changes' ? (
                     <div role="tabpanel" aria-label="Changes" className="dashboard-card overflow-hidden">
                         {changes.data.length === 0 ? (

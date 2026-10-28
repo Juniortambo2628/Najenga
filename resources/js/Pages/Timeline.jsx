@@ -238,38 +238,30 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                         { label: 'Timeline' },
                     ],
                 }}
+                panel={{
+                    id: 'timeline',
+                    title: 'Timeline',
+                    icon: 'fa-stream',
+                    subtitle: 'Everything that happened, newest first',
+                    items: TABS.map((tab) => ({
+                        id: tab.key,
+                        label: tab.label,
+                        icon: tab.icon,
+                        group: tab.key === 'all' ? undefined : 'Only',
+                        count: tabData[tab.key]?.length || 0,
+                    })),
+                    activeId: activeTab,
+                    onChange: (id) => {
+                        setActiveTab(id);
+                        clearSelection();
+                    },
+                }}
                 toolbar={{
                     actions: visible([{ id: 'add', label: 'Add Milestone', icon: 'fa-plus', href: route('timeline.create'), variant: 'primary' }]),
                 }}
             >
 
                 <StatsBar expenses={expenses} photos={photos} documents={documents} milestones={timelines} />
-
-                {/* Tabs */}
-                <div className="flex gap-1 mb-6 bg-surface-panel/90 border border-white/[0.08] rounded-xl p-1 w-fit overflow-x-auto">
-                    {TABS.map((tab) => {
-                        const count = tabData[tab.key]?.length || 0;
-                        return (
-                            <button
-                                key={tab.key}
-                                onClick={() => { setActiveTab(tab.key); clearSelection(); }}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                                    activeTab === tab.key
-                                        ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                }`}
-                            >
-                                <i aria-hidden="true" className={`fas ${tab.icon}`}></i>
-                                {tab.label}
-                                {count > 0 && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-white/20' : 'bg-white/10'}`}>
-                                        {count}
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })}
-                </div>
 
                 {/* Bulk Actions */}
                 {selectedCount > 0 && (

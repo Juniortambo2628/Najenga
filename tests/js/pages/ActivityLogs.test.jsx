@@ -4,7 +4,8 @@ import { render, screen } from '@testing-library/react';
 vi.mock('@inertiajs/react', () => ({
     Head: () => null,
     Link: ({ href, children, preserveScroll, ...rest }) => <a href={href} {...rest}>{children}</a>,
-    usePage: () => ({ props: { auth: { user: { id: 1 } } } }),
+    usePage: () => ({ props: { auth: { user: { id: 1 } } }, component: 'ActivityLogs' }),
+    router: { get: vi.fn() },
 }));
 vi.mock('@/Layouts/AuthenticatedLayout', () => ({ default: ({ children }) => <div>{children}</div> }));
 
@@ -23,7 +24,8 @@ const logs = { data: [{ id: 1, action: 'auth.login', description: 'Signed in', i
 describe('ActivityLogs', () => {
     it('shows changes from the version history, read-only', () => {
         render(<ActivityLogs tab="changes" changes={changes} logs={logs} />);
-        expect(screen.getByRole('tab', { name: /Changes/ })).toHaveAttribute('aria-selected', 'true');
+        // The side panel picks the log.
+        expect(screen.getAllByRole('button', { name: /Changes/ })[0]).toHaveAttribute('aria-current', 'true');
         expect(screen.getByText('Mary Manager')).toBeInTheDocument();
         expect(screen.getByText('Cement')).toBeInTheDocument();
         expect(screen.getByText('20,000')).toBeInTheDocument();
@@ -34,7 +36,7 @@ describe('ActivityLogs', () => {
 
     it('shows sign-ins and account events on their own tab', () => {
         render(<ActivityLogs tab="account" changes={changes} logs={logs} />);
-        expect(screen.getByRole('tab', { name: /Sign-ins/ })).toHaveAttribute('aria-selected', 'true');
+        expect(screen.getAllByRole('button', { name: /Sign-ins/ })[0]).toHaveAttribute('aria-current', 'true');
         expect(screen.getByText('Signed in')).toBeInTheDocument();
         expect(screen.getByText('auth.login')).toBeInTheDocument();
         expect(screen.queryByText('Cement')).toBeNull();
