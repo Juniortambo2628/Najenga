@@ -101,12 +101,12 @@ class ProjectRoleAuthorizationTest extends TestCase
 
         foreach (['viewer', 'editor'] as $role) {
             $this->actingAs($this->{$role})
-                ->postJson("/projects/{$this->project->id}/share", ['email' => $newcomer->email, 'role' => 'editor'])
+                ->postJson("/projects/{$this->project->id}/invitations", ['email' => $newcomer->email, 'role' => 'editor'])
                 ->assertForbidden();
         }
 
         $this->actingAs($this->manager)
-            ->postJson("/projects/{$this->project->id}/share", ['email' => $newcomer->email, 'role' => 'viewer'])
+            ->postJson("/projects/{$this->project->id}/invitations", ['email' => $newcomer->email, 'role' => 'viewer'])
             ->assertOk();
 
         $this->assertDatabaseHas('project_user', [

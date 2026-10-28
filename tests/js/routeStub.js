@@ -92,7 +92,6 @@ export const TEST_ROUTES = {
     'projects.members.destroy': '/projects/{project}/members/{user}',
     'projects.members.update': '/projects/{project}/members/{user}',
     'projects.share.destroy': '/projects/{project}/share/{user}',
-    'projects.share.store': '/projects/{project}/share',
     'projects.show': '/projects/{project}',
     'projects.store': '/projects',
     'projects.update': '/projects/{project}',
