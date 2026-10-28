@@ -5,7 +5,7 @@ const axiosMock = vi.hoisted(() => ({ post: vi.fn() }));
 vi.mock('axios', () => ({ default: axiosMock }));
 
 import usePresenceHeartbeat, { HEARTBEAT_MS } from '../../../resources/js/Hooks/usePresenceHeartbeat';
-import { useOnline } from '../../../resources/js/Utils/presence';
+import { useBadges, useOnline } from '../../../resources/js/Utils/presence';
 
 const setVisibility = (state) => {
     Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
@@ -14,7 +14,7 @@ const setVisibility = (state) => {
 
 beforeEach(() => {
     vi.useFakeTimers();
-    axiosMock.post.mockReset().mockResolvedValue({ data: { online: [{ id: 2, name: 'Mary', page: 'expenses', project_id: null }] } });
+    axiosMock.post.mockReset().mockResolvedValue({ data: { online: [{ id: 2, name: 'Mary', page: 'expenses', project_id: null }], badges: { photos: 3 } } });
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
 });
 afterEach(() => vi.useRealTimers());
@@ -23,11 +23,12 @@ describe('usePresenceHeartbeat', () => {
     it('beats on mount and every 20 seconds, and shares who is online', async () => {
         const { result } = renderHook(() => {
             usePresenceHeartbeat();
-            return useOnline();
+            return { online: useOnline(), badges: useBadges() };
         });
         await act(async () => {});
         expect(axiosMock.post).toHaveBeenCalledWith('/presence/heartbeat', { page: window.location.pathname });
-        expect(result.current).toEqual([{ id: 2, name: 'Mary', page: 'expenses', project_id: null }]);
+        expect(result.current.online).toEqual([{ id: 2, name: 'Mary', page: 'expenses', project_id: null }]);
+        expect(result.current.badges).toEqual({ photos: 3 });
 
         await act(async () => vi.advanceTimersByTime(HEARTBEAT_MS));
         expect(axiosMock.post).toHaveBeenCalledTimes(2);
