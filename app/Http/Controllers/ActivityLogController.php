@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Revision;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -31,14 +32,37 @@ class ActivityLogController extends Controller
                 ->where('subject_id', (int) $request->input('subject_id'));
         }
 
-        $logs = $logs->orderBy('created_at', 'desc')->paginate(50);
-
         if ($request->expectsJson()) {
-            return response()->json($logs);
+            return response()->json($logs->orderBy('created_at', 'desc')->paginate(50));
         }
 
+        // The page: changes to records come from the version history (what
+        // changed, field by field, by everyone in your projects); sign-ins and
+        // account events stay in activity_logs, without the record-change
+        // rows the history already shows.
         return Inertia::render('ActivityLogs', [
-            'logs' => $logs,
+            'tab' => $request->input('tab') === 'account' ? 'account' : 'changes',
+            'changes' => Revision::visibleTo($request->user())
+                ->with('user')
+                ->latest('id')
+                ->paginate(30, ['*'], 'changes_page')
+                ->withQueryString()
+                ->through(fn (Revision $revision) => $revision->toHistory()),
+            'logs' => $logs->whereNotIn('action', self::recordChangeActions())
+                ->orderBy('created_at', 'desc')
+                ->paginate(50)
+                ->withQueryString(),
         ]);
+    }
+
+    /** Activity actions that only repeat a version history entry. */
+    private static function recordChangeActions(): array
+    {
+        $types = [...array_keys(Revision::TYPES), 'timeline'];
+
+        return collect($types)
+            ->crossJoin(['created', 'updated', 'deleted', 'restored'])
+            ->map(fn (array $pair) => implode('.', $pair))
+            ->all();
     }
 }

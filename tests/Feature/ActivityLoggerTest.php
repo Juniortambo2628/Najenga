@@ -96,8 +96,8 @@ class ActivityLoggerTest extends TestCase
         $me = User::factory()->create(['role' => 'client']);
         $other = User::factory()->create(['role' => 'client']);
 
-        ActivityLogger::logFor($me, 'project.created', 'mine');
-        ActivityLogger::logFor($other, 'project.created', 'theirs');
+        ActivityLogger::logFor($me, 'project.member_added', 'mine');
+        ActivityLogger::logFor($other, 'project.member_added', 'theirs');
 
         $this->actingAs($me)
             ->get('/activity-logs')
@@ -112,7 +112,7 @@ class ActivityLoggerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'client']);
 
-        ActivityLogger::logFor($user, 'project.created', 'one row');
+        ActivityLogger::logFor($user, 'project.member_added', 'one row');
 
         // The Inertia page, no Accept header.
         $this->actingAs($user)
@@ -129,7 +129,7 @@ class ActivityLoggerTest extends TestCase
             ->assertJsonStructure([
                 'data' => [['id', 'action', 'description', 'ip_address']],
             ])
-            ->assertJsonPath('data.0.action', 'project.created');
+            ->assertJsonPath('data.0.action', 'project.member_added');
     }
 
     public function test_action_code_is_capped_at_the_column_width(): void

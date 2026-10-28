@@ -105,6 +105,47 @@ class Revision extends Model
         return static::where('created_at', '<', now()->subDays(self::KEEP_DAYS));
     }
 
+    /**
+     * Versions the user can see: those of projects they own or belong to, and
+     * of their own records outside any project.
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereIn('project_id', Project::accessibleBy($user)->select('id'))
+            ->orWhere(fn (Builder $own) => $own->whereNull('project_id')->where('user_id', $user->id)));
+    }
+
+    /** One version as the history lists show it (load `user` first). */
+    public function toHistory(): array
+    {
+        return [
+            'id' => $this->id,
+            'event' => $this->event,
+            'type' => $this->type(),
+            'record_id' => $this->revisionable_id,
+            'project_id' => $this->project_id,
+            'label' => self::label($this->after ?? $this->before),
+            'user' => $this->user ? ['id' => $this->user->id, 'name' => $this->user->name] : null,
+            'at' => $this->updated_at->toIso8601String(),
+            'changes' => $this->diff(),
+            'restorable' => $this->isRestorable(),
+            'undoable' => $this->event === 'updated' && $this->isRestorable(true),
+        ];
+    }
+
+    /** A record's human name from its fields. */
+    public static function label(?array $fields): ?string
+    {
+        foreach (['name', 'title', 'original_name', 'filename'] as $field) {
+            if (filled($fields[$field] ?? null)) {
+                return (string) $fields[$field];
+            }
+        }
+
+        return null;
+    }
+
     /** Groups every version one request wrote (e.g. a bulk delete). */
     public static function batchId(): string
     {
