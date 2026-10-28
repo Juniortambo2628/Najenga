@@ -4,6 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import ProjectSwitcher from '@/Components/ProjectSwitcher';
 import HistoryDrawer from '@/Components/HistoryDrawer';
+import Tour, { startTour } from '@/Components/Tour';
 import { AlsoHere, OnlineAvatars } from '@/Components/OnlinePeople';
 import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
@@ -189,6 +190,7 @@ export default function AuthenticatedLayout({ children }) {
             <Toaster position="top-right" />
             <FlashToast />
             <ConfirmHost />
+            <Tour user={user} autoStart={component === 'Dashboard'} />
 
             <a href="#main-content" className="skip-link">Skip to main content</a>
             <div className="min-h-screen bg-[#0b0c0d] flex">
@@ -201,7 +203,7 @@ export default function AuthenticatedLayout({ children }) {
                 )}
 
                 {/* Sidebar */}
-                <aside className={`
+                <aside data-tour="sidebar" className={`
                     fixed inset-y-0 left-0 z-40 h-screen
                     bg-[#101112] border-r border-white/[0.08] shadow-2xl flex flex-col
                     transform transition-all duration-300 ease-in-out
@@ -353,6 +355,7 @@ export default function AuthenticatedLayout({ children }) {
                             <button
                                 type="button"
                                 onClick={openHistory}
+                                data-tour="history"
                                 aria-label="Version history"
                                 title="Version history"
                                 className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white"
@@ -361,10 +364,12 @@ export default function AuthenticatedLayout({ children }) {
                             </button>
                             <HistoryDrawer show={historyOpen} onClose={closeHistory} />
 
-                            <NotificationsDropdown />
+                            <div data-tour="notifications">
+                                <NotificationsDropdown />
+                            </div>
 
                             {/* User Dropdown */}
-                            <div className="relative">
+                            <div className="relative" data-tour="account">
                                 <button 
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                     aria-expanded={userDropdownOpen}
@@ -395,6 +400,16 @@ export default function AuthenticatedLayout({ children }) {
                                             <Link href={route('profile.edit')} className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-white/5">
                                                 <i aria-hidden="true" className="fas fa-user w-5"></i>Profile
                                             </Link>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setUserDropdownOpen(false);
+                                                    startTour();
+                                                }}
+                                                className="flex w-full items-center gap-3 px-4 py-2 text-left text-gray-300 hover:bg-white/5"
+                                            >
+                                                <i aria-hidden="true" className="fas fa-route w-5"></i>Take the tour
+                                            </button>
                                             <div className="border-t border-white/10 mt-2 pt-2">
                                                 <Link 
                                                     href={route('logout')} 
