@@ -10,36 +10,35 @@ on:
         description: "Shell script to run on the server"
         required: true
         default: |
-          echo '== host =='
-          hostname; whoami; date -u
-          echo '== what serves 443 =='
-          ss -tlnp 2>/dev/null | grep -E ':443|:80' || netstat -tlnp 2>/dev/null | grep -E ':443|:80'
-          ps -ef | grep -Ei 'httpd|nginx|lshttpd|apache' | grep -v grep | head -10
-          echo '== served cert via SNI =='
-          echo | timeout 15 openssl s_client -connect 127.0.0.1:443 -servername najenga.okjtech.co.ke 2>/dev/null | openssl x509 -noout -subject -issuer -dates -serial 2>/dev/null || echo 's_client failed'
-          echo '== acme clients =='
-          command -v certbot || true
-          command -v acme.sh || true
-          ls -la $HOME/.acme.sh 2>/dev/null | head -20 || true
-          ls -la /etc/letsencrypt 2>/dev/null | head -20 || true
-          ls -la /etc/letsencrypt/renewal 2>/dev/null || true
-          echo '== account crontab =='
-          crontab -l 2>/dev/null || echo 'no crontab'
-          echo '== shared cron =='
-          ls /etc/cron.d 2>/dev/null || true
-          grep -riE 'acme|certbot|renew|autossl' /etc/cron.d /etc/crontab 2>/dev/null | head -20 || true
-          echo '== cpanel ssl =='
-          command -v uapi || true
-          uapi DomainInfo list_domains 2>/dev/null | head -30 || true
-          ls -la /var/cpanel/ssl 2>/dev/null || true
-          ls /usr/local/cpanel/bin 2>/dev/null | grep -i ssl || true
-          echo '== cert files (recent) =='
-          find $HOME /etc/apache2 /etc/nginx /etc/ssl -name '*.crt' -o -name '*.pem' 2>/dev/null | grep -vE 'ssl/certs|snakeoil' | head -40
-          echo '== apache ssl config for our domain =='
-          grep -rl 'najenga' /etc/apache2 2>/dev/null | head -10 || true
-          grep -rhE 'SSLCertificateFile|SSLCertificateKeyFile' /etc/apache2 2>/dev/null | sort -u | head -20 || true
-          echo '== home =='
-          ls -la $HOME | head -30
+          echo '== php =='
+          command -v php || true
+          ls /usr/local/bin/php /usr/bin/php 2>/dev/null || true
+          php -v 2>/dev/null | head -1 || true
+          echo '== najenga dirs =='
+          ls -d $HOME/najenga-core $HOME/najenga.okjtech.co.ke 2>/dev/null || true
+          echo '== najenga cron =='
+          crontab -l 2>/dev/null | grep -i najenga || echo 'NO NAJENGA CRON'
+          echo '== queue/cache/session (no secrets) =='
+          grep -E '^(QUEUE_CONNECTION|CACHE_STORE|SESSION_DRIVER)=' $HOME/najenga-core/.env 2>/dev/null || echo 'no .env readable'
+          echo '== my public ip =='
+          PUBIP=$(curl -4 -s --max-time 8 https://api.ipify.org)
+          echo "$PUBIP"
+          echo '== cert: public ip :443 SNI najenga =='
+          echo | timeout 15 openssl s_client -connect "$PUBIP:443" -servername najenga.okjtech.co.ke 2>/dev/null | openssl x509 -noout -subject -issuer -dates 2>/dev/null || echo 'pubip s_client failed'
+          echo '== cert: 127.0.0.1 :443 SNI najenga =='
+          echo | timeout 15 openssl s_client -connect 127.0.0.1:443 -servername najenga.okjtech.co.ke 2>/dev/null | openssl x509 -noout -subject -issuer -dates 2>/dev/null || echo 'local s_client failed'
+          echo '== external hairpin: https via dns =='
+          curl -sS --max-time 10 https://najenga.okjtech.co.ke/health -o /dev/null -w 'code=%{http_code}\n' 2>&1 | tail -3
+          echo '== uapi ssl coverage =='
+          uapi SSL get_ssl_domains 2>/dev/null | head -80 || echo 'get_ssl_domains failed'
+          uapi SSL get_certificates 2>/dev/null | head -80 || echo 'get_certificates failed'
+          echo '== autossl =='
+          uapi SSL get_autossl_provider 2>/dev/null | head -20 || echo 'get_autossl_provider n/a'
+          echo '== web server config visible? =='
+          ls /etc/apache2 2>&1 | head -3
+          ls /etc/nginx 2>&1 | head -3
+          echo '== docroot of the subdomain =='
+          uapi DomainInfo list_domains 2>/dev/null | grep -A2 najenga | head -6 || true
 
 jobs:
   diag:
