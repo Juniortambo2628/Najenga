@@ -11,6 +11,7 @@ import ConfirmHost from '@/Components/ConfirmHost';
 import { useHasUnsavedChanges } from '@/Utils/unsavedChanges';
 import usePresenceHeartbeat from '@/Hooks/usePresenceHeartbeat';
 import { useBadges } from '@/Utils/presence';
+import { closeHistory, openHistory, useHistoryOpen } from '@/Utils/historyDrawer';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 import { navItemsFor } from '@/Config/navigation';
 
@@ -88,7 +89,7 @@ export default function AuthenticatedLayout({ children }) {
     const hero = current ? reported.hero : null;
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-    const [historyOpen, setHistoryOpen] = useState(false);
+    const historyOpen = useHistoryOpen();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searchOpen, setSearchOpen] = useState(false);
@@ -249,7 +250,7 @@ export default function AuthenticatedLayout({ children }) {
                 </aside>
 
                 {/* Main Content Area */}
-                <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-x-clip ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+                <div className={`flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 overflow-x-clip ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
                     {/* Top Navbar */}
                     {/* Above everything in the page (sticky toolbars, heroes), so its menus are never covered. */}
                     <header className="h-16 bg-[#0b0c0d]/90 backdrop-blur-xl flex items-center justify-between px-4 sticky top-0 z-30">
@@ -339,14 +340,14 @@ export default function AuthenticatedLayout({ children }) {
                             {/* Version history of the records on this page */}
                             <button
                                 type="button"
-                                onClick={() => setHistoryOpen(true)}
+                                onClick={openHistory}
                                 aria-label="Version history"
                                 title="Version history"
                                 className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white"
                             >
                                 <i aria-hidden="true" className="fas fa-clock-rotate-left" />
                             </button>
-                            <HistoryDrawer show={historyOpen} onClose={() => setHistoryOpen(false)} />
+                            <HistoryDrawer show={historyOpen} onClose={closeHistory} />
 
                             <NotificationsDropdown />
 

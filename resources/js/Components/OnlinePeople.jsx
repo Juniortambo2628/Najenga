@@ -48,13 +48,18 @@ export function OnlineAvatars() {
     return <Stack people={online} max={4} size="h-8 w-8 text-[11px]" label={`${online.length} online in your projects`} />;
 }
 
-/** "Mary is also here": others on the same page (the same project, on a project's page). */
-export function AlsoHere() {
+/** Others on this page (the same project, on a project's page). */
+export function usePeopleHere() {
     const online = useOnline();
     const segments = window.location.pathname.split('/').filter(Boolean);
     const page = segments[0] || 'dashboard';
     const projectId = page === 'projects' && /^\d+$/.test(segments[1] ?? '') ? Number(segments[1]) : null;
-    const here = online.filter((p) => p.page === page && (projectId === null || p.project_id === projectId));
+    return online.filter((p) => p.page === page && (projectId === null || p.project_id === projectId));
+}
+
+/** "Mary is also here". */
+export function AlsoHere() {
+    const here = usePeopleHere();
     if (here.length === 0) return null;
 
     const names = here.length === 1 ? here[0].name : here.length === 2 ? `${here[0].name} and ${here[1].name}` : `${here[0].name} and ${here.length - 1} others`;

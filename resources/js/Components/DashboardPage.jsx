@@ -1,6 +1,22 @@
 import DashboardHero from '@/Components/DashboardHero';
 import FloatingToolbar from '@/Components/FloatingToolbar';
 import { SidePanelAside, SidePanelMobileBar } from '@/Components/SidePanel';
+import { usePage } from '@inertiajs/react';
+import PageActivityPanel, { ACTIVITY_PANEL_PAGES } from '@/Components/PageActivityPanel';
+
+/**
+ * The side panel pages with lists get when they have none of their own:
+ * who's here, latest changes, History and Share. Collapsed to a rail at
+ * first, so lists keep their width; desktop only.
+ */
+const ACTIVITY_PANEL = {
+    id: 'page-activity',
+    title: 'Activity',
+    icon: 'fa-users',
+    defaultCollapsed: true,
+    desktopOnly: true,
+    content: <PageActivityPanel />,
+};
 
 /**
  * The one layout every dashboard page renders through, so each page has the
@@ -21,13 +37,17 @@ import { SidePanelAside, SidePanelMobileBar } from '@/Components/SidePanel';
  * @param {ReactNode} [summary] - Usually a SummaryCards element
  * @param {object}    [toolbar] - FloatingToolbar props; leave out for no toolbar
  * @param {object}    [panel]   - Side panel config (see SidePanel); on phones it
- *                                becomes a chip bar or bottom sheet under the navbar
+ *                                becomes a chip bar or bottom sheet under the navbar.
+ *                                Without one, list pages get the Activity panel;
+ *                                `panel={false}` turns that off.
  * @param {boolean}   [fill]    - Fit the screen; the content's ListPanel scrolls
  * @param {Function}  [onClick] - Click handler on the page (e.g. to close a context menu)
  * @param {string}    [className]     - Extra classes for the page wrapper (e.g. a max width)
  * @param {string}    [bodyClassName] - Extra classes for the content column (e.g. spacing between sections)
  */
-export default function DashboardPage({ hero, summary = null, toolbar = null, panel = null, fill = false, onClick, className = '', bodyClassName = '', children }) {
+export default function DashboardPage({ hero, summary = null, toolbar = null, panel: ownPanel, fill = false, onClick, className = '', bodyClassName = '', children }) {
+    const { component } = usePage();
+    const panel = ownPanel ?? (ownPanel !== false && ACTIVITY_PANEL_PAGES.includes(component) ? ACTIVITY_PANEL : null);
     // Navbar 4rem + main's padding (2rem top, 6rem bottom for the toolbar).
     const fit = fill ? 'fit:h-[calc(100dvh-12rem)] fit:flex fit:flex-col' : '';
     const classes = `${fit} ${className}`.trim();
@@ -41,7 +61,7 @@ export default function DashboardPage({ hero, summary = null, toolbar = null, pa
 
             {toolbar && <FloatingToolbar {...toolbar} />}
 
-            {panel && <SidePanelMobileBar panel={panel} />}
+            {panel && !panel.desktopOnly && <SidePanelMobileBar panel={panel} />}
 
             <div className={`${panel ? 'lg:flex lg:gap-5' : ''} ${fill ? 'fit:flex-1 fit:min-h-0' : ''}`}>
                 <div className={`min-w-0 ${panel ? 'lg:flex-1' : ''} ${fill ? 'fit:h-full fit:flex fit:flex-col' : ''} ${bodyClassName}`}>{children}</div>
