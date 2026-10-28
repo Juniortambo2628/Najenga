@@ -169,7 +169,7 @@ class ReceiptProcessingService
     /**
      * Write the receipts row that mirrors the expense's first receipt media.
      */
-    protected function recordReceipt(Expense $expense, ?array $ocr = null, string $originalName = ''): ?Receipt
+    public function recordReceipt(Expense $expense, ?array $ocr = null, string $originalName = ''): ?Receipt
     {
         $media = $expense->getFirstMedia('receipt');
 

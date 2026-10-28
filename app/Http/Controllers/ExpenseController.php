@@ -9,6 +9,7 @@ use App\Http\Requests\UploadExpenseReceiptRequest;
 use App\Models\Expense;
 use App\Models\Project;
 use App\Services\ActivityLogger;
+use App\Services\ReceiptProcessingService;
 use App\Traits\HasProjectScope;
 use App\Traits\BatchDeletes;
 use App\Traits\RespondsWithModel;
@@ -174,7 +175,7 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function uploadReceipt(UploadExpenseReceiptRequest $request, Expense $expense)
+    public function uploadReceipt(UploadExpenseReceiptRequest $request, Expense $expense, ReceiptProcessingService $receipts)
     {
         $expense->clearMediaCollection('receipt');
 
@@ -185,6 +186,9 @@ class ExpenseController extends Controller
                 'uploaded_by' => auth()->id(),
             ])
             ->toMediaCollection('receipt');
+
+        // List it under Receipts too, like receipts sent by chat or checked on Receipt Verification.
+        $receipts->recordReceipt($expense, null, $request->file('receipt')->getClientOriginalName());
 
         return response()->json([
             'success' => true,
@@ -198,6 +202,7 @@ class ExpenseController extends Controller
         $this->authorize('update', $expense);
 
         $expense->clearMediaCollection('receipt');
+        $expense->receipt()->first()?->delete();
 
         return response()->json(['success' => true]);
     }
