@@ -160,7 +160,7 @@ export default function Tour({ user, autoStart = false }) {
                 className="fixed w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-white/10 bg-surface-overlay p-5 shadow-2xl"
                 style={cardStyle}
             >
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                <p className="mb-1 text-[11px] font-semibold capitalize text-gray-500">
                     {index + 1} of {steps.length}
                 </p>
                 <h2 id="tour-title" className="text-lg font-semibold text-white">{step.title}</h2>

@@ -12,6 +12,7 @@ import useAction, { visit } from '@/Hooks/useAction';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import { formatCurrency, formatCurrencyCompact } from '@/Config/currencies';
 import { exportToCSV } from '@/Utils/exportToCSV';
+import titleCase from '@/Utils/titleCase';
 
 /** Spent as a share of the budget (0 when there's no budget), and whether it's over. */
 export function budgetUse(project) {
@@ -170,7 +171,7 @@ function ProjectOverview({ project, onShare }) {
                             {recent.expenses.map((expense) => (
                                 <li key={expense.id} className="flex items-center justify-between gap-3">
                                     <Link href={route('expenses.show', expense.id)} className="min-w-0">
-                                        <span className="block truncate text-sm font-medium text-white hover:underline">{expense.title}</span>
+                                        <span className="block truncate text-sm font-medium text-white hover:underline">{titleCase(expense.title)}</span>
                                         <span className="text-xs text-white/45">{expense.date}</span>
                                     </Link>
                                     <span className="shrink-0 font-mono text-sm text-white">{formatCurrency(expense.amount, expense.currency || project.currency)}</span>

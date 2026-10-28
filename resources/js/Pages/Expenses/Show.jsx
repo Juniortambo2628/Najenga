@@ -9,6 +9,7 @@ import { useDropzone } from 'react-dropzone';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import DetailRow from '@/Components/DetailRow';
 import useAction from '@/Hooks/useAction';
+import titleCase from '@/Utils/titleCase';
 
 function ReceiptSection({ expense, onUpdate }) {
     const [previewUrl, setPreviewUrl] = useState(expense?.receipt_url || null);
@@ -105,21 +106,21 @@ export default function Show({ expense }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title={expense.title} />
+            <Head title={titleCase(expense.title)} />
 
             <DashboardPage
                 className="max-w-4xl mx-auto"
                 hero={{
-                    title: expense.title,
+                    title: titleCase(expense.title),
                     subtitle: expense.project_name && expense.project_name !== 'N/A' ? expense.project_name : 'Expense details',
                     breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Expenses', href: route('expenses') },
-                        { label: expense.title },
+                        { label: titleCase(expense.title) },
                     ],
                     actions: <div className="flex gap-3">
-                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[expense.status] || statusColors.paid}`}>
-                                {expense.status?.toUpperCase()}
+                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize border ${statusColors[expense.status] || statusColors.paid}`}>
+                                {expense.status}
                             </span>
                             <Link
                                 href={route('expenses.edit', expense.id)}
@@ -138,7 +139,7 @@ export default function Show({ expense }) {
                                 <DetailRow label="Amount" value={formatCurrency(expense.amount, expense.currency)} mono />
                                 <DetailRow label="Category" value={expense.category} />
                                 <DetailRow label="Payment Method" value={expense.payment_method ? (PAYMENT_LABELS[expense.payment_method] || expense.payment_method) : null} />
-                                <DetailRow label="Recipient" value={expense.recipient} />
+                                <DetailRow label="Recipient" value={titleCase(expense.recipient)} />
                                 <DetailRow label="Date" value={expense.expense_date} mono />
                                 <DetailRow label="Time" value={expense.time} mono />
                                 <DetailRow label="Reference" value={expense.reference_number} mono />
@@ -146,7 +147,7 @@ export default function Show({ expense }) {
                             </div>
                             {expense.description && (
                                 <div className="mt-5 pt-5 border-t border-white/10">
-                                    <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">Description</span>
+                                    <span className="text-[11px] font-bold text-gray-400 capitalize">Description</span>
                                     <p className="mt-2 text-sm text-gray-300 whitespace-pre-wrap">{expense.description}</p>
                                 </div>
                             )}

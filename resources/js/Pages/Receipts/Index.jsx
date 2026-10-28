@@ -111,7 +111,7 @@ export default function Index({ receipts = [] }) {
                     <table className="w-full text-left">
                         <thead className="sticky top-0 z-10 bg-surface-panel">
                             <tr className="border-b border-white/10">
-                                <th className="px-6 py-4 w-10">
+                                <th className="px-4 py-2.5 w-10">
                                     <input
                                         type="checkbox"
                                         checked={allSelected}
@@ -120,24 +120,24 @@ export default function Index({ receipts = [] }) {
                                         className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                     />
                                 </th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">ID</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Expense ID</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Filename</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Status</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Created At</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">ID</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Expense ID</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Filename</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Status</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Created At</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredReceipts.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-400">
+                                    <td colSpan="6" className="px-4 py-10 text-center text-gray-400">
                                         {receipts.length === 0 ? 'No receipts found.' : 'No receipts match your search or filters.'}
                                     </td>
                                 </tr>
                             ) : (
                                 filteredReceipts.map((receipt) => (
                                     <tr key={receipt.id} className={`border-b border-white/5 hover:bg-white/5 transition ${isSelected(receipt.id) ? 'bg-white/5' : ''}`}>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-2.5">
                                             <input
                                                 type="checkbox"
                                                 checked={isSelected(receipt.id)}
@@ -146,9 +146,9 @@ export default function Index({ receipts = [] }) {
                                                 className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                             />
                                         </td>
-                                        <td className="px-6 py-4 text-gray-300 text-sm">#{receipt.id}</td>
-                                        <td className="px-6 py-4 text-gray-300 text-sm">{receipt.expense_id || '-'}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-2.5 text-gray-300 text-sm">#{receipt.id}</td>
+                                        <td className="px-4 py-2.5 text-gray-300 text-sm">{receipt.expense_id || '-'}</td>
+                                        <td className="px-4 py-2.5">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500">
                                                     <i aria-hidden="true" className="fas fa-file-image text-sm"></i>
@@ -160,12 +160,12 @@ export default function Index({ receipts = [] }) {
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-2.5">
                                             <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${STATUS_STYLES[statusOf(receipt)] || STATUS_STYLES.pending}`}>
                                                 {statusOf(receipt).replace('_', ' ')}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-400 text-sm">
+                                        <td className="px-4 py-2.5 text-gray-400 text-sm">
                                             {new Date(receipt.created_at).toLocaleDateString()}
                                         </td>
                                     </tr>

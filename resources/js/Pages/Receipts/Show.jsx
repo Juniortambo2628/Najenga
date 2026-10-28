@@ -29,8 +29,8 @@ export default function Show({ receipt }) {
                         { label: receipt.original_name || `Receipt #${receipt.id}` },
                     ],
                     actions: <div className="flex gap-3">
-                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${statusColors[receipt.verification_status] || statusColors.pending}`}>
-                                {receipt.verification_status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize border ${statusColors[receipt.verification_status] || statusColors.pending}`}>
+                                {receipt.verification_status?.replace('_', ' ') || 'pending'}
                             </span>
                             <Link
                                 href={route('receipts.edit', receipt.id)}

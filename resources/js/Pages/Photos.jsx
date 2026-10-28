@@ -251,7 +251,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                 key={g}
                                 onClick={() => setTimelineGroup(g)}
                                 aria-pressed={timelineGroup === g}
-                                className={`px-3 py-1.5 rounded-lg transition text-xs uppercase font-bold ${timelineGroup === g ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-300'}`}
+                                className={`px-3 py-1.5 rounded-lg transition text-xs capitalize font-bold ${timelineGroup === g ? 'bg-white text-black' : 'text-gray-400 hover:text-gray-300'}`}
                             >
                                 {g}
                             </button>
@@ -349,7 +349,7 @@ export default function Photos({ photos = [], projects = [] }) {
                             {/* Editable Fields */}
                             <div className="space-y-4">
                                 <div>
-                                    <label htmlFor="photos-title" className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Title</label>
+                                    <label htmlFor="photos-title" className="text-gray-400 text-xs capitalize block mb-1">Title</label>
                                     <input id="photos-title" 
                                         type="text" 
                                         value={previewPhoto?.title || ''}
@@ -363,7 +363,7 @@ export default function Photos({ photos = [], projects = [] }) {
                                 </div>
                                 
                                 <div>
-                                    <label htmlFor="photos-location" className="text-gray-400 text-xs uppercase tracking-wider block mb-1">Location</label>
+                                    <label htmlFor="photos-location" className="text-gray-400 text-xs capitalize block mb-1">Location</label>
                                     <div className="relative">
                                         <i aria-hidden="true" className="fas fa-map-marker-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
                                         <input id="photos-location" 

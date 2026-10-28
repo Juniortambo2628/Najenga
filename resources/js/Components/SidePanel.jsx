@@ -81,7 +81,7 @@ export function SidePanelNav({ panel, onPicked }) {
                     return (
                         <li key={item.id}>
                             {groupStart && (
-                                <p className={`px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/35 ${index > 0 ? 'pt-3' : ''}`}>{item.group}</p>
+                                <p className={`px-2.5 pb-1 text-xs font-semibold capitalize text-white/40 ${index > 0 ? 'pt-3' : ''}`}>{item.group}</p>
                             )}
                             <button
                                 type="button"

@@ -46,7 +46,7 @@ export default function PageActivityPanel() {
     return (
         <div className="space-y-5 text-sm">
             <section aria-labelledby="panel-here">
-                <h3 id="panel-here" className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">On this page</h3>
+                <h3 id="panel-here" className="mb-2 text-[11px] font-bold capitalize text-gray-500">On this page</h3>
                 {here.length === 0 ? (
                     <p className="text-gray-500">Only you right now.</p>
                 ) : (
@@ -62,7 +62,7 @@ export default function PageActivityPanel() {
             </section>
 
             <section aria-labelledby="panel-latest">
-                <h3 id="panel-latest" className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Latest changes</h3>
+                <h3 id="panel-latest" className="text-[11px] font-bold capitalize text-gray-500">Latest changes</h3>
                 {latest.status === 'loading' ? (
                     <p className="py-2 text-gray-500">Loading…</p>
                 ) : latest.status === 'error' ? (

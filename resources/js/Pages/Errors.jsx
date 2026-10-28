@@ -41,7 +41,7 @@ export default function Errors({ status = 500 }) {
 
             <main className="min-h-screen flex items-center justify-center bg-black px-5 py-8 text-white">
                 <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-gradient-to-br from-[rgba(26,5,8,0.8)] to-[rgba(10,1,2,0.8)] p-10 text-center backdrop-blur-xl">
-                    <div className="text-xs font-bold uppercase tracking-[0.25em] text-[#DC143C]">{status}</div>
+                    <div className="text-xs font-bold capitalize text-[#DC143C]">{status}</div>
                     <h1 className="mt-2 text-3xl font-bold leading-tight">{heading}</h1>
                     <p className="mt-3 leading-relaxed text-gray-400">{message}</p>
                     <div className="mt-8 flex flex-wrap justify-center gap-3">

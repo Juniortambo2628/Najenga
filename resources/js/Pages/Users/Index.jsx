@@ -209,7 +209,7 @@ export default function Index({ users }) {
                     <table className="w-full text-left">
                         <thead className="sticky top-0 z-10 bg-surface-panel">
                             <tr className="border-b border-white/10">
-                                <th className="px-6 py-4 w-10">
+                                <th className="px-4 py-2.5 w-10">
                                     <input
                                         type="checkbox"
                                         checked={selectedCount === filteredUsers.length && filteredUsers.length > 0}
@@ -218,18 +218,18 @@ export default function Index({ users }) {
                                         className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                     />
                                 </th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">User</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Email</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Role</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Status</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium">Joined</th>
-                                <th className="px-6 py-4 text-gray-400 text-sm font-medium text-right">Actions</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">User</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Email</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Role</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Status</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Joined</th>
+                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredUsers.map((user) => (
                                 <tr key={user.id} className={`border-b border-white/5 hover:bg-white/5 transition ${isSelected(user.id) ? 'bg-white/5' : ''}`}>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-2.5">
                                         <input
                                             type="checkbox"
                                             checked={isSelected(user.id)}
@@ -238,7 +238,7 @@ export default function Index({ users }) {
                                             className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                         />
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-2.5">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center text-white font-bold text-sm">
                                                 {user.first_name?.[0]}{user.last_name?.[0]}
@@ -253,17 +253,17 @@ export default function Index({ users }) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-gray-300">{user.email}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-2.5 text-gray-300">{user.email}</td>
+                                    <td className="px-4 py-2.5">
                                         <StatusBadge status={user.role} />
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-2.5">
                                         <StatusBadge status={user.status} />
                                     </td>
-                                    <td className="px-6 py-4 text-gray-400 text-sm">
+                                    <td className="px-4 py-2.5 text-gray-400 text-sm">
                                         {new Date(user.created_at).toLocaleDateString()}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="px-4 py-2.5 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button onClick={() => handleEdit(user)} aria-label={`Edit ${user.name}`} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
                                                 <i aria-hidden="true" className="fas fa-edit"></i>
@@ -277,7 +277,7 @@ export default function Index({ users }) {
                             ))}
                             {filteredUsers.length === 0 && (
                                 <tr>
-                                    <td colSpan="7" className="px-6 py-12 text-center text-gray-400">
+                                    <td colSpan="7" className="px-4 py-10 text-center text-gray-400">
                                         {users.length === 0 ? 'No users found' : 'No users match your search or filters'}
                                     </td>
                                 </tr>

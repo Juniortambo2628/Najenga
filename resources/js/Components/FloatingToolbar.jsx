@@ -75,7 +75,7 @@ function SavedViews({ filters, search, onApplied }) {
 
     return (
         <div className="space-y-1.5 border-t border-white/10 pt-3">
-            <span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">Saved views</span>
+            <span className="block text-xs font-semibold capitalize text-gray-400">Saved views</span>
             {views.length > 0 && (
                 <ul className="space-y-1">
                     {views.map((view) => (
@@ -129,7 +129,7 @@ function FiltersMenu({ filters, search }) {
                     >
                         {filters.map((filter) => (
                             <label key={filter.name} className="block">
-                                <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">{filter.title || filter.label}</span>
+                                <span className="mb-1 block text-xs font-semibold capitalize text-gray-400">{filter.title || filter.label}</span>
                                 <select
                                     value={filter.value}
                                     onChange={(e) => filter.onChange(e.target.value)}

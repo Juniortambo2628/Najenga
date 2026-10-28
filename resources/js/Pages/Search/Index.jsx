@@ -45,7 +45,7 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
 
                 {query && (
                     <div className="flex items-center gap-2 mb-6 flex-wrap">
-                        <span className="text-xs text-gray-400 uppercase tracking-widest mr-2">Filter</span>
+                        <span className="text-xs text-gray-400 capitalize mr-2">Filter</span>
                         <button
                             onClick={() => handleTypeFilter(null)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${!type ? 'bg-[#8B0000] text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
@@ -99,7 +99,7 @@ export default function SearchIndex({ query = '', type = null, results = [], tot
                                     ) : (
                                         <div className="text-gray-400 text-3xl">[{r.type}]</div>
                                     )}
-                                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-widest font-bold bg-black/60 text-white border border-white/10">
+                                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] capitalize font-bold bg-black/60 text-white border border-white/10">
                                         {TYPE_LABELS[r.type] || r.type}
                                    </span>
                                </div>

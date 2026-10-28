@@ -138,7 +138,7 @@ export default function Messages() {
                                             {selectedConversation.users.find(u => u.id !== auth.user.id)?.name}
                                         </h3>
                                         {selectedConversation.project && (
-                                            <span className="text-[10px] text-gray-400 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                                            <span className="text-[11px] text-gray-400 capitalize bg-white/5 px-2 py-0.5 rounded border border-white/5">
                                                 {selectedConversation.project.name}
                                             </span>
                                         )}

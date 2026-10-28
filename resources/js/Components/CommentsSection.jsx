@@ -195,7 +195,7 @@ export default function CommentsSection({ type, id, projectId }) {
                         </div>
                         <div>
                             <span className="text-sm font-bold text-gray-200">{comment.user?.name || 'User'}</span>
-                            <span className="ml-2 text-[10px] text-gray-400 uppercase tracking-wider">
+                            <span className="ml-2 text-[11px] text-gray-400 capitalize">
                                 {formatDistanceToNow(new Date(comment.created_at))} ago
                             </span>
                         </div>
