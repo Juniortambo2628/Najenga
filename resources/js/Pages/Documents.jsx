@@ -33,6 +33,33 @@ import useVisibleActions from '@/Hooks/useVisibleActions';
 pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
 if (pdfjs.setVerbosityLevel) pdfjs.setVerbosityLevel(pdfjs.VerbosityLevel?.ERRORS ?? 1);
 
+/**
+ * The Folders panel's rows: the top level, then each folder after its parent
+ * (deeper ones described by their path), with how many documents sit in it.
+ */
+export function folderTree(folders, documents) {
+    const inFolder = (id) => documents.filter((d) => (d.folder_id ?? null) === id).length;
+    const rows = [{ id: 'root', label: 'Top level', icon: 'fa-house', count: inFolder(null) }];
+    const walk = (parentId, path) => {
+        folders
+            .filter((f) => (f.parent_id ?? null) === parentId)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .forEach((folder) => {
+                rows.push({
+                    id: `folder:${folder.id}`,
+                    group: 'Folders',
+                    label: folder.name,
+                    description: path.length ? `in ${path.join(' / ')}` : undefined,
+                    icon: path.length ? 'fa-folder-open' : 'fa-folder',
+                    count: inFolder(folder.id),
+                });
+                walk(folder.id, [...path, folder.name]);
+            });
+    };
+    walk(null, []);
+    return rows;
+}
+
 export default function Documents({ documents = [], folders = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [shareTarget, setShareTarget] = useState(null);
@@ -102,6 +129,14 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         if (typeFilter !== 'all') result = result.filter(doc => doc.document_type === typeFilter);
         return result;
     }, [documents, typeFilter, currentFolderId]);
+
+    // The Folders panel: the top level, then every folder as a tree, each with what's directly in it.
+    const projectFolders = useMemo(
+        () => (activeProjectId ? folders.filter((f) => String(f.project_id) === String(activeProjectId)) : folders),
+        [folders, activeProjectId],
+    );
+    const projectDocuments = useFilteredItems(documents, { projectId: activeProjectId });
+    const folderPanelItems = useMemo(() => folderTree(projectFolders, projectDocuments), [projectFolders, projectDocuments]);
 
     const filteredDocuments = useFilteredItems(folderAndTypeFiltered, {
         projectId: activeProjectId,
@@ -206,6 +241,18 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                         { label: 'Documents' },
                     ],
                 }}
+                panel={{
+                    id: 'documents',
+                    title: 'Folders',
+                    icon: 'fa-folder-tree',
+                    subtitle: activeProject ? `Folders in ${activeProject.name}` : 'Folders in all projects',
+                    items: folderPanelItems,
+                    activeId: currentFolderId == null ? 'root' : `folder:${currentFolderId}`,
+                    onChange: (id) => {
+                        setCurrentFolderId(id === 'root' ? null : Number(id.slice('folder:'.length)));
+                        clearSelection();
+                    },
+                }}
                 toolbar={{
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search documents' },
                     filters: [
@@ -268,22 +315,13 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     ))}
                 </div>
 
-                {/* Empty State */}
-                {filteredDocuments.length === 0 && folders.length === 0 && (
-                    <EmptyState 
-                        icon="fa-file-alt" 
-                        title="No documents yet" 
-                        message="Upload documents to keep them organized"
-                        action={canEdit ? { label: 'Upload Document', onClick: () => router.get(route('documents.create')) } : undefined}
-                    />
-                )}
-
                 {/* Documents List/Grid */}
                 {filteredDocuments.length === 0 && currentSubfolders.length === 0 ? (
                     <EmptyState
                         icon="fa-file-alt"
-                        title={currentFolderId ? 'This folder is empty' : 'No documents found'}
-                        message="Upload documents to your projects to see them here."
+                        title={currentFolderId ? 'This folder is empty' : 'No documents yet'}
+                        message="Upload documents to keep them organised."
+                        action={canEdit ? { label: 'Upload Document', onClick: () => router.get(route('documents.create')) } : undefined}
                         noun="document"
                         search={searchQuery}
                         filtered={typeFilter !== 'all'}
