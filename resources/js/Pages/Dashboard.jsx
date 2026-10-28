@@ -1,9 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
+import DashboardPage from '@/Components/DashboardPage';
 import SummaryCards from '@/Components/SummaryCards';
 import StatusBadge from '@/Components/StatusBadge';
 import EmptyState from '@/Components/EmptyState';
-import DashboardHero from '@/Components/DashboardHero';
 import { formatCurrency } from '@/Config/currencies';
 import titleCase from '@/Utils/titleCase';
 
@@ -73,33 +73,19 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
         <AuthenticatedLayout>
             <Head title="Dashboard" />
 
-            <div className="mx-auto max-w-7xl space-y-8">
-                <section className="relative isolate overflow-hidden rounded-3xl border border-white/[0.08] bg-[#111213] px-5 py-5 sm:px-7 sm:py-6">
-                    <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-36 -z-10 h-96 w-96 rounded-full bg-rose-900/20 blur-3xl" />
-                    <DashboardHero
-                        title={`Welcome back, ${auth.user.first_name || auth.user.name}!`}
-                        subtitle="Here's what's happening with your construction projects."
-                        breadcrumbs={[{ label: 'Dashboard' }]}
-                        actions={(
-                            <Link href={route('projects.create')} className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#171719] transition hover:bg-rose-100">
-                                <i aria-hidden="true" className="fas fa-plus text-xs" />
-                                New project
-                            </Link>
-                        )}
-                    />
-                </section>
-
-                <section aria-labelledby="dashboard-overview-heading">
-                    <div className="mb-4 flex items-end justify-between gap-4">
-                        <div>
-                            <p className="mb-1 text-[11px] font-semibold capitalize text-rose-300">Workspace overview</p>
-                            <h2 id="dashboard-overview-heading" className="text-lg font-semibold text-white">Your projects at a glance</h2>
-                        </div>
-                        <span className="hidden text-xs text-white/35 sm:block">A snapshot of your workspace</span>
-                    </div>
-                    <SummaryCards cards={statCards} stackOnPhones />
-                </section>
-
+            <DashboardPage
+                className="max-w-7xl mx-auto"
+                bodyClassName="space-y-8"
+                hero={{
+                    title: `Welcome back, ${auth.user.first_name || auth.user.name}!`,
+                    subtitle: "Here's what's happening with your construction projects.",
+                    breadcrumbs: [{ label: 'Dashboard' }],
+                }}
+                summary={<SummaryCards cards={statCards} stackOnPhones />}
+                toolbar={{
+                    actions: [{ id: 'new', label: 'New project', icon: 'fa-plus', href: route('projects.create'), variant: 'primary' }],
+                }}
+            >
                 <DashboardSection icon="fa-bolt" eyebrow="Keep things moving" title="Quick actions">
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
                         {QUICK_ACTIONS.map((action) => <QuickAction key={action.href} {...action} />)}
@@ -152,7 +138,7 @@ export default function Dashboard({ auth, stats = {}, recentExpenses = [], recen
                         )}
                     </DashboardSection>
                 </div>
-            </div>
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }
