@@ -71,6 +71,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/projects/{project}/members', [\App\Http\Controllers\ProjectMemberController::class, 'index'])->name('projects.members');
     Route::patch('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'update'])->name('projects.members.update');
     Route::delete('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    // Who is online (Phase 14.1): a heartbeat every 20s per visible tab, plus page changes.
+    Route::post('/presence/heartbeat', [\App\Http\Controllers\PresenceController::class, 'heartbeat'])->middleware('throttle:30,1')->name('presence.heartbeat');
+
     // Version history (Phase 13.4)
     Route::get('/history', [\App\Http\Controllers\HistoryController::class, 'index'])->name('history.index');
     Route::get('/history/{type}/{id}', [\App\Http\Controllers\HistoryController::class, 'record'])->whereNumber('id')->name('history.record');

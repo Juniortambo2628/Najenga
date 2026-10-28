@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
 import ConfirmHost from '@/Components/ConfirmHost';
 import { useHasUnsavedChanges } from '@/Utils/unsavedChanges';
+import usePresenceHeartbeat from '@/Hooks/usePresenceHeartbeat';
 import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContext';
 import { navItemsFor } from '@/Config/navigation';
 
@@ -74,6 +75,7 @@ export default function AuthenticatedLayout({ children }) {
     );
     // A page with unsaved edits (useUnsavedChangesGuard) shows a chip in the navbar.
     const hasUnsaved = useHasUnsavedChanges();
+    usePresenceHeartbeat();
     const headingContext = useMemo(() => ({ setHeading, reportHero }), [setHeading, reportHero]);
     const current = reported.url === url;
     const heading = current && reported.title ? reported.title : fallbackHeading(component);
