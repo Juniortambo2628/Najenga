@@ -29,8 +29,8 @@ export default function Register({ email = '', joiningProject = null }) {
             <Head title="Register - Najenga" />
 
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white mb-1">Sign Up Account</h2>
-                <p className="text-gray-400 text-sm">Enter your personal data to create your account.</p>
+                <h1 className="text-3xl font-semibold tracking-tight text-[#1A1514] mb-1">Sign Up Account</h1>
+                <p className="text-[#6B5D58] text-sm">Enter your personal data to create your account.</p>
                 {joiningProject && (
                     <p role="status" className="mt-3 rounded-xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
                         <i aria-hidden="true" className="fas fa-user-plus mr-2" />
@@ -43,7 +43,7 @@ export default function Register({ email = '', joiningProject = null }) {
                 {/* Name Fields */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="first_name" className="block text-gray-300 text-sm font-medium mb-2">
+                        <label htmlFor="first_name" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                             First Name
                         </label>
                         <input
@@ -51,16 +51,16 @@ export default function Register({ email = '', joiningProject = null }) {
                             type="text"
                             name="first_name"
                             value={data.first_name}
-                            className="auth-input"
+                            className="auth-field"
                             placeholder="eg. John"
                             autoFocus
                             onChange={(e) => setData('first_name', e.target.value)}
                             required
                         />
-                        <InputError message={errors.first_name} className="mt-2" />
+                        <InputError light message={errors.first_name} className="mt-2" />
                     </div>
                     <div>
-                        <label htmlFor="last_name" className="block text-gray-300 text-sm font-medium mb-2">
+                        <label htmlFor="last_name" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                             Last Name
                         </label>
                         <input
@@ -68,18 +68,18 @@ export default function Register({ email = '', joiningProject = null }) {
                             type="text"
                             name="last_name"
                             value={data.last_name}
-                            className="auth-input"
+                            className="auth-field"
                             placeholder="eg. Francisco"
                             onChange={(e) => setData('last_name', e.target.value)}
                             required
                         />
-                        <InputError message={errors.last_name} className="mt-2" />
+                        <InputError light message={errors.last_name} className="mt-2" />
                     </div>
                 </div>
 
                 {/* Username */}
                 <div>
-                    <label htmlFor="username" className="block text-gray-300 text-sm font-medium mb-2">
+                    <label htmlFor="username" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                         Username
                     </label>
                     <input
@@ -87,18 +87,18 @@ export default function Register({ email = '', joiningProject = null }) {
                         type="text"
                         name="username"
                         value={data.username}
-                        className="auth-input"
+                        className="auth-field"
                         placeholder="Choose a username"
                         autoComplete="username"
                         onChange={(e) => setData('username', e.target.value)}
                         required
                     />
-                    <InputError message={errors.username} className="mt-2" />
+                    <InputError light message={errors.username} className="mt-2" />
                 </div>
 
                 {/* Email */}
                 <div>
-                    <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2">
+                    <label htmlFor="email" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                         Email
                     </label>
                     <input
@@ -106,18 +106,18 @@ export default function Register({ email = '', joiningProject = null }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="auth-input"
+                        className="auth-field"
                         placeholder="eg. johnfrans@gmail.com"
                         autoComplete="username"
                         onChange={(e) => setData('email', e.target.value)}
                         required
                     />
-                    <InputError message={errors.email} className="mt-2" />
+                    <InputError light message={errors.email} className="mt-2" />
                 </div>
 
                 {/* Password */}
                 <div>
-                    <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2">
+                    <label htmlFor="password" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                         Password
                     </label>
                     <input
@@ -125,19 +125,19 @@ export default function Register({ email = '', joiningProject = null }) {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="auth-input"
+                        className="auth-field"
                         placeholder="Enter your password"
                         autoComplete="new-password"
                         onChange={(e) => setData('password', e.target.value)}
                         required
                     />
-                    <p className="text-gray-400 text-xs mt-1">Must be at least 8 characters.</p>
-                    <InputError message={errors.password} className="mt-1" />
+                    <p className="text-[#6B5D58] text-xs mt-1">Must be at least 8 characters.</p>
+                    <InputError light message={errors.password} className="mt-1" />
                 </div>
 
                 {/* Confirm Password */}
                 <div>
-                    <label htmlFor="password_confirmation" className="block text-gray-300 text-sm font-medium mb-2">
+                    <label htmlFor="password_confirmation" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                         Confirm Password
                     </label>
                     <input
@@ -145,13 +145,13 @@ export default function Register({ email = '', joiningProject = null }) {
                         type="password"
                         name="password_confirmation"
                         value={data.password_confirmation}
-                        className="auth-input"
+                        className="auth-field"
                         placeholder="Confirm your password"
                         autoComplete="new-password"
                         onChange={(e) => setData('password_confirmation', e.target.value)}
                         required
                     />
-                    <InputError message={errors.password_confirmation} className="mt-2" />
+                    <InputError light message={errors.password_confirmation} className="mt-2" />
                 </div>
 
                 {/* Submit */}
@@ -166,9 +166,9 @@ export default function Register({ email = '', joiningProject = null }) {
                 </motion.button>
             </form>
 
-            <p className="text-center text-gray-400 text-sm mt-6">
+            <p className="text-center text-[#6B5D58] text-sm mt-6">
                 Already have an account?{' '}
-                <Link href={route('login')} className="text-white font-semibold hover:underline">
+                <Link href={route('login')} className="text-[#1A1514] font-semibold hover:underline">
                     Log in
                 </Link>
             </p>

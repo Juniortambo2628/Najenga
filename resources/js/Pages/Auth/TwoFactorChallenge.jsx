@@ -31,13 +31,13 @@ export default function TwoFactorChallenge() {
                 className="auth-card"
             >
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 flex items-center justify-center">
-                        <i className="fas fa-shield-halved text-2xl text-white" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#F1ECE8] flex items-center justify-center">
+                        <i className="fas fa-shield-halved text-2xl text-[#1A1514]" />
                     </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">
+                    <h1 className="text-3xl font-semibold tracking-tight text-[#1A1514] mb-2">
                         Two-Factor Authentication
                     </h1>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-[#6B5D58] text-sm">
                         {mode === 'code'
                             ? 'Enter the 6-digit code from your authenticator app.'
                             : 'Enter one of your recovery codes to sign in.'}
@@ -49,7 +49,7 @@ export default function TwoFactorChallenge() {
                         <div>
                             <label
                                 htmlFor="code"
-                                className="block text-gray-300 text-sm font-medium mb-2"
+                                className="block text-[#3A2F2C] text-sm font-medium mb-2"
                             >
                                 Authentication Code
                             </label>
@@ -61,7 +61,7 @@ export default function TwoFactorChallenge() {
                                 autoComplete="one-time-code"
                                 maxLength={6}
                                 value={data.code}
-                                className="auth-input"
+                                className="auth-field"
                                 placeholder="6-digit code"
                                 autoFocus
                                 onChange={(e) =>
@@ -71,13 +71,13 @@ export default function TwoFactorChallenge() {
                                     )
                                 }
                             />
-                            <InputError message={errors.code} className="mt-2" />
+                            <InputError light message={errors.code} className="mt-2" />
                         </div>
                     ) : (
                         <div>
                             <label
                                 htmlFor="recovery_code"
-                                className="block text-gray-300 text-sm font-medium mb-2"
+                                className="block text-[#3A2F2C] text-sm font-medium mb-2"
                             >
                                 Recovery Code
                             </label>
@@ -87,7 +87,7 @@ export default function TwoFactorChallenge() {
                                 name="recovery_code"
                                 autoComplete="one-time-code"
                                 value={data.recovery_code}
-                                className="auth-input"
+                                className="auth-field"
                                 placeholder="Enter recovery code"
                                 autoFocus
                                 onChange={(e) =>
@@ -118,7 +118,7 @@ export default function TwoFactorChallenge() {
                         onClick={() =>
                             switchMode(mode === 'code' ? 'recovery' : 'code')
                         }
-                        className="text-sm text-gray-400 hover:text-white transition"
+                        className="text-sm text-[#6B5D58] hover:text-[#1A1514] transition"
                     >
                         {mode === 'code'
                             ? 'Use a recovery code instead'
@@ -126,10 +126,10 @@ export default function TwoFactorChallenge() {
                     </button>
                 </div>
 
-                <p className="text-center text-gray-400 text-sm mt-6">
+                <p className="text-center text-[#6B5D58] text-sm mt-6">
                     <Link
                         href={route('login')}
-                        className="hover:text-white transition"
+                        className="hover:text-[#1A1514] transition"
                     >
                         Back to sign in
                     </Link>
