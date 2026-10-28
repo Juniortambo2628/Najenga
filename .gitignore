@@ -91,3 +91,7 @@ status-dev.bat
 status-dev.ps1
 stop-dev.bat
 stop-dev.ps1
+
+# Playwright visual tests (reports and failed-run output)
+/storage/playwright-report
+/storage/playwright-results
