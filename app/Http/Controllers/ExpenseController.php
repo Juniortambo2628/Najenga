@@ -23,7 +23,7 @@ class ExpenseController extends Controller
     {
         $user = auth()->user();
         return Inertia::render('Expenses', [
-            'expenses' => Expense::where('user_id', $user->id)
+            'expenses' => Expense::visibleTo($user)
                 ->with('project:id,name')
                 ->orderBy('expense_date', 'desc')
                 ->get()
@@ -135,10 +135,9 @@ class ExpenseController extends Controller
             $this->authorize('update', Project::findOrFail($projectId));
         }
 
-        // Only expenses the user may change: their own, and not in a project
-        // where they are a viewer.
+        // Only expenses the user may change (see ExpensePolicy).
         $ids = Expense::whereIn('id', $request->input('ids'))
-            ->where('user_id', auth()->id())
+            ->visibleTo($request->user())
             ->with('project')
             ->get()
             ->filter(fn ($expense) => $request->user()->can('update', $expense))

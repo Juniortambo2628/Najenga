@@ -25,7 +25,7 @@ trait BatchDownloads
         ]);
 
         $records = $model::whereIn('id', $request->input('ids'))
-            ->where('user_id', auth()->id())
+            ->visibleTo(auth()->user())
             ->get();
 
         $zipPath = tempnam(sys_get_temp_dir(), 'najenga-download-');

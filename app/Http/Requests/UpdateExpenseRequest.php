@@ -2,13 +2,27 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('expense'));
+        $expense = $this->route('expense');
+        if (! $this->user()->can('update', $expense)) {
+            return false;
+        }
+
+        // Moving it to another project needs edit rights there too.
+        $projectId = $this->input('project_id');
+        if ($projectId && (int) $projectId !== (int) $expense->project_id) {
+            $project = Project::find($projectId);
+
+            return ! $project || $this->user()->can('update', $project);
+        }
+
+        return true;
     }
 
     public function rules(): array

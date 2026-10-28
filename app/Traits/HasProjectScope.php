@@ -7,10 +7,22 @@ use App\Models\Project;
 trait HasProjectScope
 {
     /**
-     * Get projects where the authenticated user is the client.
+     * Projects the authenticated user can see (their own and those they are a
+     * member of), each with the user's role in it.
      */
     protected function getClientProjects()
     {
-        return Project::where('client_id', auth()->id())->get(['id', 'name']);
+        $user = auth()->user();
+        $roles = Project::rolesFor($user);
+
+        return Project::accessibleBy($user)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Project $project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'role' => $roles[$project->id] ?? null,
+            ])
+            ->values();
     }
 }

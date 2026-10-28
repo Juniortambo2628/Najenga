@@ -66,7 +66,7 @@ class PhotoControllerTest extends TestCase
     {
         $photo = Photo::factory()->create([
             'user_id' => $this->otherUser->id,
-            'project_id' => $this->project->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
         ]);
 
         $this->actingAs($this->user)
@@ -92,7 +92,7 @@ class PhotoControllerTest extends TestCase
     {
         $photo = Photo::factory()->create([
             'user_id' => $this->otherUser->id,
-            'project_id' => $this->project->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
         ]);
 
         $this->actingAs($this->user)
@@ -118,7 +118,7 @@ class PhotoControllerTest extends TestCase
     {
         $photo = Photo::factory()->create([
             'user_id' => $this->otherUser->id,
-            'project_id' => $this->project->id,
+            'project_id' => Project::factory()->create(['client_id' => $this->otherUser->id])->id,
         ]);
 
         // show() had no authorize() call, so any signed-in user could open

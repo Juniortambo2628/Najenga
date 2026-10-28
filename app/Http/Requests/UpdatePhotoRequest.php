@@ -2,13 +2,27 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Project;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdatePhotoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('photo'));
+        $photo = $this->route('photo');
+        if (! $this->user()->can('update', $photo)) {
+            return false;
+        }
+
+        // Moving it to another project needs edit rights there too.
+        $projectId = $this->input('project_id');
+        if ($projectId && (int) $projectId !== (int) $photo->project_id) {
+            $project = Project::find($projectId);
+
+            return ! $project || $this->user()->can('update', $project);
+        }
+
+        return true;
     }
 
     public function rules(): array
