@@ -27,6 +27,7 @@ class PresenceController extends Controller
         $user->forceFill(['seen_at' => now(), 'current_page' => $path])->saveQuietly();
 
         $projectIds = Project::accessibleBy($user)->pluck('id');
+        $visible = $projectIds->map(fn ($id) => (int) $id)->all();
 
         $online = User::query()
             ->whereKeyNot($user->id)
@@ -34,10 +35,18 @@ class PresenceController extends Controller
             ->where(fn ($q) => $q
                 ->whereHas('projects', fn ($p) => $p->whereIn('projects.id', $projectIds))
                 ->orWhereIn('id', Project::whereIn('id', $projectIds)->select('client_id')))
+            ->with(['projects' => fn ($p) => $p->whereIn('projects.id', $projectIds)->select('projects.id')])
             ->orderBy('first_name')
             ->limit(50)
             ->get()
-            ->map(fn (User $other) => ['id' => $other->id, 'name' => $other->name] + self::where($other->current_page, $projectIds->map(fn ($id) => (int) $id)->all()));
+            ->map(fn (User $other) => [
+                'id' => $other->id,
+                'name' => $other->name,
+                // The projects you share, for avatars on project cards.
+                'projects' => $other->projects->pluck('id')
+                    ->merge(Project::whereIn('id', $projectIds)->where('client_id', $other->id)->pluck('id'))
+                    ->map(fn ($id) => (int) $id)->unique()->values()->all(),
+            ] + self::where($other->current_page, $visible));
 
         return response()->json(['online' => $online->values()]);
     }

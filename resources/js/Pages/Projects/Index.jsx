@@ -18,6 +18,7 @@ import { exportToCSV } from '@/Utils/exportToCSV';
 import { CURRENCY_OPTIONS, formatCurrency } from '@/Config/currencies';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import { ProjectOnline } from '@/Components/OnlinePeople';
 
 // A project's own role decides its buttons (projects carry my_role).
 const CAN_EDIT = ['owner', 'manager', 'editor'];
@@ -355,6 +356,7 @@ export default function Projects({ projects = [] }) {
                                                 className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                             />
                                             <StatusBadge status={project.status} />
+                                            <ProjectOnline projectId={project.id} />
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {CAN_EDIT.includes(project.my_role) && (

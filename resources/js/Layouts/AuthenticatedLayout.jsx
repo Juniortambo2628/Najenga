@@ -4,6 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
 import ProjectSwitcher from '@/Components/ProjectSwitcher';
 import HistoryDrawer from '@/Components/HistoryDrawer';
+import { AlsoHere, OnlineAvatars } from '@/Components/OnlinePeople';
 import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
 import ConfirmHost from '@/Components/ConfirmHost';
@@ -248,6 +249,7 @@ export default function AuthenticatedLayout({ children }) {
                             </button>
                             <NavbarTitle heading={heading} hero={hero} />
                             <ProjectSwitcher />
+                            <AlsoHere />
                             {hasUnsaved && (
                                 <span role="status" className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-200">
                                     <i aria-hidden="true" className="fas fa-circle-exclamation" />
@@ -314,6 +316,10 @@ export default function AuthenticatedLayout({ children }) {
                             </div>
 
                             {/* Notifications */}
+                            <div className="hidden sm:block">
+                                <OnlineAvatars />
+                            </div>
+
                             {/* Version history of the records on this page */}
                             <button
                                 type="button"

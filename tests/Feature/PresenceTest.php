@@ -48,7 +48,7 @@ class PresenceTest extends TestCase
         $this->actingAs($this->me)->postJson('/presence/heartbeat', ['page' => '/expenses'])
             ->assertOk()
             ->assertJsonCount(1, 'online')
-            ->assertJsonPath('online.0', ['id' => $member->id, 'name' => $member->name, 'page' => 'projects', 'project_id' => $this->project->id]);
+            ->assertJsonPath('online.0', ['id' => $member->id, 'name' => $member->name, 'projects' => [$this->project->id], 'page' => 'projects', 'project_id' => $this->project->id]);
 
         // The member sees the project's owner too (owners are members from 12.5's backfill on).
         $this->actingAs($member)->postJson('/presence/heartbeat', ['page' => '/photos'])
