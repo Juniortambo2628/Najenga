@@ -15,7 +15,7 @@ const initials = (name = '') => name.split(' ').filter(Boolean).slice(0, 2).map(
 
 const daysLeft = (iso) => Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 
-function RoleBadge({ role }) {
+export function RoleBadge({ role }) {
     const info = ROLE_INFO[role] ?? ROLE_INFO.viewer;
     return <span className={`rounded-lg border px-2 py-0.5 text-xs font-medium ${info.tone}`}>{info.label}</span>;
 }

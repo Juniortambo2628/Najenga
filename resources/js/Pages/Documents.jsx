@@ -26,6 +26,7 @@ import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import SharePanel from '@/Components/SharePanel';
 import useAction, { visit } from '@/Hooks/useAction';
+import useActiveProjectId from '@/Hooks/useActiveProjectId';
 
 // Configure PDF worker (served locally, no CDN round-trip)
 pdfjs.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.mjs';
@@ -48,7 +49,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
         );
     };
     const [typeFilter, setTypeFilter] = useState('all');
-    const [activeProjectId, setActiveProjectId] = useState(null);
+    const [activeProjectId] = useActiveProjectId();
     const [viewMode, setViewMode] = useState('grid'); // Default to grid
     
     // Selection State
@@ -203,7 +204,6 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                     ],
                 }}
                 toolbar={{
-                    project: { projects, currentId: activeProjectId, onChange: setActiveProjectId },
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search documents' },
                     filters: [
                         {

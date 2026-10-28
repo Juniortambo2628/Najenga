@@ -2,6 +2,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import NotificationsDropdown from '@/Components/NotificationsDropdown';
+import ProjectSwitcher from '@/Components/ProjectSwitcher';
 import { Toaster } from 'react-hot-toast';
 import FlashToast from '@/Components/FlashToast';
 import ConfirmHost from '@/Components/ConfirmHost';
@@ -242,6 +243,7 @@ export default function AuthenticatedLayout({ children }) {
                                 <i aria-hidden="true" className="fas fa-bars text-lg"></i>
                             </button>
                             <NavbarTitle heading={heading} hero={hero} />
+                            <ProjectSwitcher />
                             {hasUnsaved && (
                                 <span role="status" className="hidden sm:inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-200">
                                     <i aria-hidden="true" className="fas fa-circle-exclamation" />

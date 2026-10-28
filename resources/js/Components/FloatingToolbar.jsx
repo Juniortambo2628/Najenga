@@ -160,7 +160,6 @@ const Divider = () => <div aria-hidden="true" className="hidden sm:block w-px h-
  * AuthenticatedLayout sets). Pages describe what goes in it:
  *
  * @param {object} [search]    { value, onChange, placeholder } — the page's list filter ("/" focuses it)
- * @param {object} [project]   { projects, currentId, onChange } — the project the page shows
  * @param {Array}  [filters]   [{ name, label, title?, value, onChange, options: [{ value, label }], defaultValue? }]
  *                             — shown in a Filters panel with a count of active ones (sort orders too)
  * @param {object} [view]      { modes: [{ value, icon, label? }], current, onChange }
@@ -173,7 +172,7 @@ const Divider = () => <div aria-hidden="true" className="hidden sm:block w-px h-
  * It can be tucked away; while hidden, a dot marks a list that is still
  * searched or filtered.
  */
-export default function FloatingToolbar({ search, project, filters = [], view, actions = [], selection, children }) {
+export default function FloatingToolbar({ search, filters = [], view, actions = [], selection, children }) {
     const [visible, setVisible] = useState(true);
     const searchRef = useRef(null);
     const selecting = selection && selection.count > 0;
@@ -193,11 +192,11 @@ export default function FloatingToolbar({ search, project, filters = [], view, a
         return () => document.removeEventListener('keydown', onKey);
     }, [search]);
 
-    const hasLeading = !!search || filters.length > 0 || !!view || !!project;
+    const hasLeading = !!search || filters.length > 0 || !!view;
     const max = hasLeading ? 2 : 4;
     const primary = actions.slice(0, max);
     const overflow = actions.slice(max);
-    const narrowed = !!search?.value || countActiveFilters(filters) > 0 || !!project?.currentId;
+    const narrowed = !!search?.value || countActiveFilters(filters) > 0;
 
     // Fixed to the content area: centred over it beside the sidebar on large screens.
     // Above page content (z-10 sticky table headers), below the navbar (z-30) and
@@ -250,20 +249,6 @@ export default function FloatingToolbar({ search, project, filters = [], view, a
                             </>
                         ) : (
                             <>
-                                {project && project.projects?.length > 0 && (
-                                    <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 pl-3 text-sm">
-                                        <i aria-hidden="true" className="fas fa-project-diagram text-[#DC143C] text-xs"></i>
-                                        <span className="sr-only">Project</span>
-                                        <select
-                                            value={project.currentId || ''}
-                                            onChange={(e) => project.onChange(e.target.value || null)}
-                                            className="max-w-[11rem] border-0 bg-transparent py-2 pl-0 pr-8 text-sm focus:ring-0"
-                                        >
-                                            <option value="">All projects</option>
-                                            {project.projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                        </select>
-                                    </label>
-                                )}
                                 {search && (
                                     <div className="relative">
                                         <i aria-hidden="true" className="fas fa-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400"></i>

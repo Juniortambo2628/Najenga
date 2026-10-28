@@ -1,12 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SummaryCards from '@/Components/SummaryCards';
 import Card from '@/Components/Card';
 import DashboardPage from '@/Components/DashboardPage';
 import EmptyState from '@/Components/EmptyState';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import useActiveProjectId from '@/Hooks/useActiveProjectId';
 
 const PERIODS = [
     { value: '3months', label: '3 Months' },
@@ -181,16 +182,21 @@ export default function Analytics({
     documentsByType = [],
     milestoneStatusBreakdown = [],
     insights = [],
-    projects = [],
 }) {
     const [period, setPeriod] = useState('6months');
-    const [projectFilter, setProjectFilter] = useState(null);
+    const [projectFilter] = useActiveProjectId();
 
     const handleContextChange = (newPeriod, newProject) => {
         setPeriod(newPeriod);
-        setProjectFilter(newProject);
         router.get(route('analytics'), { period: newPeriod, project_id: newProject }, { preserveState: true, replace: true });
     };
+
+    // The numbers come from the server: reload them when the navbar's project
+    // differs from the one these were built for.
+    useEffect(() => {
+        const shown = new URLSearchParams(window.location.search).get('project_id');
+        if ((shown || null) !== projectFilter) handleContextChange(period, projectFilter);
+    }, [projectFilter]);
 
     const totalExpenses = stats.totalExpenses || 0;
     const totalProjects = stats.totalProjects || 0;
@@ -214,7 +220,6 @@ export default function Analytics({
                     ],
                 }}
                 toolbar={{
-                    project: { projects, currentId: projectFilter, onChange: (val) => handleContextChange(period, val) },
                     children: (
                         <>
                             <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
