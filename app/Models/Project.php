@@ -156,10 +156,13 @@ class Project extends Model
         return $role !== null && ! ProjectRole::canEdit($role);
     }
 
-    /** A project's versions belong to its own history. */
+    /**
+     * A project's versions belong to its own history; once the row itself is
+     * gone (a hard delete), the version can't point at it.
+     */
     public function revisionProjectId(): ?int
     {
-        return $this->getKey();
+        return $this->exists ? $this->getKey() : null;
     }
 
     /**

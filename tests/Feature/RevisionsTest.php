@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Database\Events\MigrationsEnded;
 use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class RevisionsTest extends TestCase
@@ -26,6 +27,10 @@ class RevisionsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Enforce foreign keys as MySQL does (the SQLite test database runs without them).
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA foreign_keys = ON');
+        }
 
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
@@ -99,6 +104,18 @@ class RevisionsTest extends TestCase
         foreach ($records as $record) {
             $this->assertSame($this->project->id, $record->revisions()->value('project_id'), class_basename($record));
         }
+    }
+
+    public function test_deleting_a_project_keeps_its_last_version(): void
+    {
+        $id = $this->project->id;
+        $this->project->delete();
+
+        $deleted = Revision::where('revisionable_type', $this->project->getMorphClass())
+            ->where('revisionable_id', $id)->where('event', 'deleted')->sole();
+        // The project row is gone, so the version can't reference it (MySQL's foreign key).
+        $this->assertNull($deleted->project_id);
+        $this->assertSame($this->project->name, $deleted->before['name']);
     }
 
     public function test_versions_older_than_180_days_are_pruned(): void
