@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ProjectShareControllerTest extends TestCase
@@ -26,7 +27,7 @@ class ProjectShareControllerTest extends TestCase
     public function test_owner_can_share_project(): void
     {
         $this->actingAs($this->owner)
-            ->postJson("/projects/{$this->project->id}/share", [
+            ->postJson("/projects/{$this->project->id}/invitations", [
                 'email' => $this->collaborator->email,
                 'role' => 'viewer',
             ])
@@ -42,7 +43,7 @@ class ProjectShareControllerTest extends TestCase
     public function test_non_owner_cannot_share_project(): void
     {
         $this->actingAs($this->collaborator)
-            ->postJson("/projects/{$this->project->id}/share", [
+            ->postJson("/projects/{$this->project->id}/invitations", [
                 'email' => $this->owner->email,
                 'role' => 'viewer',
             ])
@@ -125,13 +126,25 @@ class ProjectShareControllerTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_cannot_share_with_nonexistent_email(): void
+    public function test_sharing_with_an_address_without_an_account_sends_an_invitation(): void
     {
+        Notification::fake();
+
         $this->actingAs($this->owner)
-            ->postJson("/projects/{$this->project->id}/share", [
+            ->postJson("/projects/{$this->project->id}/invitations", [
                 'email' => 'nonexistent@example.com',
                 'role' => 'viewer',
             ])
-            ->assertUnprocessable();
+            ->assertCreated()
+            ->assertJsonPath('status', 'invited');
+
+        $this->assertDatabaseHas('project_invitations', ['project_id' => $this->project->id, 'email' => 'nonexistent@example.com']);
+    }
+
+    public function test_the_old_share_endpoint_is_gone(): void
+    {
+        $this->actingAs($this->owner)
+            ->postJson("/projects/{$this->project->id}/share", ['email' => $this->collaborator->email, 'role' => 'viewer'])
+            ->assertNotFound();
     }
 }

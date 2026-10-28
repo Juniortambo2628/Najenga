@@ -201,7 +201,7 @@ class ProjectControllerTest extends TestCase
         $project = Project::factory()->create(['client_id' => $this->user->id]);
 
         $this->actingAs($this->user)
-            ->postJson("/projects/{$project->id}/share", [
+            ->postJson("/projects/{$project->id}/invitations", [
                 'email' => $this->otherUser->email,
                 'role' => 'viewer',
             ])
@@ -234,7 +234,7 @@ class ProjectControllerTest extends TestCase
         $project = Project::factory()->create(['client_id' => $this->otherUser->id]);
 
         $this->actingAs($this->user)
-            ->postJson("/projects/{$project->id}/share", [
+            ->postJson("/projects/{$project->id}/invitations", [
                 'email' => $this->user->email,
                 'role' => 'viewer',
             ])

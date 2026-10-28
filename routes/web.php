@@ -66,7 +66,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/projects/{project}/users', [\App\Http\Controllers\ProjectController::class, 'users'])->name('projects.users');
 
     // Project Sharing
-    Route::post('/projects/{project}/share', [\App\Http\Controllers\ProjectShareController::class, 'store'])->name('projects.share.store');
     Route::delete('/projects/{project}/share/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'destroy'])->name('projects.share.destroy');
     Route::get('/projects/{project}/members', [\App\Http\Controllers\ProjectMemberController::class, 'index'])->name('projects.members');
     Route::patch('/projects/{project}/members/{user}', [\App\Http\Controllers\ProjectMemberController::class, 'update'])->name('projects.members.update');
