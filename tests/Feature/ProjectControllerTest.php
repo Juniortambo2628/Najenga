@@ -126,7 +126,7 @@ class ProjectControllerTest extends TestCase
             ->delete("/projects/{$project->id}")
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+        $this->assertSoftDeleted('projects', ['id' => $project->id]);
     }
 
     public function test_non_owner_cannot_delete_project(): void
@@ -140,7 +140,7 @@ class ProjectControllerTest extends TestCase
         $this->assertDatabaseHas('projects', ['id' => $project->id]);
     }
 
-    public function test_deleting_a_project_cleans_up_children_and_their_media(): void
+    public function test_a_deleted_project_goes_to_the_trash_with_its_records_and_files(): void
     {
         Storage::fake('public');
 
@@ -156,14 +156,43 @@ class ProjectControllerTest extends TestCase
             'project_id' => $project->id,
             'user_id' => $this->user->id,
         ]);
+        $deletedEarlier = Expense::factory()->create(['project_id' => $project->id, 'user_id' => $this->user->id]);
+        $deletedEarlier->delete();
 
+        $this->travel(5)->minutes();
         $this->actingAs($this->user)
             ->delete("/projects/{$project->id}")
             ->assertRedirect();
 
+        $this->assertSoftDeleted('projects', ['id' => $project->id]);
+        $this->assertSoftDeleted('photos', ['id' => $photo->id]);
+        $this->assertSoftDeleted('expenses', ['id' => $expense->id]);
+        $this->assertSame(1, Media::where('model_type', Photo::class)->where('model_id', $photo->id)->count());
+
+        // Restoring brings back what went with it, not what was deleted before.
+        Project::withTrashed()->find($project->id)->restore();
+        $this->assertNotSoftDeleted('photos', ['id' => $photo->id]);
+        $this->assertNotSoftDeleted('expenses', ['id' => $expense->id]);
+        $this->assertSoftDeleted('expenses', ['id' => $deletedEarlier->id]);
+    }
+
+    public function test_after_30_days_in_the_trash_a_project_and_its_files_are_gone(): void
+    {
+        Storage::fake('public');
+
+        $project = Project::factory()->create(['client_id' => $this->user->id]);
+        $photo = Photo::factory()->create(['project_id' => $project->id, 'user_id' => $this->user->id]);
+        $photo->addMedia(UploadedFile::fake()->image('site.jpg'))->toMediaCollection('photos');
+        $project->delete();
+
+        $this->travel(29)->days();
+        $this->artisan('model:prune', ['--model' => [Project::class]])->assertSuccessful();
+        $this->assertSoftDeleted('projects', ['id' => $project->id]);
+
+        $this->travel(2)->days();
+        $this->artisan('model:prune', ['--model' => [Project::class]])->assertSuccessful();
         $this->assertDatabaseMissing('projects', ['id' => $project->id]);
         $this->assertDatabaseMissing('photos', ['id' => $photo->id]);
-        $this->assertDatabaseMissing('expenses', ['id' => $expense->id]);
         $this->assertSame(0, Media::where('model_type', Photo::class)->where('model_id', $photo->id)->count());
     }
 

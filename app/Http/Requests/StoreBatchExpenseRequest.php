@@ -33,7 +33,7 @@ class StoreBatchExpenseRequest extends FormRequest
             'expenses.*.title' => 'required|string|max:255',
             'expenses.*.amount' => 'required|numeric|min:0',
             'expenses.*.category' => 'required|string|max:50',
-            'expenses.*.project_id' => 'nullable|exists:projects,id',
+            'expenses.*.project_id' => 'nullable|exists:projects,id,deleted_at,NULL',
             'expenses.*.expense_date' => 'required|date',
             'expenses.*.description' => 'nullable|string',
             'expenses.*.payment_method' => 'nullable|string|max:50',

@@ -36,7 +36,7 @@ class StoreReceiptRequest extends FormRequest
             'reference_number' => 'nullable|string|max:100',
             'purpose'          => 'nullable|string',
             'category'         => 'nullable|string|max:50',
-            'project_id'       => 'nullable|exists:projects,id',
+            'project_id'       => 'nullable|exists:projects,id,deleted_at,NULL',
             'temp_path'        => 'required|string',
         ];
     }

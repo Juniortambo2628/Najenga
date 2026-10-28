@@ -145,7 +145,7 @@ class ExpenseControllerTest extends TestCase
             ->delete("/expenses/{$expense->id}")
             ->assertRedirect();
 
-        $this->assertDatabaseMissing('expenses', ['id' => $expense->id]);
+        $this->assertSoftDeleted('expenses', ['id' => $expense->id]);
     }
 
     public function test_user_cannot_delete_other_users_expense(): void

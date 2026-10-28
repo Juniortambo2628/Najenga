@@ -30,7 +30,7 @@ class UpdatePhotoRequest extends FormRequest
         return [
             'title' => 'sometimes|string|max:255',
             'location' => 'nullable|string|max:255',
-            'project_id' => 'sometimes|exists:projects,id',
+            'project_id' => 'sometimes|exists:projects,id,deleted_at,NULL',
             'description' => 'nullable|string',
         ];
     }

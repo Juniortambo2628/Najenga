@@ -29,7 +29,7 @@ class StorePhotoRequest extends FormRequest
         return [
             'photos' => 'required|array',
             'photos.*' => 'required|image|max:20480',
-            'project_id' => 'nullable|exists:projects,id',
+            'project_id' => 'nullable|exists:projects,id,deleted_at,NULL',
             'relative_paths' => 'nullable|array',
             'relative_paths.*' => 'nullable|string|max:500',
             'last_modified' => 'nullable|array',

@@ -151,7 +151,7 @@ class WhatsAppActivityTest extends TestCase
             ->assertRedirect();
 
         $this->assertDatabaseMissing('whatsapp_logs', ['id' => $log->id]);
-        $this->assertDatabaseMissing('expenses', ['id' => $expense->id]);
+        $this->assertSoftDeleted('expenses', ['id' => $expense->id]);
     }
 
     public function test_non_owner_cannot_delete(): void

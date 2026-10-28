@@ -113,9 +113,12 @@ class RevisionsTest extends TestCase
 
         $deleted = Revision::where('revisionable_type', $this->project->getMorphClass())
             ->where('revisionable_id', $id)->where('event', 'deleted')->sole();
-        // The project row is gone, so the version can't reference it (MySQL's foreign key).
-        $this->assertNull($deleted->project_id);
+        $this->assertSame($id, $deleted->project_id); // in the trash: still the project's history
         $this->assertSame($this->project->name, $deleted->before['name']);
+
+        // Deleted for good, the row is gone and can't be referenced (MySQL's foreign key).
+        $this->project->forceDelete();
+        $this->assertNull(Revision::where('revisionable_id', $id)->where('revisionable_type', $this->project->getMorphClass())->latest('id')->value('project_id'));
     }
 
     public function test_versions_older_than_180_days_are_pruned(): void

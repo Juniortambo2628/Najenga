@@ -29,7 +29,7 @@ class StoreTimelineRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'project_id' => 'required|exists:projects,id',
+            'project_id' => 'required|exists:projects,id,deleted_at,NULL',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|string|in:pending,in_progress,completed,delayed',

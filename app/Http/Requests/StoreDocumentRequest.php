@@ -33,7 +33,7 @@ class StoreDocumentRequest extends FormRequest
     {
         return [
             'documents.*' => 'required|file|max:51200',
-            'project_id' => 'nullable|exists:projects,id',
+            'project_id' => 'nullable|exists:projects,id,deleted_at,NULL',
             'folder_id' => ['nullable', 'exists:folders,id', new FolderInProject($this->input('project_id'))],
         ];
     }

@@ -30,7 +30,7 @@ class StoreExpenseRequest extends FormRequest
             'title' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
             'category' => 'required|string',
-            'project_id' => 'required|exists:projects,id',
+            'project_id' => 'required|exists:projects,id,deleted_at,NULL',
             'expense_date' => 'required|date',
             'description' => 'nullable|string',
             'payment_method' => 'nullable|string',
