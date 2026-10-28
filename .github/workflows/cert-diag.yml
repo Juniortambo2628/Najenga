@@ -1,0 +1,61 @@
+name: Cert Diagnostics
+
+# One-off, dispatch-only: inspects how TLS for najenga.okjtech.co.ke is
+# served and renewed on the VPS. Uses the same SSH secrets as deploy.yml.
+# Delete this workflow (and its branch) after use.
+on:
+  workflow_dispatch:
+    inputs:
+      cmd:
+        description: "Shell script to run on the server"
+        required: true
+        default: |
+          echo '== host =='
+          hostname; whoami; date -u
+          echo '== what serves 443 =='
+          ss -tlnp 2>/dev/null | grep -E ':443|:80' || netstat -tlnp 2>/dev/null | grep -E ':443|:80'
+          ps -ef | grep -Ei 'httpd|nginx|lshttpd|apache' | grep -v grep | head -10
+          echo '== served cert via SNI =='
+          echo | timeout 15 openssl s_client -connect 127.0.0.1:443 -servername najenga.okjtech.co.ke 2>/dev/null | openssl x509 -noout -subject -issuer -dates -serial 2>/dev/null || echo 's_client failed'
+          echo '== acme clients =='
+          command -v certbot || true
+          command -v acme.sh || true
+          ls -la $HOME/.acme.sh 2>/dev/null | head -20 || true
+          ls -la /etc/letsencrypt 2>/dev/null | head -20 || true
+          ls -la /etc/letsencrypt/renewal 2>/dev/null || true
+          echo '== account crontab =='
+          crontab -l 2>/dev/null || echo 'no crontab'
+          echo '== shared cron =='
+          ls /etc/cron.d 2>/dev/null || true
+          grep -riE 'acme|certbot|renew|autossl' /etc/cron.d /etc/crontab 2>/dev/null | head -20 || true
+          echo '== cpanel ssl =='
+          command -v uapi || true
+          uapi DomainInfo list_domains 2>/dev/null | head -30 || true
+          ls -la /var/cpanel/ssl 2>/dev/null || true
+          ls /usr/local/cpanel/bin 2>/dev/null | grep -i ssl || true
+          echo '== cert files (recent) =='
+          find $HOME /etc/apache2 /etc/nginx /etc/ssl -name '*.crt' -o -name '*.pem' 2>/dev/null | grep -vE 'ssl/certs|snakeoil' | head -40
+          echo '== apache ssl config for our domain =='
+          grep -rl 'najenga' /etc/apache2 2>/dev/null | head -10 || true
+          grep -rhE 'SSLCertificateFile|SSLCertificateKeyFile' /etc/apache2 2>/dev/null | sort -u | head -20 || true
+          echo '== home =='
+          ls -la $HOME | head -30
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+          echo "SSH configured"
+
+      - name: Run diagnostics on server
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'bash -s' << 'ENDSSH'
+          set +e
+          ${{ inputs.cmd }}
+          ENDSSH
