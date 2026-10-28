@@ -22,12 +22,12 @@ export default function ForgotPassword({ status }) {
             <Head title="Forgot Password - Najenga" />
 
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white mb-1">Reset Password</h2>
-                <p className="text-gray-400 text-sm">Enter your email to receive a password reset link.</p>
+                <h1 className="text-3xl font-semibold tracking-tight text-[#1A1514] mb-1">Reset Password</h1>
+                <p className="text-[#6B5D58] text-sm">Enter your email to receive a password reset link.</p>
             </div>
 
             {status && (
-                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 text-sm text-center">
+                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm text-center">
                     {status}
                 </div>
             )}
@@ -35,7 +35,7 @@ export default function ForgotPassword({ status }) {
             <form onSubmit={submit} className="space-y-4">
                 {/* Email */}
                 <div>
-                    <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2">
+                    <label htmlFor="email" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                         Email
                     </label>
                     <input
@@ -43,12 +43,12 @@ export default function ForgotPassword({ status }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="auth-input"
+                        className="auth-field"
                         placeholder="eg. johnfrans@gmail.com"
                         autoFocus
                         onChange={(e) => setData('email', e.target.value)}
                     />
-                    <InputError message={errors.email} className="mt-2" />
+                    <InputError light message={errors.email} className="mt-2" />
                 </div>
 
                 {/* Submit */}
@@ -63,9 +63,9 @@ export default function ForgotPassword({ status }) {
                 </motion.button>
             </form>
 
-            <p className="text-center text-gray-400 text-sm mt-6">
+            <p className="text-center text-[#6B5D58] text-sm mt-6">
                 Remember your password?{' '}
-                <Link href={route('login')} className="text-white font-semibold hover:underline">
+                <Link href={route('login')} className="text-[#1A1514] font-semibold hover:underline">
                     Sign in
                 </Link>
             </p>

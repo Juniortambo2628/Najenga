@@ -62,12 +62,12 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Login - Najenga" />
 
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white mb-1">Sign In Account</h2>
-                <p className="text-gray-400 text-sm">Enter your credentials to access your account.</p>
+                <h1 className="text-3xl font-semibold tracking-tight text-[#1A1514] mb-1">Sign In Account</h1>
+                <p className="text-[#6B5D58] text-sm">Enter your credentials to access your account.</p>
             </div>
 
             {status && (
-                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 text-sm text-center">
+                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm text-center">
                     {status}
                 </div>
             )}
@@ -75,7 +75,7 @@ export default function Login({ status, canResetPassword }) {
             <form onSubmit={submit} className="space-y-4">
                 {/* Email */}
                 <div>
-                    <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2">
+                    <label htmlFor="email" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                         Email
                     </label>
                     <input
@@ -83,19 +83,19 @@ export default function Login({ status, canResetPassword }) {
                         type="email"
                         name="email"
                         value={data.email}
-                        className="auth-input"
+                        className="auth-field"
                         placeholder="eg. johnfrans@gmail.com"
                         autoComplete="username webauthn"
                         autoFocus
                         onChange={(e) => setData('email', e.target.value)}
                     />
-                    <InputError message={errors.email} className="mt-2" />
+                    <InputError light message={errors.email} className="mt-2" />
                 </div>
 
                 {/* Password */}
                 {mode === 'password' && (
                     <div>
-                        <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2">
+                        <label htmlFor="password" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                             Password
                         </label>
                         <input
@@ -103,19 +103,19 @@ export default function Login({ status, canResetPassword }) {
                             type="password"
                             name="password"
                             value={data.password}
-                            className="auth-input"
+                            className="auth-field"
                             placeholder="Enter your password"
                             autoComplete="current-password"
                             onChange={(e) => setData('password', e.target.value)}
                         />
-                        <InputError message={errors.password} className="mt-2" />
+                        <InputError light message={errors.password} className="mt-2" />
                     </div>
                 )}
 
                 {/* Login Code */}
                 {mode === 'code' && codeSent && (
                     <div>
-                        <label htmlFor="code" className="block text-gray-300 text-sm font-medium mb-2">
+                        <label htmlFor="code" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                             Sign-In Code
                         </label>
                         <input
@@ -126,12 +126,12 @@ export default function Login({ status, canResetPassword }) {
                             autoComplete="one-time-code"
                             maxLength={6}
                             value={data.code}
-                            className="auth-input"
+                            className="auth-field"
                             placeholder="6-digit code"
                             autoFocus
                             onChange={(e) => setData('code', e.target.value.replace(/\D/g, ''))}
                         />
-                        <InputError message={errors.code} className="mt-2" />
+                        <InputError light message={errors.code} className="mt-2" />
                     </div>
                 )}
 
@@ -144,14 +144,14 @@ export default function Login({ status, canResetPassword }) {
                                 name="remember"
                                 checked={data.remember}
                                 onChange={(e) => setData('remember', e.target.checked)}
-                                className="w-4 h-4 rounded border-white/20 bg-white/10 text-[rgb(139,0,0)] focus:ring-[rgb(139,0,0)]"
+                                className="w-4 h-4 rounded border-[#D8CEC7] bg-[#F1ECE8] text-[rgb(139,0,0)] focus:ring-[rgb(139,0,0)]"
                             />
-                            <span className="text-gray-400 text-sm">Remember me</span>
+                            <span className="text-[#6B5D58] text-sm">Remember me</span>
                         </label>
                         {canResetPassword && (
                             <Link
                                 href={route('password.request')}
-                                className="text-sm text-gray-400 hover:text-white transition"
+                                className="text-sm text-[#6B5D58] hover:text-[#1A1514] transition"
                             >
                                 Forgot password?
                             </Link>
@@ -180,15 +180,15 @@ export default function Login({ status, canResetPassword }) {
             {passkeySupported && (
                 <div className="mt-5">
                     <div className="flex items-center gap-3 mb-4">
-                        <span className="flex-1 h-px bg-white/10"></span>
-                        <span className="text-gray-500 text-xs">or</span>
-                        <span className="flex-1 h-px bg-white/10"></span>
+                        <span className="flex-1 h-px bg-[#F1ECE8]"></span>
+                        <span className="text-[#8A7B72] text-xs">or</span>
+                        <span className="flex-1 h-px bg-[#F1ECE8]"></span>
                     </div>
                     <motion.button
                         type="button"
                         onClick={() => verify()}
                         disabled={passkeyLoading}
-                        className="w-full px-5 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/15 transition disabled:opacity-50"
+                        className="w-full h-12 px-5 rounded-full border border-[#E6DFD9] bg-white text-[#1A1514] text-sm font-medium hover:bg-[#F1ECE8] transition disabled:opacity-50"
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                     >
@@ -197,7 +197,7 @@ export default function Login({ status, canResetPassword }) {
                             : 'Sign in with passkey'}
                     </motion.button>
                     {passkeyError && (
-                        <p className="text-sm text-red-400 mt-2 text-center">
+                        <p className="text-sm text-red-600 mt-2 text-center">
                             {passkeyError}
                         </p>
                     )}
@@ -208,7 +208,7 @@ export default function Login({ status, canResetPassword }) {
                 <button
                     type="button"
                     onClick={() => switchMode(mode === 'password' ? 'code' : 'password')}
-                    className="text-sm text-gray-400 hover:text-white transition"
+                    className="text-sm text-[#6B5D58] hover:text-[#1A1514] transition"
                 >
                     {mode === 'password'
                         ? 'Email me a sign-in code instead'
@@ -216,9 +216,9 @@ export default function Login({ status, canResetPassword }) {
                 </button>
             </div>
 
-            <p className="text-center text-gray-400 text-sm mt-6">
+            <p className="text-center text-[#6B5D58] text-sm mt-6">
                 Don't have an account?{' '}
-                <Link href={route('register')} className="text-white font-semibold hover:underline">
+                <Link href={route('register')} className="text-[#1A1514] font-semibold hover:underline">
                     Sign up
                 </Link>
             </p>

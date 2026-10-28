@@ -24,25 +24,25 @@ export default function ConfirmPassword() {
             <Head title="Confirm Password - Najenga" />
 
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white mb-1">Secure Area</h2>
-                <p className="text-gray-400 text-sm">Please confirm your password before continuing.</p>
+                <h1 className="text-3xl font-semibold tracking-tight text-[#1A1514] mb-1">Secure Area</h1>
+                <p className="text-[#6B5D58] text-sm">Please confirm your password before continuing.</p>
             </div>
 
             {/* Lock Icon */}
             <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
-                    <i aria-hidden="true" className="fas fa-lock text-2xl text-white/60"></i>
+                <div className="w-16 h-16 rounded-full bg-[#F1ECE8] flex items-center justify-center">
+                    <i aria-hidden="true" className="fas fa-lock text-2xl text-[#B3122E]"></i>
                 </div>
             </div>
 
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-[#6B5D58] text-sm text-center mb-6">
                 This is a secure area of the application. Please confirm your password before continuing.
             </p>
 
             <form onSubmit={submit} className="space-y-4">
                 {/* Password */}
                 <div>
-                    <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2">
+                    <label htmlFor="password" className="block text-[#3A2F2C] text-sm font-medium mb-2">
                         Password
                     </label>
                     <input
@@ -50,12 +50,12 @@ export default function ConfirmPassword() {
                         type="password"
                         name="password"
                         value={data.password}
-                        className="auth-input"
+                        className="auth-field"
                         placeholder="Enter your password"
                         autoFocus
                         onChange={(e) => setData('password', e.target.value)}
                     />
-                    <InputError message={errors.password} className="mt-2" />
+                    <InputError light message={errors.password} className="mt-2" />
                 </div>
 
                 {/* Submit */}

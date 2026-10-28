@@ -19,24 +19,24 @@ export default function VerifyEmail({ status }) {
             <Head title="Email Verification - Najenga" />
 
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white mb-1">Email Verification</h2>
-                <p className="text-gray-400 text-sm">Verify your email to start using Najenga.</p>
+                <h1 className="text-3xl font-semibold tracking-tight text-[#1A1514] mb-1">Email Verification</h1>
+                <p className="text-[#6B5D58] text-sm">Verify your email to start using Najenga.</p>
             </div>
 
             {/* Mail Icon */}
             <div className="flex justify-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
-                    <i aria-hidden="true" className="fas fa-envelope text-2xl text-white/60"></i>
+                <div className="w-16 h-16 rounded-full bg-[#F1ECE8] flex items-center justify-center">
+                    <i aria-hidden="true" className="fas fa-envelope text-2xl text-[#B3122E]"></i>
                 </div>
             </div>
 
-            <p className="text-gray-400 text-sm text-center mb-6">
+            <p className="text-[#6B5D58] text-sm text-center mb-6">
                 Thanks for signing up! Before getting started, could you verify your email address by
                 clicking on the link we just emailed to you?
             </p>
 
             {status === 'verification-link-sent' && (
-                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-xl text-green-400 text-sm text-center">
+                <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm text-center">
                     A new verification link has been sent to the email address you provided during registration.
                 </div>
             )}
@@ -54,15 +54,15 @@ export default function VerifyEmail({ status }) {
             </form>
 
             <div className="flex items-center justify-center gap-4 mt-6">
-                <Link href={route('login')} className="text-gray-400 text-sm hover:text-white transition">
+                <Link href={route('login')} className="text-[#6B5D58] text-sm hover:text-[#1A1514] transition">
                     Back to Login
                 </Link>
-                <span className="text-gray-400">|</span>
+                <span className="text-[#6B5D58]">|</span>
                 <Link
                     href={route('logout')}
                     method="post"
                     as="button"
-                    className="text-gray-400 text-sm hover:text-white transition"
+                    className="text-[#6B5D58] text-sm hover:text-[#1A1514] transition"
                 >
                     Log Out
                 </Link>

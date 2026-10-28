@@ -3,9 +3,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { assertPasskey, passkeySupported } from '@/Utils/webauthn';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 
 export default function PasskeyLogin() {
     const supported = useMemo(() => passkeySupported(), []);
@@ -49,8 +46,8 @@ export default function PasskeyLogin() {
             <Head title="Sign in with a passkey - Najenga" />
 
             <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white mb-1">Passkey sign-in</h2>
-                <p className="text-gray-400 text-sm">
+                <h1 className="text-3xl font-semibold tracking-tight text-[#1A1514] mb-1">Passkey sign-in</h1>
+                <p className="text-[#6B5D58] text-sm">
                     {supported
                         ? 'Enter your email and confirm with your device.'
                         : 'This browser does not support passkeys. Use password or email code instead.'}
@@ -60,34 +57,34 @@ export default function PasskeyLogin() {
             {supported && (
                 <form onSubmit={signIn} className="space-y-4">
                     <div>
-                        <InputLabel htmlFor="email" value="Email" />
-                        <TextInput
+                        <label htmlFor="email" className="mb-2 block text-xs font-semibold text-[#3A2F2C]">Email</label>
+                        <input
                             id="email"
                             type="email"
                             name="email"
                             autoComplete="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 block w-full"
+                            className="auth-field"
                             required
                             autoFocus
                         />
-                        <InputError message={error} className="mt-2" />
+                        <InputError light message={error} className="mt-2" />
                     </div>
 
                     <div className="flex items-center justify-between">
-                        <Link href={route('login')} className="text-sm text-gray-400 hover:text-white underline">
+                        <Link href={route('login')} className="text-sm text-[#6B5D58] hover:text-[#1A1514] underline">
                             Use password instead
                         </Link>
-                        <PrimaryButton disabled={busy}>
+                        <button type="submit" disabled={busy} className="auth-submit !mt-0 !w-auto px-8">
                             {busy ? 'Waiting for browser…' : 'Continue with passkey'}
-                        </PrimaryButton>
+                        </button>
                     </div>
                 </form>
             )}
 
-            <p className="text-center text-gray-400 text-sm mt-6">
-                <Link href={route('login.code')} className="hover:text-white underline">
+            <p className="text-center text-[#6B5D58] text-sm mt-6">
+                <Link href={route('login.code')} className="hover:text-[#1A1514] underline">
                     Or sign in with an email code
                 </Link>
             </p>
