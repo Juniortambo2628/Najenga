@@ -25,6 +25,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// The step-by-step journeys through Najenga (Pages/Journey.jsx, Config/journeys.js).
+Route::get('/for-homeowners', fn () => Inertia::render('Journey', ['journeyId' => 'homeowners']))->name('journey.homeowners');
+Route::get('/for-contractors', fn () => Inertia::render('Journey', ['journeyId' => 'contractors']))->name('journey.contractors');
+
 Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', [
     'effectiveDate' => '16 September 2026',
     'contactEmail' => 'najenga-info@okjtech.co.ke',

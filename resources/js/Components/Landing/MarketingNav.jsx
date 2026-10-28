@@ -2,11 +2,13 @@ import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { Container, Logo, PillLink } from './ui';
 
-const LINKS = [
-    { href: '#journey', label: 'How it works' },
-    { href: '#inside', label: 'Inside Najenga' },
-    { href: '#who', label: 'Who it’s for' },
-    { href: '#faq', label: 'Questions' },
+/** The top links, usable from any public page (the anchors are the front page's). */
+const links = () => [
+    { href: `${route('home')}#journey`, label: 'How it works' },
+    { href: `${route('home')}#inside`, label: 'Inside Najenga' },
+    { href: route('journey.homeowners'), label: 'For homeowners' },
+    { href: route('journey.contractors'), label: 'For contractors' },
+    { href: `${route('home')}#faq`, label: 'Questions' },
 ];
 
 /** The top bar over the hero photo: logo, page links, sign in and get started. */
@@ -17,8 +19,8 @@ export default function MarketingNav({ auth }) {
         <header className="absolute inset-x-0 top-0 z-40 text-white">
             <Container className="flex h-20 items-center justify-between gap-6">
                 <Logo light className="h-11 sm:h-12" />
-                <nav aria-label="Main" className="hidden items-center gap-8 lg:flex">
-                    {LINKS.map((link) => (
+                <nav aria-label="Main" className="hidden items-center gap-6 xl:gap-8 lg:flex">
+                    {links().map((link) => (
                         <a key={link.href} href={link.href} className="text-sm text-white/80 transition hover:text-white">
                             {link.label}
                         </a>
@@ -53,7 +55,7 @@ export default function MarketingNav({ auth }) {
             {open && (
                 <Container>
                     <nav aria-label="Main" className="rounded-3xl bg-white p-3 text-[#1A1514] shadow-2xl lg:hidden">
-                        {LINKS.map((link) => (
+                        {links().map((link) => (
                             <a key={link.href} href={link.href} onClick={() => setOpen(false)} className="block rounded-2xl px-4 py-3 font-medium hover:bg-[#F4F1EE]">
                                 {link.label}
                             </a>

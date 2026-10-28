@@ -5,11 +5,11 @@ import axios from 'axios';
 /** The tour's stops: an element marked data-tour="…", or none for a centred card. */
 export const TOUR_STEPS = [
     { title: 'Welcome to Najenga', body: 'A quick look around: where your projects, expenses, receipts, photos and documents live, and how to work on them with others.' },
-    { target: 'sidebar', title: 'Your pages', body: 'Projects, Expenses, Receipts, Photos, Documents and the Timeline. A red number means others changed something there since you last looked.' },
+    { target: 'sidebar', title: 'Your pages', body: 'The Overview, Expenses, Receipts, Photos, Documents and the Timeline, in groups. A red number means others changed something there since you last looked.' },
     { target: 'project-switcher', title: 'Pick a project', body: 'Every page follows the project picked here, or shows all of them. Your role in each project is shown beside it.' },
     { target: 'history', title: 'Version history', body: 'Every change is kept. See who changed what, undo a change, or bring back something deleted.' },
     { target: 'notifications', title: 'Notifications', body: 'Comments, invitations and activity on your projects arrive here.' },
-    { target: 'account', title: 'Your account', body: 'Your profile and signing out. You can take this tour again from here any time.' },
+    { target: 'account', title: 'Your account', body: 'Settings and signing out. You can take this tour again from here any time.' },
 ];
 
 /** New accounts (created this many days ago or less) get the tour once, by themselves. */

@@ -48,6 +48,8 @@ export const TEST_ROUTES = {
     'history.index': '/history',
     'history.restore': '/history/versions/{revision}/restore',
     'home': '/',
+    'journey.contractors': '/for-contractors',
+    'journey.homeowners': '/for-homeowners',
     'login': '/login',
     'login-code.request': '/login-code',
     'login-code.verify': '/login-code/verify',

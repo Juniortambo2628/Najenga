@@ -1,13 +1,12 @@
-import { Head } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { Head, Link } from '@inertiajs/react';
 import MarketingNav from '@/Components/Landing/MarketingNav';
 import MarketingFooter from '@/Components/Landing/MarketingFooter';
 import SectionNav, { SECTION_OFFSET } from '@/Components/Landing/SectionNav';
 import FeatureExplorer from '@/Components/Landing/FeatureExplorer';
 import FaqSection from '@/Components/Landing/FaqSection';
+import PhotoHero from '@/Components/Landing/PhotoHero';
+import { BG, FEATURE_GROUPS } from '@/Config/marketing';
 import { Container, Eyebrow, ImageCard, Photo, PillLink, SectionHeading } from '@/Components/Landing/ui';
-
-const BG = '/Najenga-backgrounds';
 
 /** The numbers under the hero. */
 const FACTS = [
@@ -34,57 +33,6 @@ const JOURNEY = [
     { title: 'Watch it go up', text: 'Photos dated from the camera, notes pinned on them, and milestones on one timeline — even when you can’t be on site.', link: 'Site', href: '#inside' },
     { title: 'Keep the paperwork', text: 'Plans, permits, contracts and quotes in folders, with the project they belong to. Search finds any of them.', link: 'Files', href: '#inside' },
     { title: 'Hand over with confidence', text: 'Every cost, photo and change on record, with who made it and when. Nothing to reconstruct at the end.', link: 'Insight', href: '#inside' },
-];
-
-/** The "Inside Najenga" explorer. */
-const FEATURE_GROUPS = [
-    {
-        id: 'money',
-        eyebrow: 'Money',
-        title: 'Every shilling, accounted for',
-        summary: 'Record costs as they happen — in a form, in a spreadsheet view, or by sending the receipt on WhatsApp. Najenga reads the receipt, you confirm it, and each cost lands in its project and category.',
-        points: ['Receipts read for you, then checked by a person', 'M-Pesa codes, bank references and cash in one list', 'Totals by category, and receipts still missing'],
-        stats: [['8', 'currencies'], ['3', 'ways to record a cost'], ['1', 'list of every payment']],
-        image: `${BG}/pexels-curtis-adams-1694007-7027840.webp`,
-        screen: '/marketing/expenses.webp',
-    },
-    {
-        id: 'site',
-        eyebrow: 'Site',
-        title: 'The site, week by week',
-        summary: 'Upload photos from site or send them on WhatsApp. Najenga dates each one from the camera, flags the ones it had to guess, and keeps them with their project.',
-        points: ['Dates read from the photo itself', 'Pin notes and drawings on a photo', 'Milestones and progress on one timeline'],
-        stats: [['Day', 'to year timeline views'], ['Pins', 'drawn on photos'], ['Zip', 'download a batch']],
-        image: `${BG}/pexels-d-goug-211350543-38210397.webp`,
-    },
-    {
-        id: 'files',
-        eyebrow: 'Files',
-        title: 'Plans and paperwork, where you left them',
-        summary: 'Drawings, permits, contracts and quotes in folders for each project. Preview them in the browser, talk about them in comments, and find any of them from the search bar.',
-        points: ['Folders for each project', 'PDFs and images open in the browser', 'Comments beside every document'],
-        stats: [['Folders', 'inside folders'], ['PDF', 'preview in place'], ['⌘K', 'search everything']],
-        image: `${BG}/pexels-expect-best-79873-323776.webp`,
-    },
-    {
-        id: 'team',
-        eyebrow: 'Team',
-        title: 'The right say for everyone',
-        summary: 'Invite people by email and choose what they can do: run the project, change records, or only look. See who else is working on the same page, and undo a mistake from the version history.',
-        points: ['Owner, manager, editor and viewer roles', 'Who’s online, and what changed since you looked', 'Every change kept, and restorable'],
-        stats: [['4', 'roles'], ['7', 'days to accept an invite'], ['1', 'click to restore']],
-        image: `${BG}/pexels-40037226-7667625.webp`,
-    },
-    {
-        id: 'insight',
-        eyebrow: 'Insight',
-        title: 'Know where the project stands',
-        summary: 'Each project’s overview shows its budget used, latest work and team. Analytics and activity logs show the rest, and a weekly email sums up what came in on WhatsApp.',
-        points: ['Budget used, at a glance', 'Spending by category and over time', 'A weekly summary in your inbox'],
-        stats: [['%', 'of budget used'], ['Weekly', 'WhatsApp summary'], ['CSV', 'export any list']],
-        image: `${BG}/pexels-ninobur-16787444.webp`,
-        screen: '/marketing/overview.webp',
-    },
 ];
 
 const SAFETY = [
@@ -123,10 +71,10 @@ function HeroPanel() {
                 </p>
             </div>
             {[
-                { href: '#who', icon: 'fa-house', title: 'For homeowners', text: 'Follow your build from anywhere, and know where every shilling went.' },
-                { href: '#who', icon: 'fa-helmet-safety', title: 'For contractors', text: 'Every site, crew and client under one sign-in.' },
+                { href: route('journey.homeowners'), icon: 'fa-house', title: 'For homeowners', text: 'Follow your build from anywhere, and know where every shilling went.' },
+                { href: route('journey.contractors'), icon: 'fa-helmet-safety', title: 'For contractors', text: 'Every site, crew and client under one sign-in.' },
             ].map((card) => (
-                <a key={card.title} href={card.href} className="group flex min-h-[14rem] flex-col justify-between rounded-3xl border border-[#EFE8E2] bg-white p-6 transition-shadow hover:shadow-[0_20px_50px_-30px_rgba(26,21,20,0.5)]">
+                <Link key={card.title} href={card.href} className="group flex min-h-[14rem] flex-col justify-between rounded-3xl border border-[#EFE8E2] bg-white p-6 transition-shadow hover:shadow-[0_20px_50px_-30px_rgba(26,21,20,0.5)]">
                     <div className="flex items-start justify-between">
                         <h3 className="font-display text-2xl font-normal leading-tight text-[#1A1514]">{card.title}</h3>
                         <i aria-hidden="true" className="fas fa-arrow-up-right-from-square text-sm text-[#B3122E] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
@@ -135,7 +83,7 @@ function HeroPanel() {
                         <i aria-hidden="true" className={`fas ${card.icon} text-[#D4A7A0]`} />
                         <p className="mt-3 text-sm leading-relaxed text-[#5E5450]">{card.text}</p>
                     </div>
-                </a>
+                </Link>
             ))}
             <ImageCard
                 image={`${BG}/pexels-kelly-28964416.webp`}
@@ -149,41 +97,32 @@ function HeroPanel() {
     );
 }
 
-/** The full-bleed photo hero with the About panel overlapping its bottom edge. */
+/** The front page's hero: the headline over the roof frame, the About panel overlapping its foot. */
 function Hero({ auth }) {
     const signedIn = !!auth?.user;
     return (
-        <section className="relative">
-            <div className="relative isolate flex min-h-[100svh] flex-col justify-center overflow-hidden pb-56 pt-32 text-white sm:pb-64">
-                <Photo src={`${BG}/pexels-vip-foto-8491089.webp`} position="center 40%" eager className="-z-20" />
-                <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#140F0E]/75 via-[#140F0E]/45 to-[#140F0E]/70" />
-                <Container>
-                    <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mx-auto max-w-5xl text-center">
-                        <Eyebrow light>Construction project management</Eyebrow>
-                        <h1 className="mt-5 font-display text-[2.75rem] font-extralight leading-[1.02] tracking-tight text-white sm:text-7xl lg:text-[6.25rem]">
-                            <span className="block">Build it right.</span>
-                            <span className="block">
-                                Keep every <span className="font-light text-rose-200">shilling</span> in sight.
-                            </span>
-                        </h1>
-                        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg">
-                            What was spent and on what, how the site is coming along, the plans and permits, and who is doing what — for every project, on your phone or in the office.
-                        </p>
-                        <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-                            <PillLink href={signedIn ? route('dashboard') : route('register')} variant="light" size="lg">
-                                {signedIn ? 'Open your dashboard' : 'Start your first project'}
-                            </PillLink>
-                            <PillLink href="#inside" variant="glass" size="lg" arrow>
-                                See what’s inside
-                            </PillLink>
-                        </div>
-                    </motion.div>
-                </Container>
-            </div>
-            <Container className="relative z-10 -mt-44 sm:-mt-52">
-                <HeroPanel />
-            </Container>
-        </section>
+        <PhotoHero
+            image={`${BG}/pexels-vip-foto-8491089.webp`}
+            position="center 40%"
+            eyebrow="Construction project management"
+            title={
+                <>
+                    <span className="block">Build it right.</span>
+                    <span className="block">
+                        Keep every <span className="font-light text-rose-200">shilling</span> in sight.
+                    </span>
+                </>
+            }
+            text="What was spent and on what, how the site is coming along, the plans and permits, and who is doing what — for every project, on your phone or in the office."
+            after={<HeroPanel />}
+        >
+            <PillLink href={signedIn ? route('dashboard') : route('register')} variant="light" size="lg">
+                {signedIn ? 'Open your dashboard' : 'Start your first project'}
+            </PillLink>
+            <PillLink href="#inside" variant="glass" size="lg" arrow>
+                See what’s inside
+            </PillLink>
+        </PhotoHero>
     );
 }
 
@@ -249,16 +188,18 @@ export default function Welcome({ auth }) {
                         <SectionHeading eyebrow="Who it’s for" title="For the people paying — and the people building" />
                         <div className="mt-14 grid gap-5 lg:grid-cols-2">
                             <ImageCard
+                                href={route('journey.homeowners')}
                                 image={`${BG}/pexels-artbovich-7031607.webp`}
-                                tags={['Homeowners', 'Building from afar']}
+                                tags={['Homeowners', 'Step by step']}
                                 title="See your house go up, wherever you are"
                                 text="Photos from site each week, every payment with its receipt, and the plans in one place — so you can follow the build from Nairobi, Mombasa or abroad."
                                 className="min-h-[32rem]"
                                 titleClass="text-3xl sm:text-5xl"
                             />
                             <ImageCard
+                                href={route('journey.contractors')}
                                 image={`${BG}/pexels-40037226-7667625.webp`}
-                                tags={['Contractors', 'Site managers']}
+                                tags={['Contractors', 'Step by step']}
                                 title="Run every site from one place"
                                 text="Each project with its crew, budget and paperwork. Switch between sites in a tap, and show clients exactly where their money went."
                                 className="min-h-[32rem]"
