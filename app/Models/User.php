@@ -54,6 +54,7 @@ class User extends Authenticatable implements PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'seen_at' => 'datetime',
             'whatsapp_verified_at' => 'datetime',
             'password' => 'hashed',
             'login_notifications_enabled' => 'boolean',
