@@ -8,7 +8,6 @@ use App\Models\Revision;
 use App\Models\User;
 use App\Support\ProjectRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class HistoryControllerTest extends TestCase
@@ -24,9 +23,6 @@ class HistoryControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        if (DB::getDriverName() === 'sqlite') {
-            DB::statement('PRAGMA foreign_keys = ON');
-        }
 
         $this->owner = User::factory()->create();
         $this->project = Project::factory()->create(['client_id' => $this->owner->id, 'name' => 'Kitengela site']);
