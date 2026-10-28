@@ -1,23 +1,80 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DashboardPage from '@/Components/DashboardPage';
+import ListPanel from '@/Components/ListPanel';
+import SummaryCards from '@/Components/SummaryCards';
+import EmptyState from '@/Components/EmptyState';
 import useAction, { visit } from '@/Hooks/useAction';
+import { rootBreadcrumbs } from '@/Config/navigation';
 
-const DIRECTION_OPTIONS = [
-    { value: 'all', label: 'All' },
-    { value: 'inbound', label: 'Inbound' },
-    { value: 'outbound', label: 'Outbound' },
+const DIRECTIONS = [
+    { value: 'inbound', label: 'Inbound', icon: 'fa-arrow-down' },
+    { value: 'outbound', label: 'Outbound', icon: 'fa-arrow-up' },
 ];
 
-const STATUS_OPTIONS = [
-    { value: 'all', label: 'Any status' },
-    { value: 'received', label: 'Received' },
-    { value: 'sent', label: 'Sent' },
-    { value: 'delivered', label: 'Delivered' },
-    { value: 'read', label: 'Read' },
-    { value: 'failed', label: 'Failed' },
+const STATUSES = [
+    { value: 'received', label: 'Received', icon: 'fa-inbox' },
+    { value: 'sent', label: 'Sent', icon: 'fa-paper-plane' },
+    { value: 'delivered', label: 'Delivered', icon: 'fa-check' },
+    { value: 'read', label: 'Read', icon: 'fa-check-double' },
+    { value: 'failed', label: 'Failed', icon: 'fa-triangle-exclamation' },
 ];
+
+const isSet = (value) => value && value !== 'all';
+
+/** The side panel's views: everything, by direction, by status. One applies at a time. */
+export function activityViews(counts = {}) {
+    return [
+        { id: 'all', label: 'All activity', icon: 'fa-layer-group' },
+        ...DIRECTIONS.map((d) => ({ id: `direction:${d.value}`, group: 'Direction', label: d.label, icon: d.icon, count: counts[d.value] })),
+        ...STATUSES.map((st) => ({ id: `status:${st.value}`, group: 'Status', label: st.label, icon: st.icon, count: st.value === 'failed' ? counts.failed : undefined })),
+    ];
+}
+
+/** Which view the server's filters amount to. */
+export function activeView(filters = {}) {
+    if (isSet(filters.direction)) return `direction:${filters.direction}`;
+    if (isSet(filters.status)) return `status:${filters.status}`;
+    return 'all';
+}
+
+/** What came in on WhatsApp and was filed: the panel's lists under the filters. */
+function FiledLists({ filed }) {
+    const lists = [
+        { key: 'expenses', title: 'Filed expenses', icon: 'fa-receipt', rows: filed?.expenses ?? [], meta: (e) => `${e.currency} ${Number(e.amount).toLocaleString()}` },
+        { key: 'photos', title: 'Filed photos', icon: 'fa-image', rows: filed?.photos ?? [], meta: (p) => p.project_name || '—' },
+    ];
+    return (
+        <div className="space-y-4 border-t border-white/[0.08] pt-4">
+            {lists.map((list) => (
+                <section key={list.key} aria-labelledby={`filed-${list.key}`}>
+                    <h3 id={`filed-${list.key}`} className="mb-2 flex items-center gap-2 text-xs font-semibold text-gray-400">
+                        <i aria-hidden="true" className={`fas ${list.icon} text-rose-300`} />
+                        {list.title}
+                    </h3>
+                    {list.rows.length === 0 ? (
+                        <p className="text-xs text-gray-500">None yet.</p>
+                    ) : (
+                        <ul className="space-y-1.5">
+                            {list.rows.map((row) => (
+                                <li key={row.id}>
+                                    <Link href={row.url} className="block rounded-lg px-2 py-1.5 hover:bg-white/5">
+                                        <span className="block truncate text-sm text-white">{row.title}</span>
+                                        <span className="flex justify-between gap-2 text-[11px] text-gray-400">
+                                            <span className="truncate">{list.meta(row)}</span>
+                                            <span className="shrink-0">{relativeTime(row.created_at)}</span>
+                                        </span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+            ))}
+        </div>
+    );
+}
 
 const relativeTime = (iso) => {
     if (!iso) return '';
@@ -62,23 +119,30 @@ const DirectionArrow = ({ direction }) => (
 
 export default function Activity({ isAdmin, filters, items, filed, counts, settingsUrl }) {
     const [q, setQ] = useState(filters?.q || '');
+    const firstRender = useRef(true);
 
     const setFilter = (patch) => {
         router.get(
             route('whatsapp'),
             {
-                direction: patch.direction ?? filters.direction,
-                status: patch.status ?? filters.status,
+                direction: 'direction' in patch ? patch.direction : filters.direction,
+                status: 'status' in patch ? patch.status : filters.status,
                 q: patch.q ?? q,
             },
             { preserveState: true, preserveScroll: true, replace: true, only: ['items', 'filters', 'counts'] },
         );
     };
 
-    const onSubmitSearch = (e) => {
-        e.preventDefault();
-        setFilter({ q });
-    };
+    // The toolbar's search asks the server once typing pauses.
+    useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return undefined;
+        }
+        const timer = setTimeout(() => setFilter({ q }), 350);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the text changes
+    }, [q]);
 
     const remove = useAction((m) => visit('delete', route('whatsapp.activity.destroy', m.id), {}, { preserveState: true }), {
         confirm: (m) => ({
@@ -98,248 +162,139 @@ export default function Activity({ isAdmin, filters, items, filed, counts, setti
         reclassify.run(m, cls);
     };
 
-    const totals = useMemo(() => [
-        { label: 'Inbound', value: counts?.inbound ?? 0, tone: 'text-blue-300' },
-        { label: 'Outbound', value: counts?.outbound ?? 0, tone: 'text-emerald-300' },
-        { label: 'Failed', value: counts?.failed ?? 0, tone: 'text-red-300' },
-    ], [counts]);
+    const pickView = (id) => {
+        const [kind, value] = id.split(':');
+        setFilter({ direction: kind === 'direction' ? value : '', status: kind === 'status' ? value : '' });
+    };
 
     return (
         <AuthenticatedLayout>
             <Head title="WhatsApp activity" />
 
             <DashboardPage
-                className="max-w-6xl mx-auto"
-                bodyClassName="space-y-6"
+                fill={items.length > 0}
                 hero={{
                     title: 'WhatsApp',
                     subtitle: isAdmin ? 'All WhatsApp activity across accounts.' : 'Your WhatsApp activity — messages sent to and from Najenga.',
-                    breadcrumbs: [
-                        { label: 'Home', href: route('home') },
-                        { label: 'Dashboard', href: route('dashboard') },
-                        { label: 'WhatsApp' },
-                    ],
-                    actions: settingsUrl && (
-                        <Link
-                            href={settingsUrl}
-                            className="mt-1 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white hover:bg-white/10"
-                        >
-                            <i aria-hidden="true" className="fas fa-cog"></i>
-                            Settings
-                        </Link>
-                    ),
+                    breadcrumbs: [...rootBreadcrumbs(), { label: 'WhatsApp' }],
+                }}
+                summary={
+                    <SummaryCards
+                        cards={[
+                            { label: 'Inbound', value: counts?.inbound ?? 0, icon: 'fa-arrow-down' },
+                            { label: 'Outbound', value: counts?.outbound ?? 0, icon: 'fa-arrow-up' },
+                            { label: 'Failed', value: counts?.failed ?? 0, icon: 'fa-triangle-exclamation' },
+                        ]}
+                    />
+                }
+                toolbar={{
+                    search: { value: q, onChange: setQ, placeholder: 'Search phone, wamid or text' },
+                    actions: settingsUrl ? [{ id: 'settings', label: 'Settings', icon: 'fa-cog', href: settingsUrl }] : [],
+                }}
+                panel={{
+                    id: 'whatsapp',
+                    title: 'Activity',
+                    icon: 'fa-comment-dots',
+                    subtitle: 'Filter what came in and went out',
+                    items: activityViews(counts),
+                    activeId: activeView(filters),
+                    onChange: pickView,
+                    content: <FiledLists filed={filed} />,
                 }}
             >
-                {/* Totals */}
-                <div className="grid grid-cols-3 gap-3">
-                    {totals.map((t) => (
-                        <div key={t.label} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                            <p className="text-xs text-gray-400">{t.label}</p>
-                            <p className={`text-2xl font-bold ${t.tone}`}>{t.value}</p>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Filters */}
-                <div className="rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4 space-y-3">
-                    <div className="flex flex-wrap gap-2 items-center">
-                        {DIRECTION_OPTIONS.map((o) => (
-                            <button
-                                key={o.value}
-                                type="button"
-                                onClick={() => setFilter({ direction: o.value === 'all' ? '' : o.value })}
-                                className={`px-3 py-1 rounded-full text-xs border ${
-                                    (filters.direction === o.value) || (filters.direction === 'all' && o.value === 'all')
-                                        ? 'bg-white/15 text-white border-white/20'
-                                        : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
-                                }`}
-                            >
-                                {o.label}
-                            </button>
+                {items.length === 0 ? (
+                    <EmptyState
+                        icon="fa-comment-dots"
+                        title="No WhatsApp activity"
+                        message="Send a message to the business number and it'll show up here."
+                        search={filters?.q}
+                        filtered={activeView(filters) !== 'all'}
+                        onClear={() => {
+                            setQ('');
+                            setFilter({ direction: '', status: '', q: '' });
+                        }}
+                    />
+                ) : (
+                    <ListPanel>
+                    <ul className="divide-y divide-white/5 px-4">
+                        {items.map((m) => (
+                            <li key={`${m.direction}-${m.id}`} className="py-3 flex gap-3 group">
+                                <DirectionArrow direction={m.direction} />
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+                                        <span className="text-white font-medium">
+                                            {m.direction === 'inbound' ? 'From' : 'To'} +{m.phone_number}
+                                        </span>
+                                        {m.user?.name && (
+                                            <span className="text-gray-400">· {m.user.name}</span>
+                                        )}
+                                        <StatusPill status={m.status} />
+                                        <span className="ml-auto">{relativeTime(m.timestamp)}</span>
+                                    </div>
+                                    <p className="text-sm text-gray-200 mt-1 whitespace-pre-wrap break-words">
+                                        {m.preview}
+                                    </p>
+                                    {m.filed && (
+                                        <Link
+                                            href={m.filed.url}
+                                            className="mt-1 inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
+                                        >
+                                            <i aria-hidden="true" className={`fas ${m.filed.kind === 'photo' ? 'fa-image' : 'fa-receipt'} text-[10px]`}></i>
+                                            → {m.filed.label}
+                                        </Link>
+                                    )}
+                                    {m.error_message && (
+                                        <p className="text-xs text-red-300 mt-1">
+                                            <i aria-hidden="true" className="fas fa-exclamation-triangle mr-1"></i>
+                                            {m.error_message}
+                                        </p>
+                                    )}
+                                    {m.message_id && (
+                                        <p className="text-[10px] text-gray-500 font-mono mt-1 truncate">
+                                            wamid: {m.message_id}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-start gap-1 shrink-0">
+                                    {m.filed && (
+                                        <select
+                                            aria-label={`Re-classify this ${m.filed.kind}`}
+                                            defaultValue=""
+                                            onChange={(e) => { onReclassify(m, e.target.value); e.target.value = ''; }}
+                                            className="text-[10px] bg-black/40 border border-white/10 rounded px-1 py-0.5 text-white"
+                                            title={`Move this ${m.filed.kind} to a different WhatsApp class`}
+                                        >
+                                            <option value="" disabled>Re-classify…</option>
+                                            {m.filed.kind === 'expense' ? (
+                                                <>
+                                                    <option value="payment_sms">Payment SMS</option>
+                                                    <option value="receipt_paper">Paper receipt</option>
+                                                    <option value="invoice">Invoice</option>
+                                                    <option value="cost_request">Cost request</option>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <option value="progress_photo">Progress photo</option>
+                                                    <option value="progress_video">Progress video</option>
+                                                </>
+                                            )}
+                                        </select>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => onDelete(m)}
+                                        className="text-gray-400 hover:text-red-300 text-xs px-2"
+                                        aria-label={`Delete ${m.direction} message from ${m.phone_number}`}
+                                        title={m.filed ? `Deletes this row and its ${m.filed.kind}` : 'Delete this row'}
+                                    >
+                                        <i aria-hidden="true" className="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </li>
                         ))}
-                        <span className="w-px h-4 bg-white/10 mx-1" />
-                        {STATUS_OPTIONS.map((o) => (
-                            <button
-                                key={o.value}
-                                type="button"
-                                onClick={() => setFilter({ status: o.value === 'all' ? '' : o.value })}
-                                className={`px-3 py-1 rounded-full text-xs border ${
-                                    (filters.status === o.value) || (filters.status === 'all' && o.value === 'all')
-                                        ? 'bg-white/15 text-white border-white/20'
-                                        : 'bg-white/5 text-gray-300 border-white/10 hover:bg-white/10'
-                                }`}
-                            >
-                                {o.label}
-                            </button>
-                        ))}
-                    </div>
-                    <form onSubmit={onSubmitSearch} className="flex gap-2">
-                        <input
-                            type="search"
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                            placeholder="Search phone, wamid or message text…"
-                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-white/30"
-                        />
-                        <button
-                            type="submit"
-                            className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-sm text-white hover:bg-white/20"
-                        >
-                            Search
-                        </button>
-                    </form>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-3">
-                    {/* Timeline */}
-                    <div className="md:col-span-2 rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4">
-                        <h2 className="text-sm font-semibold text-white mb-3">Timeline</h2>
-                        {items.length === 0 ? (
-                            <p className="text-sm text-gray-400 py-6 text-center">
-                                No WhatsApp activity yet. Send a message to the business number and it'll show up here.
-                            </p>
-                        ) : (
-                            <ul className="divide-y divide-white/5">
-                                {items.map((m) => (
-                                    <li key={`${m.direction}-${m.id}`} className="py-3 flex gap-3 group">
-                                        <DirectionArrow direction={m.direction} />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
-                                                <span className="text-white font-medium">
-                                                    {m.direction === 'inbound' ? 'From' : 'To'} +{m.phone_number}
-                                                </span>
-                                                {m.user?.name && (
-                                                    <span className="text-gray-400">· {m.user.name}</span>
-                                                )}
-                                                <StatusPill status={m.status} />
-                                                <span className="ml-auto">{relativeTime(m.timestamp)}</span>
-                                            </div>
-                                            <p className="text-sm text-gray-200 mt-1 whitespace-pre-wrap break-words">
-                                                {m.preview}
-                                            </p>
-                                            {m.filed && (
-                                                <Link
-                                                    href={m.filed.url}
-                                                    className="mt-1 inline-flex items-center gap-1 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
-                                                >
-                                                    <i aria-hidden="true" className={`fas ${m.filed.kind === 'photo' ? 'fa-image' : 'fa-receipt'} text-[10px]`}></i>
-                                                    → {m.filed.label}
-                                                </Link>
-                                            )}
-                                            {m.error_message && (
-                                                <p className="text-xs text-red-300 mt-1">
-                                                    <i aria-hidden="true" className="fas fa-exclamation-triangle mr-1"></i>
-                                                    {m.error_message}
-                                                </p>
-                                            )}
-                                            {m.message_id && (
-                                                <p className="text-[10px] text-gray-500 font-mono mt-1 truncate">
-                                                    wamid: {m.message_id}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-start gap-1 shrink-0">
-                                            {m.filed && (
-                                                <select
-                                                    aria-label={`Re-classify this ${m.filed.kind}`}
-                                                    defaultValue=""
-                                                    onChange={(e) => { onReclassify(m, e.target.value); e.target.value = ''; }}
-                                                    className="text-[10px] bg-black/40 border border-white/10 rounded px-1 py-0.5 text-white"
-                                                    title={`Move this ${m.filed.kind} to a different WhatsApp class`}
-                                                >
-                                                    <option value="" disabled>Re-classify…</option>
-                                                    {m.filed.kind === 'expense' ? (
-                                                        <>
-                                                            <option value="payment_sms">Payment SMS</option>
-                                                            <option value="receipt_paper">Paper receipt</option>
-                                                            <option value="invoice">Invoice</option>
-                                                            <option value="cost_request">Cost request</option>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <option value="progress_photo">Progress photo</option>
-                                                            <option value="progress_video">Progress video</option>
-                                                        </>
-                                                    )}
-                                                </select>
-                                            )}
-                                            <button
-                                                type="button"
-                                                onClick={() => onDelete(m)}
-                                                className="text-gray-400 hover:text-red-300 text-xs px-2"
-                                                aria-label={`Delete ${m.direction} message from ${m.phone_number}`}
-                                                title={m.filed ? `Deletes this row and its ${m.filed.kind}` : 'Delete this row'}
-                                            >
-                                                <i aria-hidden="true" className="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-
-                    {/* Filed */}
-                    <div className="space-y-4">
-                        <section className="rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4">
-                            <h2 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                                <i aria-hidden="true" className="fas fa-receipt text-red-300"></i>
-                                Filed expenses
-                            </h2>
-                            {filed?.expenses?.length ? (
-                                <ul className="space-y-2">
-                                    {filed.expenses.map((e) => (
-                                        <li key={e.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-2">
-                                            <Link href={e.url} className="text-sm text-white hover:underline block truncate">
-                                                {e.title}
-                                            </Link>
-                                            <div className="text-xs text-gray-400 flex items-center justify-between gap-2 mt-0.5">
-                                                <span>
-                                                    {e.currency} {Number(e.amount).toLocaleString()}
-                                                    {e.confidence != null && (
-                                                        <span className="ml-2 text-gray-500">
-                                                            · {(Number(e.confidence) * 100).toFixed(0)}% conf.
-                                                        </span>
-                                                    )}
-                                                </span>
-                                                <span>{relativeTime(e.created_at)}</span>
-                                            </div>
-                                            {e.project_name && (
-                                                <p className="text-[10px] text-gray-500 mt-0.5">{e.project_name}</p>
-                                            )}
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-xs text-gray-500">None yet.</p>
-                            )}
-                        </section>
-
-                        <section className="rounded-2xl border border-white/[0.08] bg-surface-panel/90 p-4">
-                            <h2 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                                <i aria-hidden="true" className="fas fa-image text-purple-300"></i>
-                                Filed photos
-                            </h2>
-                            {filed?.photos?.length ? (
-                                <ul className="space-y-2">
-                                    {filed.photos.map((p) => (
-                                        <li key={p.id} className="rounded-lg border border-white/10 bg-white/[0.02] p-2">
-                                            <Link href={p.url} className="text-sm text-white hover:underline block truncate">
-                                                {p.title}
-                                            </Link>
-                                            <div className="text-xs text-gray-400 flex items-center justify-between gap-2 mt-0.5">
-                                                <span className="truncate">{p.project_name || '—'}</span>
-                                                <span>{relativeTime(p.created_at)}</span>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-xs text-gray-500">None yet.</p>
-                            )}
-                        </section>
-                    </div>
-                </div>
+                    </ul>
+                    </ListPanel>
+                )}
             </DashboardPage>
         </AuthenticatedLayout>
     );

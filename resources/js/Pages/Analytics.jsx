@@ -5,15 +5,15 @@ import SummaryCards from '@/Components/SummaryCards';
 import Card from '@/Components/Card';
 import DashboardPage from '@/Components/DashboardPage';
 import EmptyState from '@/Components/EmptyState';
-import { formatCurrency } from '@/Config/currencies';
+import { formatCurrency, formatCurrencyCompact } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
 
 const PERIODS = [
-    { value: '3months', label: '3 Months' },
-    { value: '6months', label: '6 Months' },
-    { value: '1year', label: '1 Year' },
-    { value: 'all', label: 'All Time' },
+    { value: '3months', label: 'Last 3 Months', icon: 'fa-calendar-week' },
+    { value: '6months', label: 'Last 6 Months', icon: 'fa-calendar-days' },
+    { value: '1year', label: 'Last Year', icon: 'fa-calendar' },
+    { value: 'all', label: 'All Time', icon: 'fa-infinity' },
 ];
 
 const INSIGHT_COLORS = {
@@ -212,50 +212,36 @@ export default function Analytics({
 
             <DashboardPage
                 hero={{
-                    title: 'Advanced Analytics',
-                    subtitle: 'Deep insights into your construction project data',
+                    title: 'Analytics',
+                    subtitle: 'Spending, records and progress across your projects',
                     breadcrumbs: [
                         ...rootBreadcrumbs(),
                         { label: 'Analytics' },
                     ],
                 }}
-                toolbar={{
-                    children: (
-                        <>
-                            <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
-                                {PERIODS.map((p) => (
-                                    <button
-                                        key={p.value}
-                                        onClick={() => handleContextChange(p.value, projectFilter)}
-                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                                            period === p.value
-                                                ? 'bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white shadow-lg'
-                                                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                        }`}
-                                    >
-                                        {p.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </>
-                    ),
-                }}
-            >
-                {/* Overview Stats */}
-                <div className="mb-8">
+                summary={
                     <SummaryCards
                         columns={6}
                         cards={[
-                            { icon: 'fa-receipt', label: 'Total Expenses', value: formatCurrency(totalExpenses) },
-                            { icon: 'fa-calculator', label: 'Avg Expense', value: formatCurrency(avgExpense) },
+                            { icon: 'fa-receipt', label: 'Total Expenses', value: formatCurrencyCompact(totalExpenses), hint: formatCurrency(totalExpenses) },
+                            { icon: 'fa-calculator', label: 'Avg Expense', value: formatCurrencyCompact(avgExpense), hint: formatCurrency(avgExpense) },
                             { icon: 'fa-project-diagram', label: 'Projects', value: totalProjects },
                             { icon: 'fa-images', label: 'Photos', value: totalPhotos },
                             { icon: 'fa-file-alt', label: 'Documents', value: totalDocuments },
                             { icon: 'fa-flag', label: 'Milestones', value: `${completedMilestones}/${totalMilestones}` },
                         ]}
                     />
-                </div>
-
+                }
+                panel={{
+                    id: 'analytics',
+                    title: 'Period',
+                    icon: 'fa-calendar-alt',
+                    subtitle: 'Figures cover this much time',
+                    items: PERIODS.map((p) => ({ id: p.value, label: p.label, icon: p.icon })),
+                    activeId: period,
+                    onChange: (value) => handleContextChange(value, projectFilter),
+                }}
+            >
                 {/* Insights */}
                 {insights.length > 0 && (
                     <div className="mb-8">
