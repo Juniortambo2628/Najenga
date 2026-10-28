@@ -42,14 +42,19 @@ describe('DashboardPage', () => {
         expect(screen.queryByRole('link')).toBeNull();
     });
 
-    it('fits the screen only when asked', () => {
-        const { container, rerender } = render(<DashboardPage hero={{ title: 'A' }} />);
-        expect(container.firstChild).toHaveAttribute('data-layout', 'flow');
-        expect(container.firstChild.className).not.toContain('fit:h-');
+    it('always fits the screen: the content column scrolls, or its ListPanel does with fill', () => {
+        const { container, rerender } = render(<DashboardPage hero={{ title: 'A' }}>body</DashboardPage>);
+        expect(container.firstChild).toHaveAttribute('data-layout', 'fit');
+        expect(container.firstChild.className).toContain('fit:h-[calc(100dvh-12rem)]');
+        const column = container.querySelector('[data-scroll-region]');
+        expect(column).toHaveTextContent('body');
+        expect(column.className).toContain('fit:overflow-y-auto');
 
-        rerender(<DashboardPage hero={{ title: 'A' }} fill />);
+        rerender(<DashboardPage hero={{ title: 'A' }} fill>body</DashboardPage>);
         expect(container.firstChild).toHaveAttribute('data-layout', 'fill');
         expect(container.firstChild.className).toContain('fit:h-[calc(100dvh-12rem)]');
+        // The ListPanel inside scrolls its own rows instead.
+        expect(container.querySelector('[data-scroll-region]')).toBeNull();
     });
 });
 

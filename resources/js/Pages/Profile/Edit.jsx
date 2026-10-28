@@ -291,6 +291,8 @@ function useSection(sections, initial) {
         } catch {
             /* no history (tests) */
         }
+        // The page fits the screen on desktops; its content column is what scrolls.
+        document.querySelector('[data-scroll-region]')?.scrollTo?.({ top: 0 });
         window.scrollTo?.({ top: 0 });
     };
     return [active, show];

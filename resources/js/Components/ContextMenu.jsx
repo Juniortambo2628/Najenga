@@ -62,7 +62,8 @@ export default function ContextMenu({ options, position, onClose }) {
         };
 
         document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('scroll', onClose);
+        // Capture: lists scroll inside their own panels, and those scrolls don't bubble.
+        document.addEventListener('scroll', onClose, true);
         window.addEventListener('resize', onClose);
         
         // Initial adjustment
@@ -70,7 +71,7 @@ export default function ContextMenu({ options, position, onClose }) {
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('scroll', onClose);
+            document.removeEventListener('scroll', onClose, true);
             window.removeEventListener('resize', onClose);
         };
     }, [onClose, position]);
