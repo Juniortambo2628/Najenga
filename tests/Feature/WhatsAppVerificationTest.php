@@ -204,7 +204,7 @@ class WhatsAppVerificationTest extends TestCase
         $user = User::factory()->create(['phone' => '0717 000 001']);
 
         $this->actingAs($user)
-            ->get('/profile')
+            ->get('/settings')
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('Profile/Edit')
@@ -214,7 +214,7 @@ class WhatsAppVerificationTest extends TestCase
         $user->forceFill(['whatsapp_verified_at' => now()])->save();
 
         $this->actingAs($user)
-            ->get('/profile')
+            ->get('/settings')
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('whatsapp.verified', true));
     }

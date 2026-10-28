@@ -61,7 +61,7 @@ class ExpenseController extends Controller
         $expense = Expense::create([
             ...$request->validated(),
             'user_id' => auth()->id(),
-            'currency' => $request->input('currency', 'KES'),
+            'currency' => $request->input('currency', $request->user()->preference('currency')),
             'status' => 'paid',
         ]);
 
@@ -93,7 +93,7 @@ class ExpenseController extends Controller
                             'reference_number' => $row['reference_number'] ?? null,
                             'purpose' => $row['purpose'] ?? null,
                             'time' => $row['time'] ?? null,
-                            'currency' => $row['currency'] ?? 'KES',
+                            'currency' => $row['currency'] ?? $user->preference('currency'),
                             'payment_source' => $row['payment_source'] ?? null,
                             'confidence' => $row['confidence'] ?? null,
                             'source_channel' => $row['source_channel'] ?? null,

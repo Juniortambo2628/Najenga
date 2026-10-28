@@ -31,7 +31,7 @@ export default function Passkeys({ passkeys }) {
                     subtitle: 'Sign in with biometrics or security keys',
                     breadcrumbs: [
                         ...rootBreadcrumbs(),
-                        { label: 'Settings', href: route('profile.edit') },
+                        { label: 'Settings', href: route('settings') },
                         { label: 'Passkeys' },
                     ],
                 }}
@@ -131,7 +131,7 @@ export default function Passkeys({ passkeys }) {
 
                     <div>
                         <Link
-                            href={route('profile.edit')}
+                            href={route('settings')}
                             className="text-sm text-gray-400 hover:text-white transition"
                         >
                             &larr; Back to settings

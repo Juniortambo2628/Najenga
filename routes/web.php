@@ -219,7 +219,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/storage/{path}', [\App\Http\Controllers\StorageController::class, 'show'])->where('path', '.*')->name('storage.show');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Settings: account, security, connections, preferences. /profile was
+    // its old address; links to it still land here.
+    Route::get('/settings', [ProfileController::class, 'edit'])->name('settings');
+    Route::patch('/settings/preferences', [ProfileController::class, 'updatePreferences'])->name('settings.preferences');
+    Route::get('/profile', fn () => redirect()->to(url('/settings')))->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/login-notifications', [ProfileController::class, 'toggleLoginNotifications'])->name('profile.login-notifications');
     Route::get('/profile/two-factor', [ProfileController::class, 'twoFactor'])->name('profile.two-factor');

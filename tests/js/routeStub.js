@@ -75,6 +75,8 @@ export const TEST_ROUTES = {
     'presence.heartbeat': '/presence/heartbeat',
     'profile.destroy': '/profile',
     'profile.edit': '/profile',
+    settings: '/settings',
+    'settings.preferences': '/settings/preferences',
     'profile.login-notifications': '/profile/login-notifications',
     'profile.passkeys': '/profile/passkeys',
     'profile.two-factor': '/profile/two-factor',
