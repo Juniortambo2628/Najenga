@@ -109,6 +109,7 @@ export const TEST_ROUTES = {
     'receipts.edit': '/receipts/{receipt}/edit',
     'receipts.index': '/receipts',
     'receipts.match': '/receipts/match',
+    'receipts.read-again': '/receipts/{receipt}/read-again',
     'receipts.show': '/receipts/{receipt}',
     'receipts.store': '/receipts/store',
     'receipts.store-bulk': '/receipts/store-bulk',

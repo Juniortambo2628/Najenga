@@ -1,125 +1,162 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
-import { formatCurrency } from '@/Config/currencies';
-import { rootBreadcrumbs } from '@/Config/navigation';
+import ListPanel from '@/Components/ListPanel';
+import SummaryCards from '@/Components/SummaryCards';
 import DetailRow from '@/Components/DetailRow';
+import StatusBadge from '@/Components/StatusBadge';
+import EmptyState from '@/Components/EmptyState';
+import { formatCurrency, formatCurrencyCompact } from '@/Config/currencies';
+import { rootBreadcrumbs } from '@/Config/navigation';
+import useAction, { visit } from '@/Hooks/useAction';
+import useVisibleActions from '@/Hooks/useVisibleActions';
+import titleCase from '@/Utils/titleCase';
 
-export default function Show({ receipt }) {
+const STATUS_LABELS = {
+    pending: 'Waiting for a check',
+    verified: 'Verified',
+    auto_verified: 'Auto-verified',
+    rejected: 'Rejected',
+};
+
+const sameAmount = (a, b) => a != null && b != null && Math.abs(Number(a) - Number(b)) < 0.01;
+const sameRef = (a, b) => !!a && !!b && a.trim().toUpperCase() === b.trim().toUpperCase();
+
+/**
+ * How the receipt compares with its expense, for the summary cards: what was
+ * read off the receipt, and whether it agrees with what the expense says.
+ */
+export function receiptChecks(receipt, expense) {
+    const currency = expense?.currency;
+    const read = receipt.extracted_amount;
+    const ref = receipt.extracted_receipt_id;
+
+    let amountHint = 'Nothing read yet';
+    if (read != null) amountHint = !expense || sameAmount(read, expense.amount) ? formatCurrency(read, currency) : `${formatCurrency(read, currency)}, expense says ${formatCurrencyCompact(expense.amount, currency)}`;
+
+    let refValue = '—';
+    let refHint = 'Nothing read yet';
+    if (ref && expense?.reference_number) {
+        refValue = sameRef(ref, expense.reference_number) ? 'Matches' : 'Differs';
+        refHint = refValue === 'Matches' ? ref : `${ref}, expense says ${expense.reference_number}`;
+    } else if (ref) {
+        refValue = ref;
+        refHint = 'The expense has none';
+    }
+
+    const confidence = receipt.ocr_confidence != null ? Number(receipt.ocr_confidence) : null;
+
+    return [
+        { label: 'Expense amount', value: expense ? formatCurrencyCompact(expense.amount, currency) : '—', icon: 'fa-receipt', hint: expense ? formatCurrency(expense.amount, currency) : 'No expense' },
+        { label: 'Read off the receipt', value: read != null ? formatCurrencyCompact(read, currency) : '—', icon: 'fa-wand-magic-sparkles', hint: amountHint },
+        { label: 'Reference', value: refValue, icon: 'fa-hashtag', hint: refHint },
+        { label: 'Read with', value: confidence != null ? `${Math.round(confidence * (confidence <= 1 ? 100 : 1))}%` : '—', icon: 'fa-gauge', hint: receipt.ocr_provider || 'Not read yet' },
+    ];
+}
+
+/** The receipt itself: an image, or a PDF in a frame. */
+function ReceiptFile({ url, receipt }) {
+    if (!url) {
+        return <EmptyState icon="fa-file-image" title="No file" message="This receipt's file is no longer on its expense." />;
+    }
+    if (receipt.mime_type === 'application/pdf' || url.toLowerCase().endsWith('.pdf')) {
+        return <iframe src={url} title={receipt.original_name || 'Receipt'} className="h-[70vh] w-full rounded-xl bg-white fit:h-full" />;
+    }
+    return (
+        <a href={url} target="_blank" rel="noreferrer" className="flex min-h-[300px] items-center justify-center fit:h-full" title="Open full size">
+            <img src={url} alt={receipt.original_name || 'Receipt'} decoding="async" className="max-h-[70vh] max-w-full rounded-xl object-contain fit:max-h-full" />
+        </a>
+    );
+}
+
+/**
+ * One receipt: the file fills the page, what was read off it sits in the side
+ * panel, and the summary cards say whether it agrees with its expense.
+ * Checking it (verify, reject, read it again) is done from the toolbar.
+ */
+export default function Show({ receipt, fileUrl }) {
     const expense = receipt.expense;
-    const statusColors = {
-        pending: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-        verified: 'bg-green-500/10 text-green-400 border-green-500/20',
-        auto_verified: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-        rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
-    };
+    const status = receipt.verification_status || 'pending';
+    const name = receipt.original_name || receipt.filename || `Receipt #${receipt.id}`;
+    const title = expense ? titleCase(expense.title) : name;
+    const { visible } = useVisibleActions();
+
+    const setStatus = useAction((value) => visit('patch', route('receipts.update', receipt.id), { verification_status: value }), {
+        error: "Couldn't update the receipt",
+        key: () => 'status',
+    });
+    const readAgain = useAction(() => visit('post', route('receipts.read-again', receipt.id)), {
+        error: "Couldn't read the receipt",
+        key: () => 'read',
+    });
+
+    const busy = setStatus.pending || readAgain.pending;
 
     return (
         <AuthenticatedLayout>
-            <Head title={receipt.original_name || 'Receipt'} />
+            <Head title={title} />
 
             <DashboardPage
-                className="max-w-4xl mx-auto"
+                fill
                 hero={{
-                    title: receipt.original_name || `Receipt #${receipt.id}`,
-                    subtitle: expense ? `Expense: ${expense.title}` : 'Receipt details',
-                    breadcrumbs: [
-                        ...rootBreadcrumbs(),
-                        { label: 'Receipts', href: route('receipts.index') },
-                        { label: receipt.original_name || `Receipt #${receipt.id}` },
-                    ],
-                    actions: <div className="flex gap-3">
-                            <span className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize border ${statusColors[receipt.verification_status] || statusColors.pending}`}>
-                                {receipt.verification_status?.replace('_', ' ') || 'pending'}
-                            </span>
-                            <Link
-                                href={route('receipts.edit', receipt.id)}
-                                className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                            >
-                                <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
-                            </Link>
-                        </div>,
+                    title,
+                    subtitle: name,
+                    breadcrumbs: [...rootBreadcrumbs(), { label: 'Receipts', href: route('receipts.index') }, { label: title }],
+                    actions: <StatusBadge status={status} />,
+                }}
+                summary={<SummaryCards cards={receiptChecks(receipt, expense)} stackOnPhones />}
+                panel={{
+                    id: 'receipt-detail',
+                    title: 'What we read',
+                    icon: 'fa-wand-magic-sparkles',
+                    subtitle: STATUS_LABELS[status] || titleCase(status),
+                    content: (
+                        <div className="space-y-6 px-1">
+                            <div className="grid grid-cols-1 gap-4">
+                                <DetailRow label="Paid to" value={receipt.extracted_merchant} />
+                                <DetailRow label="Amount" value={receipt.extracted_amount != null ? formatCurrency(receipt.extracted_amount, expense?.currency) : null} mono />
+                                <DetailRow label="Date" value={receipt.extracted_date?.slice(0, 10)} mono />
+                                <DetailRow label="Reference" value={receipt.extracted_receipt_id} mono />
+                            </div>
+                            {receipt.extracted_text && (
+                                <details className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm">
+                                    <summary className="cursor-pointer text-gray-300">Text on the receipt</summary>
+                                    <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-gray-400">{receipt.extracted_text}</p>
+                                </details>
+                            )}
+                            <div className="grid grid-cols-1 gap-4 border-t border-white/10 pt-5">
+                                {expense && <DetailRow label="Expense" value={`${titleCase(expense.title)} · ${expense.expense_date?.slice(0, 10) ?? ''}`} />}
+                                {expense?.project && <DetailRow label="Project" value={expense.project.name} />}
+                                <DetailRow label="File" value={receipt.filename} mono />
+                                <DetailRow label="Added" value={receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : null} />
+                            </div>
+                        </div>
+                    ),
+                }}
+                toolbar={{
+                    actions: [
+                        ...visible([
+                            status !== 'verified' && { id: 'verify', label: 'Mark Verified', icon: 'fa-circle-check', variant: 'primary', disabled: busy, onClick: () => setStatus.run('verified') },
+                            status !== 'rejected' && { id: 'reject', label: 'Reject', icon: 'fa-circle-xmark', variant: 'danger', disabled: busy, onClick: () => setStatus.run('rejected') },
+                            status !== 'pending' && { id: 'pending', label: 'Back to Waiting', icon: 'fa-hourglass-half', disabled: busy, onClick: () => setStatus.run('pending') },
+                            { id: 'read', label: readAgain.pending ? 'Reading…' : 'Read Again', icon: 'fa-rotate', disabled: busy, onClick: () => readAgain.run() },
+                        ].filter(Boolean)),
+                        expense && { id: 'expense', label: 'Open Expense', icon: 'fa-receipt', href: route('expenses.show', expense.id), readOnly: true },
+                        fileUrl && { id: 'download', label: 'Download', icon: 'fa-download', href: fileUrl, download: true, readOnly: true },
+                    ].filter(Boolean),
                 }}
             >
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Receipt Image</h3>
-                            {receipt.file_path ? (
-                                <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center min-h-[300px]">
-                                    <img loading="lazy" decoding="async" 
-                                        src={`/storage/${receipt.file_path}`}
-                                        alt={receipt.original_name}
-                                        className="max-w-full max-h-[500px] object-contain"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center gap-3 py-12 text-gray-400">
-                                    <i aria-hidden="true" className="fas fa-file-image text-3xl text-gray-400"></i>
-                                    <p className="text-sm">No receipt image available</p>
-                                </div>
-                            )}
-                        </section>
-                    </div>
-
-                    <div className="space-y-8">
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">OCR Extracted Data</h3>
-                            <div className="grid grid-cols-1 gap-5">
-                                <DetailRow label="Merchant" value={receipt.extracted_merchant} />
-                                <DetailRow label="Amount" value={receipt.extracted_amount ? formatCurrency(receipt.extracted_amount, expense?.currency) : null} mono />
-                                <DetailRow label="Date" value={receipt.extracted_date} mono />
-                                <DetailRow label="Receipt ID" value={receipt.extracted_receipt_id} mono />
-                                <DetailRow label="OCR Provider" value={receipt.ocr_provider} />
-                                <DetailRow label="Confidence" value={receipt.ocr_confidence ? `${(receipt.ocr_confidence * 100).toFixed(0)}%` : null} />
-                            </div>
-                        </section>
-
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">File Info</h3>
-                            <dl className="space-y-4 text-sm">
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Filename</dt>
-                                    <dd className="text-gray-300 font-mono text-xs">{receipt.filename}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Type</dt>
-                                    <dd className="text-gray-300">{receipt.mime_type}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="text-gray-400">Created</dt>
-                                    <dd className="text-gray-300">{receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : '—'}</dd>
-                                </div>
-                            </dl>
-                        </section>
-
-                        <section className="panel p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
-                            <div className="space-y-3">
-                                <Link
-                                    href={route('receipts.edit', receipt.id)}
-                                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                >
-                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Receipt
-                                </Link>
-                                {expense && (
-                                    <Link
-                                        href={route('expenses.show', expense.id)}
-                                        className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                    >
-                                        <i aria-hidden="true" className="fas fa-receipt text-[#DC143C]"></i> View Expense
-                                    </Link>
-                                )}
-                                <Link
-                                    href={route('receipts.index')}
-                                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                >
-                                    <i aria-hidden="true" className="fas fa-list text-[#DC143C]"></i> Back to Receipts
-                                </Link>
-                            </div>
-                        </section>
-                    </div>
-                </div>
+                <ListPanel
+                    header={
+                        <div className="flex items-center gap-3 border-b border-white/[0.08] px-5 py-3">
+                            <i aria-hidden="true" className="fas fa-file-invoice text-rose-300" />
+                            <h2 className="truncate text-sm font-semibold text-white">{name}</h2>
+                        </div>
+                    }
+                    bodyClassName="p-4"
+                >
+                    <ReceiptFile url={fileUrl} receipt={receipt} />
+                </ListPanel>
             </DashboardPage>
         </AuthenticatedLayout>
     );

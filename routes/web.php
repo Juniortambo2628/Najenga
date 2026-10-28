@@ -189,6 +189,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/receipts/{receipt}/edit', [\App\Http\Controllers\ReceiptController::class, 'edit'])->name('receipts.edit');
     Route::patch('/receipts/{receipt}', [\App\Http\Controllers\ReceiptController::class, 'update'])->name('receipts.update');
     Route::delete('/receipts/{receipt}', [\App\Http\Controllers\ReceiptController::class, 'destroy'])->name('receipts.destroy');
+    Route::post('/receipts/{receipt}/read-again', [\App\Http\Controllers\ReceiptController::class, 'readAgain'])->name('receipts.read-again');
     Route::post('/receipts/analyze', [\App\Http\Controllers\ReceiptController::class, 'analyze'])->name('receipts.analyze');
     Route::post('/receipts/analyze-bulk', [\App\Http\Controllers\ReceiptController::class, 'analyzeBulk'])->name('receipts.analyze-bulk');
     Route::post('/receipts/store', [\App\Http\Controllers\ReceiptController::class, 'store'])->name('receipts.store');
