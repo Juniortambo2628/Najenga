@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\ForeignKeyColumn;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('page_visits', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            ForeignKeyColumn::add($table, 'user_id', 'users');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->string('module', 40);
             $table->timestamp('seen_at');
 

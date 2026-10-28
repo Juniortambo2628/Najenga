@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\ForeignKeyColumn;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,14 +19,17 @@ return new class extends Migration
     {
         Schema::create('project_invitations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            ForeignKeyColumn::add($table, 'project_id', 'projects');
+            $table->foreign('project_id')->references('id')->on('projects')->cascadeOnDelete();
             $table->string('email', 191);
             $table->string('role', 20)->default('viewer');
             $table->char('token_hash', 64)->unique();
-            $table->foreignId('invited_by')->nullable()->constrained('users')->nullOnDelete();
+            ForeignKeyColumn::add($table, 'invited_by', 'users')->nullable();
+            $table->foreign('invited_by')->references('id')->on('users')->nullOnDelete();
             $table->timestamp('expires_at');
             $table->timestamp('accepted_at')->nullable();
-            $table->foreignId('accepted_by')->nullable()->constrained('users')->nullOnDelete();
+            ForeignKeyColumn::add($table, 'accepted_by', 'users')->nullable();
+            $table->foreign('accepted_by')->references('id')->on('users')->nullOnDelete();
             $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
 
