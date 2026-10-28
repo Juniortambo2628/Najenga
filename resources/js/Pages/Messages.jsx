@@ -1,223 +1,183 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
+import DashboardPage from '@/Components/DashboardPage';
+import ListPanel from '@/Components/ListPanel';
+import EmptyState from '@/Components/EmptyState';
+import Button from '@/Components/Button';
 import useAction from '@/Hooks/useAction';
-import { MessageBox, ChatList, Input, Button } from 'react-chat-elements';
+import { rootBreadcrumbs } from '@/Config/navigation';
+import { MessageBox } from 'react-chat-elements';
 import 'react-chat-elements/dist/main.css';
 
+/** The other person in a conversation (or a placeholder). */
+const otherPerson = (conversation, userId) => conversation.users.find((u) => u.id !== userId) ?? { name: 'User' };
+
+/** The side panel's rows: one per conversation, newest message first, matching the search. */
+export function conversationItems(conversations, userId, search = '') {
+    const q = search.trim().toLowerCase();
+    return conversations
+        .map((c) => ({ conversation: c, person: otherPerson(c, userId) }))
+        .filter(({ conversation, person }) => !q || [person.name, conversation.project?.name, conversation.last_message?.body].some((field) => field?.toLowerCase().includes(q)))
+        .sort((a, b) => new Date(b.conversation.last_message_at || 0) - new Date(a.conversation.last_message_at || 0))
+        .map(({ conversation, person }) => ({
+            id: String(conversation.id),
+            label: person.name,
+            description: conversation.last_message?.body || 'Start a conversation…',
+            icon: 'fa-user',
+            group: conversation.project?.name,
+        }));
+}
+
+/**
+ * Messages: conversations in the shared side panel (chips on phones), the
+ * open conversation as the page's list panel: who it's with on top, the
+ * messages scrolling, and the reply box pinned underneath.
+ */
 export default function Messages() {
     const { auth } = usePage().props;
     const [conversations, setConversations] = useState([]);
-    const [selectedConversation, setSelectedConversation] = useState(null);
+    const [selectedId, setSelectedId] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
-    const inputRef = useRef(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    const selected = conversations.find((c) => c.id === selectedId) ?? null;
 
     useEffect(() => {
-        fetchConversations();
+        axios
+            .get('/conversations')
+            .then((response) => setConversations(response.data))
+            .catch(() => setConversations([]));
     }, []);
 
     useEffect(() => {
-        if (selectedConversation) {
-            fetchMessages(selectedConversation.id);
-        }
-    }, [selectedConversation]);
+        if (!selectedId) return;
+        setLoading(true);
+        axios
+            .get(`/conversations/${selectedId}/messages`)
+            .then((response) => setMessages(response.data.data))
+            .catch(() => setMessages([]))
+            .finally(() => setLoading(false));
+    }, [selectedId]);
 
     useEffect(() => {
-        scrollToBottom();
+        messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' });
     }, [messages]);
-
-    const fetchConversations = async () => {
-        try {
-            const response = await axios.get('/conversations');
-            setConversations(response.data);
-        } catch (error) {
-            console.error("Failed to fetch conversations", error);
-        }
-    };
-
-    const fetchMessages = async (conversationId) => {
-        setLoading(true);
-        try {
-            const response = await axios.get(`/conversations/${conversationId}/messages`);
-            // paginate handling if needed, but for now simple:
-            setMessages(response.data.data);
-        } catch (error) {
-            console.error("Failed to fetch messages", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const send = useAction((conversationId, body) => axios.post(`/conversations/${conversationId}/messages`, { body }), {
         error: 'Message not sent',
         key: () => 'send',
         onSuccess: (response, conversationId) => {
             setMessages((list) => [...list, response.data]);
-
-            // Update conversation list item last message
-            setConversations((list) => list.map(c => (
-                c.id === conversationId
-                    ? { ...c, last_message: response.data, last_message_at: response.data.created_at }
-                    : c
-            )));
+            setConversations((list) =>
+                list.map((c) => (c.id === conversationId ? { ...c, last_message: response.data, last_message_at: response.data.created_at } : c)),
+            );
         },
         // Give the text back so it can be sent again.
         onError: (err, conversationId, body) => setNewMessage(body),
     });
 
-    const handleSendMessage = () => {
-        if (!newMessage.trim() || !selectedConversation) return;
+    const handleSend = (e) => {
+        e?.preventDefault();
+        if (!newMessage.trim() || !selected) return;
         const body = newMessage;
         setNewMessage('');
-        send.run(selectedConversation.id, body);
+        send.run(selected.id, body);
     };
 
-    const chatListData = conversations.map(c => {
-        const otherUser = c.users.find(u => u.id !== auth.user.id);
-        return {
-            id: c.id,
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser?.name || 'User')}&background=8B0000&color=fff`,
-            alt: otherUser?.name || 'User',
-            title: otherUser?.name || 'User',
-            subtitle: c.last_message?.body || 'Start a conversation...',
-            date: c.last_message_at ? new Date(c.last_message_at) : null,
-            unread: 0, // Backend could provide unread count
-            className: selectedConversation?.id === c.id ? 'bg-white/5' : '',
-            conversation: c
-        };
-    });
+    const items = useMemo(() => conversationItems(conversations, auth.user.id, search), [conversations, auth.user.id, search]);
+    const person = selected ? otherPerson(selected, auth.user.id) : null;
 
     return (
         <AuthenticatedLayout>
             <Head title="Messages" />
 
-            <div className="h-[calc(100vh-64px)] flex overflow-hidden bg-black">
-                {/* Conversations Sidebar */}
-                <div className="w-80 border-r border-white/10 flex flex-col bg-black/40">
-                    <div className="p-4 border-b border-white/10">
-                        <h2 className="text-xl font-bold text-white mb-4">Messages</h2>
-                        <div className="relative">
-                            <input 
-                                type="text"
-                                placeholder="Search conversations..."
-                                aria-label="Search conversations"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#8B0000]"
-                            />
-                        </div>
-                    </div>
-                    
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        <ChatList
-                            className="chat-list dark-theme"
-                            dataSource={chatListData}
-                            onClick={(item) => setSelectedConversation(item.conversation)}
-                        />
-                    </div>
-                </div>
-
-                {/* Chat Area */}
-                <div className="flex-1 flex flex-col relative">
-                    {selectedConversation ? (
-                        <>
-                            {/* Chat Header */}
-                            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/40">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-[#8B0000] flex items-center justify-center text-white font-bold">
-                                        {selectedConversation.users.find(u => u.id !== auth.user.id)?.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-white">
-                                            {selectedConversation.users.find(u => u.id !== auth.user.id)?.name}
-                                        </h3>
-                                        {selectedConversation.project && (
-                                            <span className="text-[11px] text-gray-400 capitalize bg-white/5 px-2 py-0.5 rounded border border-white/5">
-                                                {selectedConversation.project.name}
-                                            </span>
-                                        )}
-                                    </div>
+            <DashboardPage
+                fill={!!selected}
+                hero={{
+                    title: 'Messages',
+                    subtitle: `${conversations.length} conversation${conversations.length === 1 ? '' : 's'}`,
+                    breadcrumbs: [...rootBreadcrumbs(), { label: 'Messages' }],
+                }}
+                toolbar={{ search: { value: search, onChange: setSearch, placeholder: 'Search conversations' } }}
+                panel={{
+                    id: 'messages',
+                    title: 'Conversations',
+                    icon: 'fa-comments',
+                    subtitle: search ? `${items.length} matching` : 'Newest first',
+                    items,
+                    activeId: selected ? String(selected.id) : undefined,
+                    onChange: (id) => setSelectedId(Number(id)),
+                }}
+            >
+                {!selected ? (
+                    <EmptyState
+                        icon="fa-comments"
+                        title={conversations.length ? 'Pick a conversation' : 'No conversations yet'}
+                        message={conversations.length ? 'Choose someone from Conversations to read and reply.' : 'Conversations with your project team show here.'}
+                    />
+                ) : (
+                    <ListPanel
+                        header={
+                            <div className="flex items-center gap-3 border-b border-white/[0.08] px-5 py-3">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#8B0000] font-bold text-white">{person.name.charAt(0)}</span>
+                                <div className="min-w-0">
+                                    <h2 className="truncate font-semibold text-white">{person.name}</h2>
+                                    {selected.project && <p className="truncate text-xs text-gray-400">{selected.project.name}</p>}
                                 </div>
                             </div>
-
-                            {/* Messages List */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar bg-black/20">
-                                {loading ? (
-                                    <div className="flex items-center justify-center h-full">
-                                        <i aria-hidden="true" className="fas fa-spinner fa-spin text-2xl text-[#8B0000]"></i>
-                                    </div>
-                                ) : (
-                                    messages.map((msg, idx) => (
-                                        <MessageBox
-                                            key={msg.id}
-                                            position={msg.user_id === auth.user.id ? 'right' : 'left'}
-                                            type={'text'}
-                                            text={msg.body}
-                                            date={new Date(msg.created_at)}
-                                            status={msg.read_at ? 'read' : 'sent'}
-                                            avatar={null}
-                                            className={msg.user_id === auth.user.id ? 'my-message' : 'other-message'}
-                                        />
-                                    ))
-                                )}
-                                <div ref={messagesEndRef} />
+                        }
+                        footer={
+                            <form onSubmit={handleSend} className="flex items-end gap-2 p-3">
+                                <label htmlFor="message-body" className="sr-only">
+                                    Message to {person.name}
+                                </label>
+                                <textarea
+                                    id="message-body"
+                                    rows={1}
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) handleSend(e);
+                                    }}
+                                    placeholder="Write a message… (Shift+Enter for a new line)"
+                                    className="max-h-40 min-h-[2.75rem] flex-1 resize-y rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-400 focus:border-[#8B0000] focus:outline-none"
+                                />
+                                <Button type="submit" disabled={!newMessage.trim() || send.pending}>
+                                    <i aria-hidden="true" className="fas fa-paper-plane" />
+                                    Send
+                                </Button>
+                            </form>
+                        }
+                        bodyClassName="space-y-2 p-4"
+                    >
+                        {loading ? (
+                            <div className="flex justify-center py-10">
+                                <i aria-label="Loading messages" className="fas fa-spinner fa-spin text-2xl text-[#8B0000]" />
                             </div>
-
-                            {/* Input Area */}
-                            <div className="p-4 bg-black/60 border-t border-white/10">
-                                <div className="flex items-end gap-2">
-                                    <div className="flex-1">
-                                        <Input
-                                            placeholder="Write something..."
-                                            multiline={true}
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            inputStyle={{ 
-                                                backgroundColor: '#1a1a1a', 
-                                                color: '#fff', 
-                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                borderRadius: '12px',
-                                                padding: '12px'
-                                            }}
-                                            onKeyPress={(e) => {
-                                                if (e.shiftKey && e.charCode === 13) return;
-                                                if (e.charCode === 13) {
-                                                    handleSendMessage();
-                                                    e.preventDefault();
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                    <Button
-                                        text={'Send'}
-                                        onClick={handleSendMessage}
-                                        title="Send"
-                                        buttonStyle={{
-                                            backgroundColor: '#8B0000',
-                                            color: '#fff',
-                                            borderRadius: '12px',
-                                            height: '45px',
-                                            fontWeight: 'bold'
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center bg-black/40 grayscale opacity-20">
-                            <i aria-hidden="true" className="fas fa-comments text-8xl mb-4"></i>
-                            <h2 className="text-2xl font-bold">Your Messages</h2>
-                            <p>Select a conversation to start chatting</p>
-                        </div>
-                    )}
-                </div>
-            </div>
+                        ) : messages.length === 0 ? (
+                            <p className="py-10 text-center text-sm text-gray-400">No messages yet. Say hello.</p>
+                        ) : (
+                            messages.map((msg) => (
+                                <MessageBox
+                                    key={msg.id}
+                                    position={msg.user_id === auth.user.id ? 'right' : 'left'}
+                                    type="text"
+                                    text={msg.body}
+                                    date={new Date(msg.created_at)}
+                                    status={msg.read_at ? 'read' : 'sent'}
+                                    className={msg.user_id === auth.user.id ? 'my-message' : 'other-message'}
+                                />
+                            ))
+                        )}
+                        <div ref={messagesEndRef} />
+                    </ListPanel>
+                )}
+            </DashboardPage>
         </AuthenticatedLayout>
     );
 }
