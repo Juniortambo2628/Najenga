@@ -21,13 +21,14 @@ import useAction, { visit } from '@/Hooks/useAction';
 import { exportToCSV } from '@/Utils/exportToCSV';
 import axios from 'axios';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import useActiveProjectId from '@/Hooks/useActiveProjectId';
 
 export default function Expenses({ expenses = [], projects = [] }) {
     const [previewExpense, setPreviewExpense] = useState(null);
     
     // View Mode & Project Context
     const [viewMode, setViewMode] = useState('list');
-    const [activeProjectId, setActiveProjectId] = useState(null);
+    const [activeProjectId] = useActiveProjectId();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -176,7 +177,6 @@ export default function Expenses({ expenses = [], projects = [] }) {
                     breadcrumbs: [...rootBreadcrumbs(), { label: 'Expenses' }],
                 }}
                 toolbar={{
-                    project: { projects, currentId: activeProjectId, onChange: setActiveProjectId },
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search expenses' },
                     filters: [
                         {

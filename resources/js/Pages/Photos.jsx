@@ -21,10 +21,11 @@ import PhotoCard from '@/Components/PhotoCard';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import SharePanel from '@/Components/SharePanel';
+import useActiveProjectId from '@/Hooks/useActiveProjectId';
 
 export default function Photos({ photos = [], projects = [] }) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeProjectId, setActiveProjectId] = useState(null);
+    const [activeProjectId] = useActiveProjectId();
     
     // Selection State
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
@@ -162,7 +163,6 @@ export default function Photos({ photos = [], projects = [] }) {
                     ],
                 }}
                 toolbar={{
-                    project: { projects, currentId: activeProjectId, onChange: setActiveProjectId },
                     search: { value: searchQuery, onChange: setSearchQuery, placeholder: 'Search photos' },
                     view: {
                         current: viewMode,

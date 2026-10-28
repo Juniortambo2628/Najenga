@@ -106,13 +106,4 @@ describe('FloatingToolbar', () => {
         fireEvent.keyDown(document.body, { key: '/' });
         expect(screen.getByRole('searchbox', { name: 'Search expenses' })).toHaveFocus();
     });
-
-    it('picks a project, with an option for all of them', () => {
-        const onChange = vi.fn();
-        render(<FloatingToolbar project={{ projects: [{ id: 7, name: 'Kitengela' }], currentId: null, onChange }} />);
-        fireEvent.change(screen.getByLabelText('Project'), { target: { value: '7' } });
-        expect(onChange).toHaveBeenCalledWith('7');
-        fireEvent.change(screen.getByLabelText('Project'), { target: { value: '' } });
-        expect(onChange).toHaveBeenLastCalledWith(null);
-    });
 });

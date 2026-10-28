@@ -17,6 +17,7 @@ import useAction, { visit } from '@/Hooks/useAction';
 import useFilteredItems from '@/Hooks/useFilteredItems';
 import { formatCurrency } from '@/Config/currencies';
 import { rootBreadcrumbs } from '@/Config/navigation';
+import useActiveProjectId from '@/Hooks/useActiveProjectId';
 
 const TABS = [
     { key: 'all', label: 'All Activity', icon: 'fa-stream' },
@@ -139,7 +140,7 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
     const [activeTab, setActiveTab] = useState('all');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTimeline, setEditingTimeline] = useState(null);
-    const [filterProject, setFilterProject] = useState(null);
+    const [filterProject] = useActiveProjectId();
     const { selected: selectedItems, toggle: toggleSelection, selectAll, deselectAll, clear: clearSelection, isSelected, count: selectedCount } = useMultiSelect();
 
     const { data, setData, patch, processing, errors, reset } = useForm({
@@ -236,7 +237,6 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                     ],
                 }}
                 toolbar={{
-                    project: { projects, currentId: filterProject, onChange: (val) => setFilterProject(val) },
                     actions: [{ id: 'add', label: 'Add Milestone', icon: 'fa-plus', href: route('timeline.create'), variant: 'primary' }],
                 }}
             >
