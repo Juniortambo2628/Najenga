@@ -7,6 +7,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# One deploy at a time. A commit can finish CI more than once (and a manual
+# run can overlap an automatic one); two deploys on the server at once clear
+# each other's caches mid-run. Later ones wait their turn instead.
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
