@@ -41,6 +41,7 @@ class UserController extends Controller
 
         return Inertia::render('Users/Show', [
             'user' => $user->loadCount(['projects', 'expenses', 'photos', 'documents']),
+            'can' => ['update' => auth()->user()->can('update', $user)],
         ]);
     }
 

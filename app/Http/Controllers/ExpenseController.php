@@ -170,8 +170,9 @@ class ExpenseController extends Controller
         $this->authorize('view', $expense);
 
         return Inertia::render('Expenses/Show', [
-            'expense' => $expense->load('project:id,name')
+            'expense' => $expense->load('project:id,name', 'receipt:id,expense_id,verification_status')
                 ->append('receipt_url', 'receipt_thumb_url'),
+            'can' => ['update' => auth()->user()->can('update', $expense)],
         ]);
     }
 
