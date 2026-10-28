@@ -74,7 +74,8 @@ class ProjectController extends Controller
                         ]),
                     'photos' => $project->photos()->latest()->take(6)->get()
                         ->map(fn ($p) => ['id' => $p->id, 'title' => $p->title, 'thumb_url' => $p->thumb_url]),
-                    'documents' => $project->documents()->latest()->take(5)->get(['id', 'title', 'document_type']),
+                    'documents' => $project->documents()->latest()->take(5)->get(['id', 'title', 'category'])
+                        ->map(fn ($d) => ['id' => $d->id, 'title' => $d->title, 'document_type' => $d->category ?? 'other']),
                 ],
             ]);
 
