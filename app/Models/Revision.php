@@ -214,31 +214,35 @@ class Revision extends Model
         return $class ? $class::withTrashed()->find($this->revisionable_id) : null;
     }
 
-    /** The fields this version brings back: after the change, or before a deletion. */
-    public function snapshot(): ?array
+    /**
+     * The fields this version brings back: after the change, or before a
+     * deletion. With `$undo`, the fields before the change (undoing it).
+     */
+    public function snapshot(bool $undo = false): ?array
     {
-        return $this->event === 'deleted' ? $this->before : $this->after;
+        return $undo || $this->event === 'deleted' ? $this->before : $this->after;
     }
 
-    public function isRestorable(): bool
+    public function isRestorable(bool $undo = false): bool
     {
-        return $this->type() !== null && $this->snapshot() !== null;
+        return $this->type() !== null && $this->snapshot($undo) !== null;
     }
 
     /**
      * Make the record look as it did in this version: the fields after the
      * change, or for a deletion the record as it was before it. A trashed
      * record is brought back first; one deleted for good is recreated with
-     * its old id. Recorded as a "restored" version.
+     * its old id. Recorded as a "restored" version. With `$undo`, the record
+     * goes back to how it was before this change.
      */
-    public function restoreVersion(): Model
+    public function restoreVersion(bool $undo = false): Model
     {
-        if (! $this->isRestorable()) {
+        if (! $this->isRestorable($undo)) {
             throw new \RuntimeException('This version cannot be restored.');
         }
 
         $class = self::TYPES[$this->type()];
-        $values = Arr::except($this->snapshot(), self::NOISE);
+        $values = Arr::except($this->snapshot($undo), self::NOISE);
 
         return DB::transaction(fn () => self::restoring(function () use ($class, $values) {
             $model = $class::withTrashed()->find($this->revisionable_id);

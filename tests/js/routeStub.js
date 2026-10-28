@@ -45,6 +45,8 @@ export const TEST_ROUTES = {
     'folders.destroy': '/folders/{folder}',
     'folders.store': '/folders',
     'folders.update': '/folders/{folder}',
+    'history.index': '/history',
+    'history.restore': '/history/versions/{revision}/restore',
     'home': '/',
     'login': '/login',
     'login-code.request': '/login-code',

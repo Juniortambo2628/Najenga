@@ -68,6 +68,12 @@ class HistoryControllerTest extends TestCase
             ->assertOk()
             ->assertJsonCount(2, 'data');
 
+        // Every type: the project's own versions too.
+        $this->actingAs($viewer)->getJson('/history')
+            ->assertOk()
+            ->assertJsonPath('data.0.type', 'expense')
+            ->assertJsonFragment(['type' => 'project', 'event' => 'created']);
+
         $this->actingAs($viewer)->getJson("/projects/{$this->project->id}/history")
             ->assertOk()
             ->assertJsonPath('data.0.type', 'expense');
@@ -96,6 +102,16 @@ class HistoryControllerTest extends TestCase
         $this->assertSame('Cement', $this->expense->title);
         $this->assertEquals(1000, $this->expense->amount);
         $this->assertSame('restored', $this->expense->revisions()->value('event'));
+    }
+
+    public function test_undoing_a_change(): void
+    {
+        $edit = $this->expense->revisions()->where('event', 'updated')->sole();
+
+        $this->getJson("/history/expense/{$this->expense->id}")->assertJsonPath('data.0.undoable', true);
+        $this->postJson("/history/versions/{$edit->id}/restore", ['undo' => true])->assertOk();
+
+        $this->assertSame('Cement', $this->expense->fresh()->title);
     }
 
     public function test_a_trashed_record_comes_back_from_its_deletion(): void
