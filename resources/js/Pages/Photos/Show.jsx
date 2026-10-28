@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';
 
-export default function Show({ photo }) {
+export default function Show({ photo, can = {} }) {
     return (
         <AuthenticatedLayout>
             <Head title={photo.title} />
@@ -24,12 +24,15 @@ export default function Show({ photo }) {
                                     <i aria-hidden="true" className="fas fa-star mr-1"></i>Featured
                                 </span>
                             )}
-                            <Link
-                                href={route('photos.edit', photo.id)}
-                                className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
-                            >
-                                <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
-                            </Link>
+                            {/* Viewers of the project see the photo, not its Edit. */}
+                            {can.update && (
+                                <Link
+                                    href={route('photos.edit', photo.id)}
+                                    className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
+                                >
+                                    <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
+                                </Link>
+                            )}
                         </div>,
                 }}
             >
@@ -87,12 +90,14 @@ export default function Show({ photo }) {
                         <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
                             <div className="space-y-3">
-                                <Link
-                                    href={route('photos.edit', photo.id)}
-                                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                >
-                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Photo
-                                </Link>
+                                {can.update && (
+                                    <Link
+                                        href={route('photos.edit', photo.id)}
+                                        className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
+                                    >
+                                        <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Photo
+                                    </Link>
+                                )}
                                 <Link
                                     href={route('photos')}
                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"

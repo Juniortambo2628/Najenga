@@ -60,7 +60,7 @@ class DocumentController extends Controller
     public function create()
     {
         return Inertia::render('Documents/Create', [
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
         ]);
     }
 
@@ -129,6 +129,7 @@ class DocumentController extends Controller
         return Inertia::render('Documents/Show', [
             'document' => $document->load('project:id,name', 'folder:id,name')
                 ->append('file_url', 'thumb_url'),
+            'can' => ['update' => auth()->user()->can('update', $document)],
         ]);
     }
 
@@ -138,7 +139,7 @@ class DocumentController extends Controller
 
         return Inertia::render('Documents/Edit', [
             'document' => $document,
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
             'folders' => \App\Models\Folder::whereIn('project_id',
                 Project::accessibleBy(auth()->user())->pluck('id')
             )->get(['id', 'name', 'parent_id', 'project_id']),

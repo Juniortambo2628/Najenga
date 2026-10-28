@@ -52,7 +52,7 @@ class ExpenseController extends Controller
     public function create()
     {
         return Inertia::render('Expenses/Create', [
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
         ]);
     }
 
@@ -208,7 +208,7 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense,
-            'projects' => $this->getClientProjects(),
+            'projects' => $this->getEditableProjects(),
         ]);
     }
 

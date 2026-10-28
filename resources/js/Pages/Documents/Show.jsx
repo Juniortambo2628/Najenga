@@ -13,7 +13,7 @@ function formatFileSize(bytes) {
     return `${size.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
-export default function Show({ document }) {
+export default function Show({ document, can = {} }) {
     const isPdf = document.mime_type === 'application/pdf';
     const isImage = document.mime_type?.startsWith('image/');
 
@@ -31,12 +31,15 @@ export default function Show({ document }) {
                         { label: 'Documents', href: route('documents') },
                         { label: document.title },
                     ],
-                    actions: <Link
+                    // Viewers of the project see the document, not its Edit.
+                    actions: can.update ? (
+                        <Link
                             href={route('documents.edit', document.id)}
                             className="px-4 py-2 bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white rounded-xl font-semibold hover:opacity-90 transition inline-flex items-center text-sm"
                         >
                             <i aria-hidden="true" className="fas fa-edit mr-2"></i> Edit
-                        </Link>,
+                        </Link>
+                    ) : null,
                 }}
             >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -92,12 +95,14 @@ export default function Show({ document }) {
                         <section className="panel p-6">
                             <h3 className="text-lg font-bold text-white mb-4">Actions</h3>
                             <div className="space-y-3">
-                                <Link
-                                    href={route('documents.edit', document.id)}
-                                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
-                                >
-                                    <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Document
-                                </Link>
+                                {can.update && (
+                                    <Link
+                                        href={route('documents.edit', document.id)}
+                                        className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300"
+                                    >
+                                        <i aria-hidden="true" className="fas fa-edit text-[#DC143C]"></i> Edit Document
+                                    </Link>
+                                )}
                                 {document.file_url && (
                                     <a href={document.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition text-sm text-gray-300">
                                         <i aria-hidden="true" className="fas fa-external-link-alt text-[#DC143C]"></i> Open in New Tab
