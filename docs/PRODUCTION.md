@@ -20,14 +20,43 @@ REDIS_PORT=6379
 
 After changing any of those, redeploy so `config:cache` picks them up.
 
-## Cron jobs to add in cPanel
+## Cron jobs (installed 2026-10-28)
 
 ```
-* * * * * cd $HOME/najenga-core && php artisan schedule:run >> /dev/null 2>&1
-* * * * * cd $HOME/najenga-core && php artisan queue:work --stop-when-empty --tries=3 --timeout=120 >> $HOME/najenga-core/storage/logs/queue.log 2>&1
+* * * * * cd $HOME/najenga-core && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1
 ```
 
-The second one only matters once `QUEUE_CONNECTION` is not `sync`.
+Installed on the cPanel VPS (user crontab). It drives the daily `model:prune`
+and the Monday 08:00 UTC WhatsApp digest — neither ran before this date.
+
+Only add the queue worker once `QUEUE_CONNECTION` is not `sync` (today it is):
+
+```
+* * * * * cd $HOME/najenga-core && /usr/local/bin/php artisan queue:work --stop-when-empty --tries=3 --timeout=120 >> $HOME/najenga-core/storage/logs/queue.log 2>&1
+```
+
+## DNS and TLS topology (since 2026-10-28)
+
+```
+najenga.okjtech.co.ke (+ www)  --DNS (Cloudoon)-->  102.212.246.224  (vps1, Hestia/Debian 12)
+                                                     nginx terminates TLS with a dedicated
+                                                     Let's Encrypt cert (CN=najenga.okjtech.co.ke)
+                                                     and reverse-proxies to
+                                                     https://51.89.113.223 (SNI/Host najenga.okjtech.co.ke)
+                                                     --> the cPanel VPS (141.95.3.80) where the app lives
+```
+
+- vps1 web domain: `dev najenga.okjtech.co.ke` (alias `www`), proxy template
+  `najenga-upstream` in `/usr/local/hestia/data/templates/web/nginx/`.
+- Certificate renewal: root crontab `15 3 * * * /usr/local/hestia/bin/v-update-letsencrypt-ssl`
+  (the ACME challenge is served from the domain's `public_html`, so renewals
+  keep working through the proxy).
+- The cPanel VPS serves the app to the proxy exactly as it served the old
+  wildcard; nothing in the app changed. Session cookies (`.okjtech.co.ke`)
+  are shared across both hops.
+- Caveat: the cPanel VPS's `uapi SSL …` calls currently fail with a "cPanel
+  License Activation" page — box-level AutoSSL is unusable, but that does not
+  affect the app or the vps1 certificate.
 
 ## Error alerting (optional)
 
