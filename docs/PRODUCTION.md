@@ -1,6 +1,45 @@
 # Production runbook
 
+## Where it runs (since 2026-10-29)
+
+Najenga is fully on the OKJTech Hestia VPS via the shared **deploy-kit**
+(`Juniortambo2628/OKJT` → `deploy-kit/README.md`):
+
+```
+Cloudoon DNS  najenga.okjtech.co.ke (+ www)  →  102.212.246.224
+Hestia VPS (Debian 12): nginx (LE cert, HTTPS forced) → Apache → PHP-FPM 8.3
+  public_html → /home/dev/web/najenga.okjtech.co.ke/private/najenga/current/public
+  private/najenga/{releases/<utc>-<sha>, shared/.env, shared/storage, current}
+  MariaDB: dev_najenga (user dev_dev_najenga)
+  PM2: najenga-scheduler (schedule:work), queue off while QUEUE_CONNECTION=sync
+```
+
+Push to `main` → "CI Tests" → "Deploy to Production" calls
+`OKJT/.github/workflows/deploy-laravel.yml@main`: build on the runner → rsync
+release → migrate → caches → atomic symlink switch → PM2 restart → verify
+(`/health`). Rollback (as `dev`):
+
+```bash
+cd ~/web/najenga.okjtech.co.ke/private/najenga && ls releases/
+ln -sfn "$PWD/releases/<previous>" current.new && mv -Tf current.new current
+sudo -n systemctl reload php8.3-fpm
+```
+
+GitHub secrets: `VPS_*` (shared, via `deploy-kit/local/set-vps-secrets.ps1`)
+and `PROD_ENV` (the full production `.env`; DB_* point at the Hestia DB).
+The old `SSH_*` secrets remain only for the decommissioned cPanel deploy.
+
+## The old cPanel VPS (rollback only)
+
+The previous hosting (cPanel box 141.95.3.80, code in `~/najenga-core`,
+old MySQL data) is kept untouched as an emergency rollback. To activate it
+temporarily: point the DNS A record back to `51.89.113.223` (its edge
+serves a valid `*.okjtech.co.ke` cert). When the Hestia move is confirmed,
+decommission it and delete the `SSH_*` secrets.
+
 ## Recommended `.env` overrides for production
+
+These are already in `PROD_ENV` unless noted:
 
 ```
 LOG_CHANNEL=stack
@@ -8,55 +47,12 @@ LOG_STACK=daily
 LOG_LEVEL=info
 LOG_DAILY_DAYS=14
 
-QUEUE_CONNECTION=database        # was: sync — moves OCR / WhatsApp off the request path
-CACHE_STORE=redis                # fall back to database if Redis is not available
-SESSION_DRIVER=redis             # ditto
-
-# Redis is already in .env — enable it in cPanel if needed
-REDIS_CLIENT=phpredis
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
+QUEUE_CONNECTION=sync        # flip to database AND set queue: true in deploy.yml
+                             # if OCR/WhatsApp should leave the request path
 ```
 
-After changing any of those, redeploy so `config:cache` picks them up.
-
-## Cron jobs (installed 2026-10-28)
-
-```
-* * * * * cd $HOME/najenga-core && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1
-```
-
-Installed on the cPanel VPS (user crontab). It drives the daily `model:prune`
-and the Monday 08:00 UTC WhatsApp digest — neither ran before this date.
-
-Only add the queue worker once `QUEUE_CONNECTION` is not `sync` (today it is):
-
-```
-* * * * * cd $HOME/najenga-core && /usr/local/bin/php artisan queue:work --stop-when-empty --tries=3 --timeout=120 >> $HOME/najenga-core/storage/logs/queue.log 2>&1
-```
-
-## DNS and TLS topology (since 2026-10-28)
-
-```
-najenga.okjtech.co.ke (+ www)  --DNS (Cloudoon)-->  102.212.246.224  (vps1, Hestia/Debian 12)
-                                                     nginx terminates TLS with a dedicated
-                                                     Let's Encrypt cert (CN=najenga.okjtech.co.ke)
-                                                     and reverse-proxies to
-                                                     https://51.89.113.223 (SNI/Host najenga.okjtech.co.ke)
-                                                     --> the cPanel VPS (141.95.3.80) where the app lives
-```
-
-- vps1 web domain: `dev najenga.okjtech.co.ke` (alias `www`), proxy template
-  `najenga-upstream` in `/usr/local/hestia/data/templates/web/nginx/`.
-- Certificate renewal: root crontab `15 3 * * * /usr/local/hestia/bin/v-update-letsencrypt-ssl`
-  (the ACME challenge is served from the domain's `public_html`, so renewals
-  keep working through the proxy).
-- The cPanel VPS serves the app to the proxy exactly as it served the old
-  wildcard; nothing in the app changed. Session cookies (`.okjtech.co.ke`)
-  are shared across both hops.
-- Caveat: the cPanel VPS's `uapi SSL …` calls currently fail with a "cPanel
-  License Activation" page — box-level AutoSSL is unusable, but that does not
-  affect the app or the vps1 certificate.
+`CACHE_STORE`/`SESSION_DRIVER` are `file` (shared/storage); Redis is not
+installed on the VPS — add it first if you switch these.
 
 ## Error alerting (optional)
 
@@ -65,24 +61,29 @@ Zero-install: pipe errors to Slack via an incoming webhook.
 ```
 LOG_STACK=daily,slack
 LOG_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
-LOG_LEVEL=info                # daily channel level
-# Slack channel uses env('LOG_LEVEL','critical') — override with:
-# LOG_SLACK_LEVEL isn't defined; the stack sends >=info to Slack too.
+LOG_LEVEL=info
 ```
 
-For a full error tracker, add `sentry/sentry-laravel` and set `SENTRY_LARAVEL_DSN`. Run `composer require sentry/sentry-laravel` locally, commit, and it activates on next deploy.
+For a full error tracker, add `sentry/sentry-laravel` and set `SENTRY_LARAVEL_DSN`.
 
 ## Debugging on production
 
-- `tail -f ~/najenga-core/storage/logs/laravel-$(date +%F).log` (daily rotated file).
+- Logs: `/home/dev/web/najenga.okjtech.co.ke/private/najenga/shared/storage/logs/`
+  (as `dev` on the VPS).
+- Scheduler: `pm2 logs najenga-scheduler` / `pm2 ls` (as `dev`).
 - `https://najenga.okjtech.co.ke/health` returns JSON: `{status, checks:{app,db,cache,storage_writable}, time}`.
-- The deploy workflow now dumps the last 200 log lines on failure and runs `/health` after every deploy.
+- TLS certificates: `~/web/najenga.okjtech.co.ke/conf/ssl/`; renewed daily at
+  03:15 by root cron `v-update-letsencrypt-ssl`.
+- Hestia gotcha: saving the domain in Hestia's Edit form resets the proxy
+  settings; re-run `v-add-web-domain-proxy dev najenga.okjtech.co.ke default`
+  and `v-rebuild-web-domain dev najenga.okjtech.co.ke` if nginx confs vanish.
 
 ## WhatsApp
 
 - Admin can inspect the current config and send a test message at `/whatsapp` (admin-only).
 - Webhook: `POST /api/whatsapp/webhook` (verified via `META_WHATSAPP_VERIFY_TOKEN`).
-- Inbound receipt images are queued (`App\Jobs\ProcessWhatsAppReceipt`) so the webhook returns 200 fast and OCR runs on the worker.
+- Inbound receipt images run inline while `QUEUE_CONNECTION=sync`; switch to
+  the database queue (see above) to move OCR off the request path.
 
 ### Meta app setup
 
@@ -90,8 +91,4 @@ For a full error tracker, add `sentry/sentry-laravel` and set `SENTRY_LARAVEL_DS
 2. **WhatsApp → API Setup**: copy `Phone Number ID` and generate a permanent **System User** access token in Business Settings.
 3. **App Settings → Basic**: copy `App ID` and `App Secret`.
 4. **WhatsApp → Configuration**: Callback URL = `https://najenga.okjtech.co.ke/api/whatsapp/webhook`, Verify Token = your chosen string. Subscribe to the `messages` field.
-5. Fill env vars, redeploy.
-
-## Deployment
-
-Now uses `rsync --delete` (backend) and `rsync` (public), touches `index.php` to bust OPcache, and probes `/health` with 5 retries before declaring success. On failure it prints the last 200 log lines and the `.env` presence check.
+5. Update `PROD_ENV`, re-run the deploy.
