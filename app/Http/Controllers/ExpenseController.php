@@ -189,7 +189,11 @@ class ExpenseController extends Controller
             ->toMediaCollection('receipt');
 
         // List it under Receipts too, like receipts sent by chat or checked on Receipt Verification.
-        $receipts->recordReceipt($expense, null, $request->file('receipt')->getClientOriginalName());
+        $media = $expense->getFirstMedia('receipt');
+        $ocr = $media
+            ? $receipts->readReceipt($media->getPathRelativeToRoot(), $media->disk)
+            : null;
+        $receipts->recordReceipt($expense, $ocr, $request->file('receipt')->getClientOriginalName());
 
         return response()->json([
             'success' => true,

@@ -182,7 +182,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
 
     // Receipts
-    Route::get('/receipt-verification', fn() => \Inertia\Inertia::render('ReceiptVerification'))->name('receipt.verification');
+    Route::get('/receipt-verification', [\App\Http\Controllers\ReceiptController::class, 'verification'])->name('receipt.verification');
     Route::get('/receipts', [\App\Http\Controllers\ReceiptController::class, 'index'])->name('receipts.index');
     Route::get('/receipts/match', [\App\Http\Controllers\ReceiptController::class, 'match'])->name('receipts.match');
     Route::get('/receipts/{receipt}', [\App\Http\Controllers\ReceiptController::class, 'show'])->name('receipts.show');
