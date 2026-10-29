@@ -16,6 +16,7 @@ class UpdateReceiptRequest extends FormRequest
         return [
             'verification_status' => 'required|in:pending,verified,rejected,auto_verified',
             'needs_verification' => 'boolean',
+            'update_matched' => 'sometimes|boolean',
         ];
     }
 }

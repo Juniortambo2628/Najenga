@@ -1,5 +1,5 @@
 import ResourceForm from '@/Components/ResourceForm';
-import { EXPENSE_FIELDS } from '@/Config/schemas/expense';
+import { expenseFields } from '@/Config/schemas/expense';
 
 export default function Edit({ expense, projects }) {
     return (
@@ -9,7 +9,7 @@ export default function Edit({ expense, projects }) {
                 { label: 'Expenses', href: route('expenses') },
                 { label: expense.title },
             ]}
-            schema={EXPENSE_FIELDS}
+            schema={expenseFields(projects)}
             method="patch"
             action={route('expenses.update', expense.id)}
             cancelHref={route('expenses')}

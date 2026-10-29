@@ -12,6 +12,7 @@ import DashboardPage from '@/Components/DashboardPage';
 import { EXPENSE_CATEGORIES } from '@/Config/expenses';
 import { rootBreadcrumbs } from '@/Config/navigation';
 import useAction from '@/Hooks/useAction';
+import useActiveProjectId from '@/Hooks/useActiveProjectId';
 
 const CATEGORIES = EXPENSE_CATEGORIES;
 
@@ -27,7 +28,7 @@ const emptyForm = {
     category: 'Materials',
 };
 
-const mapExtractedToForm = (ext = {}) => ({
+const mapExtractedToForm = (ext = {}, projectId = '') => ({
     title: ext.merchant || ext.recipient || 'Unknown',
     amount: ext.total || '',
     expense_date: ext.date || new Date().toISOString().split('T')[0],
@@ -37,9 +38,12 @@ const mapExtractedToForm = (ext = {}) => ({
     reference_number: ext.reference_number || '',
     purpose: '',
     category: 'Materials',
+    project_id: projectId,
 });
 
-export default function ReceiptVerification() {
+export default function ReceiptVerification({ projects = [] }) {
+    const [activeProjectId] = useActiveProjectId();
+    const defaultProjectId = projects.some((project) => String(project.id) === String(activeProjectId)) ? activeProjectId : '';
     const [files, setFiles] = useState([]);
     const [queue, setQueue] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(-1);
@@ -47,7 +51,8 @@ export default function ReceiptVerification() {
     const [errors, setErrors] = useState({});
     const [bulkMode, setBulkMode] = useState(false);
 
-    const [formData, setFormData] = useState({ ...emptyForm });
+    const [formData, setFormData] = useState({ ...emptyForm, project_id: defaultProjectId });
+    const [updateMatched, setUpdateMatched] = useState(false);
     const [rawText, setRawText] = useState('');
     const [currentTempPath, setCurrentTempPath] = useState('');
     const [currentFileId, setCurrentFileId] = useState(null);
@@ -103,7 +108,7 @@ export default function ReceiptVerification() {
 
             if (response.data.success) {
                 const ext = response.data.extracted;
-                const populated = mapExtractedToForm(ext);
+                const populated = mapExtractedToForm(ext, defaultProjectId);
 
                 setQueue(prev => prev.map((e, i) => i === idx ? {
                     ...e,
@@ -117,6 +122,7 @@ export default function ReceiptVerification() {
                 setRawText(response.data.text);
                 setCurrentTempPath(response.data.temp_path);
                 setCurrentFileId(entry.id);
+                setUpdateMatched(false);
 
                 // Check for matching expenses after OCR
                 if (populated.reference_number) {
@@ -196,7 +202,7 @@ export default function ReceiptVerification() {
                 }
 
                 const ext = result.extracted || {};
-                const populated = mapExtractedToForm(ext);
+                const populated = mapExtractedToForm(ext, defaultProjectId);
                 populatedByQueueIdx.set(idx, { populated, result });
 
                 setQueue(prev => prev.map((e, i) => i === idx ? {
@@ -213,6 +219,7 @@ export default function ReceiptVerification() {
                 const { populated, result } = populatedByQueueIdx.get(firstReady.idx);
                 setCurrentIndex(firstReady.idx);
                 setCurrentFileId(firstReady.entry.id);
+                setUpdateMatched(false);
                 setFormData(populated);
                 setRawText(result.text || '');
                 setCurrentTempPath(result.temp_path || '');
@@ -263,7 +270,8 @@ export default function ReceiptVerification() {
                 entry.id === currentFileId ? { ...entry, status: 'saved' } : entry
             ));
 
-            setFormData({ ...emptyForm });
+            setFormData({ ...emptyForm, project_id: defaultProjectId });
+            setUpdateMatched(false);
             setRawText('');
             setCurrentTempPath('');
             setCurrentFileId(null);
@@ -279,7 +287,7 @@ export default function ReceiptVerification() {
     const handleSave = (e) => {
         e.preventDefault();
         setErrors({});
-        save.run({ ...formData, temp_path: currentTempPath });
+        save.run({ ...formData, project_id: formData.project_id || null, update_matched: updateMatched, temp_path: currentTempPath });
     };
 
     const saveAll = useAction((expenses) => axios.post('/receipts/store-bulk', { expenses }, getAxiosConfig()), {
@@ -317,6 +325,7 @@ export default function ReceiptVerification() {
             ...e.formData,
             temp_path: e.result.temp_path,
             ocr_source: e.result.extracted ? 'local-tesseract' : 'unknown',
+            update_matched: !!e.updateMatched,
         }));
 
         saveAll.run(expenses, readyEntries);
@@ -328,6 +337,7 @@ export default function ReceiptVerification() {
         setCurrentIndex(idx);
         setCurrentFileId(entry.id);
         if (entry.formData) setFormData(entry.formData);
+        setUpdateMatched(!!entry.updateMatched);
         if (entry.rawText) setRawText(entry.rawText);
         if (entry.result?.temp_path) setCurrentTempPath(entry.result.temp_path);
     };
@@ -683,6 +693,30 @@ export default function ReceiptVerification() {
                                     />
                                     <InputError id="receiptverification-purpose-error" message={errors.purpose} className="mt-1" />
                                 </div>
+
+                                <div>
+                                    <InputLabel htmlFor="receiptverification-project" value="Project" />
+                                    <SelectInput
+                                        id="receiptverification-project"
+                                        value={formData.project_id || ''}
+                                        onChange={(e) => updateCurrentField('project_id', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    >
+                                        <option value="">No project</option>
+                                        {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                                    </SelectInput>
+                                </div>
+
+                                {queue[currentIndex]?.matchedExpense && (
+                                    <label className="flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-gray-200">
+                                        <input type="checkbox" checked={updateMatched} onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setUpdateMatched(checked);
+                                            setQueue((prev) => prev.map((entry, index) => index === currentIndex ? { ...entry, updateMatched: checked } : entry));
+                                        }} className="mt-1" />
+                                        <span>Update the matched expense with these receipt details</span>
+                                    </label>
+                                )}
 
                                 <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
                                     <SecondaryButton

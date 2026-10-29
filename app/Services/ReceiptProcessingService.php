@@ -239,7 +239,7 @@ class ReceiptProcessingService
             'extracted_receipt_id' => $parsed['reference_number'] ?? null,
             'ocr_provider'         => $ocr['provider'] ?? null,
             'processed_at'         => now(),
-            'needs_verification'   => $confidence !== null && $confidence < 0.7,
+            'needs_verification'   => $confidence === null || $confidence < 0.7,
             'verification_status'  => 'pending',
         ];
 

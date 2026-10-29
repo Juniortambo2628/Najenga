@@ -17,11 +17,7 @@ class StoreReceiptRequest extends FormRequest
 
         $project = Project::find($projectId);
 
-        if (! $project) {
-            return true;
-        }
-
-        return $this->user()->can('update', $project);
+        return $project && $this->user()->can('update', $project);
     }
 
     public function rules(): array

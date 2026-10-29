@@ -19,7 +19,7 @@ class UpdateExpenseRequest extends FormRequest
         if ($projectId && (int) $projectId !== (int) $expense->project_id) {
             $project = Project::find($projectId);
 
-            return ! $project || $this->user()->can('update', $project);
+            return $project && $this->user()->can('update', $project);
         }
 
         return true;

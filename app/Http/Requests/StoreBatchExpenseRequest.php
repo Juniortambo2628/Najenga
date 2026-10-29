@@ -18,7 +18,7 @@ class StoreBatchExpenseRequest extends FormRequest
 
             $project = Project::find($projectId);
 
-            if ($project && ! $this->user()->can('update', $project)) {
+            if (! $project || ! $this->user()->can('update', $project)) {
                 return false;
             }
         }

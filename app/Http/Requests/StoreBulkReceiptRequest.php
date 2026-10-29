@@ -18,7 +18,7 @@ class StoreBulkReceiptRequest extends FormRequest
 
             $project = Project::find($projectId);
 
-            if ($project && ! $this->user()->can('update', $project)) {
+            if (! $project || ! $this->user()->can('update', $project)) {
                 return false;
             }
         }
@@ -42,6 +42,7 @@ class StoreBulkReceiptRequest extends FormRequest
             'expenses.*.category'        => 'nullable|string',
             'expenses.*.project_id'      => 'nullable|exists:projects,id,deleted_at,NULL',
             'expenses.*.temp_path'       => 'required|string',
+            'expenses.*.update_matched'  => 'sometimes|boolean',
         ];
     }
 }
