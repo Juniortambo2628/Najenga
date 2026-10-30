@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
@@ -102,7 +103,7 @@ class DashboardControllerTest extends TestCase
             'user_id' => $this->user->id,
             'project_id' => $project->id,
             'amount' => 1000,
-            'expense_date' => now()->subMonth()->toDateString(),
+            'expense_date' => now()->subMonthNoOverflow()->toDateString(),
         ]);
 
         $this->actingAs($this->user)
@@ -142,13 +143,13 @@ class DashboardControllerTest extends TestCase
             'user_id' => $this->user->id,
             'project_id' => $project->id,
             'amount' => 1000,
-            'expense_date' => now()->subMonth()->toDateString(),
+            'expense_date' => now()->subMonthNoOverflow()->toDateString(),
         ]);
         Expense::factory()->create([
             'user_id' => $this->user->id,
             'project_id' => $project->id,
             'amount' => 999999,
-            'expense_date' => now()->subMonths(3)->toDateString(),
+            'expense_date' => now()->subMonthsNoOverflow(3)->toDateString(),
         ]);
 
         $otherUser = User::factory()->create(['role' => 'client']);
@@ -157,7 +158,7 @@ class DashboardControllerTest extends TestCase
             'user_id' => $otherUser->id,
             'project_id' => $otherProject->id,
             'amount' => 999999,
-            'expense_date' => now()->subMonth()->toDateString(),
+            'expense_date' => now()->subMonthNoOverflow()->toDateString(),
         ]);
 
         $this->actingAs($this->user)
@@ -166,5 +167,46 @@ class DashboardControllerTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('stats.expenseTrend', 50));
     }
-}
 
+    public static function monthEndDates(): array
+    {
+        return [
+            '30 October (previous month ends on the 30th)' => ['2026-10-30', '2026-09-30', '2026-08-31'],
+            '31 October' => ['2026-10-31', '2026-09-30', '2026-08-31'],
+            '31 March (subMonth would overflow into March)' => ['2026-03-31', '2026-02-28', '2026-01-31'],
+            '29 February in a leap year' => ['2028-02-29', '2028-01-31', '2027-12-31'],
+            '1 March' => ['2026-03-01', '2026-02-28', '2026-01-31'],
+        ];
+    }
+
+    #[DataProvider('monthEndDates')]
+    public function test_expense_trend_uses_whole_calendar_months_near_month_end(
+        string $today,
+        string $lastDayOfPreviousMonth,
+        string $lastDayOfMonthBefore,
+    ): void {
+        $this->travelTo($today.' 12:00:00');
+
+        $project = Project::factory()->create(['client_id' => $this->user->id]);
+        $expense = fn (int $amount, string $date) => Expense::factory()->create([
+            'user_id' => $this->user->id,
+            'project_id' => $project->id,
+            'amount' => $amount,
+            'expense_date' => $date,
+        ]);
+
+        // This month: 1500, spent on today's date (the last day for most cases).
+        $expense(1500, $today);
+        // Previous month: 1000, on its first and last days.
+        $expense(400, substr($lastDayOfPreviousMonth, 0, 8).'01');
+        $expense(600, $lastDayOfPreviousMonth);
+        // The month before must not count as "previous".
+        $expense(999999, $lastDayOfMonthBefore);
+
+        $this->actingAs($this->user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.expenseTrend', 50));
+    }
+}

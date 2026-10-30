@@ -33,19 +33,17 @@ class DashboardController extends Controller
                     ->limit(5)
                     ->get(['id', 'name', 'location', 'status']);
 
-                $currentMonthTotal = Expense::where('user_id', $user->id)
-                    ->whereBetween('expense_date', [
-                        now()->startOfMonth()->toDateString(),
-                        now()->endOfMonth()->toDateString(),
-                    ])
+                // Whole calendar months as half-open ranges [start, next start):
+                // an inclusive end date would drop rows stored with a time part
+                // on the last day, and subMonth() overflows on the 29th–31st
+                // (31 March would become 3 March).
+                $monthTotal = fn ($month) => Expense::where('user_id', $user->id)
+                    ->where('expense_date', '>=', $month->copy()->startOfMonth()->toDateString())
+                    ->where('expense_date', '<', $month->copy()->startOfMonth()->addMonth()->toDateString())
                     ->sum('amount');
 
-                $previousMonthTotal = Expense::where('user_id', $user->id)
-                    ->whereBetween('expense_date', [
-                        now()->subMonth()->startOfMonth()->toDateString(),
-                        now()->subMonth()->endOfMonth()->toDateString(),
-                    ])
-                    ->sum('amount');
+                $currentMonthTotal = $monthTotal(now());
+                $previousMonthTotal = $monthTotal(now()->subMonthNoOverflow());
 
                 $expenseTrend = $previousMonthTotal > 0
                     ? round((($currentMonthTotal - $previousMonthTotal) / $previousMonthTotal) * 100, 1)
