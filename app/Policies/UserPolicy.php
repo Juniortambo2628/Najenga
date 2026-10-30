@@ -8,26 +8,26 @@ class UserPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->role === 'admin';
+        return (bool) $user->is_superadmin;
     }
 
     public function view(User $user, User $model): bool
     {
-        return $user->role === 'admin' || $user->id === $model->id;
+        return (bool) $user->is_superadmin || $user->id === $model->id;
     }
 
     public function create(User $user): bool
     {
-        return $user->role === 'admin';
+        return (bool) $user->is_superadmin;
     }
 
     public function update(User $user, User $model): bool
     {
-        return $user->role === 'admin';
+        return (bool) $user->is_superadmin;
     }
 
     public function delete(User $user, User $model): bool
     {
-        return $user->role === 'admin';
+        return (bool) $user->is_superadmin;
     }
 }

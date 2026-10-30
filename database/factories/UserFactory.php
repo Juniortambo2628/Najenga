@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
+
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -39,6 +41,14 @@ class UserFactory extends Factory
     /**
      * Indicate that the model's email address should be unverified.
      */
+    /** Admins (users.role, until it is dropped) are superadmins, as UserController keeps them. */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (User $user) {
+            $user->is_superadmin ??= $user->role === 'admin';
+        });
+    }
+
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [

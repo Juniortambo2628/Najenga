@@ -18,7 +18,7 @@ export default function NavbarShare() {
 
     if (projects.length === 0) return null;
     const active = projects.find((p) => String(p.id) === activeId) ?? null;
-    const label = (project) => (['owner', 'manager'].includes(project.role) ? 'Share' : 'Members');
+    const label = (project) => (project.role === 'owner' ? 'Share' : 'Members');
 
     return (
         <>

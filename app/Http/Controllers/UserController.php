@@ -29,6 +29,7 @@ class UserController extends Controller
         $validated['username'] = $validated['username'] ?? strtolower($validated['first_name'] . '.' . $validated['last_name']);
 
         $user = User::create($validated);
+        $this->syncSuperadmin($user);
 
         ActivityLogger::log('user.created', sprintf('Created user %s (#%d)', $user->email, $user->id));
 
@@ -50,6 +51,7 @@ class UserController extends Controller
         $this->authorize('update', $user);
 
         $user->update($request->validated());
+        $this->syncSuperadmin($user);
 
         return redirect()->back()->with('success', 'User updated successfully');
     }
@@ -69,5 +71,11 @@ class UserController extends Controller
 
         $user->delete();
         return redirect()->back()->with('success', 'User deleted successfully');
+    }
+
+    /** An admin (users.role, until it is dropped) is a superadmin, and the other way round. */
+    private function syncSuperadmin(User $user): void
+    {
+        $user->forceFill(['is_superadmin' => $user->role === 'admin'])->save();
     }
 }

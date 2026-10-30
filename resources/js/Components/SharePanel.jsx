@@ -5,8 +5,7 @@ import Modal from '@/Components/Modal';
 import useAction from '@/Hooks/useAction';
 
 export const ROLE_INFO = {
-    owner: { label: 'Owner', help: 'Everything, including deleting the project', tone: 'border-rose-400/30 bg-rose-500/15 text-rose-200' },
-    manager: { label: 'Manager', help: 'Edits everything and manages people', tone: 'border-amber-400/30 bg-amber-500/10 text-amber-200' },
+    owner: { label: 'Co-owner', help: 'Edits everything and manages people', tone: 'border-amber-400/30 bg-amber-500/10 text-amber-200' },
     editor: { label: 'Editor', help: 'Adds and changes expenses, photos, documents', tone: 'border-sky-400/30 bg-sky-500/10 text-sky-200' },
     viewer: { label: 'Viewer', help: 'Reads and comments only', tone: 'border-white/15 bg-white/5 text-gray-300' },
 };
@@ -15,8 +14,11 @@ const initials = (name = '') => name.split(' ').filter(Boolean).slice(0, 2).map(
 
 const daysLeft = (iso) => Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
 
-export function RoleBadge({ role }) {
-    const info = ROLE_INFO[role] ?? ROLE_INFO.viewer;
+/** The project's client: its first owner. */
+const CLIENT_INFO = { label: 'Owner', help: 'Everything, including deleting the project', tone: 'border-rose-400/30 bg-rose-500/15 text-rose-200' };
+
+export function RoleBadge({ role, isClient = false }) {
+    const info = isClient ? CLIENT_INFO : (ROLE_INFO[role] ?? ROLE_INFO.viewer);
     return <span className={`rounded-lg border px-2 py-0.5 text-xs font-medium ${info.tone}`}>{info.label}</span>;
 }
 
@@ -30,7 +32,7 @@ function Avatar({ name }) {
 
 /**
  * Who is in a project, and inviting more people: members with their roles
- * (changeable by owners and managers), pending email invitations (resend,
+ * (the client changes anyone's, co-owners editors' and viewers'), pending email invitations (resend,
  * revoke), and leaving the project. Replaces ShareProjectModal.
  */
 export default function SharePanel({ show, onClose, project }) {
@@ -111,9 +113,9 @@ export default function SharePanel({ show, onClose, project }) {
         invite.run({ email, role });
     };
 
-    // Owners manage everyone but themselves; managers manage editors and viewers.
+    // The client manages everyone but themselves; co-owners manage editors and viewers.
     const canManageMember = (member) =>
-        state?.can_manage && member.role !== 'owner' && member.id !== me.id && (state.my_role === 'owner' || member.role !== 'manager');
+        state?.can_manage && !member.is_client && member.id !== me.id && (state.i_am_client || member.role !== 'owner');
 
     return (
         <Modal show={show} onClose={onClose} maxWidth="2xl">
@@ -155,7 +157,7 @@ export default function SharePanel({ show, onClose, project }) {
                                     >
                                         {state.assignable.map((r) => (
                                             <option key={r} value={r} className="bg-surface-overlay">
-                                                {ROLE_INFO[r].label}
+                                                {ROLE_INFO[r]?.label ?? r}
                                             </option>
                                         ))}
                                     </select>
@@ -203,7 +205,7 @@ export default function SharePanel({ show, onClose, project }) {
                                                 >
                                                     {[...new Set([member.role, ...state.assignable])].map((r) => (
                                                         <option key={r} value={r} className="bg-surface-overlay">
-                                                            {ROLE_INFO[r].label}
+                                                            {ROLE_INFO[r]?.label ?? r}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -219,9 +221,9 @@ export default function SharePanel({ show, onClose, project }) {
                                                 </button>
                                             </>
                                         ) : (
-                                            <RoleBadge role={member.role} />
+                                            <RoleBadge role={member.role} isClient={member.is_client} />
                                         )}
-                                        {member.id === me.id && member.role !== 'owner' && (
+                                        {member.id === me.id && !member.is_client && (
                                             <button
                                                 type="button"
                                                 onClick={() => leave.run()}

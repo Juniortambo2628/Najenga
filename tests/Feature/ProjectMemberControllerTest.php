@@ -30,7 +30,7 @@ class ProjectMemberControllerTest extends TestCase
         $this->project = Project::factory()->create(['client_id' => $this->owner->id]);
         foreach (['manager', 'manager2', 'editor', 'viewer'] as $who) {
             $this->{$who} = User::factory()->create();
-            $this->project->users()->attach($this->{$who}->id, ['role' => $who === 'manager2' ? 'manager' : $who]);
+            $this->project->users()->attach($this->{$who}->id, ['role' => in_array($who, ['manager', 'manager2'], true) ? 'owner' : $who]);
         }
     }
 
@@ -42,9 +42,13 @@ class ProjectMemberControllerTest extends TestCase
             ->assertJsonPath('members.0.id', $this->owner->id)
             ->assertJsonPath('members.0.role', 'owner')
             ->assertJsonPath('my_role', 'owner')
-            ->assertJsonPath('assignable', ['manager', 'editor', 'viewer']);
+            ->assertJsonPath('members.0.is_client', true)
+            ->assertJsonPath('i_am_client', true)
+            ->assertJsonPath('assignable', ['owner', 'editor', 'viewer']);
 
         $this->actingAs($this->manager)->getJson("/projects/{$this->project->id}/members")
+            ->assertJsonPath('my_role', 'owner')
+            ->assertJsonPath('i_am_client', false)
             ->assertJsonPath('assignable', ['editor', 'viewer']);
 
         $this->actingAs($this->viewer)->getJson("/projects/{$this->project->id}/members")
@@ -52,12 +56,13 @@ class ProjectMemberControllerTest extends TestCase
             ->assertJsonPath('assignable', []);
     }
 
-    public function test_owner_changes_any_role_except_their_own(): void
+    public function test_the_client_changes_any_role_except_their_own(): void
     {
         $this->actingAs($this->owner)
-            ->patchJson("/projects/{$this->project->id}/members/{$this->viewer->id}", ['role' => 'manager'])
-            ->assertOk();
-        $this->assertSame('manager', $this->project->roleFor($this->viewer));
+            ->patchJson("/projects/{$this->project->id}/members/{$this->viewer->id}", ['role' => 'owner'])
+            ->assertOk()
+            ->assertJsonPath('message', fn ($m) => str_contains($m, 'a co-owner'));
+        $this->assertSame('owner', $this->project->roleFor($this->viewer));
 
         $this->actingAs($this->owner)
             ->patchJson("/projects/{$this->project->id}/members/{$this->owner->id}", ['role' => 'viewer'])
@@ -65,14 +70,14 @@ class ProjectMemberControllerTest extends TestCase
         $this->assertSame('owner', $this->project->roleFor($this->owner));
     }
 
-    public function test_managers_manage_editors_and_viewers_only(): void
+    public function test_co_owners_manage_editors_and_viewers_only(): void
     {
         $this->actingAs($this->manager)
             ->patchJson("/projects/{$this->project->id}/members/{$this->viewer->id}", ['role' => 'editor'])
             ->assertOk();
 
         $this->actingAs($this->manager)
-            ->patchJson("/projects/{$this->project->id}/members/{$this->viewer->id}", ['role' => 'manager'])
+            ->patchJson("/projects/{$this->project->id}/members/{$this->viewer->id}", ['role' => 'owner'])
             ->assertUnprocessable();
 
         $this->actingAs($this->manager)
@@ -81,7 +86,14 @@ class ProjectMemberControllerTest extends TestCase
         $this->actingAs($this->manager)
             ->deleteJson("/projects/{$this->project->id}/members/{$this->manager2->id}")
             ->assertForbidden();
-        $this->assertSame('manager', $this->project->roleFor($this->manager2));
+        $this->assertSame('owner', $this->project->roleFor($this->manager2));
+    }
+
+    public function test_co_owners_can_leave_but_the_client_cannot(): void
+    {
+        $this->actingAs($this->owner)->deleteJson("/projects/{$this->project->id}/members/{$this->owner->id}")->assertUnprocessable();
+        $this->actingAs($this->manager)->deleteJson("/projects/{$this->project->id}/members/{$this->manager->id}")->assertOk();
+        $this->assertNull($this->project->roleFor($this->manager));
     }
 
     public function test_editors_and_viewers_cannot_manage_members(): void

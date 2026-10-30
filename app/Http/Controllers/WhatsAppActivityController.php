@@ -29,7 +29,7 @@ class WhatsAppActivityController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $isAdmin = $user?->role === 'admin';
+        $isAdmin = (bool) $user?->is_superadmin;
 
         $direction = $request->string('direction')->toString();  // '', 'inbound', 'outbound'
         $status = $request->string('status')->toString();        // '', 'sent', 'received', 'failed', ...
@@ -153,7 +153,7 @@ class WhatsAppActivityController extends Controller
     public function reclassify(Request $request, WhatsAppLog $log): RedirectResponse
     {
         $user = $request->user();
-        $isAdmin = $user?->role === 'admin';
+        $isAdmin = (bool) $user?->is_superadmin;
         abort_unless($isAdmin || $log->user_id === $user?->id, 403);
 
         $data = $request->validate([
@@ -196,7 +196,7 @@ class WhatsAppActivityController extends Controller
     public function destroy(Request $request, WhatsAppLog $log): RedirectResponse
     {
         $user = $request->user();
-        $isAdmin = $user?->role === 'admin';
+        $isAdmin = (bool) $user?->is_superadmin;
         abort_unless($isAdmin || $log->user_id === $user?->id, 403);
 
         DB::transaction(function () use ($log) {

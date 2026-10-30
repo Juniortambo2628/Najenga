@@ -1,7 +1,7 @@
 import { usePage } from '@inertiajs/react';
 
-const EDIT = ['owner', 'manager', 'editor'];
-const MANAGE = ['owner', 'manager'];
+const EDIT = ['owner', 'editor'];
+const MANAGE = ['owner'];
 
 /**
  * The current user's role in one project (from the shared `auth.projects`),

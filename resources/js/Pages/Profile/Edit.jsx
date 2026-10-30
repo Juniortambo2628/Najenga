@@ -235,7 +235,7 @@ function ProjectsSection({ projects }) {
                             </Link>
                             <RoleBadge role={project.role} />
                             <button type="button" onClick={() => setSharing(project)} className="rounded-lg px-2.5 py-1 text-xs font-medium text-gray-300 transition hover:bg-white/10 hover:text-white">
-                                {['owner', 'manager'].includes(project.role) ? 'Share…' : 'Members…'}
+                                {project.role === 'owner' ? 'Share…' : 'Members…'}
                             </button>
                         </li>
                     ))}
@@ -314,7 +314,7 @@ export default function Edit({ mustVerifyEmail, status, whatsapp = {}, twoFactor
         toggleNotifications.run(enabled);
     };
 
-    const sections = settingsSections({ isAdmin: user.role === 'admin', twoFactor, passkeys, whatsapp, loginAlerts, projects });
+    const sections = settingsSections({ isAdmin: Boolean(user.is_superadmin), twoFactor, passkeys, whatsapp, loginAlerts, projects });
     const [active, show] = useSection(sections, section);
     const current = sections.find((s) => s.id === active);
 

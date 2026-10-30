@@ -14,8 +14,8 @@ use Tests\TestCase;
 
 /**
  * Project roles decide what a member may do in a shared project: owner
- * (the client), manager and editor can change it; a viewer can read and
- * comment only. Members are managed by the owner and managers.
+ * (the client), a co-owner (e.g. its manager) and an editor can change it; a
+ * viewer can read and comment only. Members are managed by the owners.
  */
 class ProjectRoleAuthorizationTest extends TestCase
 {
@@ -38,7 +38,7 @@ class ProjectRoleAuthorizationTest extends TestCase
         $this->stranger = User::factory()->create(['role' => 'client']);
 
         $this->project = Project::factory()->create(['client_id' => $this->owner->id]);
-        $this->project->users()->attach($this->manager->id, ['role' => 'manager']);
+        $this->project->users()->attach($this->manager->id, ['role' => 'owner']);
         $this->project->users()->attach($this->editor->id, ['role' => 'editor']);
         $this->project->users()->attach($this->viewer->id, ['role' => 'viewer']);
     }
@@ -46,7 +46,7 @@ class ProjectRoleAuthorizationTest extends TestCase
     public function test_role_for_each_kind_of_user(): void
     {
         $this->assertSame('owner', $this->project->roleFor($this->owner));
-        $this->assertSame('manager', $this->project->roleFor($this->manager));
+        $this->assertSame('owner', $this->project->roleFor($this->manager));
         $this->assertSame('editor', $this->project->roleFor($this->editor));
         $this->assertSame('viewer', $this->project->roleFor($this->viewer));
         $this->assertNull($this->project->roleFor($this->stranger));
@@ -63,7 +63,7 @@ class ProjectRoleAuthorizationTest extends TestCase
         $this->assertDatabaseMissing('projects', ['name' => 'Renamed by viewer']);
     }
 
-    public function test_editor_and_manager_can_update_project(): void
+    public function test_editor_and_co_owner_can_update_project(): void
     {
         foreach (['editor', 'manager'] as $role) {
             $this->actingAs($this->{$role})
@@ -96,7 +96,7 @@ class ProjectRoleAuthorizationTest extends TestCase
 
     // Members
 
-    public function test_only_owner_and_manager_can_add_members(): void
+    public function test_only_owners_can_add_members(): void
     {
         $newcomer = User::factory()->create();
 

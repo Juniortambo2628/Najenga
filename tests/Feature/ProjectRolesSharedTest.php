@@ -48,7 +48,8 @@ class ProjectRolesSharedTest extends TestCase
         $this->assertTrue(ProjectRole::canEdit('editor'));
         $this->assertFalse(ProjectRole::canEdit('viewer'));
         $this->assertFalse(ProjectRole::canEdit(null));
-        $this->assertTrue(ProjectRole::canManage('manager'));
+        $this->assertTrue(ProjectRole::canManage('owner'));
+        $this->assertFalse(ProjectRole::canManage('manager')); // managers are co-owners now
         $this->assertFalse(ProjectRole::canManage('editor'));
     }
 }

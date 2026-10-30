@@ -32,7 +32,7 @@ class ProjectInvitationNotification extends Notification
                 '%s invited you to the project "%s" as %s.',
                 $inviter?->name ?? 'Someone',
                 $project->name,
-                $this->invitation->role === 'viewer' ? 'a viewer' : 'an '.$this->invitation->role,
+                match ($this->invitation->role) { 'viewer' => 'a viewer', 'owner' => 'a co-owner', default => 'an '.$this->invitation->role },
             ))
             ->action('Join the project', $this->url)
             ->line(sprintf('The link works for %d days. If you don\'t have an account yet, you can create one with this email address.', ProjectInvitation::VALID_DAYS))

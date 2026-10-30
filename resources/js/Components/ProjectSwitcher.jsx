@@ -69,7 +69,7 @@ export default function ProjectSwitcher() {
                             <MenuItem>
                                 <button type="button" onClick={() => setSharing(true)} className={itemClass}>
                                     <i aria-hidden="true" className="fas fa-user-plus w-4 text-gray-500" />
-                                    {['owner', 'manager'].includes(active.role) ? 'Share…' : 'Members…'}
+                                    {active.role === 'owner' ? 'Share…' : 'Members…'}
                                 </button>
                             </MenuItem>
                         </>

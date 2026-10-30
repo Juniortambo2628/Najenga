@@ -86,7 +86,7 @@ class ProjectInvitationTest extends TestCase
         $this->assertSame('viewer', ProjectInvitation::sole()->role);
     }
 
-    public function test_only_owners_and_managers_invite_and_only_owners_make_managers(): void
+    public function test_only_owners_invite_and_only_the_client_makes_co_owners(): void
     {
         foreach (['viewer', 'editor'] as $role) {
             $member = User::factory()->create();
@@ -97,9 +97,9 @@ class ProjectInvitationTest extends TestCase
         }
 
         $manager = User::factory()->create();
-        $this->project->users()->attach($manager->id, ['role' => 'manager']);
+        $this->project->users()->attach($manager->id, ['role' => 'owner']); // a co-owner
         $this->actingAs($manager)
-            ->postJson("/projects/{$this->project->id}/invitations", ['email' => 'm@example.com', 'role' => 'manager'])
+            ->postJson("/projects/{$this->project->id}/invitations", ['email' => 'm@example.com', 'role' => 'owner'])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('role');
         $this->actingAs($manager)
@@ -107,7 +107,7 @@ class ProjectInvitationTest extends TestCase
             ->assertCreated();
 
         $this->actingAs($this->owner)
-            ->postJson("/projects/{$this->project->id}/invitations", ['email' => 'boss@example.com', 'role' => 'manager'])
+            ->postJson("/projects/{$this->project->id}/invitations", ['email' => 'boss@example.com', 'role' => 'owner'])
             ->assertCreated();
     }
 

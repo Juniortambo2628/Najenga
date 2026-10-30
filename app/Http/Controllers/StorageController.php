@@ -21,7 +21,7 @@ class StorageController extends Controller
             abort(404);
         }
 
-        if (auth()->user()->role === 'admin') {
+        if (auth()->user()->is_superadmin) {
             return Storage::disk('public')->response($path);
         }
 

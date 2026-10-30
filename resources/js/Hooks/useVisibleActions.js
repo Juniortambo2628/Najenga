@@ -3,7 +3,7 @@ import { usePage } from '@inertiajs/react';
 import useActiveProjectId from '@/Hooks/useActiveProjectId';
 import useRole from '@/Hooks/useRole';
 
-const EDIT = ['owner', 'manager', 'editor'];
+const EDIT = ['owner', 'editor'];
 
 /**
  * Projects a form may file a record under: not those where the person is a

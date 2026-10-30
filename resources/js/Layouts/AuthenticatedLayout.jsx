@@ -192,7 +192,8 @@ export default function AuthenticatedLayout({ children }) {
         return () => document.removeEventListener('keydown', onKeyDown);
     }, []);
 
-    const navSections = navSectionsFor(user.role);
+    // Superadmins see the admin pages (Analytics, Users).
+    const navSections = navSectionsFor(user.is_superadmin ? 'admin' : user.role);
 
     return (
         <>

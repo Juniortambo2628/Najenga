@@ -51,12 +51,12 @@ class ProjectMembersBackfillTest extends TestCase
         $project = Project::factory()->create(['client_id' => $client->id, 'manager_id' => $manager->id]);
 
         $this->assertSame('owner', $project->users()->where('users.id', $client->id)->value('project_user.role'));
-        $this->assertSame('manager', $project->users()->where('users.id', $manager->id)->value('project_user.role'));
+        $this->assertSame('owner', $project->users()->where('users.id', $manager->id)->value('project_user.role'));
 
         $viewer = User::factory()->create();
         $project->users()->attach($viewer->id, ['role' => 'viewer']);
         $project->update(['manager_id' => $viewer->id]);
 
-        $this->assertSame('manager', $project->users()->where('users.id', $viewer->id)->value('project_user.role'));
+        $this->assertSame('owner', $project->users()->where('users.id', $viewer->id)->value('project_user.role'));
     }
 }

@@ -82,7 +82,7 @@ export default function PageActivityPanel() {
                 {project && (
                     <button type="button" onClick={() => setSharing(true)} className={button}>
                         <i aria-hidden="true" className="fas fa-user-plus w-4 text-[#DC143C]" />
-                        {['owner', 'manager'].includes(project.role) ? `Share ${project.name}` : `People in ${project.name}`}
+                        {project.role === 'owner' ? `Share ${project.name}` : `People in ${project.name}`}
                     </button>
                 )}
             </div>

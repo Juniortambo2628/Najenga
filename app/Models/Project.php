@@ -33,14 +33,14 @@ class Project extends Model
 
     protected static function booted(): void
     {
-        // The client is always an owner member and the assigned manager a
-        // manager member, so the member list is the one list of who is in.
+        // The client and the assigned manager are always owner members (the
+        // manager a co-owner), so the member list is the one list of who is in.
         static::saved(function (Project $project) {
             if ($project->wasChanged('client_id') || $project->wasRecentlyCreated) {
                 $project->grantRole($project->client_id, ProjectRole::OWNER);
             }
             if ($project->wasChanged('manager_id') || $project->wasRecentlyCreated) {
-                $project->grantRole($project->manager_id, ProjectRole::MANAGER);
+                $project->grantRole($project->manager_id, ProjectRole::OWNER);
             }
         });
 
@@ -160,6 +160,12 @@ class Project extends Model
         }
 
         return $this->users()->where('users.id', $user->id)->value('project_user.role');
+    }
+
+    /** The project's client: its first owner, who can't be removed and alone deletes it or changes co-owners. */
+    public function isClient(User $user): bool
+    {
+        return (int) $this->client_id === (int) $user->id;
     }
 
     public function userCanEdit(User $user): bool

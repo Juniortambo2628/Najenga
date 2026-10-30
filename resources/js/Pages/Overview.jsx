@@ -212,7 +212,7 @@ function ProjectOverview({ project, onShare }) {
                         ))}
                     </ul>
                     <button type="button" onClick={onShare} className="mt-4 text-sm font-medium text-[#DC143C] hover:text-white">
-                        {['owner', 'manager'].includes(project.my_role) ? 'Invite or manage people…' : 'See the team…'}
+                        {project.my_role === 'owner' ? 'Invite or manage people…' : 'See the team…'}
                     </button>
                 </Section>
             </div>
@@ -293,7 +293,7 @@ export default function Overview({ projects = [], focus = null }) {
     const actions = project
         ? [
               ...(canEdit ? [{ id: 'edit', label: 'Edit Project', icon: 'fa-pen', href: route('projects.edit', project.id), variant: 'primary' }] : []),
-              { id: 'share', label: ['owner', 'manager'].includes(project.my_role) ? 'Share' : 'Members', icon: 'fa-user-plus', onClick: () => setSharing(true) },
+              { id: 'share', label: project.my_role === 'owner' ? 'Share' : 'Members', icon: 'fa-user-plus', onClick: () => setSharing(true) },
               ...(project.can_delete ? [{ id: 'delete', label: 'Delete Project', icon: 'fa-trash', variant: 'danger', onClick: () => deleteProject.run(project) }] : []),
           ]
         : [
