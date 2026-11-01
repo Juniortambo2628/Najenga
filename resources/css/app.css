@@ -75,47 +75,6 @@
 
 @layer components {
     /* ============================================
-       LANDING PAGE STANDARDIZED CLASSES
-       ============================================ */
-
-    /* Landing CTA primary button (used in ScrollSection) */
-    .landing-cta-primary {
-        @apply inline-flex items-center gap-2 px-8 py-3 bg-white text-black font-semibold rounded-full transition-colors duration-300 hover:bg-gray-200;
-    }
-
-    /* Landing CTA section buttons (brand gradient) */
-    .landing-cta-brand {
-        @apply inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 shadow-xl bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white hover:shadow-lg hover:shadow-[rgb(139,0,0)]/25;
-    }
-
-    .landing-cta-secondary {
-        @apply inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 border-2 border-white text-white hover:bg-white/10;
-    }
-
-    /* Scroll arrows for ScrollSection */
-    .landing-scroll-arrow {
-        @apply w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all duration-300 hover:bg-white/20 hover:scale-110 cursor-pointer;
-    }
-
-    /* Scroll card tags */
-    .landing-card-tag {
-        @apply text-xs text-white/70 bg-white/10 backdrop-blur-sm px-2 py-1 rounded-full;
-    }
-
-    /* Landing animation helpers */
-    .landing-section {
-        @apply min-h-screen flex items-center;
-        will-change: transform;
-    }
-    .landing-section > * {
-        will-change: transform, opacity;
-    }
-
-    /* ============================================
-       END LANDING PAGE STANDARDIZED CLASSES
-       ============================================ */
-
-    /* ============================================
        AUTH PAGE STANDARDIZED CLASSES
        ============================================ */
 
