@@ -28,6 +28,7 @@ jobs:
       domain: najenga.okjtech.co.ke
       app_name: najenga
       health_path: /health
+      spa_dir: frontend   # the OKJT kit app (public pages); built into public/
       queue: false        # QUEUE_CONNECTION=sync; set true if it moves to database
       scheduler: true     # daily model:prune + the Monday 08:00 UTC WhatsApp digest
     secrets:

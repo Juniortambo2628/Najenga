@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "./okjt-theme.css";
+
+@source "../node_modules/@okjt/site/dist";
+@source "../node_modules/@okjt/ui/dist";
+
+body {
+  background: #F4F1EE;
+  color: #1A1514;
+  font-family: var(--font-sans);
+}

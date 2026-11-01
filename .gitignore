@@ -95,3 +95,5 @@ stop-dev.ps1
 # Playwright visual tests (reports and failed-run output)
 /storage/playwright-report
 /storage/playwright-results
+/public/index.html
+/public/app-assets

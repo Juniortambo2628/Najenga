@@ -48,9 +48,9 @@ class ApiTransportTest extends TestCase
 
         // The session-authed JSON endpoints, excluding the Sanctum route and
         // the public webhooks. /api/analytics and /api/timeline/data were
-        // removed in the same pass: both had zero callers.
+        // removed in the same pass: both had zero callers. /api/session tells the kit app's public pages whether someone is signed in.
         $this->assertSame(
-            ['api/search/live'],
+            ['api/search/live', 'api/session'],
             collect($apiStack)
                 ->pluck('uri')
                 ->filter(fn ($uri) => $uri !== 'api/user' && $uri !== 'api/activity-logs')

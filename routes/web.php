@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
@@ -16,28 +15,13 @@ Route::get('/health', function () {
     return response()->json(['status' => $ok ? 'ok' : 'degraded', 'checks' => $checks, 'time' => now()->toIso8601String()], $ok ? 200 : 503);
 })->name('health');
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-})->name('home');
-
-// The step-by-step journeys through Najenga (Pages/Journey.jsx, Config/journeys.js).
-Route::get('/for-homeowners', fn () => Inertia::render('Journey', ['journeyId' => 'homeowners']))->name('journey.homeowners');
-Route::get('/for-contractors', fn () => Inertia::render('Journey', ['journeyId' => 'contractors']))->name('journey.contractors');
-
-Route::get('/privacy', fn () => Inertia::render('Legal/Privacy', [
-    'effectiveDate' => '16 September 2026',
-    'contactEmail' => 'najenga-info@okjtech.co.ke',
-]))->name('privacy');
-
-Route::get('/terms', fn () => Inertia::render('Legal/Terms', [
-    'effectiveDate' => '16 September 2026',
-    'contactEmail' => 'najenga-info@okjtech.co.ke',
-]))->name('terms');
+// The public pages live in the OKJT kit app (frontend/, @okjt/site). Laravel
+// serves its index.html for them; the names stay for route() in Inertia pages.
+Route::get('/', \App\Http\Controllers\SpaController::class)->name('home');
+Route::get('/for-homeowners', \App\Http\Controllers\SpaController::class)->name('journey.homeowners');
+Route::get('/for-contractors', \App\Http\Controllers\SpaController::class)->name('journey.contractors');
+Route::get('/privacy', \App\Http\Controllers\SpaController::class)->name('privacy');
+Route::get('/terms', \App\Http\Controllers\SpaController::class)->name('terms');
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 

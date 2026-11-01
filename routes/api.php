@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Whether someone is signed in, for the kit app's public pages (frontend/).
+Route::middleware('web')->get('/session', fn () => ['signed_in' => auth()->check()])->name('api.session');
+
 // Telegram Webhook (Public, no auth)
 Route::post('/telegram/webhook', [\App\Http\Controllers\TelegramController::class, 'handleWebhook']);
 
