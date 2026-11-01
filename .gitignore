@@ -97,3 +97,4 @@ stop-dev.ps1
 /storage/playwright-results
 /public/index.html
 /public/app-assets
+/database/dashboard-preview.sqlite
