@@ -1,0 +1,297 @@
+/*
+ * Najenga's dashboard styles, moved from resources/css/app.css (Tailwind 3)
+ * for the kit app. Everything is scoped to .admin-theme (on <html> while the
+ * dashboard is open), so the public pages are untouched.
+ */
+
+/* Najenga's own colours beside the kit's tokens (bg-surface-panel, text-brand-light…). */
+@theme {
+  --color-surface-sidebar: #101112;
+  --color-surface-panel: #141516;
+  --color-surface-overlay: #18191b;
+  --color-brand: #8B0000;
+  --color-brand-light: #DC143C;
+  --color-brand-dark: #5C0000;
+}
+
+@layer base {
+  :root.admin-theme body {
+    background: #0b0c0d;
+    color: #fff;
+  }
+
+  /* Tailwind 3's defaults the pages were written against. */
+  .admin-theme *, .admin-theme ::after, .admin-theme ::before, .admin-theme ::backdrop, .admin-theme ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  .admin-theme input::placeholder, .admin-theme textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+  .admin-theme button:not(:disabled), .admin-theme [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* No sideways scrolling ("clip" keeps sticky elements sticky). */
+  .admin-theme, .admin-theme body {
+    overflow-x: hidden;
+    overflow-x: clip;
+    max-width: 100vw;
+  }
+
+  /* Visible keyboard focus (WCAG 2.4.7 / 1.4.11): ~7:1 on black. */
+  .admin-theme :focus-visible {
+    outline: 2px solid #fb7185 !important;
+    outline-offset: 2px;
+  }
+
+  .admin-theme select {
+    color-scheme: dark;
+  }
+  .admin-theme select option {
+    background-color: #18191b;
+    color: #f3f4f6;
+    padding: 8px 12px;
+  }
+  .admin-theme select option:hover,
+  .admin-theme select option:focus,
+  .admin-theme select option:active,
+  .admin-theme select option:checked {
+    background-color: #8B0000;
+    color: #ffffff;
+  }
+  .admin-theme select option[value=""] {
+    color: #9ca3af;
+  }
+
+  /* Fields: one attribute's specificity (:where), so a field's own utilities win. */
+  .admin-theme :where(input)[type="text"],
+  .admin-theme :where(input)[type="email"],
+  .admin-theme :where(input)[type="password"],
+  .admin-theme :where(input)[type="number"],
+  .admin-theme :where(input)[type="date"],
+  .admin-theme :where(input)[type="time"],
+  .admin-theme :where(input)[type="datetime-local"],
+  .admin-theme :where(input)[type="search"],
+  .admin-theme :where(input)[type="url"],
+  .admin-theme textarea,
+  .admin-theme select {
+    @apply bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 transition-all duration-200;
+    @apply focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50;
+  }
+}
+
+@layer components {
+  .skip-link {
+    @apply sr-only;
+  }
+  .skip-link:focus {
+    @apply not-sr-only fixed top-3 left-3 z-[100] rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black;
+  }
+
+  /* The dark glass panel every card and section uses (padding stays a utility). */
+  .panel {
+    @apply bg-[#141516]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] text-white font-semibold rounded-full px-6 py-2 transition-all duration-300 hover:shadow-lg;
+  }
+  .quick-action-btn {
+    @apply flex flex-col gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-gray-300 no-underline transition-all duration-300 hover:-translate-y-0.5 hover:border-rose-200/20 hover:bg-white/[0.045] hover:text-white;
+  }
+  .quick-action-icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200/10 bg-rose-950/50 text-base text-rose-200;
+  }
+  .glass-nav-btn {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium transition-all duration-300 hover:bg-white/20;
+  }
+  .glass-stat-bar {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  .glass-stat-bar > div + div {
+    @apply border-l border-white/20;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  }
+  .admin-theme ::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .select-chevron {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+}
+
+/* Tailwind 3 palette values for the colour families Najenga's pages use, so they render exactly as they did (Tailwind 4 redrew them in oklch). Generated from tailwindcss@3 colors. */
+@theme {
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-amber-950: #451a03;
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
+  --color-cyan-50: #ecfeff;
+  --color-cyan-100: #cffafe;
+  --color-cyan-200: #a5f3fc;
+  --color-cyan-300: #67e8f9;
+  --color-cyan-400: #22d3ee;
+  --color-cyan-500: #06b6d4;
+  --color-cyan-600: #0891b2;
+  --color-cyan-700: #0e7490;
+  --color-cyan-800: #155e75;
+  --color-cyan-900: #164e63;
+  --color-cyan-950: #083344;
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-800: #065f46;
+  --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #bbf7d0;
+  --color-green-300: #86efac;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+  --color-green-900: #14532d;
+  --color-green-950: #052e16;
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-300: #fdba74;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+  --color-orange-800: #9a3412;
+  --color-orange-900: #7c2d12;
+  --color-orange-950: #431407;
+  --color-pink-50: #fdf2f8;
+  --color-pink-100: #fce7f3;
+  --color-pink-200: #fbcfe8;
+  --color-pink-300: #f9a8d4;
+  --color-pink-400: #f472b6;
+  --color-pink-500: #ec4899;
+  --color-pink-600: #db2777;
+  --color-pink-700: #be185d;
+  --color-pink-800: #9d174d;
+  --color-pink-900: #831843;
+  --color-pink-950: #500724;
+  --color-purple-50: #faf5ff;
+  --color-purple-100: #f3e8ff;
+  --color-purple-200: #e9d5ff;
+  --color-purple-300: #d8b4fe;
+  --color-purple-400: #c084fc;
+  --color-purple-500: #a855f7;
+  --color-purple-600: #9333ea;
+  --color-purple-700: #7e22ce;
+  --color-purple-800: #6b21a8;
+  --color-purple-900: #581c87;
+  --color-purple-950: #3b0764;
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+  --color-red-950: #450a0a;
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-200: #fecdd3;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  --color-rose-700: #be123c;
+  --color-rose-800: #9f1239;
+  --color-rose-900: #881337;
+  --color-rose-950: #4c0519;
+  --color-sky-50: #f0f9ff;
+  --color-sky-100: #e0f2fe;
+  --color-sky-200: #bae6fd;
+  --color-sky-300: #7dd3fc;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0ea5e9;
+  --color-sky-600: #0284c7;
+  --color-sky-700: #0369a1;
+  --color-sky-800: #075985;
+  --color-sky-900: #0c4a6e;
+  --color-sky-950: #082f49;
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-200: #fef08a;
+  --color-yellow-300: #fde047;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
+  --color-yellow-700: #a16207;
+  --color-yellow-800: #854d0e;
+  --color-yellow-900: #713f12;
+  --color-yellow-950: #422006;
+}

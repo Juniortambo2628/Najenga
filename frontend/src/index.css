@@ -1,8 +1,16 @@
 @import "tailwindcss";
 @import "./okjt-theme.css";
+@import "./najenga/najenga.css";
+
+@plugin "@tailwindcss/forms";
 
 @source "../node_modules/@okjt/site/dist";
 @source "../node_modules/@okjt/ui/dist";
+@source "../node_modules/@okjt/dashboard/dist";
+@source "../../resources/js";
+
+/* Short wide screens: lists and side panels fill the window (the kit's and Najenga's `fit:`). */
+@custom-variant fit (@media (min-width: 1024px) and (min-height: 640px));
 
 body {
   background: #F4F1EE;
