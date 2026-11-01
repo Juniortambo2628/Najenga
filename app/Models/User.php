@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\PasskeyAuthenticatable;
+use Okjt\Kit\Accounts\HasAccounts;
 
 class User extends Authenticatable implements PasskeyUser
 {
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, PasskeyAuthenticatable;
+    use HasAccounts, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.

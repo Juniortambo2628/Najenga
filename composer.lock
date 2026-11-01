@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8d23e3decff8267afff0bf5becb43c6b",
+    "content-hash": "bdd3057fad5a8b7822b2b77003d157ea",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3471,6 +3471,64 @@
                 }
             ],
             "time": "2026-02-16T23:10:27+00:00"
+        },
+        {
+            "name": "okjt/laravel-kit",
+            "version": "v0.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Juniortambo2628/okjt-laravel-kit.git",
+                "reference": "4eacef584c5ac4fd834b008c9aa674ea931097b0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Juniortambo2628/okjt-laravel-kit/zipball/4eacef584c5ac4fd834b008c9aa674ea931097b0",
+                "reference": "4eacef584c5ac4fd834b008c9aa674ea931097b0",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "^12.0",
+                "illuminate/http": "^12.0",
+                "illuminate/routing": "^12.0",
+                "illuminate/support": "^12.0",
+                "php": "^8.2",
+                "pragmarx/google2fa": "^8.0|^9.0"
+            },
+            "require-dev": {
+                "bacon/bacon-qr-code": "^3.0",
+                "laravel/sanctum": "^4.0",
+                "laravel/socialite": "^5.0",
+                "orchestra/testbench": "^10.0",
+                "phpunit/phpunit": "^11.5"
+            },
+            "suggest": {
+                "ext-zip": "Backups (BackupService)",
+                "laravel/passkeys": "Passkeys (PasskeyController)",
+                "laravel/socialite": "Signing in with Google (SocialAuthController)"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Okjt\\Kit\\KitServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Okjt\\Kit\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "The server half of the OKJT kit: workspaces and roles, version history, and the middleware that enforces them, for Laravel 12 APIs.",
+            "support": {
+                "issues": "https://github.com/Juniortambo2628/okjt-laravel-kit/issues",
+                "source": "https://github.com/Juniortambo2628/okjt-laravel-kit/tree/v0.2.2"
+            },
+            "time": "2026-10-31T07:53:43+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -11219,5 +11277,8 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "platform-overrides": {
+        "php": "8.2.0"
+    },
+    "plugin-api-version": "2.6.0"
 }

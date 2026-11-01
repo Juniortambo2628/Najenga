@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Okjt\Kit\Workspace\Workspace;
 
-class Project extends Model
+class Project extends Model implements Workspace
 {
     use HasFactory, RecordsRevisions, TrashedForThirtyDays;
 
@@ -35,12 +36,26 @@ class Project extends Model
     {
         // The client and the assigned manager are always owner members (the
         // manager a co-owner), so the member list is the one list of who is in.
+        // The project belongs to its client's account, made the first time.
+        static::saving(function (Project $project) {
+            if ($project->client_id && (! $project->account_id || $project->isDirty('client_id'))) {
+                $client = User::find($project->client_id);
+                if ($client) {
+                    $project->account_id = Account::ownedBy($client)->id;
+                }
+            }
+        });
+
         static::saved(function (Project $project) {
             if ($project->wasChanged('client_id') || $project->wasRecentlyCreated) {
                 $project->grantRole($project->client_id, ProjectRole::OWNER);
             }
             if ($project->wasChanged('manager_id') || $project->wasRecentlyCreated) {
                 $project->grantRole($project->manager_id, ProjectRole::OWNER);
+                // A manager is staff on the client's account (owner of the projects they manage).
+                if ($project->manager_id && (int) $project->manager_id !== (int) $project->client_id && $project->account && ($manager = User::find($project->manager_id))) {
+                    $project->account->addStaff($manager);
+                }
             }
         });
 
@@ -76,6 +91,30 @@ class Project extends Model
             'end_date' => 'date',
             'budget' => 'decimal:2',
         ];
+    }
+
+    /** The client's account, which holds the project. */
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
+    }
+
+    /** The kit's workspace: a request names a project by its id. */
+    public static function findByKey(?string $key): ?self
+    {
+        return $key !== null && ctype_digit($key) ? static::find((int) $key) : null;
+    }
+
+    /** Every project stays open to its people, whatever its status. */
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    /** Projects have no public pages. */
+    public function isPublished(): bool
+    {
+        return true;
     }
 
     /**
