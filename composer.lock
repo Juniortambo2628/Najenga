@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9172bb64042cf8bbf0b5a2d9f034ef81",
+    "content-hash": "b60eaa3d889e1e7bbf869218a7b3fb1c",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3336,16 +3336,16 @@
         },
         {
             "name": "okjt/laravel-kit",
-            "version": "v0.2.2",
+            "version": "v0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Juniortambo2628/okjt-laravel-kit.git",
-                "reference": "4eacef584c5ac4fd834b008c9aa674ea931097b0"
+                "reference": "21f980edfffbd5f887d2cbfe8db2d1f6626f9490"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Juniortambo2628/okjt-laravel-kit/zipball/4eacef584c5ac4fd834b008c9aa674ea931097b0",
-                "reference": "4eacef584c5ac4fd834b008c9aa674ea931097b0",
+                "url": "https://api.github.com/repos/Juniortambo2628/okjt-laravel-kit/zipball/21f980edfffbd5f887d2cbfe8db2d1f6626f9490",
+                "reference": "21f980edfffbd5f887d2cbfe8db2d1f6626f9490",
                 "shasum": ""
             },
             "require": {
@@ -3388,9 +3388,9 @@
             "description": "The server half of the OKJT kit: workspaces and roles, version history, and the middleware that enforces them, for Laravel 12 APIs.",
             "support": {
                 "issues": "https://github.com/Juniortambo2628/okjt-laravel-kit/issues",
-                "source": "https://github.com/Juniortambo2628/okjt-laravel-kit/tree/v0.2.2"
+                "source": "https://github.com/Juniortambo2628/okjt-laravel-kit/tree/v0.4.0"
             },
-            "time": "2026-10-31T07:53:43+00:00"
+            "time": "2026-11-02T12:14:47+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
