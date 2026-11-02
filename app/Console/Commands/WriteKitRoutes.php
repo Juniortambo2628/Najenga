@@ -6,10 +6,9 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Route;
 
 /**
- * Writes Laravel's named routes (name => path) for the kit app in
- * frontend/, so its route('expenses.show', id) gives the same URLs as the
- * Inertia pages' Ziggy. Run after adding or renaming a route; a test fails
- * while the file is out of date.
+ * Writes Laravel's named routes (name => path) for the app in frontend/,
+ * whose route('expenses.show', id) builds its URLs from them. Run after
+ * adding or renaming a route; a test fails while the file is out of date.
  */
 class WriteKitRoutes extends Command
 {

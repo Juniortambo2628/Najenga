@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Revision;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class ActivityLogController extends Controller
 {
@@ -40,7 +40,7 @@ class ActivityLogController extends Controller
         // changed, field by field, by everyone in your projects); sign-ins and
         // account events stay in activity_logs, without the record-change
         // rows the history already shows.
-        return Inertia::render('ActivityLogs', [
+        return Page::render('ActivityLogs', [
             'tab' => $request->input('tab') === 'account' ? 'account' : 'changes',
             'changes' => Revision::visibleTo($request->user())
                 ->with('user')

@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class WhatsAppSettingsController extends Controller
 {
@@ -19,7 +19,7 @@ class WhatsAppSettingsController extends Controller
     {
         $mask = fn (?string $v) => $v ? substr($v, 0, 4) . str_repeat('*', max(0, strlen($v) - 8)) . substr($v, -4) : null;
 
-        return Inertia::render('WhatsApp/Settings', [
+        return Page::render('WhatsApp/Settings', [
             'config' => [
                 'app_id' => config('services.meta.whatsapp_app_id'),
                 'app_secret_masked' => $mask(config('services.meta.whatsapp_app_secret')),

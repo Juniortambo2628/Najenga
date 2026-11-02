@@ -13,8 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
-use Inertia\Response;
+use App\Http\Page;
 
 class ProfileController extends Controller
 {
@@ -24,7 +23,7 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request, TwoFactorAuthenticator $totp): Response
+    public function edit(Request $request, TwoFactorAuthenticator $totp): Page
     {
         $user = $request->user();
         $digits = preg_replace('/[^\d]/', '', (string) ($user->whatsapp_wa_id ?? $user->phone));
@@ -58,7 +57,7 @@ class ProfileController extends Controller
                 'created_at' => $p->created_at?->toIso8601String(),
             ]);
 
-        return Inertia::render('Profile/Edit', [
+        return Page::render('Profile/Edit', [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
             'passkeysCount' => $user->passkeys()->count(),
@@ -127,11 +126,11 @@ class ProfileController extends Controller
     /**
      * Display the two-factor authentication management page.
      */
-    public function twoFactor(Request $request): Response
+    public function twoFactor(Request $request): Page
     {
         $user = $request->user();
 
-        return Inertia::render('Profile/TwoFactor', [
+        return Page::render('Profile/TwoFactor', [
             'enabled' => ! is_null($user->two_factor_confirmed_at),
             'pending' => ! is_null($user->two_factor_secret) && is_null($user->two_factor_confirmed_at),
         ]);
@@ -140,9 +139,9 @@ class ProfileController extends Controller
     /**
      * Display the passkey management page.
      */
-    public function passkeys(Request $request): Response
+    public function passkeys(Request $request): Page
     {
-        return Inertia::render('Profile/Passkeys', [
+        return Page::render('Profile/Passkeys', [
             'passkeys' => $request->user()
                 ->passkeys()
                 ->orderByDesc('created_at')

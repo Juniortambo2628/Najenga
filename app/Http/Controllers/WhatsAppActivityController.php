@@ -11,8 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
-use Inertia\Response;
+use App\Http\Page;
 
 /**
  * The user-visible /whatsapp page: a timeline of inbound + outbound WhatsApp
@@ -26,7 +25,7 @@ class WhatsAppActivityController extends Controller
     private const LOGS_PER_PAGE = 100;
     private const FILED_PER_LIST = 25;
 
-    public function index(Request $request): Response
+    public function index(Request $request): Page
     {
         $user = $request->user();
         $isAdmin = (bool) $user?->is_superadmin;
@@ -126,7 +125,7 @@ class WhatsAppActivityController extends Controller
                 ->where('status', 'failed')->count(),
         ];
 
-        return Inertia::render('WhatsApp/Activity', [
+        return Page::render('WhatsApp/Activity', [
             'isAdmin' => $isAdmin,
             'filters' => [
                 'direction' => $direction ?: 'all',

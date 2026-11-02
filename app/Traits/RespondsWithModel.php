@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Http\Page;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,10 +13,11 @@ use Symfony\Component\HttpFoundation\Response;
  * Two kinds of caller hit the same URL:
  *
  *   - axios sends `Accept: application/json` and wants a JSON body;
- *   - Inertia (router.post/patch/delete) sends `X-Inertia: true` and wants a
- *     302 back to where the user came from, so the flash toast fires.
+ *   - a page's form (router.post/patch/delete in the app) sends
+ *     `X-Kit-Page` and wants a 302 back to where the user came from, so the
+ *     flash toast fires.
  *
- * `wantsJson() && !X-Inertia` is what tells them apart, so every endpoint
+ * `wantsJson() && !X-Kit-Page` is what tells them apart, so every endpoint
  * reachable both ways returns through one of these two methods instead of
  * repeating the condition.
  *
@@ -33,7 +35,7 @@ trait RespondsWithModel
      */
     protected function respondOrRedirect(Request $request, string $successMessage, ?JsonResponse $json = null): Response
     {
-        if ($request->wantsJson() && !$request->header('X-Inertia')) {
+        if ($request->wantsJson() && ! Page::requested($request)) {
             return $json ?? response()->json(['success' => true, 'message' => $successMessage]);
         }
 
@@ -48,7 +50,7 @@ trait RespondsWithModel
      */
     protected function respondErrorOrRedirect(Request $request, string $errorMessage, ?JsonResponse $json = null): Response
     {
-        if ($request->wantsJson() && !$request->header('X-Inertia')) {
+        if ($request->wantsJson() && ! Page::requested($request)) {
             return $json ?? response()->json(['message' => $errorMessage], 400);
         }
 

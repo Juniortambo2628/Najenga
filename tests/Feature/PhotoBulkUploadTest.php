@@ -113,7 +113,7 @@ class PhotoBulkUploadTest extends TestCase
         $this->actingAs($this->user)
             ->get('/photos/create')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
+            ->assertPage(fn ($page) => $page
                 ->component('Photos/Create')
                 ->has('uploadLimits.maxFiles')
                 ->has('uploadLimits.maxBytes')
@@ -127,7 +127,7 @@ class PhotoBulkUploadTest extends TestCase
 
         $this->actingAs($this->user)
             ->get('/photos')
-            ->assertInertia(fn ($page) => $page
+            ->assertPage(fn ($page) => $page
                 ->where('photos.0.title', 'new')
                 ->where('photos.0.photo_date', 'Jun 22, 2026')
                 ->where('photos.1.title', 'old'));

@@ -24,14 +24,14 @@ class DetailPagePermissionsTest extends TestCase
         $milestone = ProjectTimeline::factory()->create(['project_id' => $project->id]);
 
         $this->actingAs($owner)->get("/expenses/{$expense->id}")
-            ->assertInertia(fn ($page) => $page->component('Expenses/Show')->where('can.update', true));
+            ->assertPage(fn ($page) => $page->component('Expenses/Show')->where('can.update', true));
         $this->actingAs($viewer)->get("/expenses/{$expense->id}")
-            ->assertInertia(fn ($page) => $page->where('can.update', false));
+            ->assertPage(fn ($page) => $page->where('can.update', false));
 
         $this->actingAs($owner)->get("/timeline/{$milestone->id}")
-            ->assertInertia(fn ($page) => $page->component('Timeline/Show')->where('can.update', true));
+            ->assertPage(fn ($page) => $page->component('Timeline/Show')->where('can.update', true));
         $this->actingAs($viewer)->get("/timeline/{$milestone->id}")
-            ->assertInertia(fn ($page) => $page->where('can.update', false));
+            ->assertPage(fn ($page) => $page->where('can.update', false));
     }
 
     public function test_the_expense_page_says_how_its_receipt_was_checked(): void
@@ -41,7 +41,7 @@ class DetailPagePermissionsTest extends TestCase
         \App\Models\Receipt::factory()->create(['expense_id' => $expense->id, 'verification_status' => 'verified']);
 
         $this->actingAs($owner)->get("/expenses/{$expense->id}")
-            ->assertInertia(fn ($page) => $page->where('expense.receipt.verification_status', 'verified'));
+            ->assertPage(fn ($page) => $page->where('expense.receipt.verification_status', 'verified'));
     }
 
     public function test_the_user_page_offers_edit_to_admins(): void
@@ -50,6 +50,6 @@ class DetailPagePermissionsTest extends TestCase
         $member = User::factory()->create(['role' => 'client']);
 
         $this->actingAs($admin)->get("/users/{$member->id}")
-            ->assertInertia(fn ($page) => $page->component('Users/Show')->where('can.update', true));
+            ->assertPage(fn ($page) => $page->component('Users/Show')->where('can.update', true));
     }
 }

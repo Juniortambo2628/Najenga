@@ -29,7 +29,7 @@ class ReceiptController extends Controller
 
     public function verification()
     {
-        return \Inertia\Inertia::render('ReceiptVerification', [
+        return \App\Http\Page::render('ReceiptVerification', [
             'projects' => $this->getEditableProjects(),
         ]);
     }
@@ -38,7 +38,7 @@ class ReceiptController extends Controller
     {
         $receipts = \App\Models\Receipt::whereHas('expense', fn ($q) => $q->visibleTo(auth()->user()))->orderBy('created_at', 'desc')->get();
 
-        return \Inertia\Inertia::render('Receipts/Index', [
+        return \App\Http\Page::render('Receipts/Index', [
             'receipts' => $receipts,
         ]);
     }
@@ -339,7 +339,7 @@ class ReceiptController extends Controller
 
         $receipt->load('expense.project:id,name');
 
-        return \Inertia\Inertia::render('Receipts/Show', [
+        return \App\Http\Page::render('Receipts/Show', [
             'receipt' => $receipt,
             'fileUrl' => $receipt->expense?->getFirstMediaUrl('receipt') ?: null,
         ]);
@@ -349,7 +349,7 @@ class ReceiptController extends Controller
     {
         $this->authorize('view', $receipt);
 
-        return \Inertia\Inertia::render('Receipts/Edit', [
+        return \App\Http\Page::render('Receipts/Edit', [
             'receipt' => $receipt->load('expense'),
         ]);
     }

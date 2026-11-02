@@ -6,7 +6,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Support\ProjectRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\AssertablePage as Assert;
 use Tests\TestCase;
 
 class ProjectRolesSharedTest extends TestCase
@@ -24,7 +24,7 @@ class ProjectRolesSharedTest extends TestCase
 
         $this->actingAs($me)
             ->get('/dashboard')
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->has('auth.projects', 2)
                 ->where('auth.projects.0', ['id' => $shared->id, 'name' => 'A shared', 'role' => 'viewer'])
                 ->where('auth.projects.1', ['id' => $mine->id, 'name' => 'B mine', 'role' => 'owner']));

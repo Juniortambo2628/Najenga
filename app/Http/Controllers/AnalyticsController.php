@@ -13,7 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class AnalyticsController extends Controller
 {
@@ -36,7 +36,7 @@ class AnalyticsController extends Controller
             $user, $projectId, $startDate, $endDate, $period
         ));
 
-        return Inertia::render('Analytics', $payload);
+        return Page::render('Analytics', $payload);
     }
 
     private function buildPayload(User $user, $projectId, $startDate, $endDate, $period): array

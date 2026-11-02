@@ -7,7 +7,7 @@ use App\Models\WhatsAppLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Inertia\Testing\AssertableInertia;
+use Tests\Support\AssertablePage;
 use Tests\TestCase;
 
 class WhatsAppVerificationTest extends TestCase
@@ -206,7 +206,7 @@ class WhatsAppVerificationTest extends TestCase
         $this->actingAs($user)
             ->get('/settings')
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->component('Profile/Edit')
                 ->where('whatsapp.phone', '+0717000001')
                 ->where('whatsapp.verified', false));
@@ -215,7 +215,7 @@ class WhatsAppVerificationTest extends TestCase
 
         $this->actingAs($user)
             ->get('/settings')
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->where('whatsapp.verified', true));
     }
 }

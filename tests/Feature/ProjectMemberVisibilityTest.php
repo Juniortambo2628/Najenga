@@ -9,7 +9,7 @@ use App\Models\ProjectTimeline;
 use App\Models\User;
 use App\Support\ProjectRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\AssertablePage as Assert;
 use Tests\TestCase;
 
 /**
@@ -50,19 +50,19 @@ class ProjectMemberVisibilityTest extends TestCase
         ProjectTimeline::factory()->create(['project_id' => $this->project->id]);
 
         $this->actingAs($viewer)->get('/expenses')
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->has('expenses', 1)
                 ->where('expenses.0.id', $this->expense->id)
                 ->where('projects.0', ['id' => $this->project->id, 'name' => 'Kitengela site', 'role' => 'viewer']));
 
         $this->actingAs($viewer)->get('/photos')
-            ->assertInertia(fn (Assert $page) => $page->has('photos', 1)->where('photos.0.id', $photo->id));
+            ->assertPage(fn (Assert $page) => $page->has('photos', 1)->where('photos.0.id', $photo->id));
 
         $this->actingAs($viewer)->get('/timeline')
-            ->assertInertia(fn (Assert $page) => $page->has('timelines', 1)->has('expenses', 1));
+            ->assertPage(fn (Assert $page) => $page->has('timelines', 1)->has('expenses', 1));
 
         $this->actingAs($viewer)->get('/overview')
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->has('projects', 1)
                 ->where('projects.0.id', $this->project->id)
                 ->where('projects.0.my_role', 'viewer'));
@@ -73,7 +73,7 @@ class ProjectMemberVisibilityTest extends TestCase
         $outsider = User::factory()->create(['role' => 'client']);
 
         $this->actingAs($outsider)->get('/expenses')
-            ->assertInertia(fn (Assert $page) => $page->has('expenses', 0)->has('projects', 0));
+            ->assertPage(fn (Assert $page) => $page->has('expenses', 0)->has('projects', 0));
         $this->actingAs($outsider)->get("/expenses/{$this->expense->id}")->assertForbidden();
     }
 

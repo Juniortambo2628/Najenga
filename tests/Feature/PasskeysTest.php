@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Inertia\Testing\AssertableInertia;
+use Tests\Support\AssertablePage;
 use Laravel\Passkeys\Actions\StorePasskey;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\Support\WebAuthn;
@@ -166,7 +166,7 @@ class PasskeysTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.passkeys'))
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->component('Profile/Passkeys')
                 ->has('passkeys', 1)
                 ->where('passkeys.0.id', $passkey->id)
@@ -174,7 +174,7 @@ class PasskeysTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('settings'))
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->where('passkeysCount', 1));
     }
 }

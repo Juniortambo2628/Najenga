@@ -15,8 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
-use Inertia\Response;
+use App\Http\Page;
 
 /**
  * Email-based one-time-code login. The flow is:
@@ -36,9 +35,9 @@ class LoginCodeController extends Controller
     private const VERIFY_ATTEMPTS = 6;
     private const VERIFY_WINDOW = 900;
 
-    public function create(Request $request): Response
+    public function create(Request $request): Page
     {
-        return Inertia::render('Auth/LoginCode', [
+        return Page::render('Auth/LoginCode', [
             'email' => (string) $request->session()->get('login_code.email', ''),
             'awaitingCode' => (bool) $request->session()->get('login_code.awaiting', false),
         ]);

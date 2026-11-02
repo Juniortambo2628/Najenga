@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia;
+use Tests\Support\AssertablePage;
 use Tests\TestCase;
 
 class UserSerializationTest extends TestCase
@@ -25,7 +25,7 @@ class UserSerializationTest extends TestCase
         $this->assertArrayNotHasKey('two_factor_recovery_codes', $fresh->toArray());
     }
 
-    public function test_two_factor_secrets_are_not_in_inertia_auth_props(): void
+    public function test_two_factor_secrets_are_not_in_the_pages_auth_props(): void
     {
         $user = User::factory()->create();
         $user->forceFill([
@@ -36,7 +36,7 @@ class UserSerializationTest extends TestCase
         $this->actingAs($user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->where('auth.user.id', $user->id)
                 ->missing('auth.user.two_factor_secret')
                 ->missing('auth.user.two_factor_recovery_codes'));

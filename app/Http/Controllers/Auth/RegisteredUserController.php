@@ -12,21 +12,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Inertia\Inertia;
-use Inertia\Response;
+use App\Http\Page;
 
 class RegisteredUserController extends Controller
 {
     /**
      * Display the registration view.
      */
-    public function create(Request $request): Response
+    public function create(Request $request): Page
     {
         // Arriving from a project invitation: suggest the invited address.
         $pending = $request->session()->get(ProjectInvitations::SESSION_KEY);
         $invitation = $pending ? ProjectInvitation::with('project:id,name')->find($pending['id']) : null;
 
-        return Inertia::render('Auth/Register', [
+        return Page::render('Auth/Register', [
             'email' => $invitation?->email ?? $request->query('email'),
             'joiningProject' => $invitation?->project?->name,
         ]);

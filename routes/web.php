@@ -4,7 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use App\Http\Page;
 
 Route::get('/health', function () {
     $checks = ['app' => true, 'db' => false, 'cache' => false, 'storage_writable' => false];
@@ -16,7 +16,7 @@ Route::get('/health', function () {
 })->name('health');
 
 // The public pages live in the OKJT kit app (frontend/, @okjt/site). Laravel
-// serves its index.html for them; the names stay for route() in Inertia pages.
+// serves its index.html for them; route() names are used by the app (routes.json).
 Route::get('/', \App\Http\Controllers\SpaController::class)->name('home');
 Route::get('/for-homeowners', \App\Http\Controllers\SpaController::class)->name('journey.homeowners');
 Route::get('/for-contractors', \App\Http\Controllers\SpaController::class)->name('journey.contractors');
@@ -192,7 +192,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/whatsapp/settings', [\App\Http\Controllers\WhatsAppSettingsController::class, 'index'])->name('whatsapp.settings');
         Route::post('/whatsapp/settings/test-send', [\App\Http\Controllers\WhatsAppSettingsController::class, 'testSend'])->name('whatsapp.test-send');
     });
-    Route::get('/messages', fn() => \Inertia\Inertia::render('Messages'))->name('messages');
+    Route::get('/messages', fn() => \App\Http\Page::render('Messages'))->name('messages');
     Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index'])->name('analytics');
 
     // Full-text search (MeiliSearch)

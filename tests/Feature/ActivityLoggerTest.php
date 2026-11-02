@@ -7,7 +7,7 @@ use App\Models\Expense;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia;
+use Tests\Support\AssertablePage;
 use Tests\TestCase;
 
 class ActivityLoggerTest extends TestCase
@@ -102,7 +102,7 @@ class ActivityLoggerTest extends TestCase
         $this->actingAs($me)
             ->get('/activity-logs')
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->component('ActivityLogs')
                 ->has('logs.data', 1)
                 ->where('logs.data.0.description', 'mine'));
@@ -118,7 +118,7 @@ class ActivityLoggerTest extends TestCase
         $this->actingAs($user)
             ->get('/activity-logs')
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->component('ActivityLogs')
                 ->has('logs.data', 1));
 

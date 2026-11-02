@@ -6,7 +6,7 @@ use App\Models\Document;
 use App\Models\Expense;
 use App\Models\Photo;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Http\Page;
 use Laravel\Scout\Builder;
 
 /**
@@ -34,7 +34,7 @@ class SearchController extends Controller
 
         $results = $query === '' ? [] : $this->runSearch($query, $type, $perPage);
 
-        return Inertia::render('Search/Index', [
+        return Page::render('Search/Index', [
             'query'   => $query,
             'type'    => $type,
             'results' => $results,

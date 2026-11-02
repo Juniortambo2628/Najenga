@@ -14,14 +14,14 @@ use App\Traits\BatchDownloads;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class PhotoController extends Controller
 {
     use HasProjectScope, AttachesMediaFromRequest, BatchDeletes, BatchDownloads, RespondsWithModel;
     public function index()
     {
-        return Inertia::render('Photos', [
+        return Page::render('Photos', [
             'photos' => Photo::visibleTo(auth()->user())
                 ->with('project:id,name')
                 ->orderByRaw('COALESCE(taken_at, photo_date, created_at) DESC')
@@ -44,7 +44,7 @@ class PhotoController extends Controller
 
     public function create()
     {
-        return Inertia::render('Photos/Create', [
+        return Page::render('Photos/Create', [
             'projects' => $this->getEditableProjects(),
             'uploadLimits' => [
                 'maxFiles' => max(1, min((int) config('photos.upload_batch_size'), (int) ini_get('max_file_uploads') ?: 20)),
@@ -176,7 +176,7 @@ class PhotoController extends Controller
     {
         $this->authorize('view', $photo);
 
-        return Inertia::render('Photos/Show', [
+        return Page::render('Photos/Show', [
             'photo' => $photo->load('project:id,name')
                 ->append('photo_url', 'thumb_url', 'preview_url'),
             'can' => ['update' => auth()->user()->can('update', $photo)],
@@ -187,7 +187,7 @@ class PhotoController extends Controller
     {
         $this->authorize('update', $photo);
 
-        return Inertia::render('Photos/Edit', [
+        return Page::render('Photos/Edit', [
             'photo' => $photo,
             'projects' => $this->getEditableProjects(),
         ]);

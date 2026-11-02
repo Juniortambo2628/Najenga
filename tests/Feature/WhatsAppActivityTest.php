@@ -15,14 +15,14 @@ class WhatsAppActivityTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * inertiaProps() (from inertiajs/inertia-laravel Testing) extracts the
-     * props out of the Inertia page object without needing to render the
+     * page() (tests/TestCase.php) extracts the props out of the page object
+     * without needing to render the
      * app.blade.php + Vite manifest, so tests pass locally on sqlite too.
      */
     private function props(string $url, ?User $as = null): array
     {
         $test = $as ? $this->actingAs($as) : $this;
-        return $test->get($url)->inertiaPage()['props'];
+        return $test->get($url)->page()['props'];
     }
 
     public function test_guest_is_bounced_to_login(): void

@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\AssertablePage as Assert;
 use Tests\TestCase;
 
 class TourTest extends TestCase
@@ -27,7 +27,7 @@ class TourTest extends TestCase
 
         // Every page knows, so the tour doesn't start on another device.
         $this->actingAs($user)->get('/dashboard')
-            ->assertInertia(fn (Assert $page) => $page->whereNot('auth.user.tour_completed_at', null));
+            ->assertPage(fn (Assert $page) => $page->whereNot('auth.user.tour_completed_at', null));
     }
 
     public function test_guests_cannot_finish_the_tour(): void

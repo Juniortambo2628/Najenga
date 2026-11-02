@@ -79,7 +79,7 @@ class ProjectController extends Controller
                 ],
             ]);
 
-        return \Inertia\Inertia::render('Overview', [
+        return \App\Http\Page::render('Overview', [
             'projects' => $projects,
             // /overview?project=ID (old project links) picks that project.
             'focus' => $request->integer('project') ?: null,
@@ -88,7 +88,7 @@ class ProjectController extends Controller
 
     public function create()
     {
-        return \Inertia\Inertia::render('Projects/Create');
+        return \App\Http\Page::render('Projects/Create');
     }
 
     public function store(StoreProjectRequest $request)
@@ -117,7 +117,7 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        return \Inertia\Inertia::render('Projects/Edit', [
+        return \App\Http\Page::render('Projects/Edit', [
             'project' => $project,
         ]);
     }

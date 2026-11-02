@@ -8,7 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia;
+use Tests\Support\AssertablePage;
 use Tests\TestCase;
 
 class ActivityLogControllerTest extends TestCase
@@ -62,7 +62,7 @@ class ActivityLogControllerTest extends TestCase
         $this->actingAs($this->user)
             ->get('/activity-logs')
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->component('ActivityLogs')
                 ->where('tab', 'changes')
                 // A member's change shows to the project's owner.
@@ -74,7 +74,7 @@ class ActivityLogControllerTest extends TestCase
 
         $this->actingAs(User::factory()->create())
             ->get('/activity-logs?tab=account')
-            ->assertInertia(fn (AssertableInertia $page) => $page
+            ->assertPage(fn (AssertablePage $page) => $page
                 ->where('tab', 'account')
                 ->has('changes.data', 0));
     }

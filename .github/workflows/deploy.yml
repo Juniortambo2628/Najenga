@@ -1,7 +1,7 @@
 name: Deploy to Production
 
 # Deploys via the shared deploy-kit (Juniortambo2628/OKJT): the runner builds
-# the app (composer + Vite), rsyncs a release into
+# the app (composer, then frontend/ with Vite), rsyncs a release into
 # ~/web/najenga.okjtech.co.ke/private/najenga/releases/, laravel-activate.sh
 # links shared .env/storage, migrates, switches the `current` symlink and
 # restarts the PM2 scheduler. Rollback = repoint `current`
@@ -28,7 +28,8 @@ jobs:
       domain: najenga.okjtech.co.ke
       app_name: najenga
       health_path: /health
-      spa_dir: frontend   # the OKJT kit app (public pages); built into public/
+      build_assets: false # no root build any more: the app is frontend/
+      spa_dir: frontend   # the app (public pages, sign-in, dashboard); built into public/
       queue: false        # QUEUE_CONNECTION=sync; set true if it moves to database
       scheduler: true     # daily model:prune + the Monday 08:00 UTC WhatsApp digest
     secrets:

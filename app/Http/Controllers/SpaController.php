@@ -7,7 +7,7 @@ use Illuminate\Http\Response;
 /**
  * Serves the OKJT kit app (frontend/): its built index.html, which
  * deploy-kit copies into public/ (spa_dir). The public pages get it as it is;
- * a dashboard page gets it with its data inside (see ServeKitPages).
+ * every other page gets it with its data inside (App\Http\Page).
  */
 class SpaController extends Controller
 {

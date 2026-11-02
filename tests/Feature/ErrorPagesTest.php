@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Page;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
@@ -73,54 +73,48 @@ class ErrorPagesTest extends TestCase
         }
     }
 
-    public function test_an_inertia_visit_to_a_missing_route_gets_the_react_error_page(): void
+    public function test_the_app_asking_for_a_missing_route_gets_the_error_page(): void
     {
-        $response = $this->get(self::MISSING, ['X-Inertia' => 'true']);
+        $response = $this->get(self::MISSING, ['X-Kit-Page' => '1']);
 
-        // assertInertia() reads viewData('page'), which only exists on the
-        // HTML rendering of the root template - an X-Inertia request gets
-        // JSON back, so assert on that body directly.
         $response->assertStatus(404);
-        $response->assertHeader('X-Inertia', 'true');
+        $response->assertHeader('X-Kit-Page', 'true');
         $this->assertSame('Errors', $response->json('component'));
         $this->assertSame(404, $response->json('props.status'));
     }
 
     public function test_the_error_page_carries_the_asset_version(): void
     {
-        $response = $this->get(self::MISSING, ['X-Inertia' => 'true']);
+        $response = $this->get(self::MISSING, ['X-Kit-Page' => '1']);
 
-        // Without this the client would store version "", then have its
-        // next visit answered with a 409 reload.
-        $this->assertSame(
-            (string) (new HandleInertiaRequests)->version(Request::create(self::MISSING)),
-            $response->json('version')
-        );
+        // Without it the app would take the error page for a new build and reload.
+        $this->assertSame(Page::version(), $response->json('version'));
+        $this->assertNotSame('', $response->json('version'));
     }
 
     public function test_a_forbidden_page_reports_the_real_status_to_the_kit_app(): void
     {
-        // /users is drawn by the kit app (config('najenga.kit_pages')): its
-        // data request gets the Errors page, at the real status.
+        // The app's request for /users' data gets the Errors page, at the real status.
         $user = User::factory()->create(['role' => 'client']);
 
         $response = $this->actingAs($user)->get('/users', ['X-Kit-Page' => '1']);
 
         $response->assertStatus(403);
-        $response->assertHeader('X-Inertia', 'true');
+        $response->assertHeader('X-Kit-Page', 'true');
         $this->assertSame('Errors', $response->json('component'));
         $this->assertSame(403, $response->json('props.status'));
     }
 
     public function test_a_forbidden_page_opened_in_the_browser_is_a_403_too(): void
     {
+        // The Blade page, which renders even when the app's build is broken.
         $user = User::factory()->create(['role' => 'client']);
 
         $response = $this->actingAs($user)->get('/users');
 
         $response->assertStatus(403);
-        $response->assertSee('najenga-spa-fixture', false);
-        $response->assertInertia(fn ($page) => $page->component('Errors')->where('status', 403));
+        $response->assertSee('Back to home');
+        $response->assertDontSee('id="kit-page"', false);
     }
 
     public function test_json_requests_are_not_handed_the_react_error_page(): void
@@ -142,7 +136,7 @@ class ErrorPagesTest extends TestCase
             'email' => 'nobody@example.com',
             'password' => 'wrong-password',
         ], [
-            'X-Inertia' => 'true',
+            'X-Kit-Page' => '1',
             'Accept' => 'text/html',
         ]);
 
@@ -150,15 +144,9 @@ class ErrorPagesTest extends TestCase
         $response->assertSessionHasErrors('email');
     }
 
-    public function test_a_signed_out_inertia_visit_is_sent_to_login(): void
+    public function test_the_app_asking_for_a_page_while_signed_out_is_sent_to_login(): void
     {
-        $headers = [
-            'X-Inertia' => 'true',
-            'Accept' => 'text/html',
-            'X-Inertia-Version' => (string) (new HandleInertiaRequests)->version(Request::create('/activity-logs')),
-        ];
-
-        $response = $this->get('/activity-logs', $headers);
+        $response = $this->get('/activity-logs', ['X-Kit-Page' => '1', 'Accept' => 'text/html']);
 
         $response->assertRedirect('/login');
     }

@@ -20,7 +20,7 @@ export default function App() {
             <Route path="/for-contractors" element={<Journey id="contractors" />} />
             <Route path="/privacy" element={<Legal doc="privacy" />} />
             <Route path="/terms" element={<Legal doc="terms" />} />
-            {/* Everything else: the dashboard. A page that hasn't moved yet reloads into Laravel. */}
+            {/* Everything else: the dashboard and sign-in pages (App\Http\Page). */}
             <Route path="*" element={<DashboardApp />} />
           </Routes>
         </Suspense>

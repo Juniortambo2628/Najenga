@@ -33,8 +33,6 @@ export async function request(method, url, { data, params, headers = {} } = {}) 
     const error = new Error(body?.message || `Request failed (${res.status})`);
     error.status = res.status;
     error.response = { status: res.status, data: body };
-    // Inertia's "reload into this page" answer (a page that hasn't moved).
-    error.location = res.headers.get('X-Inertia-Location');
     if (res.status === 401 || res.status === 419) window.location.assign('/login');
     throw error;
   }
@@ -50,9 +48,9 @@ export const http = {
 };
 
 /**
- * A page's data: the props its controller gives Inertia
- * (App\Http\Middleware\ServeKitPages). A page that hasn't moved to the kit
- * app answers with HTML instead: load it as a page of its own.
+ * A page's data: what its controller returns (App\Http\Page). Anything
+ * that isn't a page (a file download, a URL outside the app) answers with
+ * something else: load it as a page of its own.
  */
 export async function fetchPage(url) {
   let data;
@@ -60,12 +58,8 @@ export async function fetchPage(url) {
     // Accept as Inertia sends it: some controllers answer JSON callers differently.
     ({ data } = await request('GET', url, { headers: { 'X-Kit-Page': '1', Accept: 'text/html, application/xhtml+xml' } }));
   } catch (error) {
-    // A 403/404 comes back as Najenga's Errors page; a page that hasn't moved, as a reload.
+    // A 403/404 comes back as Najenga's Errors page.
     if (error.response?.data?.component) return error.response.data;
-    if (error.location) {
-      window.location.assign(error.location);
-      return new Promise(() => {});
-    }
     throw error;
   }
   if (!data?.component) {

@@ -15,12 +15,12 @@ use Tests\TestCase;
  * Every mutation in this app is reachable from two sides of the same URL:
  *
  *   - axios sends `Accept: application/json` and reads a JSON body;
- *   - Inertia (router.post/patch/delete) sends `X-Inertia: true`, expects a
- *     302 back to the referrer and reads the flash message.
+ *   - a page's form (router.post/patch/delete in the app) sends `X-Kit-Page`,
+ *     expects a 302 back to the referrer and reads the flash message.
  *
- * Getting it wrong is silent: a JSON body to Inertia raises Inertia's "invalid
- * response" modal instead of saving, and a redirect to axios saves the row but
- * hands the caller a page of HTML.
+ * Getting it wrong is silent: a JSON body to a page's form leaves the app
+ * without a page to show, and a redirect to axios saves the row but hands
+ * the caller a page of HTML.
  */
 class MutationResponseTest extends TestCase
 {
@@ -37,11 +37,11 @@ class MutationResponseTest extends TestCase
         $this->project = Project::factory()->create(['client_id' => $this->user->id]);
     }
 
-    /** The headers an Inertia visit actually sends. */
-    private function inertia()
+    /** The headers a page's form sends. */
+    private function form()
     {
         return $this->actingAs($this->user)
-            ->withHeaders(['X-Inertia' => 'true', 'Accept' => 'text/html']);
+            ->withHeaders(['X-Kit-Page' => '1', 'Accept' => 'text/html, application/xhtml+xml']);
     }
 
     private function expense(): Expense
@@ -64,11 +64,11 @@ class MutationResponseTest extends TestCase
         $this->assertDatabaseHas('expenses', ['id' => $expense->id, 'title' => 'Renamed']);
     }
 
-    public function test_inertia_caller_updating_an_expense_gets_a_redirect_and_flash(): void
+    public function test_a_pages_form_updating_an_expense_gets_a_redirect_and_flash(): void
     {
         $expense = $this->expense();
 
-        $this->inertia()
+        $this->form()
             ->patch("/expenses/{$expense->id}", ['title' => 'Renamed'])
             ->assertRedirect()
             ->assertSessionHas('success', 'Expense updated successfully');
@@ -91,14 +91,14 @@ class MutationResponseTest extends TestCase
         $this->assertDatabaseHas('photos', ['id' => $photo->id, 'title' => 'Renamed']);
     }
 
-    public function test_inertia_caller_updating_a_photo_gets_a_redirect_and_flash(): void
+    public function test_a_pages_form_updating_a_photo_gets_a_redirect_and_flash(): void
     {
         $photo = Photo::factory()->create([
             'user_id' => $this->user->id,
             'project_id' => $this->project->id,
         ]);
 
-        $this->inertia()
+        $this->form()
             ->patch("/photos/{$photo->id}", ['title' => 'Renamed'])
             ->assertRedirect()
             ->assertSessionHas('success', 'Photo updated successfully');
@@ -106,27 +106,27 @@ class MutationResponseTest extends TestCase
         $this->assertDatabaseHas('photos', ['id' => $photo->id, 'title' => 'Renamed']);
     }
 
-    public function test_json_accept_header_does_not_sway_an_inertia_visit(): void
+    public function test_json_accept_header_does_not_sway_a_pages_form(): void
     {
-        // The second half of the rule: X-Inertia wins over what the client says
-        // it accepts, otherwise a visit could still be handed a JSON body.
+        // The second half of the rule: X-Kit-Page wins over what the client
+        // says it accepts, otherwise a form could still be handed a JSON body.
         $photo = Photo::factory()->create([
             'user_id' => $this->user->id,
             'project_id' => $this->project->id,
         ]);
 
         $this->actingAs($this->user)
-            ->withHeaders(['X-Inertia' => 'true', 'Accept' => 'application/json'])
+            ->withHeaders(['X-Kit-Page' => '1', 'Accept' => 'application/json'])
             ->patch("/photos/{$photo->id}", ['title' => 'Renamed'])
             ->assertRedirect()
             ->assertSessionHas('success', 'Photo updated successfully');
     }
 
-    public function test_inertia_photo_upload_redirects_instead_of_returning_json(): void
+    public function test_a_pages_photo_upload_redirects_instead_of_returning_json(): void
     {
         Storage::fake('public');
 
-        $this->inertia()
+        $this->form()
             ->post('/photos', [
                 'photos' => [UploadedFile::fake()->image('site-plan.jpg')],
                 'project_id' => $this->project->id,
@@ -150,11 +150,11 @@ class MutationResponseTest extends TestCase
             ->assertJsonStructure(['message', 'photos']);
     }
 
-    public function test_inertia_document_upload_redirects_instead_of_returning_json(): void
+    public function test_a_pages_document_upload_redirects_instead_of_returning_json(): void
     {
         Storage::fake('public');
 
-        $this->inertia()
+        $this->form()
             ->post('/documents', [
                 // A text file on purpose: the response shape is what is under
                 // test, and PDFs run Spatie's image conversions, which are far
@@ -175,7 +175,7 @@ class MutationResponseTest extends TestCase
         $userWithoutProject = User::factory()->create(['role' => 'client']);
 
         $this->actingAs($userWithoutProject)
-            ->withHeaders(['X-Inertia' => 'true', 'Accept' => 'text/html'])
+            ->withHeaders(['X-Kit-Page' => '1', 'Accept' => 'text/html'])
             ->post('/photos', [
                 'photos' => [UploadedFile::fake()->image('site-plan.jpg')],
             ])

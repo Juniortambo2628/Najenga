@@ -8,7 +8,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Support\ProjectRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\AssertablePage as Assert;
 use Tests\TestCase;
 
 /** Viewers aren't offered what they can't do: filing into a project, editing a record. */
@@ -36,7 +36,7 @@ class ViewerFormsTest extends TestCase
         foreach (['/expenses/create', '/photos/create', '/documents/create', '/timeline/create'] as $url) {
             $this->actingAs($this->me)->get($url)
                 ->assertOk()
-                ->assertInertia(fn (Assert $page) => $page
+                ->assertPage(fn (Assert $page) => $page
                     ->has('projects', 1)
                     ->where('projects.0.name', 'Mine'));
         }
@@ -45,7 +45,7 @@ class ViewerFormsTest extends TestCase
     public function test_lists_still_name_every_project_you_can_see(): void
     {
         $this->actingAs($this->me)->get('/expenses')
-            ->assertInertia(fn (Assert $page) => $page->has('projects', 2));
+            ->assertPage(fn (Assert $page) => $page->has('projects', 2));
     }
 
     public function test_detail_pages_say_whether_you_can_edit(): void
@@ -56,10 +56,10 @@ class ViewerFormsTest extends TestCase
         $own = Document::factory()->create(['user_id' => $this->me->id, 'project_id' => $this->mine->id]);
 
         $this->actingAs($this->me)->get("/documents/{$theirs->id}")
-            ->assertOk()->assertInertia(fn (Assert $page) => $page->where('can.update', false));
+            ->assertOk()->assertPage(fn (Assert $page) => $page->where('can.update', false));
         $this->actingAs($this->me)->get("/photos/{$photo->id}")
-            ->assertOk()->assertInertia(fn (Assert $page) => $page->where('can.update', false));
+            ->assertOk()->assertPage(fn (Assert $page) => $page->where('can.update', false));
         $this->actingAs($this->me)->get("/documents/{$own->id}")
-            ->assertInertia(fn (Assert $page) => $page->where('can.update', true));
+            ->assertPage(fn (Assert $page) => $page->where('can.update', true));
     }
 }

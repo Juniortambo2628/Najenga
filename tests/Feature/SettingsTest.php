@@ -7,7 +7,7 @@ use App\Notifications\NewActivityNotification;
 use App\Notifications\WhatsAppWeeklyDigest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\AssertablePage as Assert;
 use Tests\TestCase;
 
 class SettingsTest extends TestCase
@@ -21,7 +21,7 @@ class SettingsTest extends TestCase
         $this->actingAs($user)
             ->get('/settings?section=preferences')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->component('Profile/Edit')
                 ->where('section', 'preferences')
                 ->where('preferences', User::PREFERENCE_DEFAULTS));

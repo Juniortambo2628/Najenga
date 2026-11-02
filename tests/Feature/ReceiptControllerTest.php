@@ -326,7 +326,7 @@ class ReceiptControllerTest extends TestCase
 
         $this->actingAs($this->user)
             ->get("/receipts/{$receipt->id}")
-            ->assertInertia(fn ($page) => $page->component('Receipts/Show')
+            ->assertPage(fn ($page) => $page->component('Receipts/Show')
                 ->where('receipt.expense.id', $expense->id)
                 ->where('fileUrl', fn ($url) => str_contains($url, 'slip')));
     }

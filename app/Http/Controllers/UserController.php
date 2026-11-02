@@ -6,20 +6,20 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Services\ActivityLogger;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class UserController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Users/Index', [
+        return Page::render('Users/Index', [
             'users' => User::orderBy('first_name')->get()
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Users/Create');
+        return Page::render('Users/Create');
     }
 
     public function store(StoreUserRequest $request)
@@ -40,7 +40,7 @@ class UserController extends Controller
     {
         $this->authorize('view', $user);
 
-        return Inertia::render('Users/Show', [
+        return Page::render('Users/Show', [
             'user' => $user->loadCount(['projects', 'expenses', 'photos', 'documents']),
             'can' => ['update' => auth()->user()->can('update', $user)],
         ]);
@@ -58,7 +58,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return Inertia::render('Users/Edit', [
+        return Page::render('Users/Edit', [
             'user' => $user,
         ]);
     }

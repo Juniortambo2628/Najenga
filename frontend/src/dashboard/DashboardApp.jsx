@@ -19,10 +19,9 @@ import { PageDataProvider, seedFirstPage, usePageState } from './page';
 
 /**
  * Najenga's dashboard on the OKJT kit: the kit's shell (sidebar, header,
- * presence) dressed as Najenga's, around Najenga's pages. A page is drawn
- * here once its route is in config('najenga.kit_pages'); its component comes
- * from resources/js/Pages, named by the server (Inertia's component name),
- * with Inertia's API supplied by ../najenga/inertia.jsx.
+ * presence) dressed as Najenga's, around Najenga's pages. Each page's
+ * component comes from resources/js/Pages, named by the server
+ * (App\Http\Page), with the page API in ../najenga/inertia.jsx.
  */
 loadFontAwesome();
 

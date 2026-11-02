@@ -7,7 +7,7 @@ use App\Models\Photo;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\AssertablePage as Assert;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
@@ -83,7 +83,7 @@ class DashboardControllerTest extends TestCase
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->component('Dashboard')
                 ->has('recentProjects', 2)
                 ->where('stats.totalProjects', 2));
@@ -108,7 +108,7 @@ class DashboardControllerTest extends TestCase
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->where('stats.expenseTrend', 50));
     }
 
@@ -125,7 +125,7 @@ class DashboardControllerTest extends TestCase
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->where('stats.expenseTrend', 0));
     }
 
@@ -163,7 +163,7 @@ class DashboardControllerTest extends TestCase
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->where('stats.expenseTrend', 50));
     }
 }

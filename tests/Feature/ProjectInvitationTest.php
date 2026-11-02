@@ -118,7 +118,7 @@ class ProjectInvitationTest extends TestCase
         $this->get($link)->assertRedirect(route('register', ['email' => 'fresh@example.com']));
 
         $this->get(route('register'))
-            ->assertInertia(fn ($page) => $page->where('email', 'fresh@example.com')->where('joiningProject', 'Kitengela site'));
+            ->assertPage(fn ($page) => $page->where('email', 'fresh@example.com')->where('joiningProject', 'Kitengela site'));
 
         $this->post('/register', [
             'first_name' => 'Fresh', 'last_name' => 'Person', 'username' => 'fresh',

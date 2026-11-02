@@ -6,7 +6,7 @@ use App\Models\Expense;
 use App\Models\Photo;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cache;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class DashboardController extends Controller
 {
@@ -62,7 +62,7 @@ class DashboardController extends Controller
                 ];
             });
 
-        return Inertia::render('Dashboard', [
+        return Page::render('Dashboard', [
             'stats' => [
                 'totalExpenses' => floatval($totalExpenses),
                 'activeProjects' => $activeProjects,

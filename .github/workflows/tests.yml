@@ -43,15 +43,7 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist
 
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Build frontend assets
-        run: npm ci && npm run build
-
+      # The PHP tests need no build: they serve a stand-in index.html.
       - name: Prepare environment
         run: |
           cp .env.example .env.testing
@@ -100,16 +92,9 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run frontend tests
-        run: npm run test:js
-
-      - name: Build frontend
-        run: npm run build
-
-      - name: Test and build the kit app (frontend/)
+      # The app (frontend/) and its tests, Najenga's page tests (tests/js) included.
+      - name: Test and build the app (frontend/)
         working-directory: frontend
         run: npm ci && npm test && npm run build

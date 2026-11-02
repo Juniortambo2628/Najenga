@@ -15,7 +15,7 @@ use App\Traits\BatchDownloads;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class DocumentController extends Controller
 {
@@ -23,7 +23,7 @@ class DocumentController extends Controller
     public function index()
     {
         $user = auth()->user();
-        return Inertia::render('Documents', [
+        return Page::render('Documents', [
             'documents' => Document::visibleTo($user)
                 ->with('project:id,name')
                 ->orderBy('created_at', 'desc')
@@ -59,7 +59,7 @@ class DocumentController extends Controller
 
     public function create()
     {
-        return Inertia::render('Documents/Create', [
+        return Page::render('Documents/Create', [
             'projects' => $this->getEditableProjects(),
         ]);
     }
@@ -126,7 +126,7 @@ class DocumentController extends Controller
     {
         $this->authorize('view', $document);
 
-        return Inertia::render('Documents/Show', [
+        return Page::render('Documents/Show', [
             'document' => $document->load('project:id,name', 'folder:id,name')
                 ->append('file_url', 'thumb_url'),
             'can' => ['update' => auth()->user()->can('update', $document)],
@@ -137,7 +137,7 @@ class DocumentController extends Controller
     {
         $this->authorize('update', $document);
 
-        return Inertia::render('Documents/Edit', [
+        return Page::render('Documents/Edit', [
             'document' => $document,
             'projects' => $this->getEditableProjects(),
             'folders' => \App\Models\Folder::whereIn('project_id',

@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\AssertablePage as Assert;
 use Tests\TestCase;
 
 class FlashSharingTest extends TestCase
@@ -26,7 +26,7 @@ class FlashSharingTest extends TestCase
             ->withSession(['success' => 'Expense added successfully'])
             ->get('/dashboard')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->where('flash.success', 'Expense added successfully'));
     }
 
@@ -35,7 +35,7 @@ class FlashSharingTest extends TestCase
         $this->withSession(['status' => 'verification-link-sent'])
             ->get('/login')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->where('flash.status', 'verification-link-sent'));
     }
 
@@ -44,7 +44,7 @@ class FlashSharingTest extends TestCase
         $this->actingAs($this->user)
             ->get('/dashboard')
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->where('flash.success', null)
                 ->where('flash.error', null)
                 ->where('flash.status', null));
@@ -65,7 +65,7 @@ class FlashSharingTest extends TestCase
 
         $this->actingAs($this->user)
             ->get('/dashboard')
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertPage(fn (Assert $page) => $page
                 ->where('flash.success', 'Folder created successfully'));
     }
 }

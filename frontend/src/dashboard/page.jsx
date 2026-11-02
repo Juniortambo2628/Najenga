@@ -5,7 +5,7 @@ import { fetchPage } from './api';
 
 /**
  * Each page's data, fetched from the URL the page is at: the props its
- * Laravel controller hands Inertia today (see ServeKitPages), including the
+ * Laravel controller returns (App\Http\Page::render), including the
  * shared ones (auth.user, auth.projects, flash). The shell keeps the last
  * shared props while the next page loads, so the frame never blinks.
  */
@@ -14,7 +14,7 @@ const PageContext = createContext(null);
 export const pageKey = (url) => ['page', url];
 
 /**
- * The page Laravel sent inside index.html (ServeKitPages), for the URL the
+ * The page Laravel sent inside index.html (App\Http\Page), for the URL the
  * browser opened: the app starts from it instead of asking again.
  */
 export function seedFirstPage(queryClient) {
@@ -29,6 +29,19 @@ export function seedFirstPage(queryClient) {
   el.remove();
 }
 
+/** The build this tab is running: the version of the first page it got. */
+let runningVersion = null;
+
+/**
+ * A page from a newer build (a deploy since this tab opened): load it as a
+ * fresh page, so the tab never asks for chunk files the deploy removed.
+ */
+export function isFromNewBuild(page) {
+  if (!page?.version) return false;
+  runningVersion ??= page.version;
+  return page.version !== runningVersion;
+}
+
 export function PageDataProvider({ children }) {
   const { pathname, search } = useLocation();
   const url = pathname + search;
@@ -40,6 +53,10 @@ export function PageDataProvider({ children }) {
     const { auth, flash } = query.data.props;
     shared.current = { auth: auth ?? {}, flash: flash ?? {} };
   }
+
+  useEffect(() => {
+    if (query.data && !query.isPlaceholderData && isFromNewBuild(query.data)) window.location.reload();
+  }, [query.data, query.isPlaceholderData]);
 
   // The server redirected (e.g. /projects to /overview): show where we ended up.
   const landed = query.data && !query.isPlaceholderData ? new URL(query.data.url, window.location.origin) : null;

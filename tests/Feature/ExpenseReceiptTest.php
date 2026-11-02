@@ -94,7 +94,7 @@ class ExpenseReceiptTest extends TestCase
 
         $this->actingAs($this->user)
             ->get('/receipts')
-            ->assertInertia(fn ($page) => $page->has('receipts', 1)->where('receipts.0.id', $receipt->id));
+            ->assertPage(fn ($page) => $page->has('receipts', 1)->where('receipts.0.id', $receipt->id));
 
         // Replacing the file keeps the one row.
         $this->actingAs($this->user)

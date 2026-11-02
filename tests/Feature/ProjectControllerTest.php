@@ -49,7 +49,7 @@ class ProjectControllerTest extends TestCase
         $this->actingAs($this->user)
             ->get("/overview?project={$project->id}")
             ->assertOk()
-            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->assertPage(fn (\Tests\Support\AssertablePage $page) => $page
                 ->component('Overview')
                 ->where('focus', $project->id)
                 ->has('projects', 1)

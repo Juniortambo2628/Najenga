@@ -15,7 +15,7 @@ use App\Traits\BatchDeletes;
 use App\Traits\RespondsWithModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class ExpenseController extends Controller
 {
@@ -23,7 +23,7 @@ class ExpenseController extends Controller
     public function index()
     {
         $user = auth()->user();
-        return Inertia::render('Expenses', [
+        return Page::render('Expenses', [
             'expenses' => Expense::visibleTo($user)
                 ->with('project:id,name')
                 ->orderBy('expense_date', 'desc')
@@ -52,7 +52,7 @@ class ExpenseController extends Controller
 
     public function create()
     {
-        return Inertia::render('Expenses/Create', [
+        return Page::render('Expenses/Create', [
             'projects' => $this->getEditableProjects(),
         ]);
     }
@@ -169,7 +169,7 @@ class ExpenseController extends Controller
     {
         $this->authorize('view', $expense);
 
-        return Inertia::render('Expenses/Show', [
+        return Page::render('Expenses/Show', [
             'expense' => $expense->load('project:id,name', 'receipt:id,expense_id,verification_status')
                 ->append('receipt_url', 'receipt_thumb_url'),
             'can' => ['update' => auth()->user()->can('update', $expense)],
@@ -216,7 +216,7 @@ class ExpenseController extends Controller
     {
         $this->authorize('update', $expense);
 
-        return Inertia::render('Expenses/Edit', [
+        return Page::render('Expenses/Edit', [
             'expense' => $expense,
             'projects' => $this->getEditableProjects(),
         ]);

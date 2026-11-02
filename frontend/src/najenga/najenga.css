@@ -147,8 +147,63 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
   }
+  /* Thin, faint scrollbars everywhere in the dashboard. */
   .admin-theme ::-webkit-scrollbar {
     width: 5px;
+    height: 5px;
+  }
+  .admin-theme ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .admin-theme ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+  }
+  .admin-theme ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .admin-theme * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  }
+
+  /* React Chat Elements (Messages), dark. */
+  .dark-theme .rce-container-ccl {
+    background-color: transparent !important;
+  }
+  .dark-theme .rce-citem {
+    background-color: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  }
+  .dark-theme .rce-citem:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  .dark-theme .rce-citem-body--top-title {
+    color: #fff !important;
+  }
+  .dark-theme .rce-citem-body--bottom-status {
+    color: #9ca3af !important;
+  }
+  .rce-mbox {
+    background-color: #1a1a1a !important;
+    color: #eee !important;
+    box-shadow: none !important;
+    border-radius: 12px !important;
+  }
+  .rce-mbox-right {
+    background-color: #8B0000 !important;
+    color: #fff !important;
+  }
+  .rce-mbox-text {
+    color: inherit !important;
+  }
+  .rce-mbox-time {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+  .rce-input {
+    background-color: #1a1a1a !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
   }
 
   .select-chevron {

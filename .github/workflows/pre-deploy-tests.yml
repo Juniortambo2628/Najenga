@@ -72,16 +72,7 @@ jobs:
       - name: Install dependencies
         run: composer install --no-progress --prefer-dist
 
-      # Inertia pages render app.blade.php, whose @vite() needs public/build/manifest.json
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Build frontend assets
-        run: npm ci && npm run build
-
+      # The PHP tests need no build: they serve a stand-in index.html.
       - name: Prepare environment
         run: |
           cp .env.example .env.testing
@@ -155,12 +146,12 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-
+      # The app (frontend/) and its tests, Najenga's page tests (tests/js) included.
       - name: Run frontend tests
-        run: npm run test:js
+        working-directory: frontend
+        run: npm ci && npm test
 
   build-check:
     runs-on: ubuntu-latest
@@ -180,18 +171,17 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Composer dependencies
         run: composer install --no-dev --optimize-autoloader --no-progress --prefer-dist
 
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Build frontend assets
-        run: npm run build
+      - name: Build the app (frontend/)
+        working-directory: frontend
+        run: npm ci && npm run build
 
       - name: Verify build output
         run: |
-          test -f public/build/manifest.json && echo "Build manifest exists" || exit 1
-          ls -la public/build/assets/ | head -20
+          test -f frontend/dist/index.html && echo "The app's index.html exists" || exit 1
+          ls -la frontend/dist/app-assets/ | head -20
           echo "Build verification passed"

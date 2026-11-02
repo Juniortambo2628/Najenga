@@ -10,7 +10,7 @@ use App\Models\Photo;
 use App\Models\ProjectTimeline;
 use App\Traits\HasProjectScope;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Http\Page;
 
 class ProjectTimelineController extends Controller
 {
@@ -34,7 +34,7 @@ class ProjectTimelineController extends Controller
             $documents->where('project_id', $projectId);
         }
 
-        return Inertia::render('Timeline', [
+        return Page::render('Timeline', [
             'timelines' => $timelines->orderBy('start_date', 'desc')->get(),
             'expenses' => $expenses->orderBy('expense_date', 'desc')->get()->map(fn ($e) => [
                 'id' => $e->id,
@@ -76,7 +76,7 @@ class ProjectTimelineController extends Controller
 
     public function create()
     {
-        return Inertia::render('Timeline/Create', [
+        return Page::render('Timeline/Create', [
             'projects' => $this->getEditableProjects(),
         ]);
     }
@@ -92,7 +92,7 @@ class ProjectTimelineController extends Controller
     {
         $this->authorize('view', $timeline);
 
-        return Inertia::render('Timeline/Show', [
+        return Page::render('Timeline/Show', [
             'timeline' => $timeline->load('project:id,name'),
             'can' => ['update' => auth()->user()->can('update', $timeline)],
         ]);
@@ -111,7 +111,7 @@ class ProjectTimelineController extends Controller
     {
         $this->authorize('update', $timeline);
 
-        return Inertia::render('Timeline/Edit', [
+        return Page::render('Timeline/Edit', [
             'timeline' => $timeline,
             'projects' => $this->getEditableProjects(),
         ]);

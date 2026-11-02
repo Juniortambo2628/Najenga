@@ -5,14 +5,12 @@ import { pageKey, usePageState } from '../dashboard/page';
 import { request } from '../dashboard/api';
 
 /**
- * What Najenga's pages used from @inertiajs/react (Link, router, useForm,
- * usePage, Head), on react-router and the page-data bridge
- * (App\Http\Middleware\ServeKitPages), so a page moves to the kit app with
- * its code nearly as it was. Requests speak Inertia's protocol to Laravel, so
- * controllers, redirects, flash messages and validation errors behave exactly
- * as they did. A visit to a page that hasn't moved yet reloads into it.
- *
- * Goes away with Inertia (Phase 6c), as pages switch to the kit's own pieces.
+ * The page API Najenga's pages are written against (Link, router, useForm,
+ * usePage, Head: the names they had under Inertia), on react-router and
+ * App\Http\Page. Pages import it as '@inertiajs/react' (vite.config.js), so
+ * their code didn't change when Inertia went. Forms speak the page protocol
+ * to Laravel (X-Kit-Page), so controllers, redirects, flash messages and
+ * validation errors work as they always did.
  */
 
 const bridge = { navigate: null, queryClient: null };
@@ -75,7 +73,7 @@ async function visit(href, options = {}) {
     } else {
       page = await fetchVisit(method.toUpperCase(), url, data);
     }
-    if (!page) return; // reloading into a page that hasn't moved
+    if (!page) return; // not a page (a download, an outside URL): loading it instead
     const target = relative(page.url);
     bridge.queryClient.setQueryData(pageKey(target), page);
     const current = window.location.pathname + window.location.search;
@@ -103,7 +101,7 @@ async function visit(href, options = {}) {
   }
 }
 
-/** A request with Inertia's headers; follows redirects; resolves to the page object. */
+/** A request for a page (X-Kit-Page); follows redirects; resolves to the page object. */
 async function fetchVisit(method, url, data) {
   const send = method !== 'GET';
   const files = send && hasFiles(data);
@@ -113,17 +111,14 @@ async function fetchVisit(method, url, data) {
   try {
     const { data: page } = await request(realMethod, url, {
       data: body,
-      headers: { 'X-Inertia': 'true', 'X-Kit-Page': '1', Accept: 'text/html, application/xhtml+xml' },
+      headers: { 'X-Kit-Page': '1', Accept: 'text/html, application/xhtml+xml' },
     });
     if (page?.component) return page;
     window.location.assign(url);
     return null;
   } catch (error) {
-    const location = error.response?.status === 409 && error.location;
-    if (location) {
-      window.location.assign(location);
-      return null;
-    }
+    // A 403/404/500 answers with the Errors page: show it.
+    if (error.response?.data?.component) return error.response.data;
     throw error;
   }
 }

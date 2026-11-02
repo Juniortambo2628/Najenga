@@ -6,23 +6,40 @@ import tailwindcss from '@tailwindcss/vite';
 const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 /**
- * Najenga's new React app (Phase 6 of moving onto the OKJT kit). Laravel
- * serves its build (copied into public/ when deployed) for the pages that
- * have moved; Inertia keeps the rest. In development it serves Laravel's
- * public/ files (photos, logos, icons) and sends everything else to Laravel.
+ * resources/js and tests/js live outside this app: their packages
+ * ('react-dropzone', 'axios'…) resolve from here, as if this app imported
+ * them, so there is one copy of each (React 19) and no node_modules above.
+ */
+function packagesFromThisApp() {
+  const outside = [here('../resources/js/'), here('../tests/js/')];
+  const entry = here('./src/main.jsx');
+  return {
+    name: 'najenga:packages-from-this-app',
+    enforce: 'pre',
+    async resolveId(source, importer, options) {
+      if (!importer || !outside.some((dir) => importer.startsWith(dir))) return null;
+      if (/^[./\0]|^@\//.test(source) || source.startsWith('/')) return null;
+      return this.resolve(source, entry, { ...options, skipSelf: true });
+    },
+  };
+}
+
+/**
+ * Najenga's React app, on the OKJT kit: the public pages, sign-in and the
+ * dashboard. Laravel serves its build (copied into public/ when deployed)
+ * with each page's data inside (App\Http\Page). In development it serves
+ * Laravel's public/ files (photos, logos, icons) and sends /api to Laravel.
  *
- * Dashboard pages that have moved are drawn from resources/js (shared with
- * the Inertia app until it goes): `@/` points there, @inertiajs/react is the
- * stand-in in src/najenga/inertia.jsx, and their layout is the kit's shell.
- * Their packages resolve from this app (React 19), never the root's.
+ * Najenga's pages and components are in resources/js: `@/` points there,
+ * and '@inertiajs/react' (the name their page API had) is
+ * src/najenga/inertia.jsx. Their packages resolve from this app.
  */
 export default defineConfig(({ command }) => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [packagesFromThisApp(), react(), tailwindcss()],
   publicDir: command === 'serve' ? '../public' : false,
   resolve: {
     alias: [
       { find: '@inertiajs/react', replacement: here('./src/najenga/inertia.jsx') },
-      { find: '@/Layouts/AuthenticatedLayout', replacement: here('./src/najenga/AuthenticatedLayout.jsx') },
       { find: /^@\//, replacement: `${here('../resources/js')}/` },
     ],
     dedupe: ['react', 'react-dom', 'react-router-dom', 'framer-motion', '@headlessui/react', 'axios', 'date-fns', 'react-hot-toast', '@tanstack/react-query', 'lucide-react'],

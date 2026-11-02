@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Inertia\Inertia;
-use Inertia\Response;
+use App\Http\Page;
 
 /**
  * Sign in with a passkey (WebAuthn assertion). Two-step JSON handshake:
@@ -36,9 +35,9 @@ class PasskeyAuthenticationController extends Controller
     {
     }
 
-    public function create(): Response
+    public function create(): Page
     {
-        return Inertia::render('Auth/PasskeyLogin');
+        return Page::render('Auth/PasskeyLogin');
     }
 
     public function options(Request $request): JsonResponse

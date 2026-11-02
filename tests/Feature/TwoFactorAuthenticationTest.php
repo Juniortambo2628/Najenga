@@ -146,7 +146,7 @@ class TwoFactorAuthenticationTest extends TestCase
 
         $this->get('/two-factor-challenge')
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('Auth/TwoFactorChallenge'));
+            ->assertPage(fn ($page) => $page->component('Auth/TwoFactorChallenge'));
     }
 
     public function test_user_without_two_factor_logs_in_directly(): void
@@ -227,7 +227,7 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.two-factor'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
+            ->assertPage(fn ($page) => $page
                 ->component('Profile/TwoFactor')
                 ->where('enabled', false)
                 ->where('pending', false));
@@ -237,7 +237,7 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.two-factor'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
+            ->assertPage(fn ($page) => $page
                 ->component('Profile/TwoFactor')
                 ->where('enabled', false)
                 ->where('pending', true));
@@ -251,7 +251,7 @@ class TwoFactorAuthenticationTest extends TestCase
         $this->actingAs($user)
             ->get(route('profile.two-factor'))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page
+            ->assertPage(fn ($page) => $page
                 ->component('Profile/TwoFactor')
                 ->where('enabled', true)
                 ->where('pending', false));
