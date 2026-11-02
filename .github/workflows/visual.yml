@@ -67,6 +67,15 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
+      # The dashboard pages are drawn by the kit app (frontend/): build it and
+      # put it in public/, as the deploy does.
+      - name: Build the kit app into public/
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          cp -r dist/. ../public/
+
       - name: Prepare environment
         run: |
           cp .env.example .env
