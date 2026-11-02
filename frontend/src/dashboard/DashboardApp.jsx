@@ -62,6 +62,10 @@ const NAMED = {
   'panel-collapse': 'fa-angles-right',
   close: 'fa-xmark',
   'chevron-up': 'fa-chevron-up',
+  'hide-toolbar': 'fa-chevron-down',
+  filters: 'fa-sliders-h',
+  more: 'fa-ellipsis-h',
+  bookmark: 'fa-bookmark',
 };
 const iconFor = (name) => {
   const fas = NAMED[name] ?? name;
@@ -82,7 +86,7 @@ function Shell({ children }) {
     // Kit components take Najenga's Font Awesome names ('fa-receipt').
     iconFor,
     // The kit's components in Najenga's dark, bold look.
-    componentDefaults: { SidePanel: { variant: 'bold' } },
+    componentDefaults: { SidePanel: { variant: 'bold' }, FloatingToolbar: { variant: 'bold' } },
     roles: [
       { value: 'owner', label: 'Owner', description: 'Everything, including people and roles' },
       { value: 'editor', label: 'Editor', description: 'Adds and changes records' },

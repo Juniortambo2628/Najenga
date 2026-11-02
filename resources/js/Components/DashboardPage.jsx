@@ -1,6 +1,5 @@
 import DashboardHero from '@/Components/DashboardHero';
-import FloatingToolbar from '@/Components/FloatingToolbar';
-import { SidePanelAside, SidePanelMobileBar } from '@okjt/dashboard';
+import { AdminFloatingToolbar, SidePanelAside, SidePanelMobileBar } from '@okjt/dashboard';
 import { usePage } from '@inertiajs/react';
 import PageActivityPanel, { ACTIVITY_PANEL_PAGES } from '@/Components/PageActivityPanel';
 
@@ -64,7 +63,7 @@ export default function DashboardPage({ hero, summary = null, toolbar = null, pa
                 {summary && <div className="mb-6">{summary}</div>}
             </div>
 
-            {toolbar && <FloatingToolbar {...toolbar} />}
+            {toolbar && <AdminFloatingToolbar variant="bold" {...toolbar} />}
 
             {panel && !panel.desktopOnly && <SidePanelMobileBar panel={panel} />}
 

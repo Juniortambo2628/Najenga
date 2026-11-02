@@ -9,7 +9,20 @@ vi.mock('@inertiajs/react', () => ({
     ),
 }));
 
-import FloatingToolbar, { countActiveFilters } from '../../../resources/js/Components/FloatingToolbar';
+import { MemoryRouter } from 'react-router-dom'
+import { promptAction } from '@okjt/ui'
+
+// The save-view prompt is @okjt/ui's dialog: answered here.
+vi.mock('@okjt/ui', async (importOriginal) => ({ ...(await importOriginal()), promptAction: vi.fn() }))
+import { AdminFloatingToolbar, countActiveFilterLists as countActiveFilters } from '@okjt/dashboard'
+
+// The kit's toolbar in the bold look (Najenga's own toolbar moved into the kit),
+// inside a router as in the app (its link actions are the router's).
+const FloatingToolbar = (props) => (
+    <MemoryRouter>
+        <AdminFloatingToolbar variant="bold" {...props} />
+    </MemoryRouter>
+);
 
 const sort = (value = 'newest', onChange = () => {}) => ({
     name: 'sort',
@@ -110,8 +123,7 @@ describe('FloatingToolbar', () => {
 
 describe('FloatingToolbar saved views', () => {
     it('saves the filters and search as a named view, and applies it later', async () => {
-        const feedback = await import('../../../resources/js/Utils/feedback');
-        vi.spyOn(feedback, 'promptAction').mockResolvedValue('Pending only');
+        promptAction.mockResolvedValue('Pending only');
         try {
             localStorage.clear();
         } catch {

@@ -14,7 +14,7 @@ export default mergeConfig(viteConfig({ command: 'build' }), defineConfig({
     setupFiles: ['../tests/js/setup.js'],
     // ../tests/js sits outside this app: its testing libraries must resolve
     // here (React 19), not from wherever Node would look first.
-    server: { deps: { inline: [/@testing-library\//] } },
+    server: { deps: { inline: [/@testing-library\//, /@okjt\//] } },
   },
   resolve: { dedupe: ['@testing-library/react', '@testing-library/jest-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'react-dom/client'] },
 }));
