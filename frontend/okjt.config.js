@@ -41,7 +41,7 @@ export default {
         accent: '#DC143C',
         accentStrong: '#fb7185',
         accentDark: '#fda4af',
-        accentSoft: '#5c1a24',
+        accentSoft: '#fecdd3',
         line: 'rgb(255 255 255 / 0.08)',
         lineStrong: 'rgb(255 255 255 / 0.12)',
         tint: 'rgb(255 255 255 / 0.05)',

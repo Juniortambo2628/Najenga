@@ -66,6 +66,11 @@ const NAMED = {
   filters: 'fa-sliders-h',
   more: 'fa-ellipsis-h',
   bookmark: 'fa-bookmark',
+  'trend-up': 'fa-arrow-trend-up',
+  'trend-down': 'fa-arrow-trend-down',
+  'trend-flat': 'fa-minus',
+  crumb: 'fa-chevron-right',
+  'arrow-up': 'fa-arrow-up',
 };
 const iconFor = (name) => {
   const fas = NAMED[name] ?? name;
@@ -86,7 +91,7 @@ function Shell({ children }) {
     // Kit components take Najenga's Font Awesome names ('fa-receipt').
     iconFor,
     // The kit's components in Najenga's dark, bold look.
-    componentDefaults: { SidePanel: { variant: 'bold' }, FloatingToolbar: { variant: 'bold' } },
+    componentDefaults: { SidePanel: { variant: 'bold' }, FloatingToolbar: { variant: 'bold' }, SummaryCards: { variant: 'bold' }, PageLayout: { variant: 'bold' }, PageHero: { variant: 'bold' } },
     roles: [
       { value: 'owner', label: 'Owner', description: 'Everything, including people and roles' },
       { value: 'editor', label: 'Editor', description: 'Adds and changes records' },
@@ -119,6 +124,7 @@ function Shell({ children }) {
       headerEndClass: 'gap-1.5 sm:gap-4 min-w-0',
       menuButtonClass: 'text-gray-400 hover:bg-white/10 hover:text-white transition',
       MenuIcon,
+      menuNewsDot: false, // Najenga's sidebar shows the changes itself
       mainClass: 'flex-1 pt-8 pb-28 lg:pb-24 px-4 overflow-x-clip min-w-0',
       HeaderStart,
       Search: GlobalSearch,

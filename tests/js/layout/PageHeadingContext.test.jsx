@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 
 vi.mock('@inertiajs/react', () => ({
+    usePage: () => ({ props: {}, url: '/receipts', component: 'Receipts/Index' }),
     Link: ({ href, children, ...rest }) => (
         <a href={href} {...rest}>
             {children}
@@ -14,7 +15,10 @@ import {
     PageHeadingContext,
     defaultPageHeading,
 } from '../../../resources/js/Layouts/PageHeadingContext';
-import DashboardHero from '../../../resources/js/Components/DashboardHero';
+import DashboardPage from '../../../resources/js/Components/DashboardPage';
+
+// The page layout reports its hero's title (the hero itself is the kit's).
+const DashboardHero = ({ title }) => <DashboardPage hero={{ title }} panel={false} />;
 
 describe('fallbackHeading', () => {
     it('uses the first segment of a nested component', () => {
@@ -42,11 +46,11 @@ describe('defaultPageHeading', () => {
     });
 });
 
-describe('DashboardHero heading reporting', () => {
+describe('DashboardPage heading reporting', () => {
     it('reports its title to the layout', () => {
         const setHeading = vi.fn();
         render(
-            <PageHeadingContext.Provider value={{ setHeading }}>
+            <PageHeadingContext.Provider value={{ setHeading, reportHero: () => {} }}>
                 <DashboardHero title="Receipts" />
             </PageHeadingContext.Provider>
         );
@@ -56,13 +60,13 @@ describe('DashboardHero heading reporting', () => {
     it('reports the new title when it changes', () => {
         const setHeading = vi.fn();
         const { rerender } = render(
-            <PageHeadingContext.Provider value={{ setHeading }}>
+            <PageHeadingContext.Provider value={{ setHeading, reportHero: () => {} }}>
                 <DashboardHero title="Receipts" />
             </PageHeadingContext.Provider>
         );
         setHeading.mockClear();
         rerender(
-            <PageHeadingContext.Provider value={{ setHeading }}>
+            <PageHeadingContext.Provider value={{ setHeading, reportHero: () => {} }}>
                 <DashboardHero title="Expenses" />
             </PageHeadingContext.Provider>
         );

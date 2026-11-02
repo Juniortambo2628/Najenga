@@ -15,7 +15,6 @@ import {
     navSectionsFor,
     rootBreadcrumbs,
 } from '../../../resources/js/Config/navigation';
-import Breadcrumb from '../../../resources/js/Components/Breadcrumb';
 
 describe('NAV_ITEMS', () => {
     it('is the single source of sidebar entries', () => {
@@ -66,27 +65,6 @@ describe('rootBreadcrumbs', () => {
         expect(a).not.toBe(b);
         a.push({ label: 'x' });
         expect(rootBreadcrumbs()).toHaveLength(1);
-    });
-});
-
-describe('Breadcrumb', () => {
-    it('renders nothing when there are no items', () => {
-        const { container } = render(<Breadcrumb items={[]} />);
-        expect(container.firstChild).toBeNull();
-    });
-
-    it('renders linked items as anchors and the last item as plain text', () => {
-        render(<Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Projects' }]} />);
-        expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard');
-        expect(screen.queryByRole('link', { name: 'Projects' })).toBeNull();
-        expect(screen.getByText('Projects')).toBeInTheDocument();
-    });
-
-    it('separates items with a chevron', () => {
-        const { container } = render(
-            <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Projects' }]} />
-        );
-        expect(container.querySelectorAll('.fa-chevron-right')).toHaveLength(1);
     });
 });
 

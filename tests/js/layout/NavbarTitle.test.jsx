@@ -13,7 +13,6 @@ vi.mock('@inertiajs/react', () => ({
 
 import { NavbarTitle } from '../../../resources/js/Layouts/AuthenticatedLayout';
 import { PageHeadingContext } from '../../../resources/js/Layouts/PageHeadingContext';
-import DashboardHero from '../../../resources/js/Components/DashboardHero';
 
 describe('NavbarTitle', () => {
     it('always shows the fallback heading on pages without a hero', () => {
@@ -36,33 +35,9 @@ describe('NavbarTitle', () => {
     });
 });
 
-describe('DashboardHero visibility reporting', () => {
-    let observerCallback;
-    afterEach(() => {
-        delete globalThis.IntersectionObserver;
-    });
-
-    it('reports when it scrolls behind the navbar, with its parent breadcrumb', () => {
-        globalThis.IntersectionObserver = class {
-            constructor(cb, options) {
-                observerCallback = cb;
-                this.options = options;
-                expect(options.rootMargin).toBe('-64px 0px 0px 0px');
-            }
-            observe() {}
-            disconnect() {}
-        };
-        const reportHero = vi.fn();
-        render(
-            <PageHeadingContext.Provider value={{ setHeading: () => {}, reportHero }}>
-                <DashboardHero
-                    title="Upload"
-                    breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Photos', href: '/photos' }, { label: 'Upload' }]}
-                />
-            </PageHeadingContext.Provider>,
-        );
-        expect(reportHero).toHaveBeenLastCalledWith({ visible: true, parent: { label: 'Photos', href: '/photos' } });
-        act(() => observerCallback([{ isIntersecting: false }]));
-        expect(reportHero).toHaveBeenLastCalledWith({ visible: false, parent: { label: 'Photos', href: '/photos' } });
+describe('pages on the kit hero', () => {
+    it('leaves the header to the kit hero, which shows its own compact title', () => {
+        const { container } = render(<NavbarTitle heading="Expenses" hero={{ kit: true }} />);
+        expect(container).toBeEmptyDOMElement();
     });
 });

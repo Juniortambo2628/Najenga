@@ -13,6 +13,8 @@ import { PageHeadingContext, fallbackHeading } from '@/Layouts/PageHeadingContex
  * scrolls away), from PageHeadingContext.
  */
 export function NavbarTitle({ heading, hero }) {
+  // The page's hero is the kit's: it shows its own compact title.
+  if (hero?.kit) return null;
   if (!hero) {
     return <span className="text-white font-semibold hidden md:block truncate">{heading}</span>;
   }

@@ -9,7 +9,10 @@ vi.mock('@inertiajs/react', () => ({
     ),
 }));
 
-import DashboardHero from '../../../resources/js/Components/DashboardHero';
+import { AdminPageHero } from '@okjt/dashboard';
+
+// Najenga's hero is the kit's, in its bold look.
+const DashboardHero = (props) => <AdminPageHero variant="bold" {...props} />;
 
 describe('DashboardHero', () => {
     it('renders the title and subtitle', () => {
