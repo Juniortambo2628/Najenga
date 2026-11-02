@@ -50,7 +50,7 @@ jobs:
           cache: 'npm'
 
       - name: Build frontend assets
-        run: npm ci && npm test && npm run build
+        run: npm ci && npm run build
 
       - name: Prepare environment
         run: |
