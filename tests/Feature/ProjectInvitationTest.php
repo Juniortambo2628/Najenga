@@ -120,10 +120,10 @@ class ProjectInvitationTest extends TestCase
         $this->get(route('register'))
             ->assertPage(fn ($page) => $page->where('email', 'fresh@example.com')->where('joiningProject', 'Kitengela site'));
 
-        $this->post('/register', [
+        $this->postJson('/api/register', [
             'first_name' => 'Fresh', 'last_name' => 'Person', 'username' => 'fresh',
             'email' => 'fresh@example.com', 'password' => 'password', 'password_confirmation' => 'password',
-        ])->assertRedirect(route('projects.show', $this->project));
+        ])->assertCreated()->assertJsonPath('data.redirect', route('projects.show', $this->project));
 
         $user = User::where('email', 'fresh@example.com')->sole();
         $this->assertSame('editor', $this->project->roleFor($user));
@@ -138,8 +138,8 @@ class ProjectInvitationTest extends TestCase
         $user = User::factory()->create(['email' => 'later@example.com', 'password' => bcrypt('password')]);
 
         $this->get($link)->assertRedirect(route('login'));
-        $this->post('/login', ['email' => 'later@example.com', 'password' => 'password'])
-            ->assertRedirect(route('projects.show', $this->project));
+        $this->postJson('/api/login', ['email' => 'later@example.com', 'password' => 'password'])
+            ->assertOk()->assertJsonPath('data.redirect', route('projects.show', $this->project));
 
         $this->assertSame('editor', $this->project->roleFor($user));
     }

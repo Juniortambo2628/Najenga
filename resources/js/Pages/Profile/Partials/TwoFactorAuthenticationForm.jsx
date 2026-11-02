@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import axios from 'axios';
+import { router, useForm } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
-import useAction, { visit } from '@/Hooks/useAction';
+import useAction from '@/Hooks/useAction';
+
+/** The page's data again, after one of the kit's two-step endpoints (/api/2fa/…). */
+const reload = () => router.reload({ preserveScroll: true });
 
 export default function TwoFactorAuthenticationForm({ twoFactor }) {
     const enabled = !!twoFactor?.enabled;
@@ -15,24 +19,32 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
 
     const confirmForm = useForm({ code: '' });
 
-    const startSetup = useAction(() => visit('post', route('two-factor.enable')), { key: () => 'enable' });
+    const startSetup = useAction(() => axios.post('/api/2fa/setup').then(reload), { key: () => 'enable' });
 
-    const disable = useAction(() => visit('delete', route('two-factor.disable')), {
+    const disable = useAction(() => axios.post('/api/2fa/disable').then(reload), {
         confirm: 'Turn off two-factor authentication?',
+        success: 'Two-factor authentication is off',
         key: () => 'disable',
     });
 
-    const cancelPending = useAction(() => visit('delete', route('two-factor.disable')), { key: () => 'cancel' });
+    const cancelPending = useAction(() => axios.post('/api/2fa/disable').then(reload), { key: () => 'cancel' });
 
+    const confirm = useAction((code) => axios.post('/api/2fa/confirm', { code }).then(reload), {
+        error: false, // the code field shows it
+        key: () => 'confirm',
+        onSuccess: () => {
+            confirmForm.reset('code');
+            setShowingCodes(true);
+        },
+        onError: (error) => confirmForm.setError('code', error.response?.data?.message || 'That code didn’t work. Try again.'),
+    });
     const submitConfirm = (e) => {
         e.preventDefault();
-        confirmForm.post(route('two-factor.confirm'), {
-            preserveScroll: true,
-            onSuccess: () => confirmForm.reset('code'),
-        });
+        confirmForm.clearErrors();
+        confirm.run(confirmForm.data.code);
     };
 
-    const regenerate = useAction(() => visit('post', route('two-factor.regenerate-recovery-codes')), {
+    const regenerate = useAction(() => axios.post('/api/2fa/recovery-codes').then(reload), {
         confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' },
         key: () => 'regenerate',
     });
@@ -103,7 +115,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                         />
                         <InputError message={confirmForm.errors.code} />
                         <div className="flex items-center gap-2">
-                            <PrimaryButton type="submit" disabled={confirmForm.processing}>
+                            <PrimaryButton type="submit" disabled={confirm.pending}>
                                 Confirm
                             </PrimaryButton>
                             <button

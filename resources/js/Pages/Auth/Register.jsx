@@ -2,9 +2,13 @@ import InputError from '@/Components/InputError';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { authApi, firstErrors } from '@/Layouts/KitAuth';
 
 export default function Register({ email = '', joiningProject = null }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const [errors, setErrors] = useState({});
+    const [processing, setProcessing] = useState(false);
+    const { data, setData, reset } = useForm({
         first_name: '',
         last_name: '',
         username: '',
@@ -13,11 +17,19 @@ export default function Register({ email = '', joiningProject = null }) {
         password_confirmation: '',
     });
 
-    const submit = (e) => {
+    // The kit's sign-up (POST /api/register); it signs the new person in.
+    const submit = async (e) => {
         e.preventDefault();
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
-        });
+        setProcessing(true);
+        setErrors({});
+        try {
+            const answer = await authApi.post('/register', data);
+            window.location.assign(answer.data?.redirect || route('dashboard'));
+        } catch (error) {
+            setErrors(firstErrors(error));
+            reset('password', 'password_confirmation');
+            setProcessing(false);
+        }
     };
 
     return (

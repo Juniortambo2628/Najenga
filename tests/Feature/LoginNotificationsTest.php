@@ -17,10 +17,10 @@ class LoginNotificationsTest extends TestCase
         Notification::fake();
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect();
+        ])->assertOk();
 
         Notification::assertSentTo($user, NewLoginNotification::class);
     }
@@ -30,17 +30,17 @@ class LoginNotificationsTest extends TestCase
         Notification::fake();
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect();
+        ])->assertOk();
 
         $this->post('/logout')->assertRedirect();
 
-        $this->post('/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect();
+        ])->assertOk();
 
         Notification::assertSentTimes(NewLoginNotification::class, 1);
     }
@@ -51,10 +51,10 @@ class LoginNotificationsTest extends TestCase
         $user = User::factory()->create();
         $user->forceFill(['login_notifications_enabled' => false])->save();
 
-        $this->post('/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect();
+        ])->assertOk();
 
         Notification::assertNotSentTo($user, NewLoginNotification::class);
     }
@@ -63,10 +63,10 @@ class LoginNotificationsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect();
+        ])->assertOk();
 
         $context = $user->fresh()->last_login_context;
 

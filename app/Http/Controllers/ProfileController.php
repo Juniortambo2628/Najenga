@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Http\Requests\ToggleLoginNotificationsRequest;
 use App\Http\Requests\VerifyWhatsAppCodeRequest;
-use App\Services\TwoFactorAuthenticator;
 use App\Services\WhatsAppMessageService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +13,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redirect;
 use App\Http\Page;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
+use Okjt\Kit\Auth\TwoFactor;
 
 class ProfileController extends Controller
 {
@@ -23,7 +27,7 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request, TwoFactorAuthenticator $totp): Page
+    public function edit(Request $request): Page
     {
         $user = $request->user();
         $digits = preg_replace('/[^\d]/', '', (string) ($user->whatsapp_wa_id ?? $user->phone));
@@ -31,20 +35,14 @@ class ProfileController extends Controller
         $twoFactor = [
             'enabled' => $user->hasEnabledTwoFactorAuthentication(),
             'recovery_codes' => $user->hasEnabledTwoFactorAuthentication()
-                ? $user->recoveryCodes()
+                ? TwoFactor::recoveryCodesOf($user)
                 : [],
         ];
 
         // Setup in progress: secret written but not yet confirmed - show the
         // QR + confirmation input.
-        if (! $user->hasEnabledTwoFactorAuthentication() && ! is_null($user->two_factor_secret)) {
-            $secret = decrypt($user->two_factor_secret);
-            $otpauth = $totp->otpauthUrl($user, $secret);
-            $twoFactor['pending'] = [
-                'secret' => $secret,
-                'otpauth_url' => $otpauth,
-                'qr_svg' => $totp->qrCodeSvg($otpauth),
-            ];
+        if ($pending = $this->pendingTwoFactor($user)) {
+            $twoFactor['pending'] = $pending;
         }
 
         $passkeys = \App\Models\Passkey::where('user_id', $user->id)
@@ -133,7 +131,25 @@ class ProfileController extends Controller
         return Page::render('Profile/TwoFactor', [
             'enabled' => ! is_null($user->two_factor_confirmed_at),
             'pending' => ! is_null($user->two_factor_secret) && is_null($user->two_factor_confirmed_at),
+            'setup' => $this->pendingTwoFactor($user),
         ]);
+    }
+
+    /** Two-step sign-in being set up (a secret, not yet confirmed): what the authenticator app scans. */
+    private function pendingTwoFactor($user): ?array
+    {
+        if ($user->hasEnabledTwoFactorAuthentication() || is_null($user->two_factor_secret)) {
+            return null;
+        }
+
+        $secret = TwoFactor::secretOf($user);
+        $otpauth = TwoFactor::url(config('app.name', 'Laravel'), $user->email, $secret);
+
+        return [
+            'secret' => $secret,
+            'otpauth_url' => $otpauth,
+            'qr_svg' => (new Writer(new ImageRenderer(new RendererStyle(220, 0), new SvgImageBackEnd())))->writeString($otpauth),
+        ];
     }
 
     /**

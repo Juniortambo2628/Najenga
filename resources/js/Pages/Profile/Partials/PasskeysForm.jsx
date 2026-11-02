@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { createPasskey, passkeySupported } from '@/Utils/webauthn';
+import { useState } from 'react';
+import { router } from '@inertiajs/react';
+import { usePasskeyRegister } from '@laravel/passkeys/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -19,7 +20,6 @@ const relativeDate = (iso) => {
 };
 
 export default function PasskeysForm({ passkeys = [] }) {
-    const supported = useMemo(() => passkeySupported(), []);
     const [adding, setAdding] = useState(false);
     const [name, setName] = useState('');
     const [error, setError] = useState('');
@@ -30,22 +30,14 @@ export default function PasskeysForm({ passkeys = [] }) {
         setError('');
     };
 
-    // The WebAuthn ceremony: server options, the browser's prompt, then register.
-    const register = useAction(async (passkeyName) => {
-        const optsRes = await window.axios.post(route('passkeys.options'));
-        const response = await createPasskey(optsRes.data);
-        return visit('post', route('passkeys.register'), { name: passkeyName, response });
-    }, {
-        error: false, // shown under the form instead
-        key: () => 'register',
-        onSuccess: () => cancel(),
-        onError: (err) => setError(
-            err.errors
-                ? err.errors.response || err.errors.name || 'Could not register passkey.'
-                : err?.message || 'Passkey setup was cancelled.',
-        ),
+    // The WebAuthn ceremony (laravel/passkeys: /user/passkeys/options, the
+    // browser's prompt, /user/passkeys), then the list again.
+    const { register, isLoading: busy, error: registerError, isSupported: supported } = usePasskeyRegister({
+        onSuccess: () => {
+            cancel();
+            router.reload({ preserveScroll: true });
+        },
     });
-    const busy = register.pending;
 
     const addPasskey = (e) => {
         e.preventDefault();
@@ -54,10 +46,10 @@ export default function PasskeysForm({ passkeys = [] }) {
             setError('Give this passkey a name (e.g. "MacBook", "Titan key").');
             return;
         }
-        register.run(name.trim());
+        register(name.trim());
     };
 
-    const removeAction = useAction((passkey) => visit('delete', route('passkeys.destroy', passkey.id)), {
+    const removeAction = useAction((passkey) => visit('delete', route('passkey.destroy', { passkey: passkey.id })), {
         confirm: (passkey) => `Remove passkey "${passkey.name}"?`,
         key: (passkey) => passkey.id,
     });
@@ -106,7 +98,7 @@ export default function PasskeysForm({ passkeys = [] }) {
                         <p className="text-xs text-gray-400 mt-1">
                             Your browser will prompt you to use Touch ID, Windows Hello, or a security key.
                         </p>
-                        <InputError message={error} className="mt-2" />
+                        <InputError message={error || registerError} className="mt-2" />
                     </div>
                     <div className="flex items-center gap-2">
                         <PrimaryButton type="submit" disabled={busy}>

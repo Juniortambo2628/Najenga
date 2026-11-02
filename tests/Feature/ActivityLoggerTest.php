@@ -18,10 +18,10 @@ class ActivityLoggerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'password',
-        ])->assertRedirect();
+        ])->assertOk();
 
         $log = ActivityLog::orderByDesc('id')->first();
 
@@ -36,7 +36,7 @@ class ActivityLoggerTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->post('/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'wrong-password',
         ]);

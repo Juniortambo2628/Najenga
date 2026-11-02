@@ -15,6 +15,7 @@ const ALLOWED_FILES = [
     'Components/Tour.jsx', // records that the tour was finished; nothing to show or confirm
     'Pages/Photos/Create.jsx', // batched upload with its own progress and per-batch errors
     'Pages/Auth/', // signed-out pages: login, register, password reset
+    'Layouts/KitAuth.jsx', // the sign-in pages' client for the kit's auth API
 ];
 // OCR analysis posts files but saves nothing.
 const ALLOWED_URLS = ['/receipts/analyze', '/receipts/analyze-bulk'];

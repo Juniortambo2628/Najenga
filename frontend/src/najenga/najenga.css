@@ -361,3 +361,30 @@
   --color-yellow-900: #713f12;
   --color-yellow-950: #422006;
 }
+
+/*
+ * The sign-in pages (resources/js/Layouts/KitAuth.jsx): the kit's sign-in
+ * forms in the light colours of Najenga's sign-in card, under the
+ * dashboard's dark ones (admin-theme on <html>).
+ */
+.najenga-auth {
+  --color-ink: #1A1514;
+  --color-body: #3A2F2C;
+  --color-soft: #5E5450;
+  --color-muted: #6B5D58;
+  --color-faint: #A8998F;
+  --color-line: #E6DFD9;
+  --color-line-strong: #D8CEC7;
+  --color-tint: #F1ECE8;
+  --color-paper: #FBF9F7;
+  --color-surface: #ffffff;
+  --color-tone-50: #F1ECE8;
+  --color-tone-200: #F1ECE8;
+  --color-accent: #C2414F;
+  --color-accent-dark: #7A0A12;
+  --color-accent-strong: #A3121F;
+  --okjt-auth-glow: #DC143C;
+  --okjt-auth-focus: #C2414F;
+  --okjt-auth-placeholder: #A8998F;
+  --okjt-auth-card: #FBF9F7;
+}

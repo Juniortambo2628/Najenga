@@ -2,135 +2,100 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\LoginCode;
 use App\Models\User;
 use App\Notifications\LoginCodeNotification;
-use App\Services\TwoFactorAuthenticator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use PragmaRX\Google2FA\Google2FA;
+use Okjt\Kit\Auth\LoginCode;
 use Tests\TestCase;
 
+/** Signing in with a code sent by email (the kit's, with Najenga's email). */
 class LoginCodeTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_page_renders(): void
-    {
-        $this->get(route('login.code'))->assertStatus(200);
-    }
-
-    public function test_request_creates_a_code_row_and_mails_it(): void
+    private function requestCode(User $user): string
     {
         Notification::fake();
+        $this->postJson('/api/login-code', ['email' => $user->email])->assertOk();
+
+        return Notification::sent($user, LoginCodeNotification::class)->last()->code;
+    }
+
+    public function test_requesting_a_code_emails_six_digits_and_keeps_only_its_hash(): void
+    {
         $user = User::factory()->create();
 
-        $this->post(route('login.code.request'), ['email' => $user->email])
-            ->assertRedirect(route('login.code'))
-            ->assertSessionHas('login_code.awaiting', true);
+        $code = $this->requestCode($user);
 
+        $this->assertMatchesRegularExpression('/^\d{6}$/', $code);
         $this->assertDatabaseCount('login_codes', 1);
-        Notification::assertSentTo($user, LoginCodeNotification::class);
+        $this->assertNotSame($code, LoginCode::sole()->code_hash);
     }
 
-    public function test_request_looks_the_same_for_unknown_emails(): void
+    public function test_unknown_email_gets_the_same_answer_without_a_code(): void
     {
         Notification::fake();
 
-        $this->post(route('login.code.request'), ['email' => 'nobody@example.test'])
-            ->assertRedirect(route('login.code'))
-            ->assertSessionHas('status');
+        $this->postJson('/api/login-code', ['email' => 'nobody@example.test'])
+            ->assertOk()
+            ->assertJson(['message' => 'If that address exists, a sign-in code is on its way.']);
 
         $this->assertDatabaseCount('login_codes', 0);
         Notification::assertNothingSent();
     }
 
-    public function test_verify_signs_the_user_in_with_the_right_code(): void
+    public function test_the_code_signs_the_user_in_once(): void
     {
-        Notification::fake();
         $user = User::factory()->create();
+        $code = $this->requestCode($user);
 
-        $sentCode = null;
-        $this->post(route('login.code.request'), ['email' => $user->email]);
-        Notification::assertSentTo($user, LoginCodeNotification::class, function ($notif) use (&$sentCode) {
-            $r = new \ReflectionClass($notif);
-            $prop = $r->getProperty('code');
-            $sentCode = $prop->getValue($notif);
-            return true;
-        });
-
-        $response = $this->withSession(['login_code.email' => $user->email, 'login_code.awaiting' => true])
-            ->post(route('login.code.verify'), [
-                'email' => $user->email,
-                'code' => $sentCode,
-            ]);
-
+        $this->postJson('/api/login-code/verify', ['email' => $user->email, 'code' => $code])
+            ->assertOk()
+            ->assertJsonPath('data.redirect', route('dashboard', absolute: false));
         $this->assertAuthenticatedAs($user);
-        $response->assertRedirect(route('dashboard', absolute: false));
-        $this->assertNotNull(LoginCode::latest('id')->first()->used_at);
-    }
 
-    public function test_verify_rejects_a_wrong_code(): void
-    {
-        Notification::fake();
-        $user = User::factory()->create();
-        $this->post(route('login.code.request'), ['email' => $user->email]);
-
-        $response = $this->post(route('login.code.verify'), [
-            'email' => $user->email,
-            'code' => '000000',
-        ]);
-
-        $response->assertSessionHasErrors('code');
+        auth()->guard('web')->logout();
+        $this->postJson('/api/login-code/verify', ['email' => $user->email, 'code' => $code])->assertStatus(422);
         $this->assertGuest();
     }
 
-    public function test_verify_rejects_an_expired_code(): void
+    public function test_a_wrong_or_expired_code_is_rejected(): void
     {
-        Notification::fake();
         $user = User::factory()->create();
-        $this->post(route('login.code.request'), ['email' => $user->email]);
-        LoginCode::latest('id')->first()->forceFill(['expires_at' => now()->subMinute()])->save();
+        $code = $this->requestCode($user);
 
-        // Even the correct plaintext code should fail because expires_at is past.
-        $sentCode = null;
-        Notification::assertSentTo($user, LoginCodeNotification::class, function ($notif) use (&$sentCode) {
-            $sentCode = (new \ReflectionClass($notif))->getProperty('code')->getValue($notif);
-            return true;
-        });
+        $this->postJson('/api/login-code/verify', ['email' => $user->email, 'code' => $code === '000000' ? '111111' : '000000'])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.code.0', 'That sign-in code is invalid or expired.');
 
-        $this->post(route('login.code.verify'), [
-            'email' => $user->email,
-            'code' => $sentCode,
-        ])->assertSessionHasErrors('code');
+        $this->travel(11)->minutes();
+        $this->postJson('/api/login-code/verify', ['email' => $user->email, 'code' => $code])->assertStatus(422);
         $this->assertGuest();
     }
 
-    public function test_verify_with_2fa_enabled_lands_on_the_challenge_page(): void
+    public function test_with_two_step_sign_in_on_the_code_still_asks_for_the_second_step(): void
     {
-        Notification::fake();
-        $user = User::factory()->create();
-        $secret = (new Google2FA())->generateSecretKey();
-        $user->forceFill([
-            'two_factor_secret' => $secret,
-            'two_factor_recovery_codes' => json_encode((new TwoFactorAuthenticator(new Google2FA()))->generateRecoveryCodes()),
+        $user = User::factory()->create([
+            'two_factor_secret' => encrypt('JBSWY3DPEHPK3PXP'),
             'two_factor_confirmed_at' => now(),
-        ])->save();
-
-        $this->post(route('login.code.request'), ['email' => $user->email]);
-        $sentCode = null;
-        Notification::assertSentTo($user, LoginCodeNotification::class, function ($notif) use (&$sentCode) {
-            $sentCode = (new \ReflectionClass($notif))->getProperty('code')->getValue($notif);
-            return true;
-        });
-
-        $response = $this->post(route('login.code.verify'), [
-            'email' => $user->email,
-            'code' => $sentCode,
         ]);
+        $code = $this->requestCode($user);
 
-        $response->assertRedirect(route('two-factor.login'));
+        $this->postJson('/api/login-code/verify', ['email' => $user->email, 'code' => $code])
+            ->assertOk()
+            ->assertJsonPath('data.requires_2fa', true);
         $this->assertGuest();
-        $this->assertSame($user->id, session('login.id'));
+    }
+
+    public function test_code_requests_are_rate_limited(): void
+    {
+        Notification::fake();
+        $user = User::factory()->create();
+
+        foreach (range(1, 3) as $i) {
+            $this->postJson('/api/login-code', ['email' => $user->email])->assertOk();
+        }
+        $this->postJson('/api/login-code', ['email' => $user->email])->assertStatus(429);
     }
 }

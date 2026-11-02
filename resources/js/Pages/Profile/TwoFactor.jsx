@@ -1,46 +1,28 @@
 import InputError from '@/Components/InputError';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { rootBreadcrumbs } from '@/Config/navigation';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
+import axios from 'axios';
 import { useEffect, useState } from 'react';
-import useAction, { visit } from '@/Hooks/useAction';
+import useAction from '@/Hooks/useAction';
 
-export default function TwoFactor({ enabled, pending: initialPending }) {
+/** Two-step sign-in, on the kit's endpoints (/api/2fa/…). `setup` is a setup already started: its secret and QR code. */
+export default function TwoFactor({ enabled, pending: initialPending, setup = null }) {
     const [pending, setPending] = useState(initialPending);
     const [isEnabled, setIsEnabled] = useState(enabled);
-    const [qr, setQr] = useState(null);
-    const [secret, setSecret] = useState(null);
+    const [qr, setQr] = useState(setup?.qr_svg ?? null);
+    const [secret, setSecret] = useState(setup?.secret ?? null);
     const [codes, setCodes] = useState(null);
     const [showCodes, setShowCodes] = useState(false);
     const [code, setCode] = useState('');
-    const { errors } = usePage().props;
-
-    const confirmError =
-        errors?.confirmTwoFactorAuthentication?.code || errors?.code;
+    const [confirmError, setConfirmError] = useState(null);
 
     const loadCodes = () =>
-        fetch(route('two-factor.recovery-codes'))
-            .then((response) => (response.ok ? response.json() : []))
-            .then((data) => setCodes(Array.isArray(data) ? data : []));
-
-    useEffect(() => {
-        if (!pending || isEnabled) {
-            return;
-        }
-
-        Promise.all([
-            fetch(route('two-factor.qr-code')).then((response) =>
-                response.json()
-            ),
-            fetch(route('two-factor.secret-key')).then((response) =>
-                response.json()
-            ),
-        ]).then(([qrData, secretData]) => {
-            setQr(qrData.svg || null);
-            setSecret(secretData.secretKey || null);
-        });
-    }, [pending, isEnabled]);
+        axios
+            .get('/api/2fa/recovery-codes')
+            .then((response) => setCodes(response.data?.recovery_codes ?? []))
+            .catch(() => setCodes([]));
 
     useEffect(() => {
         if (isEnabled && showCodes) {
@@ -48,35 +30,42 @@ export default function TwoFactor({ enabled, pending: initialPending }) {
         }
     }, [isEnabled, showCodes]);
 
-    const enableAction = useAction(() => visit('post', route('two-factor.enable'), {}, { preserveScroll: false }), {
+    const enableAction = useAction(() => axios.post('/api/2fa/setup'), {
         key: () => 'enable',
-        onSuccess: () => setPending(true),
+        onSuccess: (response) => {
+            setQr(response.data?.qr_code_svg || null);
+            setSecret(response.data?.secret || null);
+            setPending(true);
+        },
     });
     const enable = () => enableAction.run();
 
-    const confirmAction2fa = useAction((value) => visit('post', route('two-factor.confirm'), { code: value }, { preserveScroll: false }), {
+    const confirmAction2fa = useAction((value) => axios.post('/api/2fa/confirm', { code: value }), {
         key: () => 'confirm',
         error: false, // the code field shows the error
-        onSuccess: () => {
+        onSuccess: (response) => {
             setIsEnabled(true);
             setPending(false);
             setCode('');
+            setConfirmError(null);
+            setCodes(response.data?.recovery_codes ?? null);
             setShowCodes(true);
         },
+        onError: (error) => setConfirmError(error.response?.data?.message || 'That code didn’t work. Try again.'),
     });
     const confirm = (e) => {
         e.preventDefault();
         confirmAction2fa.run(code);
     };
 
-    const regenerateAction = useAction(() => visit('post', route('two-factor.regenerate-recovery-codes'), {}, { preserveScroll: false }), {
+    const regenerateAction = useAction(() => axios.post('/api/2fa/recovery-codes'), {
         confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' },
         key: () => 'regenerate',
-        onSuccess: () => loadCodes(),
+        onSuccess: (response) => setCodes(response.data?.recovery_codes ?? []),
     });
     const regenerate = () => regenerateAction.run();
 
-    const disableAction = useAction(() => visit('delete', route('two-factor.disable'), {}, { preserveScroll: false }), {
+    const disableAction = useAction(() => axios.post('/api/2fa/disable'), {
         confirm: 'Turn off two-factor authentication?',
         key: () => 'disable',
         onSuccess: () => {

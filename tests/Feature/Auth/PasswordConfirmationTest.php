@@ -14,31 +14,24 @@ class PasswordConfirmationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->get('/user/confirm-password');
-
-        $response->assertStatus(200);
+        $this->actingAs($user)->get('/user/confirm-password')->assertOk()
+            ->assertPage(fn ($page) => $page->component('Auth/ConfirmPassword'));
     }
 
     public function test_password_can_be_confirmed(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/user/confirm-password', [
-            'password' => 'password',
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionHasNoErrors();
+        $this->actingAs($user)->postJson('/api/confirm-password', ['password' => 'password'])->assertOk();
+        $this->getJson('/api/confirmed-password-status')->assertJsonPath('data.confirmed', true);
     }
 
     public function test_password_is_not_confirmed_with_invalid_password(): void
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->post('/user/confirm-password', [
-            'password' => 'wrong-password',
-        ]);
-
-        $response->assertSessionHasErrors();
+        $this->actingAs($user)->postJson('/api/confirm-password', ['password' => 'wrong-password'])
+            ->assertStatus(422)->assertJsonValidationErrors('password');
+        $this->getJson('/api/confirmed-password-status')->assertJsonPath('data.confirmed', false);
     }
 }

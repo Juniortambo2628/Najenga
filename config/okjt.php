@@ -27,6 +27,20 @@ $config = array_replace_recursive($kit, [
     'accounts' => [
         'model' => Account::class,
     ],
+    // Signing in on Najenga's own origin: the session cookie, as before.
+    'auth' => [
+        'mode' => 'session',
+        'guard' => 'web',
+        // Najenga doesn't ask people to verify their address (User isn't MustVerifyEmail).
+        'verified_to_sign_in' => false,
+        // Secrets and recovery codes encrypted as Laravel Fortify kept them.
+        'two_factor' => ['secrets_encrypted' => true],
+        'login_codes' => ['notification' => \App\Notifications\LoginCodeNotification::class],
+        'password_reset' => ['path' => '/reset-password'],
+    ],
+    'messages' => [
+        'bad_credentials' => 'These credentials do not match our records.',
+    ],
 ]);
 
 $config['roles']['all'] = ['owner', 'editor', 'viewer'];

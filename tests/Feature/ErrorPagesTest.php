@@ -127,21 +127,22 @@ class ErrorPagesTest extends TestCase
 
     /**
      * The render callback in bootstrap/app.php runs before Laravel converts
-     * a ValidationException, so if it claims one, every rejected form - the
-     * login typo above all - answers 500 and the field messages are lost.
+     * a ValidationException, so if it claims one, every rejected form
+     * answers 500 and the field messages are lost.
      */
     public function test_a_rejected_form_gets_errors_not_the_error_page(): void
     {
-        $response = $this->post('/login', [
-            'email' => 'nobody@example.com',
-            'password' => 'wrong-password',
+        $user = \App\Models\User::factory()->create(['role' => 'client']);
+
+        $response = $this->actingAs($user)->from('/projects')->post('/projects', [
+            'name' => '',
         ], [
             'X-Kit-Page' => '1',
             'Accept' => 'text/html',
         ]);
 
         $response->assertStatus(302);
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors('name');
     }
 
     public function test_the_app_asking_for_a_page_while_signed_out_is_sent_to_login(): void

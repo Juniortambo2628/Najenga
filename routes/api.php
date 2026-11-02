@@ -1,6 +1,11 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\LoginCodeController;
+use Okjt\Kit\Http\Controllers\ConfirmPasswordController;
+use Okjt\Kit\Http\Controllers\EmailVerificationController;
+use Okjt\Kit\Http\Controllers\PasswordResetController;
+use Okjt\Kit\Http\Controllers\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,10 +38,31 @@ Route::post('/telegram/webhook', [\App\Http\Controllers\TelegramController::clas
 Route::get('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppController::class, 'verifyWebhook']);
 Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsAppController::class, 'handleWebhook']);
 
-// Authenticated user route (for Sanctum SPA if needed)
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Signing in, on the OKJT kit's auth API (okjt.auth.mode 'session': the
+// session cookie). The sign-in pages (resources/js/Pages/Auth) call these.
+Route::middleware('web')->group(function () {
+    Route::post('/login', [AuthController::class, 'login'])->name('api.login');
+    Route::post('/verify-2fa', [AuthController::class, 'verify2fa'])->name('api.verify-2fa');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:6,1')->name('api.register');
+    Route::post('/login-code', [LoginCodeController::class, 'request'])->middleware('throttle:3,1')->name('api.login-code');
+    Route::post('/login-code/verify', [LoginCodeController::class, 'verify'])->middleware('throttle:6,1')->name('api.login-code.verify');
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:6,1')->name('api.forgot-password');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:6,1')->name('api.reset-password');
+    Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->middleware('throttle:6,1')->name('api.email.resend');
+
+    Route::middleware('auth')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
+        Route::get('/user', [AuthController::class, 'user'])->name('api.user');
+        Route::post('/confirm-password', [ConfirmPasswordController::class, 'confirm'])->middleware('throttle:6,1')->name('api.confirm-password');
+        Route::get('/confirmed-password-status', [ConfirmPasswordController::class, 'status'])->name('api.confirmed-password-status');
+
+        Route::post('/2fa/setup', [TwoFactorController::class, 'setup'])->name('api.2fa.setup');
+        Route::post('/2fa/confirm', [TwoFactorController::class, 'confirm'])->middleware('throttle:6,1')->name('api.2fa.confirm');
+        Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->name('api.2fa.disable');
+        Route::get('/2fa/recovery-codes', [TwoFactorController::class, 'recoveryCodes'])->name('api.2fa.recovery-codes');
+        Route::post('/2fa/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('api.2fa.regenerate-recovery-codes');
+    });
+});
 
 // Activity logs API (JSON, session auth)
 Route::middleware(['web', 'auth'])->group(function () {

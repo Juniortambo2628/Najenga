@@ -1,66 +1,29 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
-use App\Http\Controllers\Auth\LoginCodeController;
-use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\PasskeyAuthenticationController;
-use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\Auth\PasswordController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
+/*
+ * Signing in, on the OKJT kit's auth API (okjt.auth.mode 'session': the
+ * session cookie, as ever). The pages are Najenga's (resources/js/Pages/Auth,
+ * built on the kit's sign-in pages); they talk to /api/… (routes/api.php). Passkeys are
+ * laravel/passkeys' own routes (config/passkeys.php).
+ */
+
+// ---- The pages --------------------------------------------------------------
+
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
-
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])
-        ->name('login');
-
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
-
-    Route::get('login/code', [LoginCodeController::class, 'create'])
-        ->name('login.code');
-
-    Route::post('login/code', [LoginCodeController::class, 'request'])
-        ->name('login.code.request');
-
-    Route::post('login/code/verify', [LoginCodeController::class, 'verify'])
-        ->name('login.code.verify');
-
-    Route::get('login/passkey', [PasskeyAuthenticationController::class, 'create'])
-        ->name('login.passkey');
-
-    Route::post('login/passkey/options', [PasskeyAuthenticationController::class, 'options'])
-        ->name('login.passkey.options');
-
-    Route::post('login/passkey', [PasskeyAuthenticationController::class, 'login'])
-        ->name('login.passkey.verify');
-
-    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
-        ->name('password.request');
-
-    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
-        ->name('password.email');
-
-    Route::post('login-code', [LoginCodeController::class, 'request'])
-        ->middleware('throttle:3,1')
-        ->name('login-code.request');
-
-    Route::post('login-code/verify', [LoginCodeController::class, 'verify'])
-        ->middleware('throttle:6,1')
-        ->name('login-code.verify');
-
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
-        ->name('password.reset');
-
-    Route::post('reset-password', [NewPasswordController::class, 'store'])
-        ->name('password.store');
+    Route::get('login', [AuthController::class, 'loginPage'])->name('login');
+    Route::get('register', [AuthController::class, 'registerPage'])->name('register');
+    Route::get('forgot-password', [AuthController::class, 'forgotPasswordPage'])->name('password.request');
+    Route::get('reset-password/{token}', [AuthController::class, 'resetPasswordPage'])->name('password.reset');
+    // Old addresses: signing in with an emailed code or a passkey is on the sign-in page now.
+    Route::redirect('login/code', '/login');
+    Route::redirect('login/passkey', '/login');
 });
 
 Route::middleware('auth')->group(function () {
@@ -71,21 +34,15 @@ Route::middleware('auth')->group(function () {
         ->middleware(['signed', 'throttle:6,1'])
         ->name('verification.verify');
 
-        Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-            ->middleware('throttle:6,1')
-            ->name('verification.send');
+    Route::post('email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 
-        Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+    Route::get('user/confirm-password', [AuthController::class, 'confirmPasswordPage'])->name('password.confirm');
 
-    Route::post('passkeys/options', [PasskeyController::class, 'options'])
-        ->name('passkeys.options');
+    Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
-    Route::post('passkeys', [PasskeyController::class, 'register'])
-        ->name('passkeys.register');
-
-    Route::delete('passkeys/{ownedPasskey}', [PasskeyController::class, 'destroy'])
-        ->name('passkeys.destroy');
-
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
+    Route::post('logout', [AuthController::class, 'signOut'])->name('logout');
 });
+
+// The auth API the pages call (/api/login, /api/verify-2fa, …) is in routes/api.php.

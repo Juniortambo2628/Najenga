@@ -6,14 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Passkeys\Contracts\PasskeyUser;
 use Laravel\Passkeys\PasskeyAuthenticatable;
 use Okjt\Kit\Accounts\HasAccounts;
 
 class User extends Authenticatable implements PasskeyUser
 {
-    use HasAccounts, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use HasAccounts, HasFactory, Notifiable, PasskeyAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -99,20 +98,6 @@ class User extends Authenticatable implements PasskeyUser
     public function hasEnabledTwoFactorAuthentication(): bool
     {
         return ! is_null($this->two_factor_secret) && ! is_null($this->two_factor_confirmed_at);
-    }
-
-    /**
-     * Return the recovery codes as an array, one per line.
-     *
-     * @return array<int, string>
-     */
-    public function recoveryCodesArray(): array
-    {
-        if (! $this->two_factor_recovery_codes) {
-            return [];
-        }
-
-        return json_decode($this->two_factor_recovery_codes, true) ?: [];
     }
 
     /**

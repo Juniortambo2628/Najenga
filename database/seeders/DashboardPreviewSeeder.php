@@ -60,7 +60,7 @@ class DashboardPreviewSeeder extends Seeder
             'username' => 'secure', 'email' => 'twofactor@example.com', 'password' => Hash::make('password'),
             'first_name' => 'Kamau', 'last_name' => 'Njoroge', 'role' => 'client', 'status' => 'active',
             'email_verified_at' => '2025-01-01 08:00:00', 'created_at' => '2025-01-01 08:00:00',
-            // Encrypted as Fortify stores them (the model's cast encrypts again).
+            // Encrypted as Fortify stored them (okjt.auth.two_factor.secrets_encrypted; the model's cast encrypts again).
             'two_factor_secret' => encrypt(self::TWO_FACTOR_SECRET),
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => '2025-01-01 08:00:00',

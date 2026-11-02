@@ -11,7 +11,7 @@ Artisan::command('inspire', function () {
 // Expired login codes, versions older than Revision::KEEP_DAYS (180 days), and
 // records 30 days in the trash, deleted for good with their files.
 Schedule::command('model:prune', ['--model' => [
-    \App\Models\LoginCode::class,
+    \Okjt\Kit\Auth\LoginCode::class,
     \App\Models\Revision::class,
     \App\Models\Project::class,
     \App\Models\Expense::class,
