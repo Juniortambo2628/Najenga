@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
     await page.route('**/presence/heartbeat', (route) => route.fulfill({ json: { online: [], badges: {} } }));
 
     await page.goto('/login');
-    await page.fill('#email', 'visual@example.com');
+    await page.fill('input[type=email]', 'visual@example.com');
     await page.fill('input[type=password]', 'password');
     await Promise.all([page.waitForURL((url) => !url.pathname.startsWith('/login')), page.click('button[type=submit]')]);
 });
