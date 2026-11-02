@@ -30,14 +30,14 @@ class SelfHostedAssetsTest extends TestCase
         }
     }
 
-    public function test_the_page_loads_font_awesome_from_the_vendor_directory(): void
+    public function test_the_kit_app_loads_font_awesome_from_the_vendor_directory(): void
     {
-        // /login renders the Inertia root template (app.blade.php); the
-        // public welcome page has its own blade and no icons.
-        $response = $this->get('/login');
+        // The pages are drawn by the kit app (frontend/), which loads the
+        // icons itself (into Tailwind's base layer): from public/vendor.
+        $loader = file_get_contents(base_path('frontend/src/dashboard/icons.jsx'));
 
-        $response->assertOk();
-        $response->assertSee('/'.self::FA_ROOT.'css/all.min.css', false);
-        $response->assertDontSee('cdnjs.cloudflare.com/ajax/libs/font-awesome', false);
+        $this->assertStringContainsString("'/".self::FA_ROOT."css/all.min.css'", $loader);
+        $this->assertStringNotContainsString('cdnjs.cloudflare.com', $loader);
+        $this->assertStringNotContainsString('cdnjs.cloudflare.com', file_get_contents(base_path('frontend/index.html')));
     }
 }

@@ -14,8 +14,17 @@
  */
 return [
     'kit_pages' => env('NAJENGA_KIT_PAGES') === 'off' ? [] : array_values(array_unique(array_merge([
-        // Every dashboard page (2026-11-02). Sign-in, registration and email
-        // verification stay on Inertia until Phase 6c.
+        // Every page (Phase 6c): the dashboard (2026-11-02), and sign-in,
+        // registration, password and email verification.
+        'login',
+        'login.code',
+        'login.passkey',
+        'register',
+        'password.request',
+        'password.reset',
+        'password.confirm',
+        'two-factor.login',
+        'verification.notice',
         'activity.logs',
         'analytics',
         'dashboard',

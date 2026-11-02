@@ -1,5 +1,5 @@
 import './globals';
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { DashboardProvider, DashboardShell } from '@okjt/dashboard';
@@ -120,6 +120,34 @@ function Shell({ children }) {
   );
 }
 
+/**
+ * Pages drawn without the dashboard frame, as on Inertia: the sign-in pages
+ * (they bring GuestLayout) and the full-screen error page. They keep
+ * Najenga's styles (admin-theme on <html>).
+ */
+const isBare = (component) => component === 'Errors' || component?.startsWith('Auth/');
+
+function Bare({ children }) {
+  useEffect(() => {
+    document.documentElement.classList.add('admin-theme');
+    return () => document.documentElement.classList.remove('admin-theme');
+  }, []);
+  return (
+    <>
+      <ConfirmHost />
+      {children}
+    </>
+  );
+}
+
+/** The frame the page asks for: the dashboard's, or none. */
+function Frame({ children }) {
+  const state = usePageState();
+  if (!state.page) return null;
+  if (isBare(state.page.component)) return <Bare>{children}</Bare>;
+  return <Shell>{children}</Shell>;
+}
+
 /** The page the server named, with its props. */
 function CurrentPage() {
   const state = usePageState();
@@ -138,9 +166,9 @@ export default function DashboardApp() {
     <QueryClientProvider client={queryClient}>
       <InertiaBridge />
       <PageDataProvider>
-        <Shell>
+        <Frame>
           <CurrentPage />
-        </Shell>
+        </Frame>
       </PageDataProvider>
     </QueryClientProvider>
   );

@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Hash;
  */
 class DashboardPreviewSeeder extends Seeder
 {
+    /** twofactor@example.com's authenticator secret (base32), for scripted sign-ins. */
+    public const TWO_FACTOR_SECRET = 'JBSWY3DPEHPK3PXP';
+
     public function run(): void
     {
         $this->call(VisualTestSeeder::class);
@@ -45,6 +48,23 @@ class DashboardPreviewSeeder extends Seeder
         ]);
         $editor->save();
         $project->users()->syncWithoutDetaching([$editor->id => ['role' => 'editor']]);
+
+        // For the sign-in pages: someone who hasn't verified their email,
+        // and someone with two-factor sign-in (secret printed by the test helper).
+        (new User)->forceFill([
+            'username' => 'newcomer', 'email' => 'unverified@example.com', 'password' => Hash::make('password'),
+            'first_name' => 'Amina', 'last_name' => 'Wanjiru', 'role' => 'client', 'status' => 'active',
+            'created_at' => '2025-01-01 08:00:00',
+        ])->save();
+        (new User)->forceFill([
+            'username' => 'secure', 'email' => 'twofactor@example.com', 'password' => Hash::make('password'),
+            'first_name' => 'Kamau', 'last_name' => 'Njoroge', 'role' => 'client', 'status' => 'active',
+            'email_verified_at' => '2025-01-01 08:00:00', 'created_at' => '2025-01-01 08:00:00',
+            // Encrypted as Fortify stores them (the model's cast encrypts again).
+            'two_factor_secret' => encrypt(self::TWO_FACTOR_SECRET),
+            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
+            'two_factor_confirmed_at' => '2025-01-01 08:00:00',
+        ])->save();
 
         $milestones = [
             ['Foundation', 'Excavation, footing and slab.', '2026-03-02', '2026-04-15', 'completed', 'high'],
