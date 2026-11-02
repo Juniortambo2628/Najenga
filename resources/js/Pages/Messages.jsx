@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import DashboardPage from '@/Components/DashboardPage';
-import ListPanel from '@/Components/ListPanel';
+import { AdminListPanel as ListPanel } from '@okjt/dashboard';
 import EmptyState from '@/Components/EmptyState';
 import Button from '@/Components/Button';
 import useAction from '@/Hooks/useAction';

@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
-import ListPanel from '@/Components/ListPanel';
+import { AdminListPanel as ListPanel } from '@okjt/dashboard';
 import SummaryCards from '@/Components/SummaryCards';
 import DetailRow from '@/Components/DetailRow';
 import { rootBreadcrumbs } from '@/Config/navigation';

@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import DashboardPage from '@/Components/DashboardPage';
-import ListPanel from '@/Components/ListPanel';
+import { AdminListPanel as ListPanel } from '@okjt/dashboard';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';

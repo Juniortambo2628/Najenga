@@ -13,7 +13,7 @@ import AccountMenu from '../najenga/shell/AccountMenu';
 import GlobalSearch from '../najenga/shell/GlobalSearch';
 import { HeaderStart, History, MenuIcon, Notifications, Online, Share } from '../najenga/shell/HeaderPieces';
 import { http } from './api';
-import { loadFontAwesome } from './icons';
+import { fa, loadFontAwesome } from './icons';
 import { NAV_ITEMS, navFor } from './navigation';
 import { PageDataProvider, seedFirstPage, usePageState } from './page';
 
@@ -55,6 +55,19 @@ const api = {
   },
 };
 
+/** Font Awesome names, and the names the kit asks for. */
+const NAMED = {
+  search: 'fa-magnifying-glass',
+  'panel-expand': 'fa-angles-left',
+  'panel-collapse': 'fa-angles-right',
+  close: 'fa-xmark',
+  'chevron-up': 'fa-chevron-up',
+};
+const iconFor = (name) => {
+  const fas = NAMED[name] ?? name;
+  return fas.startsWith('fa-') ? fa(fas, { brand: fas === 'fa-whatsapp' }) : null;
+};
+
 const MODULES = NAV_ITEMS.map((item) => ({ key: item.key, path: item.path, label: item.label }));
 
 function Shell({ children }) {
@@ -66,6 +79,10 @@ function Shell({ children }) {
     api,
     modules: MODULES,
     home: { label: 'Dashboard', path: '/dashboard' },
+    // Kit components take Najenga's Font Awesome names ('fa-receipt').
+    iconFor,
+    // The kit's components in Najenga's dark, bold look.
+    componentDefaults: { SidePanel: { variant: 'bold' } },
     roles: [
       { value: 'owner', label: 'Owner', description: 'Everything, including people and roles' },
       { value: 'editor', label: 'Editor', description: 'Adds and changes records' },

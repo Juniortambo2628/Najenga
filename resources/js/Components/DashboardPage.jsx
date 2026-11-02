@@ -1,6 +1,6 @@
 import DashboardHero from '@/Components/DashboardHero';
 import FloatingToolbar from '@/Components/FloatingToolbar';
-import { SidePanelAside, SidePanelMobileBar } from '@/Components/SidePanel';
+import { SidePanelAside, SidePanelMobileBar } from '@okjt/dashboard';
 import { usePage } from '@inertiajs/react';
 import PageActivityPanel, { ACTIVITY_PANEL_PAGES } from '@/Components/PageActivityPanel';
 

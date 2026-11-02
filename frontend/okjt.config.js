@@ -28,7 +28,7 @@ export default {
     },
     // The dashboard is dark: the values its Tailwind 3 pages wrote by hand
     // (#0b0c0d page, #141516 panels, white text at falling strengths, the
-    // brand reds), as the kit's tokens. The tone ramp runs dark to light.
+    // brand reds), as the kit's tokens.
     dashboard: {
       colorScheme: 'dark',
       colors: {
@@ -47,21 +47,26 @@ export default {
         tint: 'rgb(255 255 255 / 0.05)',
         paper: '#0b0c0d',
         paperWarm: '#101112',
-        surface: '#141516',
+        // Najenga's panels: #141516 at 90% (the .panel class).
+        surface: 'rgb(20 21 22 / 0.9)',
         contrast: '#ffffff',
+        // Solid buttons: Najenga's deep red.
+        action: '#8B0000',
         positive: '#34d399',
         positiveDark: '#6ee7b7',
+        // White at rising strengths, as Najenga's pages write it: hovers
+        // white/4, borders white/8 and /12, text white/40 to white.
         tone: {
-          50: '#1a1b1c',
-          100: '#232425',
-          200: '#2c2d2e',
-          300: '#3d3e3f',
-          400: '#6b6c6d',
-          500: '#8a8b8c',
-          600: '#a3a4a5',
-          700: '#c4c5c6',
-          800: '#e2e3e3',
-          900: '#f2f2f2',
+          50: 'rgb(255 255 255 / 0.04)',
+          100: 'rgb(255 255 255 / 0.08)',
+          200: 'rgb(255 255 255 / 0.12)',
+          300: 'rgb(255 255 255 / 0.2)',
+          400: 'rgb(255 255 255 / 0.4)',
+          500: 'rgb(255 255 255 / 0.5)',
+          600: 'rgb(255 255 255 / 0.6)',
+          700: 'rgb(255 255 255 / 0.75)',
+          800: 'rgb(255 255 255 / 0.85)',
+          900: 'rgb(255 255 255 / 0.95)',
           950: '#ffffff',
         },
       },

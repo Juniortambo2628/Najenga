@@ -1,4 +1,4 @@
-import { fa } from './icons';
+import { faNav as fa } from './icons';
 
 /**
  * The sidebar, grouped. `roles` limits an item to those roles ('admin' is a

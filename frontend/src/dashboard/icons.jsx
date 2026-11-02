@@ -1,22 +1,35 @@
 /**
  * Najenga's dashboard keeps its Font Awesome icons (served from
  * /vendor/fontawesome, loaded by the dashboard only). `fa('fa-receipt')` is a
- * component the kit can render wherever it takes an icon.
+ * component the kit can render wherever it takes an icon; `faNav()` is the
+ * same in the sidebar's box (an inline span around a w-5 icon, as Najenga's
+ * sidebar had).
  */
 const cache = new Map();
 
-export function fa(name, { brand = false } = {}) {
-  const key = `${brand ? 'fab' : 'fas'} ${name}`;
+function make(key, render) {
   if (!cache.has(key)) {
-    // Najenga's icon box (w-5, centred), whatever size the kit asks for.
-    // In the sidebar, the same box as Najenga's own: an inline span around a w-5 icon.
-    const Icon = ({ className = '' }) => (className.includes('w-')
-      ? <span className="relative"><i aria-hidden="true" className={`${key} w-5 text-center`} /></span>
-      : <i aria-hidden="true" className={`${key} ${className}`} />);
-    Icon.displayName = `Fa(${name})`;
+    const Icon = render;
+    Icon.displayName = `Fa(${key})`;
     cache.set(key, Icon);
   }
   return cache.get(key);
+}
+
+const classOf = (name, brand) => `${brand ? 'fab' : 'fas'} ${name}`;
+
+export function fa(name, { brand = false } = {}) {
+  const cls = classOf(name, brand);
+  return make(cls, ({ className = '', ...rest }) => <i aria-hidden="true" className={`${cls} ${className}`} {...rest} />);
+}
+
+export function faNav(name, { brand = false } = {}) {
+  const cls = classOf(name, brand);
+  return make(`nav ${cls}`, () => (
+    <span className="relative">
+      <i aria-hidden="true" className={`${cls} w-5 text-center`} />
+    </span>
+  ));
 }
 
 export function loadFontAwesome() {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import DashboardPage from '@/Components/DashboardPage';
-import ListPanel from '@/Components/ListPanel';
+import { AdminListPanel as ListPanel } from '@okjt/dashboard';
 import SummaryCards from '@/Components/SummaryCards';
 import EmptyState from '@/Components/EmptyState';
 import useAction, { visit } from '@/Hooks/useAction';

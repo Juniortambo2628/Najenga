@@ -10,7 +10,7 @@ import EmptyState from '@/Components/EmptyState';
 import PrimaryButton from '@/Components/PrimaryButton';
 import Button from '@/Components/Button';
 import DashboardPage from '@/Components/DashboardPage';
-import ListPanel from '@/Components/ListPanel';
+import { AdminListPanel as ListPanel } from '@okjt/dashboard';
 import Modal from '@/Components/Modal';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useActiveProject from '@/Hooks/useActiveProject';
