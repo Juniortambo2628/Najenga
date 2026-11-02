@@ -15,7 +15,7 @@ import { HeaderStart, History, MenuIcon, Notifications, Online, Share } from '..
 import { http } from './api';
 import { loadFontAwesome } from './icons';
 import { NAV_ITEMS, navFor } from './navigation';
-import { PageDataProvider, usePageState } from './page';
+import { PageDataProvider, seedFirstPage, usePageState } from './page';
 
 /**
  * Najenga's dashboard on the OKJT kit: the kit's shell (sidebar, header,
@@ -37,6 +37,7 @@ function pageComponent(name) {
 }
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
+seedFirstPage(queryClient);
 
 /**
  * The kit's API client, with presence answered by Najenga's own heartbeat

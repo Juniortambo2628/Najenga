@@ -4,23 +4,27 @@ namespace App\Http\Middleware;
 
 use App\Http\Controllers\SpaController;
 use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The bridge while Najenga's pages move from Inertia to the OKJT kit app
- * (frontend/). For a GET to a page in config('najenga.kit_pages'):
+ * (frontend/). For a GET to a page in config('najenga.kit_pages'), the
+ * controller runs as it always has, as an Inertia request, and then:
  *
- *   - the kit app asking for the page's data (X-Kit-Page): the controller
- *     runs as it always has and its Inertia props come back as JSON
- *     ({ component, props, url, version }), shared props included;
+ *   - the kit app asking for a page's data (X-Kit-Page): its Inertia page
+ *     object as JSON ({ component, props, url, version }), shared props
+ *     included;
+ *   - a browser loading the page: the kit app's index.html with that page
+ *     object inside, at the controller's status (a 403 stays a 403);
  *   - an Inertia visit from a page that hasn't moved: a full reload, so the
- *     browser lands in the kit app;
- *   - anything else (typing the URL, a refresh): the kit app's index.html.
+ *     browser lands in the kit app.
  *
- * So a page moves without touching its controller. Sits before
- * HandleInertiaRequests in the web group.
+ * Redirects and sign-in redirects pass through as they are. So a page moves
+ * without touching its controller. Sits before HandleInertiaRequests in the
+ * web group.
  */
 class ServeKitPages
 {
@@ -32,23 +36,29 @@ class ServeKitPages
             return $next($request);
         }
 
-        if ($request->headers->has('X-Kit-Page')) {
-            // Ask Inertia for its JSON page object, at the version it expects.
-            $request->headers->set('X-Inertia', 'true');
-            $request->headers->set('X-Inertia-Version', (string) (new HandleInertiaRequests)->version($request));
-
-            return $next($request);
-        }
-
-        if ($request->headers->has('X-Inertia')) {
+        if ($request->headers->has('X-Inertia') && ! $request->headers->has('X-Kit-Page')) {
             return Inertia::location($request->fullUrl());
         }
 
-        // Signed-out visitors still go to sign in, as the page's auth would.
-        if (! $request->user() && in_array('auth', $request->route()->gatherMiddleware(), true)) {
-            return $next($request);
+        $forApp = $request->headers->has('X-Kit-Page');
+
+        // Ask Inertia for its JSON page object, at the version it expects.
+        $request->headers->set('X-Inertia', 'true');
+        $request->headers->set('X-Inertia-Version', (string) (new HandleInertiaRequests)->version($request));
+
+        $response = $next($request);
+
+        if ($forApp || ! $response instanceof JsonResponse) {
+            return $response;
         }
 
-        return app(SpaController::class)();
+        $page = $response->getData(true);
+        if (! isset($page['component'])) {
+            return $response;
+        }
+
+        return response()
+            ->view('kit-app', ['page' => $page, 'html' => SpaController::html($page)], $response->getStatusCode())
+            ->header('Cache-Control', 'no-cache, private');
     }
 }

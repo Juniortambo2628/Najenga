@@ -98,25 +98,29 @@ class ErrorPagesTest extends TestCase
         );
     }
 
-    public function test_a_forbidden_inertia_visit_reports_the_real_status(): void
+    public function test_a_forbidden_page_reports_the_real_status_to_the_kit_app(): void
     {
+        // /users is drawn by the kit app (config('najenga.kit_pages')): its
+        // data request gets the Errors page, at the real status.
         $user = User::factory()->create(['role' => 'client']);
 
-        $headers = ['X-Inertia' => 'true'];
-        $version = (new HandleInertiaRequests)->version(Request::create('/users'));
-
-        if ($version !== null) {
-            // A real Inertia client always sends the version it holds;
-            // without it HandleVersion answers 409 before the page shows.
-            $headers['X-Inertia-Version'] = $version;
-        }
-
-        $response = $this->actingAs($user)->get('/users', $headers);
+        $response = $this->actingAs($user)->get('/users', ['X-Kit-Page' => '1']);
 
         $response->assertStatus(403);
         $response->assertHeader('X-Inertia', 'true');
         $this->assertSame('Errors', $response->json('component'));
         $this->assertSame(403, $response->json('props.status'));
+    }
+
+    public function test_a_forbidden_page_opened_in_the_browser_is_a_403_too(): void
+    {
+        $user = User::factory()->create(['role' => 'client']);
+
+        $response = $this->actingAs($user)->get('/users');
+
+        $response->assertStatus(403);
+        $response->assertSee('najenga-spa-fixture', false);
+        $response->assertInertia(fn ($page) => $page->component('Errors')->where('status', 403));
     }
 
     public function test_json_requests_are_not_handed_the_react_error_page(): void

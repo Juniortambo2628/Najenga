@@ -48,3 +48,16 @@ describe('fetchPage()', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('the first page', () => {
+  it('starts from the page Laravel put in index.html, and removes it', async () => {
+    const { QueryClient } = await import('@tanstack/react-query');
+    const { seedFirstPage, pageKey } = await import('../src/dashboard/page');
+    window.history.replaceState({}, '', '/expenses?project=2');
+    document.head.insertAdjacentHTML('beforeend', '<script id="kit-page" type="application/json">{"component":"Expenses","props":{"a":1},"url":"/expenses?project=2"}</script>');
+    const client = new QueryClient();
+    seedFirstPage(client);
+    expect(client.getQueryData(pageKey('/expenses?project=2'))).toMatchObject({ component: 'Expenses' });
+    expect(document.getElementById('kit-page')).toBeNull();
+  });
+});

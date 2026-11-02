@@ -13,12 +13,28 @@ const PageContext = createContext(null);
 
 export const pageKey = (url) => ['page', url];
 
+/**
+ * The page Laravel sent inside index.html (ServeKitPages), for the URL the
+ * browser opened: the app starts from it instead of asking again.
+ */
+export function seedFirstPage(queryClient) {
+  const el = typeof document !== 'undefined' && document.getElementById('kit-page');
+  if (!el) return;
+  try {
+    const page = JSON.parse(el.textContent);
+    queryClient.setQueryData(pageKey(window.location.pathname + window.location.search), page);
+  } catch {
+    // Unreadable: the app asks for the page instead.
+  }
+  el.remove();
+}
+
 export function PageDataProvider({ children }) {
   const { pathname, search } = useLocation();
   const url = pathname + search;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const query = useQuery({ queryKey: pageKey(url), queryFn: () => fetchPage(url), placeholderData: keepPreviousData, staleTime: 0 });
+  const query = useQuery({ queryKey: pageKey(url), queryFn: () => fetchPage(url), placeholderData: keepPreviousData, staleTime: 2000 });
   const shared = useRef({ auth: {}, flash: {} });
   if (query.data?.props) {
     const { auth, flash } = query.data.props;

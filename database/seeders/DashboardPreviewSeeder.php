@@ -8,6 +8,7 @@ use App\Models\Folder;
 use App\Models\Photo;
 use App\Models\Project;
 use App\Models\ProjectTimeline;
+use App\Models\Receipt;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -97,6 +98,22 @@ class DashboardPreviewSeeder extends Seeder
         $expense = $project->expenses()->first();
         if ($expense) {
             Comment::create(['body' => 'Receipt is in the WhatsApp chat — I’ll attach it tonight.', 'user_id' => $editor->id, 'commentable_id' => $expense->id, 'commentable_type' => $expense::class]);
+
+            // A receipt read by OCR, for the Receipts pages.
+            (new Receipt)->forceFill([
+                'expense_id' => $expense->id,
+                'filename' => 'bamburi-receipt.jpg',
+                'original_name' => 'bamburi-receipt.jpg',
+                'file_path' => 'receipts/bamburi-receipt.jpg',
+                'file_size' => 120000,
+                'mime_type' => 'image/jpeg',
+                'extracted_text' => "BAMBURI HARDWARE\nCEMENT 40 BAGS\nTOTAL KES 32,000",
+                'extracted_amount' => 32000,
+                'extracted_date' => '2026-10-20',
+                'extracted_merchant' => 'Bamburi Hardware',
+                'ocr_provider' => 'tesseract',
+                'processed_at' => '2026-10-20 11:00:00',
+            ])->save();
         }
     }
 }
