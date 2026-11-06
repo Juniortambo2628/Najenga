@@ -77,6 +77,7 @@ export default function Edit({ document: doc, projects, folders }) {
                             <option value="drawing">Drawing</option>
                             <option value="permit">Permit</option>
                             <option value="invoice">Invoice</option>
+                            <option value="quote">Quotation</option>
                             <option value="ticket">Ticket</option>
                             <option value="other">Other</option>
                         </SelectInput>

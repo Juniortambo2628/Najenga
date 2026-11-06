@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { useState, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import axios from 'axios';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
@@ -41,6 +41,76 @@ const mapExtractedToForm = (ext = {}, projectId = '') => ({
     project_id: projectId,
 });
 
+/** One expense the reader found, as the form's fields. */
+const mapExpenseToForm = (exp = {}, projectId = '') => ({
+    title: exp.title || exp.recipient || 'Unknown',
+    amount: exp.amount ?? '',
+    expense_date: exp.expense_date || new Date().toISOString().split('T')[0],
+    time: exp.time || '',
+    recipient: exp.recipient || '',
+    payment_method: exp.payment_method || 'mobile_money',
+    reference_number: exp.reference_number || '',
+    purpose: exp.purpose || '',
+    category: exp.category || 'Materials',
+    project_id: projectId,
+});
+
+const money = (amount, currency = 'KES') => (amount === null || amount === undefined || amount === ''
+    ? '—'
+    : `${currency} ${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+
+const shortDate = (iso) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null);
+
+/** What an invoice or quotation is filed as under Documents. */
+const documentForm = (doc, projectId) => {
+    const what = doc.type === 'quote' ? 'Quotation' : 'Invoice';
+    const due = doc.type === 'quote' ? (doc.valid_until && `valid until ${shortDate(doc.valid_until)}`) : (doc.due_date && `due ${shortDate(doc.due_date)}`);
+    return {
+        title: [what, doc.number, doc.issuer && `— ${doc.issuer}`].filter(Boolean).join(' '),
+        description: [doc.total ? money(doc.total, doc.currency) : null, due, doc.bill_to && `for ${doc.bill_to}`].filter(Boolean).join(', '),
+        document_date: doc.date || '',
+        category: doc.type === 'quote' ? 'quote' : 'invoice',
+        project_id: projectId,
+    };
+};
+
+/**
+ * A queue entry once its file is read: one entry per expense in it (they
+ * share the file and preview), or one entry for an invoice / quotation to
+ * file as a document.
+ */
+const expandEntry = (entry, result, projectId) => {
+    const shared = { rawText: result.text || '', summary: result.summary || '', kind: result.kind };
+
+    if (result.document) {
+        return [{
+            ...entry,
+            ...shared,
+            status: 'document',
+            document: result.document,
+            docForm: documentForm(result.document, projectId),
+            result: { temp_path: result.document.temp_path },
+        }];
+    }
+
+    const expenses = result.expenses || [];
+    if (expenses.length === 0) {
+        return [{ ...entry, ...shared, status: 'error', error: result.summary || 'No payment found in this file.' }];
+    }
+
+    return expenses.map((exp, i) => ({
+        ...entry,
+        ...shared,
+        id: i === 0 ? entry.id : `${entry.id}-${i + 1}`,
+        part: expenses.length > 1 ? { index: i + 1, total: expenses.length } : null,
+        status: exp.duplicate_of ? 'duplicate' : 'ready',
+        duplicateOf: exp.duplicate_of || null,
+        needsCheck: !!exp.needs_check,
+        formData: mapExpenseToForm(exp, projectId),
+        result: { temp_path: exp.temp_path, extracted: exp },
+    }));
+};
+
 export default function ReceiptVerification({ projects = [] }) {
     const [activeProjectId] = useActiveProjectId();
     const defaultProjectId = projects.some((project) => String(project.id) === String(activeProjectId)) ? activeProjectId : '';
@@ -56,6 +126,9 @@ export default function ReceiptVerification({ projects = [] }) {
     const [rawText, setRawText] = useState('');
     const [currentTempPath, setCurrentTempPath] = useState('');
     const [currentFileId, setCurrentFileId] = useState(null);
+    // The latest queue, for reading it straight after a change.
+    const queueRef = useRef(queue);
+    queueRef.current = queue;
 
     const getAxiosConfig = (extraHeaders = {}) => {
         const token = document.head.querySelector('meta[name="csrf-token"]')?.content;
@@ -93,7 +166,55 @@ export default function ReceiptVerification({ projects = [] }) {
         setQueue(prev => prev.filter(e => e.id !== id));
     };
 
-    const analyzeOne = useCallback(async (entry, idx) => {
+    /** Is a payment like this one already an expense? Marks the entry if so. */
+    const checkMatch = async (entry) => {
+        const form = entry.formData;
+        if (!form?.reference_number) return;
+        try {
+            const matchResponse = await axios.get('/receipts/match', {
+                ...getAxiosConfig(),
+                params: { reference_number: form.reference_number, date: form.expense_date, time: form.time },
+            });
+            if (matchResponse.data.matched) {
+                setQueue(prev => prev.map(e => e.id === entry.id ? { ...e, matchedExpense: matchResponse.data.expense } : e));
+            }
+        } catch (err) {
+            // Silently fail - matching is optional
+        }
+    };
+
+    /** Put a read file's entries in place of its pending entry; returns them. */
+    const applyResult = (entryId, result) => {
+        const current = queueRef.current;
+        const entry = current.find(e => e.id === entryId);
+        if (!entry) return { next: current, added: [] };
+        const added = expandEntry(entry, result, defaultProjectId);
+        const next = current.flatMap(e => e.id === entryId ? added : [e]);
+        queueRef.current = next;
+        setQueue(next);
+        return { next, added };
+    };
+
+    const markFailed = (entryId, message) => {
+        const next = queueRef.current.map(e => e.id === entryId ? { ...e, status: 'error', result: null, error: message } : e);
+        queueRef.current = next;
+        setQueue(next);
+    };
+
+    /** Show this entry (from a queue that may not be rendered yet). */
+    const showEntry = (list, entryId) => {
+        const idx = list.findIndex(e => e.id === entryId);
+        const entry = list[idx];
+        if (!entry) return;
+        setCurrentIndex(idx);
+        setCurrentFileId(entry.id);
+        setUpdateMatched(!!entry.updateMatched);
+        setRawText(entry.rawText || '');
+        setCurrentTempPath(entry.result?.temp_path || '');
+        if (entry.formData) setFormData(entry.formData);
+    };
+
+    const analyzeOne = async (entry, idx) => {
         setCurrentIndex(idx);
         setProcessing(true);
         setErrors({});
@@ -107,73 +228,29 @@ export default function ReceiptVerification({ projects = [] }) {
             }));
 
             if (response.data.success) {
-                const ext = response.data.extracted;
-                const populated = mapExtractedToForm(ext, defaultProjectId);
-
-                setQueue(prev => prev.map((e, i) => i === idx ? {
-                    ...e,
-                    status: 'ready',
-                    result: { extracted: ext, temp_path: response.data.temp_path },
-                    formData: populated,
-                    rawText: response.data.text,
-                } : e));
-
-                setFormData(populated);
-                setRawText(response.data.text);
-                setCurrentTempPath(response.data.temp_path);
-                setCurrentFileId(entry.id);
-                setUpdateMatched(false);
-
-                // Check for matching expenses after OCR
-                if (populated.reference_number) {
-                    try {
-                        const matchResponse = await axios.get('/receipts/match', {
-                            ...getAxiosConfig(),
-                            params: {
-                                reference_number: populated.reference_number,
-                                date: populated.expense_date,
-                                time: populated.time,
-                            }
-                        });
-                        if (matchResponse.data.matched) {
-                            const matchedExpense = matchResponse.data.expense;
-                            setQueue(prev => prev.map((e, i) => i === idx ? {
-                                ...e,
-                                matchedExpense: matchedExpense,
-                            } : e));
-                        }
-                    } catch (err) {
-                        // Silently fail - matching is optional
-                    }
+                const { next, added } = applyResult(entry.id, response.data);
+                showEntry(next, added[0]?.id);
+                for (const item of added) {
+                    if (item.status === 'ready') await checkMatch(item);
                 }
             } else {
-                setQueue(prev => prev.map((e, i) => i === idx ? {
-                    ...e,
-                    status: 'error',
-                    result: null,
-                } : e));
+                markFailed(entry.id, response.data.message);
                 setErrors({ analysis: response.data.message || 'OCR failed' });
             }
         } catch (error) {
             const msg = error.response?.data?.message || 'Failed to analyze receipt.';
-            setQueue(prev => prev.map((e, i) => i === idx ? {
-                ...e,
-                status: 'error',
-                result: null,
-            } : e));
+            markFailed(entry.id, msg);
             setErrors({ analysis: msg });
         } finally {
             setProcessing(false);
         }
-    }, []);
+    };
 
     const analyzeAll = async () => {
         setProcessing(true);
         setErrors({});
 
-        const pending = queue
-            .map((entry, idx) => ({ entry, idx }))
-            .filter(({ entry }) => entry.status === 'pending');
+        const pending = queueRef.current.filter((entry) => entry.status === 'pending');
 
         if (pending.length === 0) {
             setProcessing(false);
@@ -181,7 +258,7 @@ export default function ReceiptVerification({ projects = [] }) {
         }
 
         const data = new FormData();
-        pending.forEach(({ entry }) => data.append('receipts[]', entry.file));
+        pending.forEach((entry) => data.append('receipts[]', entry.file));
 
         try {
             const response = await axios.post('/receipts/analyze-bulk', data, getAxiosConfig({
@@ -189,76 +266,88 @@ export default function ReceiptVerification({ projects = [] }) {
             }));
 
             const byIndex = new Map((response.data.results || []).map((r) => [r.index, r]));
-            const populatedByQueueIdx = new Map();
+            const toMatch = [];
             let failed = 0;
+            let firstShown = null;
+            let latest = queueRef.current;
 
-            pending.forEach(({ entry, idx }, position) => {
+            pending.forEach((entry, position) => {
                 const result = byIndex.get(position);
 
                 if (!result || !result.success) {
                     failed += 1;
-                    setQueue(prev => prev.map((e, i) => i === idx ? { ...e, status: 'error', result: null } : e));
+                    markFailed(entry.id, result?.message);
+                    latest = queueRef.current;
                     return;
                 }
 
-                const ext = result.extracted || {};
-                const populated = mapExtractedToForm(ext, defaultProjectId);
-                populatedByQueueIdx.set(idx, { populated, result });
-
-                setQueue(prev => prev.map((e, i) => i === idx ? {
-                    ...e,
-                    status: 'ready',
-                    result: { extracted: ext, temp_path: result.temp_path },
-                    formData: populated,
-                    rawText: result.text || '',
-                } : e));
+                const { next, added } = applyResult(entry.id, result);
+                latest = next;
+                if (firstShown === null && added[0]) firstShown = added[0].id;
+                toMatch.push(...added.filter(item => item.status === 'ready'));
             });
 
-            const firstReady = pending.find(({ idx }) => populatedByQueueIdx.has(idx));
-            if (firstReady) {
-                const { populated, result } = populatedByQueueIdx.get(firstReady.idx);
-                setCurrentIndex(firstReady.idx);
-                setCurrentFileId(firstReady.entry.id);
-                setUpdateMatched(false);
-                setFormData(populated);
-                setRawText(result.text || '');
-                setCurrentTempPath(result.temp_path || '');
-            }
+            if (firstShown !== null) showEntry(latest, firstShown);
 
-            for (const [idx, { populated }] of populatedByQueueIdx) {
-                if (!populated.reference_number) continue;
-                try {
-                    const matchResponse = await axios.get('/receipts/match', {
-                        ...getAxiosConfig(),
-                        params: {
-                            reference_number: populated.reference_number,
-                            date: populated.expense_date,
-                            time: populated.time,
-                        },
-                    });
-                    if (matchResponse.data.matched) {
-                        const matchedExpense = matchResponse.data.expense;
-                        setQueue(prev => prev.map((e, i) => i === idx ? { ...e, matchedExpense } : e));
-                    }
-                } catch (err) {
-                    // Silently fail - matching is optional
-                }
-            }
+            for (const item of toMatch) await checkMatch(item);
 
             if (failed > 0) {
                 setErrors({ analysis: `${failed} receipt${failed > 1 ? 's' : ''} failed OCR.` });
-            } else if (populatedByQueueIdx.size === 0) {
+            } else if (firstShown === null) {
                 setErrors({ analysis: 'OCR failed.' });
             }
         } catch (error) {
             const msg = error.response?.data?.message || 'Failed to analyze receipts.';
-            pending.forEach(({ idx }) => {
-                setQueue(prev => prev.map((e, i) => i === idx ? { ...e, status: 'error', result: null } : e));
-            });
+            pending.forEach((entry) => markFailed(entry.id, msg));
             setErrors({ analysis: msg });
         } finally {
             setProcessing(false);
         }
+    };
+
+    /** An invoice or quotation: under Documents, not an expense. */
+    const fileDocument = useAction((entry) => axios.post('/receipts/file-document', {
+        ...entry.docForm,
+        project_id: entry.docForm.project_id || null,
+        temp_path: entry.result.temp_path,
+        original_name: entry.file?.name,
+    }, getAxiosConfig()), {
+        error: false,
+        key: () => 'file-document',
+        onSuccess: (response, entry) => {
+            setQueue(prev => prev.map(e => e.id === entry.id ? { ...e, status: 'filed' } : e));
+        },
+        onError: (error) => setErrors(error.response?.data?.errors
+            ? Object.fromEntries(Object.entries(error.response.data.errors).map(([k, v]) => [`doc_${k}`, Array.isArray(v) ? v[0] : v]))
+            : { doc_save: error.response?.data?.message || 'Could not file the document.' }),
+    });
+
+    const updateDocField = (field, value) => {
+        setQueue(prev => prev.map((e, i) => i === currentIndex ? { ...e, docForm: { ...e.docForm, [field]: value } } : e));
+    };
+
+    /** Someone knows better: this invoice was paid, so record it as an expense. */
+    const recordDocumentAsExpense = (entry) => {
+        const doc = entry.document;
+        const form = mapExpenseToForm({
+            title: doc.issuer || (doc.type === 'quote' ? 'Quotation' : 'Invoice'),
+            amount: doc.total,
+            expense_date: doc.date,
+            recipient: doc.issuer,
+            payment_method: 'other',
+            reference_number: doc.number,
+            purpose: (doc.items || []).map(item => item.description).join(', '),
+            category: 'Materials',
+        }, entry.docForm?.project_id || defaultProjectId);
+        setQueue(prev => prev.map((e, i) => i === currentIndex ? { ...e, status: 'ready', formData: form } : e));
+        setFormData(form);
+        setCurrentTempPath(entry.result.temp_path);
+    };
+
+    /** A payment already in this batch: save it anyway. */
+    const keepDuplicate = (entry) => {
+        setQueue(prev => prev.map((e, i) => i === currentIndex ? { ...e, status: 'ready', duplicateOf: null } : e));
+        setFormData(entry.formData);
     };
 
     // Saving shows its errors inline (beside the form), not as toasts.
@@ -331,16 +420,7 @@ export default function ReceiptVerification({ projects = [] }) {
         saveAll.run(expenses, readyEntries);
     };
 
-    const selectEntry = (idx) => {
-        const entry = queue[idx];
-        if (!entry) return;
-        setCurrentIndex(idx);
-        setCurrentFileId(entry.id);
-        if (entry.formData) setFormData(entry.formData);
-        setUpdateMatched(!!entry.updateMatched);
-        if (entry.rawText) setRawText(entry.rawText);
-        if (entry.result?.temp_path) setCurrentTempPath(entry.result.temp_path);
-    };
+    const selectEntry = (idx) => showEntry(queue, queue[idx]?.id);
 
     const updateCurrentField = (field, value) => {
         const updated = { ...formData, [field]: value };
@@ -349,10 +429,12 @@ export default function ReceiptVerification({ projects = [] }) {
     };
 
     const pendingCount = queue.filter(e => e.status === 'pending').length;
+    const documentCount = queue.filter(e => e.status === 'document').length;
     const readyCount = queue.filter(e => e.status === 'ready').length;
     const savedCount = queue.filter(e => e.status === 'saved').length;
 
-    const processing = analyzing || save.pending || saveAll.pending;
+    const processing = analyzing || save.pending || saveAll.pending || fileDocument.pending;
+    const current = currentIndex >= 0 ? queue[currentIndex] : null;
 
     return (
         <AuthenticatedLayout>
@@ -374,6 +456,7 @@ export default function ReceiptVerification({ projects = [] }) {
                         <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">{pendingCount} pending</span>
                         <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded">{readyCount} ready</span>
                         <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">{savedCount} saved</span>
+                        {documentCount > 0 && <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded">{documentCount} to file as documents</span>}
                     </div>
                 )}
 
@@ -437,7 +520,13 @@ export default function ReceiptVerification({ projects = [] }) {
                                             : 'bg-black/30 border-white/5 hover:bg-white/5'
                                     }`}
                                 >
-                                    <img loading="lazy" decoding="async"  src={entry.preview} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                                    {entry.file?.type === 'application/pdf' ? (
+                                        <span aria-hidden="true" className="w-10 h-10 rounded bg-white/5 flex items-center justify-center flex-shrink-0">
+                                            <i className="fas fa-file-pdf text-gray-400"></i>
+                                        </span>
+                                    ) : (
+                                        <img loading="lazy" decoding="async" src={entry.preview} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                                    )}
                                     <button
                                         type="button"
                                         disabled={entry.status === 'pending'}
@@ -446,14 +535,19 @@ export default function ReceiptVerification({ projects = [] }) {
                                     >
                                         <span className="block text-white truncate text-xs">{entry.file.name}</span>
                                         <span className={`block text-xs ${
-                                            entry.status === 'saved' ? 'text-green-400' :
+                                            entry.status === 'saved' || entry.status === 'filed' ? 'text-green-400' :
                                             entry.status === 'ready' ? 'text-blue-400' :
+                                            entry.status === 'document' ? 'text-yellow-400' :
                                             entry.status === 'error' ? 'text-red-400' :
                                             'text-gray-400'
                                         }`}>
+                                            {entry.part && `Payment ${entry.part.index} of ${entry.part.total} · `}
                                             {entry.status === 'pending' && 'Waiting...'}
-                                            {entry.status === 'ready' && `Ready - ${entry.formData?.recipient || 'No recipient'}`}
+                                            {entry.status === 'ready' && `Ready - ${entry.formData?.title || entry.formData?.recipient || 'No recipient'}${entry.formData?.amount ? ` · ${money(entry.formData.amount)}` : ''}`}
+                                            {entry.status === 'duplicate' && `Already in this batch (${entry.duplicateOf})`}
+                                            {entry.status === 'document' && `${entry.document?.type === 'quote' ? 'Quotation' : 'Invoice'} - file as a document`}
                                             {entry.status === 'saved' && 'Saved'}
+                                            {entry.status === 'filed' && 'Filed under Documents'}
                                             {entry.status === 'error' && 'Failed'}
                                         </span>
                                     </button>
@@ -495,6 +589,12 @@ export default function ReceiptVerification({ projects = [] }) {
                                     </button>
                                 )}
 
+                                {queue[currentIndex].summary && (
+                                    <p className="text-xs text-gray-400" role="status">
+                                        <i aria-hidden="true" className="fas fa-receipt mr-1"></i>{queue[currentIndex].summary}
+                                    </p>
+                                )}
+
                                 {rawText && (
                                     <details className="text-gray-400 text-xs cursor-pointer">
                                         <summary>View Raw OCR Text</summary>
@@ -525,15 +625,133 @@ export default function ReceiptVerification({ projects = [] }) {
                             <div className="text-center text-red-400 py-8">
                                 <i aria-hidden="true" className="fas fa-exclamation-triangle text-3xl mb-2"></i>
                                 <p className="text-sm">Failed to analyze this receipt</p>
-                                {errors.analysis && <p className="text-xs mt-2">{errors.analysis}</p>}
+                                {(queue[currentIndex].error || errors.analysis) && <p className="text-xs mt-2">{queue[currentIndex].error || errors.analysis}</p>}
                             </div>
                         ) : queue[currentIndex].status === 'saved' ? (
                             <div className="text-center text-green-400 py-8">
                                 <i aria-hidden="true" className="fas fa-check-circle text-3xl mb-2"></i>
                                 <p className="text-sm">Expense saved successfully</p>
                             </div>
+                        ) : queue[currentIndex].status === 'filed' ? (
+                            <div className="text-center text-green-400 py-8">
+                                <i aria-hidden="true" className="fas fa-check-circle text-3xl mb-2"></i>
+                                <p className="text-sm">Filed under Documents</p>
+                            </div>
+                        ) : queue[currentIndex].status === 'duplicate' ? (
+                            <div className="space-y-3">
+                                <div className="p-3 bg-amber-400/10 border border-amber-400/30 rounded-xl">
+                                    <div className="flex items-center gap-2 text-amber-300 text-sm font-medium">
+                                        <i aria-hidden="true" className="fas fa-clone"></i>
+                                        <span>Already in this batch</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        {current.formData?.reference_number} ({money(current.formData?.amount)}) is also in {current.duplicateOf}, so it won't be saved twice.
+                                    </p>
+                                </div>
+                                <div className="flex justify-end pt-3 border-t border-white/10">
+                                    <SecondaryButton type="button" onClick={() => keepDuplicate(current)}>
+                                        Save it as well
+                                    </SecondaryButton>
+                                </div>
+                            </div>
+                        ) : queue[currentIndex].status === 'document' ? (
+                            <div className="space-y-3">
+                                <div className="p-3 bg-amber-400/10 border border-amber-400/30 rounded-xl">
+                                    <div className="flex items-center gap-2 text-amber-300 text-sm font-medium">
+                                        <i aria-hidden="true" className={`fas ${current.document.type === 'quote' ? 'fa-file-signature' : 'fa-file-invoice-dollar'}`}></i>
+                                        <span>This is {current.document.type === 'quote' ? 'a quotation' : 'an invoice'}, not a receipt</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        {current.document.type === 'quote'
+                                            ? 'A quotation is a price, not a payment: it goes under Documents.'
+                                            : 'An invoice asks for payment: it goes under Documents. The payment that settles it is the expense.'}
+                                    </p>
+                                </div>
+
+                                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                                    {[
+                                        ['From', current.document.issuer],
+                                        ['Number', current.document.number],
+                                        ['Total', current.document.total ? money(current.document.total, current.document.currency) : null],
+                                        ['Paid', current.document.paid !== null && current.document.paid !== undefined ? money(current.document.paid, current.document.currency) : null],
+                                        ['Date', shortDate(current.document.date)],
+                                        [current.document.type === 'quote' ? 'Valid until' : 'Due', shortDate(current.document.type === 'quote' ? current.document.valid_until : current.document.due_date)],
+                                    ].filter(([, value]) => value).map(([label, value]) => (
+                                        <div key={label}>
+                                            <dt className="text-xs text-gray-400">{label}</dt>
+                                            <dd className="text-white break-words">{value}</dd>
+                                        </div>
+                                    ))}
+                                </dl>
+
+                                {current.document.items?.length > 0 && (
+                                    <ul className="text-xs text-gray-400 space-y-1 border-t border-white/10 pt-2">
+                                        {current.document.items.map((item, i) => (
+                                            <li key={i} className="flex justify-between gap-2">
+                                                <span className="truncate">{item.quantity ? `${item.quantity} × ` : ''}{item.description}</span>
+                                                <span className="text-gray-300">{money(item.total, current.document.currency)}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                <div>
+                                    <InputLabel htmlFor="receiptverification-doc-title" value="Document title" />
+                                    <TextInput
+                                        id="receiptverification-doc-title"
+                                        aria-invalid={!!errors.doc_title}
+                                        aria-describedby={errors.doc_title ? 'receiptverification-doc-title-error' : undefined}
+                                        value={current.docForm.title}
+                                        onChange={(e) => updateDocField('title', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError id="receiptverification-doc-title-error" message={errors.doc_title} className="mt-1" />
+                                </div>
+
+                                <div>
+                                    <InputLabel htmlFor="receiptverification-doc-project" value="Project" />
+                                    <SelectInput
+                                        id="receiptverification-doc-project"
+                                        aria-invalid={!!errors.doc_project_id}
+                                        aria-describedby={errors.doc_project_id ? 'receiptverification-doc-project-error' : undefined}
+                                        value={current.docForm.project_id || ''}
+                                        onChange={(e) => updateDocField('project_id', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    >
+                                        <option value="">Choose a project</option>
+                                        {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                                    </SelectInput>
+                                    <InputError id="receiptverification-doc-project-error" message={errors.doc_project_id} className="mt-1" />
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
+                                    <SecondaryButton type="button" onClick={() => recordDocumentAsExpense(current)}>
+                                        It's paid: record as expense
+                                    </SecondaryButton>
+                                    <PrimaryButton type="button" disabled={processing} onClick={() => { setErrors({}); fileDocument.run(current); }}>
+                                        <i aria-hidden="true" className="fas fa-folder-plus mr-1"></i>
+                                        {fileDocument.pending ? 'Filing...' : 'File under Documents'}
+                                    </PrimaryButton>
+                                </div>
+
+                                {errors.doc_save && (
+                                    <div className="p-2 bg-red-500/20 border border-red-500/30 rounded-xl text-red-400 text-xs">
+                                        <i aria-hidden="true" className="fas fa-exclamation-circle mr-1"></i>{errors.doc_save}
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <form onSubmit={handleSave} className="space-y-3">
+                                {current?.needsCheck && (
+                                    <div className="p-3 bg-amber-400/10 border border-amber-400/30 rounded-xl">
+                                        <div className="flex items-center gap-2 text-amber-300 text-sm font-medium">
+                                            <i aria-hidden="true" className="fas fa-eye"></i>
+                                            <span>Check these details</span>
+                                        </div>
+                                        <p className="text-xs text-gray-400 mt-1">Part of this payment was hard to read (the reference or the date): compare it with the image before saving.</p>
+                                    </div>
+                                )}
+
                                 {/* Recipient */}
                                 <div>
                                     <InputLabel htmlFor="receiptverification-recipient" value="Recipient" />

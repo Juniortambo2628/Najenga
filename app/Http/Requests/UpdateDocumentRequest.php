@@ -17,7 +17,7 @@ class UpdateDocumentRequest extends FormRequest
         return [
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'category' => 'sometimes|string|in:drawing,permit,invoice,ticket,other',
+            'category' => 'sometimes|string|in:drawing,permit,invoice,quote,ticket,other',
             'document_date' => 'nullable|date',
             'folder_id' => ['nullable', 'exists:folders,id', new FolderInProject($this->route('document')->project_id)],
         ];

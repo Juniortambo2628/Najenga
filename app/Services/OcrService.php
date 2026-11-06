@@ -32,9 +32,11 @@ class OcrService
     }
 
     /**
-     * Extract text from an image or PDF (first page only for PDFs).
+     * Extract text from an image or a PDF (all of a PDF's text; its first
+     * pages scanned when it has none). `alternatives` holds other readings
+     * of an image, when there are any.
      *
-     * @return array{success: bool, text?: string, confidence?: float, source?: string, message?: string}
+     * @return array{success: bool, text?: string, alternatives?: array<int, string>, confidence?: float, source?: string, message?: string}
      */
     public function extractText(string $absolutePath, string $language = 'eng'): array
     {
@@ -74,6 +76,12 @@ class OcrService
             return ['success' => false, 'message' => "File not found: {$absolutePath}"];
         }
 
+        // PDFs: their own text when they have it (tickets, invoices made by
+        // software), else their pages as images. Tesseract can't open a PDF.
+        if ($this->isPdf($absolutePath)) {
+            return $this->extractPdf($absolutePath, $language);
+        }
+
         // 1. Native Tesseract CLI — fastest path
         if ($tesseract = $this->findTesseract()) {
             return $this->runNativeTesseract($tesseract, $absolutePath, $language);
@@ -100,7 +108,7 @@ class OcrService
     {
         $hash = @sha1_file($absolutePath);
 
-        return 'ocr:' . ($hash ?: 'path:' . md5($absolutePath)) . ':' . $language;
+        return 'ocr:v2:' . ($hash ?: 'path:' . md5($absolutePath)) . ':' . $language;
     }
 
     /**
@@ -144,46 +152,215 @@ class OcrService
     }
 
     /**
-     * Run tesseract directly. Outputs plain text to stdout.
+     * Run tesseract directly over an image, twice.
+     *
+     * The image is enlarged and turned grey first (phone screenshots and
+     * photos read far better that way), then read as a single column of
+     * text (psm 4: chat bubbles, SMS screenshots, till receipts) and as one
+     * uniform block (psm 6). Each reading gets different characters wrong;
+     * ReceiptReader keeps whichever reading of a field is valid. `text` is
+     * the first reading, `alternatives` the rest.
      */
     protected function runNativeTesseract(string $binary, string $inputPath, string $language): array
     {
+        $prepared = $this->prepareImage($inputPath);
+
         try {
-            // -l <lang>: language pack
-            // --dpi 300: assume 300 DPI for screen-scraped images (improves accuracy)
-            // --psm 6: assume a single uniform block of text (good for receipts)
-            // -c preserve_interword_spaces=1: keep spaces between words
-            $cmd = [
-                $binary,
-                $inputPath,
-                'stdout',  // output to stdout
-                '-l', $language,
-                '--psm', '6',
-            ];
+            $readings = [];
+            foreach (['4', '6'] as $psm) {
+                $process = new Process([$binary, $prepared ?? $inputPath, 'stdout', '-l', $language, '--psm', $psm]);
+                $process->setTimeout($this->timeoutSeconds);
+                $process->run();
 
-            $process = new Process($cmd);
-            $process->setTimeout($this->timeoutSeconds);
-            $process->run();
-
-            if (!$process->isSuccessful()) {
-                Log::warning('Native Tesseract failed', ['stderr' => $process->getErrorOutput()]);
-                return ['success' => false, 'message' => 'Native Tesseract failed: ' . $process->getErrorOutput()];
+                if (!$process->isSuccessful()) {
+                    Log::warning('Native Tesseract failed', ['stderr' => $process->getErrorOutput(), 'psm' => $psm]);
+                    continue;
+                }
+                $readings[] = trim($process->getOutput());
             }
 
-            $text = trim($process->getOutput());
+            if ($readings === []) {
+                return ['success' => false, 'message' => 'Native Tesseract failed'];
+            }
 
-            // Get confidence via tsv output if available — most receipts don't include
-            // confidence, but tesseract can report it via a separate run. For now,
-            // we estimate based on character count heuristics.
+            $text = $readings[0] !== '' ? $readings[0] : ($readings[1] ?? '');
+
             return [
-                'success'    => true,
-                'text'       => $text,
-                'confidence' => $this->estimateConfidence($text),
-                'source'     => 'native-tesseract',
+                'success'      => true,
+                'text'         => $text,
+                'alternatives' => array_values(array_filter(array_slice($readings, 1), fn ($r) => $r !== '' && $r !== $text)),
+                'confidence'   => $this->estimateConfidence($text),
+                'source'       => 'native-tesseract',
             ];
         } catch (ProcessFailedException $e) {
             Log::error('Tesseract process failed', ['error' => $e->getMessage()]);
             return ['success' => false, 'message' => $e->getMessage()];
+        } finally {
+            if ($prepared) {
+                @unlink($prepared);
+            }
+        }
+    }
+
+    /**
+     * A copy of the image made for reading: at least ~1600px wide (up to 3x),
+     * grey, with more contrast. Null when GD can't open it (the original is
+     * read as it is).
+     */
+    protected function prepareImage(string $path): ?string
+    {
+        if (!function_exists('imagecreatefromstring')) {
+            return null;
+        }
+
+        $source = @imagecreatefromstring((string) @file_get_contents($path));
+        if (!$source) {
+            return null;
+        }
+
+        $width = imagesx($source);
+        $height = imagesy($source);
+        $scale = $width > 0 ? max(1.0, min(3.0, 1600 / $width)) : 1.0;
+        $newWidth = (int) round($width * $scale);
+        $newHeight = (int) round($height * $scale);
+
+        $image = imagecreatetruecolor($newWidth, $newHeight);
+        imagecopyresampled($image, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        imagefilter($image, IMG_FILTER_GRAYSCALE);
+        imagefilter($image, IMG_FILTER_CONTRAST, -40);
+
+        $out = tempnam(sys_get_temp_dir(), 'ocr-') . '.png';
+        $ok = imagepng($image, $out);
+        imagedestroy($source);
+        imagedestroy($image);
+
+        return $ok ? $out : null;
+    }
+
+    protected function isPdf(string $path): bool
+    {
+        $handle = @fopen($path, 'rb');
+        if (!$handle) {
+            return false;
+        }
+        $head = (string) fread($handle, 5);
+        fclose($handle);
+
+        return $head === '%PDF-';
+    }
+
+    /**
+     * Text from a PDF: its text layer (pdftotext -layout keeps columns in
+     * reading order; smalot/pdfparser when poppler isn't installed), else
+     * its first pages rendered and read with Tesseract (scanned PDFs).
+     */
+    protected function extractPdf(string $path, string $language): array
+    {
+        $text = $this->pdfTextLayer($path);
+        if (mb_strlen(preg_replace('/\s+/', '', $text)) >= 40) {
+            return [
+                'success'    => true,
+                'text'       => $text,
+                'confidence' => 0.95,
+                'source'     => 'pdf-text',
+            ];
+        }
+
+        $pages = $this->renderPdfPages($path);
+        $tesseract = $this->findTesseract();
+        if ($pages === [] || !$tesseract) {
+            foreach ($pages as $page) {
+                @unlink($page);
+            }
+
+            return ['success' => false, 'message' => 'This PDF has no text to read, and it could not be turned into images to scan.'];
+        }
+
+        $texts = [];
+        $alternatives = [];
+        foreach ($pages as $page) {
+            $result = $this->runNativeTesseract($tesseract, $page, $language);
+            @unlink($page);
+            if ($result['success'] ?? false) {
+                $texts[] = $result['text'];
+                $alternatives[] = $result['alternatives'][0] ?? $result['text'];
+            }
+        }
+
+        if ($texts === []) {
+            return ['success' => false, 'message' => 'Could not read the scanned PDF.'];
+        }
+
+        $text = implode("\n\n", $texts);
+
+        return [
+            'success'      => true,
+            'text'         => $text,
+            'alternatives' => [implode("\n\n", $alternatives)],
+            'confidence'   => $this->estimateConfidence($text),
+            'source'       => 'pdf-scan',
+        ];
+    }
+
+    protected function pdfTextLayer(string $path): string
+    {
+        if ($binary = $this->findBinary('pdftotext')) {
+            $process = new Process([$binary, '-layout', '-enc', 'UTF-8', $path, '-']);
+            $process->setTimeout(60);
+            $process->run();
+            if ($process->isSuccessful() && trim($process->getOutput()) !== '') {
+                return trim($process->getOutput());
+            }
+        }
+
+        try {
+            return trim((new \Smalot\PdfParser\Parser())->parseFile($path)->getText());
+        } catch (\Throwable $e) {
+            Log::info('PDF text layer unreadable: ' . $e->getMessage());
+
+            return '';
+        }
+    }
+
+    /**
+     * The first pages of a PDF as PNGs (pdftoppm), for scanning.
+     *
+     * @return array<int, string>
+     */
+    protected function renderPdfPages(string $path, int $maxPages = 3): array
+    {
+        $binary = $this->findBinary('pdftoppm');
+        if (!$binary) {
+            return [];
+        }
+
+        $prefix = tempnam(sys_get_temp_dir(), 'pdfpage-');
+        @unlink($prefix);
+        $process = new Process([$binary, '-r', '200', '-png', '-f', '1', '-l', (string) $maxPages, $path, $prefix]);
+        $process->setTimeout($this->timeoutSeconds);
+        $process->run();
+        if (!$process->isSuccessful()) {
+            return [];
+        }
+
+        $pages = glob($prefix . '-*.png') ?: [];
+        sort($pages);
+
+        return $pages;
+    }
+
+    /** A command-line tool on PATH, or null. */
+    protected function findBinary(string $name): ?string
+    {
+        try {
+            $process = new Process(DIRECTORY_SEPARATOR === '\\' ? ['where', $name] : ['which', $name]);
+            $process->setTimeout(5);
+            $process->run();
+            $path = trim(explode("\n", $process->getOutput())[0] ?? '');
+
+            return $process->isSuccessful() && $path !== '' && file_exists($path) ? $path : null;
+        } catch (\Throwable) {
+            return null;
         }
     }
 

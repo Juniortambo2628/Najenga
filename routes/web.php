@@ -178,6 +178,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/receipts/analyze-bulk', [\App\Http\Controllers\ReceiptController::class, 'analyzeBulk'])->name('receipts.analyze-bulk');
     Route::post('/receipts/store', [\App\Http\Controllers\ReceiptController::class, 'store'])->name('receipts.store');
     Route::post('/receipts/store-bulk', [\App\Http\Controllers\ReceiptController::class, 'storeBulk'])->name('receipts.store-bulk');
+    Route::post('/receipts/file-document', [\App\Http\Controllers\ReceiptController::class, 'fileDocument'])->name('receipts.file-document');
 
     // Other pages
     Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity.logs');

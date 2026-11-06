@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AnalyzeBulkReceiptRequest;
 use App\Http\Requests\AnalyzeReceiptRequest;
+use App\Http\Requests\FileReceiptDocumentRequest;
 use App\Http\Requests\MatchReceiptRequest;
 use App\Http\Requests\StoreBulkReceiptRequest;
 use App\Http\Requests\StoreReceiptRequest;
 use App\Http\Requests\UpdateReceiptRequest;
+use App\Models\Document;
 use App\Models\Expense;
 use App\Services\ActivityLogger;
 use App\Services\OcrService;
 use App\Services\ReceiptParser;
 use App\Services\ReceiptProcessingService;
+use App\Services\Receipts\ReceiptReader;
 use App\Traits\HasProjectScope;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -24,6 +27,7 @@ class ReceiptController extends Controller
         protected OcrService $ocr,
         protected ReceiptParser $parser,
         protected ReceiptProcessingService $receipts,
+        protected ReceiptReader $reader,
     ) {
     }
 
@@ -48,29 +52,16 @@ class ReceiptController extends Controller
         try {
             $uploaded = $request->file('receipt');
             $path = $uploaded->store('temp_receipts', 'local');
-            $absolutePath = Storage::disk('local')->path($path);
+            $result = $this->readUpload($path);
 
-            $result = $this->ocr->extractText($absolutePath);
-
-            if (!($result['success'] ?? false)) {
+            if (!$result['success']) {
                 return response()->json([
                     'success' => false,
-                    'message' => $result['message'] ?? 'OCR Failed',
+                    'message' => $result['message'],
                 ], 500);
             }
 
-            $text = $result['text'] ?? '';
-            $data = $this->parser->parse($text);
-
-            return response()->json([
-                'success'    => true,
-                'text'       => $text,
-                'confidence' => $result['confidence'] ?? null,
-                'source'     => $result['source'] ?? 'unknown',
-                'extracted'  => $data,
-                'temp_path'  => $path,
-            ]);
-
+            return response()->json($result);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('OCR Execution Failed: ' . $e->getMessage());
             return response()->json([
@@ -78,6 +69,121 @@ class ReceiptController extends Controller
                 'message' => 'OCR Failed: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Read one uploaded file: what it is (payments, a flight ticket, a
+     * receipt, or an invoice / quotation to file as a document), and an
+     * expense for each payment in it. Each expense gets its own copy of
+     * the file, so saving one doesn't take the file from the others.
+     *
+     * @return array<string, mixed>
+     */
+    private function readUpload(string $path): array
+    {
+        $ocr = $this->ocr->extractText(Storage::disk('local')->path($path));
+        if (!($ocr['success'] ?? false)) {
+            return ['success' => false, 'message' => $ocr['message'] ?? 'OCR Failed', 'temp_path' => $path];
+        }
+
+        $text = $ocr['text'] ?? '';
+        $reading = $this->reader->read($text, $ocr['alternatives'] ?? []);
+
+        $expenses = [];
+        foreach ($reading['expenses'] as $i => $expense) {
+            $expenses[] = [
+                'title'            => $expense['title'],
+                'amount'           => $expense['amount'],
+                'expense_date'     => $expense['date'],
+                'time'             => $expense['time'],
+                'recipient'        => $expense['recipient'],
+                'payment_method'   => $expense['payment_method'],
+                'reference_number' => $expense['reference_number'],
+                'purpose'          => $expense['purpose'],
+                'category'         => $expense['category'],
+                'account'          => $expense['account'] ?? null,
+                'phone'            => $expense['phone'] ?? null,
+                'source'           => $expense['source'],
+                'needs_check'      => $expense['needs_check'],
+                'temp_path'        => $i === 0 ? $path : $this->copyUpload($path, $i),
+            ];
+        }
+
+        $first = $reading['expenses'][0] ?? null;
+
+        return [
+            'success'    => true,
+            'kind'       => $reading['kind'],
+            'summary'    => $reading['summary'],
+            'expenses'   => $expenses,
+            'document'   => $reading['document'] ? $reading['document'] + ['temp_path' => $path] : null,
+            'text'       => $text,
+            'confidence' => $ocr['confidence'] ?? null,
+            'source'     => $ocr['source'] ?? 'unknown',
+            // The first expense in the older shape, for older callers.
+            'extracted'  => $first ? [
+                'merchant'         => $first['title'],
+                'recipient'        => $first['recipient'],
+                'date'             => $first['date'],
+                'time'             => $first['time'],
+                'total'            => $first['amount'],
+                'reference_number' => $first['reference_number'],
+                'payment_method'   => $first['payment_method'],
+                'purpose'          => $first['purpose'],
+            ] : $this->parser->parse($text),
+            'temp_path'  => $path,
+        ];
+    }
+
+    private function copyUpload(string $path, int $index): string
+    {
+        $copy = preg_replace('/(\.[A-Za-z0-9]+)?$/', '-' . ($index + 1) . '$1', $path, 1);
+        Storage::disk('local')->copy($path, $copy);
+
+        return $copy;
+    }
+
+    /**
+     * File an uploaded invoice or quotation under the project's documents:
+     * it isn't an expense until it's paid (the payment is the expense).
+     */
+    public function fileDocument(FileReceiptDocumentRequest $request)
+    {
+        $projectId = (int) $request->project_id;
+        if (!$this->getEditableProjects()->contains(fn (array $project) => (int) $project['id'] === $projectId)) {
+            abort(403, 'You can\'t add documents to this project.');
+        }
+
+        $disk = Storage::disk('local');
+        if (!$disk->exists($request->temp_path)) {
+            return response()->json(['success' => false, 'message' => 'That upload is gone: upload the file again.'], 422);
+        }
+
+        $name = $request->original_name ?: basename($request->temp_path);
+        $document = Document::create([
+            'user_id'       => Auth::id(),
+            'project_id'    => $projectId,
+            'title'         => $request->title,
+            'description'   => $request->description,
+            'category'      => $request->category,
+            'document_date' => $request->document_date,
+            'original_name' => $name,
+            'filename'      => $name,
+            'file_path'     => '',
+            'file_size'     => $disk->size($request->temp_path),
+            'mime_type'     => $disk->mimeType($request->temp_path),
+        ]);
+
+        $media = $document
+            ->addMediaFromDisk($request->temp_path, 'local')
+            ->usingName($name)
+            ->withCustomProperties(['original_name' => $name, 'source' => 'receipt_verification'])
+            ->toMediaCollection('files', 'public');
+        $document->update(['file_path' => \Illuminate\Support\Str::after($media->getUrl(), '/storage/')]);
+
+        ActivityLogger::log('document.filed', sprintf('Filed %s "%s" from Receipt Verification', $request->category === 'quote' ? 'quotation' : 'invoice', $document->title), $document);
+
+        return response()->json(['success' => true, 'document' => $document->fresh()]);
     }
 
     /**
@@ -92,34 +198,12 @@ class ReceiptController extends Controller
         foreach ($files as $index => $uploaded) {
             try {
                 $path = $uploaded->store('temp_receipts', 'local');
-                $absolutePath = Storage::disk('local')->path($path);
-
-                $ocrResult = $this->ocr->extractText($absolutePath);
-
-                if (!($ocrResult['success'] ?? false)) {
-                    $results[] = [
-                        'index'      => $index,
-                        'filename'   => $uploaded->getClientOriginalName(),
-                        'success'    => false,
-                        'message'    => $ocrResult['message'] ?? 'OCR Failed',
-                        'temp_path'  => $path,
-                    ];
-                    continue;
-                }
-
-                $text = $ocrResult['text'] ?? '';
-                $data = $this->parser->parse($text);
-
-                $results[] = [
-                    'index'      => $index,
-                    'filename'   => $uploaded->getClientOriginalName(),
-                    'success'    => true,
-                    'text'       => $text,
-                    'confidence' => $ocrResult['confidence'] ?? null,
-                    'source'     => $ocrResult['source'] ?? 'unknown',
-                    'extracted'  => $data,
-                    'temp_path'  => $path,
-                ];
+                $result = $this->readUpload($path);
+                $results[] = ['index' => $index, 'filename' => $uploaded->getClientOriginalName()] + ($result['success'] ? $result : [
+                    'success'   => false,
+                    'message'   => $result['message'],
+                    'temp_path' => $path,
+                ]);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Bulk OCR Failed for file #{$index}: " . $e->getMessage());
                 $results[] = [
@@ -130,6 +214,24 @@ class ReceiptController extends Controller
                 ];
             }
         }
+
+        // Overlapping screenshots show the same payment twice: the later
+        // copy is marked, so it isn't saved twice.
+        $seen = [];
+        foreach ($results as &$result) {
+            foreach ($result['expenses'] ?? [] as $i => $expense) {
+                $ref = $expense['reference_number'] ?? null;
+                if (!is_string($ref) || strlen($ref) < 6) {
+                    continue;
+                }
+                if (isset($seen[$ref])) {
+                    $result['expenses'][$i]['duplicate_of'] = $seen[$ref];
+                } else {
+                    $seen[$ref] = $result['filename'];
+                }
+            }
+        }
+        unset($result);
 
         return response()->json([
             'success' => true,

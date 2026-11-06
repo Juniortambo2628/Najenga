@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\ProcessWhatsAppMedia;
+use App\Models\Document;
 use App\Models\Expense;
 use App\Models\Photo;
 use App\Models\Project;
@@ -152,6 +153,84 @@ class ProcessWhatsAppMediaTest extends TestCase
         // The expense is filed once and the job completes; a throw here would
         // make the queue retry and file it again.
         $this->assertSame(1, Expense::count());
+    }
+
+    public function test_a_screenshot_with_several_payments_files_an_expense_for_each(): void
+    {
+        $this->fakeGraph(mime: 'image/jpeg');
+        $this->mockOcr([
+            'success' => true,
+            'text' => "Transport Truck 13:46\nQB2C34DEFG Confirmed.\nKsh40,000.00 sent to PETER\nOTIENO 0712345678 on 29/10/26 at\n6:57 PM.\nFuel 13:49\nQD4E56FGHJ Confirmed.\nKsh5,500.00 paid to RUBIS\nENERGY - MOMBASA ROAD.\non 30/10/26 at 8:08 AM.",
+            'alternatives' => [],
+        ]);
+
+        $this->runJob(['media_type' => 'image', 'media_id' => 'MEDIA1', 'mime' => 'image/jpeg', 'caption' => '']);
+
+        $expenses = Expense::orderBy('id')->get();
+        $this->assertSame(['Transport Truck', 'Fuel'], $expenses->pluck('title')->all());
+        $this->assertSame([40000.0, 5500.0], $expenses->pluck('amount')->map(fn ($a) => (float) $a)->all());
+        $this->assertSame(['QB2C34DEFG', 'QD4E56FGHJ'], $expenses->pluck('reference_number')->all());
+        $this->assertSame(['Transport', 'Transport'], $expenses->pluck('category')->all());
+        $this->assertSame([$this->project->id, $this->project->id], $expenses->pluck('project_id')->all());
+        $this->assertSame(0, Photo::count());
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'PNID/messages') && str_contains((string) $r['text']['body'] ?? '', 'Created 2 expenses'));
+    }
+
+    public function test_the_same_screenshot_twice_does_not_file_its_payments_twice(): void
+    {
+        $text = "QB2C34DEFG Confirmed. Ksh40,000.00 sent to PETER OTIENO 0712345678 on 29/10/26 at 6:57 PM.";
+        foreach ([1, 2] as $i) {
+            $this->fakeGraph(mime: 'image/jpeg');
+            $this->mockOcr(['success' => true, 'text' => $text]);
+            $this->runJob(['media_type' => 'image', 'media_id' => 'MEDIA1', 'mime' => 'image/jpeg', 'caption' => '']);
+        }
+
+        $this->assertSame(1, Expense::count());
+    }
+
+    public function test_an_invoice_is_filed_under_documents_not_as_an_expense(): void
+    {
+        $this->fakeGraph(mime: 'application/pdf');
+        $this->mockOcr([
+            'success' => true,
+            'text' => "Mwangi Building Supplies Ltd\nTax invoice\nInvoice no: INV-00123\nDate: Oct 29, 2026 · Due: Nov 12, 2026\nGrand total: KES 18,400.00\nPaid: KES 0.00",
+        ]);
+
+        $this->runJob(['media_type' => 'document', 'media_id' => 'MEDIA1', 'mime' => 'application/pdf', 'caption' => '']);
+
+        $this->assertSame(0, Expense::count());
+        $document = Document::sole();
+        $this->assertSame('invoice', $document->category);
+        $this->assertSame('Invoice INV-00123 — Mwangi Building Supplies Ltd', $document->title);
+        $this->assertSame($this->project->id, $document->project_id);
+        $this->assertNotNull($document->getFirstMedia('files'));
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'PNID/messages') && str_contains((string) ($r['text']['body'] ?? ''), 'filed under Documents'));
+    }
+
+    public function test_a_quotation_is_filed_under_documents(): void
+    {
+        $this->fakeGraph(mime: 'image/jpeg');
+        $this->mockOcr(['success' => true, 'text' => "Otieno Contractors Ltd\nQUOTATION\nQuote No: QT-45\nValid until: 03/12/2026\nTotal KES 85,000.00"]);
+
+        $this->runJob(['media_type' => 'image', 'media_id' => 'MEDIA1', 'mime' => 'image/jpeg', 'caption' => '']);
+
+        $this->assertSame(0, Expense::count());
+        $this->assertSame('quote', Document::sole()->category);
+    }
+
+    public function test_a_flight_ticket_is_one_transport_expense(): void
+    {
+        $this->fakeGraph(mime: 'application/pdf');
+        $this->mockOcr(['success' => true, 'text' => "Thank you for travelling with Jambojet\nBooking Reference / PNR K7Q2ZX\nOutbound: NBO - MBA\nTotal Paid: KES 18,200\nPayment Type Visa\nPayment Date Tuesday 20 October 2026"]);
+
+        $this->runJob(['media_type' => 'document', 'media_id' => 'MEDIA1', 'mime' => 'application/pdf', 'caption' => '']);
+
+        $expense = Expense::sole();
+        $this->assertEquals(18200, (float) $expense->amount);
+        $this->assertSame('K7Q2ZX', $expense->reference_number);
+        $this->assertSame('Transport', $expense->category);
+        $this->assertSame('card', $expense->payment_method);
+        $this->assertSame('flight_ticket', $expense->payment_source);
     }
 
     private function runJob(array $payload): void

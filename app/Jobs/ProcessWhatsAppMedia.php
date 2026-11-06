@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Document;
 use App\Models\Expense;
 use App\Models\Photo;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Services\MediaClassifier;
 use App\Services\OcrService;
 use App\Services\PaymentMatcher;
 use App\Services\PhotoDateResolver;
+use App\Services\Receipts\ReceiptReader;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -50,6 +52,7 @@ class ProcessWhatsAppMedia implements ShouldQueue
         $mediaType = $this->payload['media_type'] ?? 'text';
         $text = $this->payload['text'] ?? $this->payload['caption'] ?? '';
         $ocrText = '';
+        $ocrAlternatives = [];
         $localPath = null;
 
         if (in_array($mediaType, ['image', 'video', 'document'], true) && ! empty($this->payload['media_id'])) {
@@ -57,7 +60,27 @@ class ProcessWhatsAppMedia implements ShouldQueue
 
             // Videos are filed as-is; only stills and documents carry text worth reading.
             if ($localPath && $mediaType !== 'video') {
-                $ocrText = $this->ocr($localPath, $ocr);
+                [$ocrText, $ocrAlternatives] = $this->ocr($localPath, $ocr);
+            }
+        }
+
+        // Several payments in one screenshot or message, a flight ticket, or
+        // an invoice / quotation (a document, not an expense): filed as such.
+        if (in_array($mediaType, ['image', 'document', 'text'], true)) {
+            $read = $mediaType === 'text'
+                ? app(ReceiptReader::class)->read($text)
+                : app(ReceiptReader::class)->read($ocrText, $ocrAlternatives);
+            $filed = $this->fileReading($read, $user, $projectId, $mediaType === 'text' ? null : $localPath, $matcher);
+            if ($filed !== null) {
+                [$decision, $result] = $filed;
+                Log::info('WhatsApp media read', ['user_id' => $user->id, 'kind' => $read['kind'], 'records' => count($result['records'])]);
+                if (! empty($result['records']) && ! empty($this->payload['wamid'])) {
+                    $this->linkFiledToLog($this->payload['wamid'], $result['records'][0]);
+                }
+                $this->notifyAdmin($user, $decision, $result['summary']);
+                $this->replyToClient($user, $decision, $result['summary']);
+
+                return;
             }
         }
 
@@ -82,6 +105,108 @@ class ProcessWhatsAppMedia implements ShouldQueue
         }
         $this->notifyAdmin($user, $decision, $summary);
         $this->replyToClient($user, $decision, $summary);
+    }
+
+    /**
+     * File what ReceiptReader found, when it found something the classifier
+     * can't: every payment in a screenshot (not just one), a flight ticket,
+     * or an invoice / quotation, which goes under Documents and is not an
+     * expense. Null leaves the message to the classifier, as before.
+     *
+     * @return array{0: array, 1: array{summary: string, records: array}}|null
+     */
+    private function fileReading(array $read, User $user, ?int $projectId, ?string $localPath, PaymentMatcher $matcher): ?array
+    {
+        if (in_array($read['kind'], ['payments', 'flight'], true) && $read['expenses']) {
+            $records = [];
+            $merged = 0;
+            foreach ($read['expenses'] as $found) {
+                $match = $matcher->findMatch([
+                    'amount' => $found['amount'],
+                    'reference_number' => $found['reference_number'],
+                    'date' => $found['date'],
+                    'recipient' => $found['recipient'],
+                ], $projectId ?? 0, $user->id);
+                $merged += $match ? 1 : 0;
+
+                $expense = $match ?? new Expense();
+                $expense->fill([
+                    'user_id' => $user->id,
+                    'project_id' => $projectId,
+                    'title' => $found['title'],
+                    'amount' => $found['amount'],
+                    'currency' => $found['currency'] ?? 'KES',
+                    'reference_number' => $found['reference_number'] ?? $match?->reference_number,
+                    'expense_date' => $found['date'] ?? $match?->expense_date ?? now()->toDateString(),
+                    'time' => $found['time'],
+                    'recipient' => $found['recipient'] ?? $match?->recipient,
+                    'purpose' => $found['purpose'] ?? $match?->purpose,
+                    'category' => $found['category'],
+                    'payment_method' => $found['payment_method'],
+                    'payment_source' => $found['source'] === 'flight' ? 'flight_ticket' : 'mpesa_or_bank_sms',
+                    'status' => $found['needs_check'] ? 'draft' : 'confirmed',
+                    'confidence' => $found['needs_check'] ? 0.6 : 0.9,
+                    'source_channel' => 'whatsapp',
+                ]);
+                $expense->save();
+                $records[] = $expense;
+            }
+
+            $total = array_sum(array_map(fn ($e) => (float) $e->amount, $records));
+            $count = count($records);
+            $summary = $count === 1
+                ? ($merged ? 'Merged into' : 'Created') . " expense #{$records[0]->id} — KES " . number_format($total, 2)
+                : sprintf('Created %d expenses — KES %s in all (%s)', $count, number_format($total, 2), implode(', ', array_unique(array_map(fn ($e) => $e->title, $records))))
+                    . ($merged ? sprintf('; %d matched ones already recorded', $merged) : '');
+
+            $class = $read['kind'] === 'flight' ? 'flight_ticket' : 'payment_sms';
+
+            return [['class' => $class, 'confidence' => 0.9, 'extracted' => [], 'auto_file' => true], ['summary' => $summary, 'records' => $records]];
+        }
+
+        if (in_array($read['kind'], ['invoice', 'quote'], true) && $localPath !== null) {
+            $document = $this->createDocument($user, $projectId, $localPath, $read['document']);
+            $what = $read['kind'] === 'quote' ? 'Quotation' : 'Invoice';
+            $summary = $document
+                ? sprintf('%s filed under Documents (#%d) — not an expense until it is paid', $what, $document->id)
+                : "{$what} received — no active project to file it under";
+
+            return [['class' => $read['kind'], 'confidence' => 0.85, 'extracted' => [], 'auto_file' => true], ['summary' => $summary, 'records' => $document ? [$document] : []]];
+        }
+
+        return null;
+    }
+
+    /** An invoice or quotation from WhatsApp, under the project's documents. */
+    private function createDocument(User $user, ?int $projectId, string $storagePath, ?array $doc): ?Document
+    {
+        if (! $projectId) return null;
+
+        try {
+            $what = ($doc['type'] ?? 'invoice') === 'quote' ? 'Quotation' : 'Invoice';
+            $total = isset($doc['total']) ? ($doc['currency'] ?? 'KES') . ' ' . number_format((float) $doc['total'], 2) : null;
+            $document = Document::create([
+                'project_id' => $projectId,
+                'user_id' => $user->id,
+                'title' => trim(implode(' ', array_filter([$what, $doc['number'] ?? null, isset($doc['issuer']) ? '— ' . $doc['issuer'] : null]))),
+                'description' => implode(', ', array_filter([$total, isset($doc['due_date']) ? 'due ' . $doc['due_date'] : null, isset($doc['valid_until']) ? 'valid until ' . $doc['valid_until'] : null, 'from WhatsApp'])),
+                'category' => ($doc['type'] ?? 'invoice') === 'quote' ? 'quote' : 'invoice',
+                'document_date' => $doc['date'] ?? null,
+                'original_name' => basename($storagePath),
+                'filename' => basename($storagePath),
+                'file_path' => '',
+                'file_size' => Storage::disk('public')->size($storagePath),
+                'mime_type' => $this->payload['mime'] ?? 'application/pdf',
+            ]);
+            $media = $document->addMediaFromDisk($storagePath, 'public')->toMediaCollection('files', 'public');
+            $document->update(['file_path' => Str::after($media->getUrl(), '/storage/')]);
+
+            return $document;
+        } catch (\Throwable $e) {
+            Log::warning('Failed to file a WhatsApp document: ' . $e->getMessage());
+
+            return null;
+        }
     }
 
     /**
@@ -150,25 +275,18 @@ class ProcessWhatsAppMedia implements ShouldQueue
                 ];
 
             case 'invoice':
-                $expense = new Expense([
-                    'user_id' => $user->id,
-                    'project_id' => $projectId,
-                    'title' => $extracted['recipient'] ?? 'Invoice',
-                    'amount' => $extracted['amount'] ?? 0,
-                    'currency' => 'KES',
-                    'reference_number' => $extracted['reference_number'],
-                    'expense_date' => $extracted['date'] ?? now()->toDateString(),
-                    'recipient' => $extracted['recipient'],
-                    'payment_method' => 'other',
-                    'payment_source' => 'invoice',
-                    'status' => 'draft',
-                    'confidence' => $decision['confidence'],
-                    'source_channel' => 'whatsapp',
-                ]);
-                $expense->save();
+                // Not paid yet: a document, not an expense.
+                $document = $localPath ? $this->createDocument($user, $projectId, $localPath, [
+                    'type' => 'invoice',
+                    'number' => $extracted['reference_number'] ?? null,
+                    'issuer' => $extracted['recipient'] ?? null,
+                    'total' => $extracted['amount'] ?? null,
+                    'currency' => $extracted['currency'] ?? 'KES',
+                    'date' => $extracted['date'] ?? null,
+                ]) : null;
                 return [
-                    'summary' => "Invoice queued as pending expense #{$expense->id}",
-                    'filed' => $expense,
+                    'summary' => $document ? "Invoice filed under Documents (#{$document->id}) — not an expense until it is paid" : 'Invoice received — not filed',
+                    'filed' => $document,
                 ];
 
             case 'cost_request':
@@ -229,18 +347,19 @@ class ProcessWhatsAppMedia implements ShouldQueue
         return $name;
     }
 
-    private function ocr(string $storagePath, OcrService $ocr): string
+    /** @return array{0: string, 1: array<int, string>} the text, and other readings of it */
+    private function ocr(string $storagePath, OcrService $ocr): array
     {
         try {
             $result = $ocr->extractText(Storage::disk('public')->path($storagePath));
             if ($result['success'] ?? false) {
-                return (string) ($result['text'] ?? '');
+                return [(string) ($result['text'] ?? ''), $result['alternatives'] ?? []];
             }
         } catch (\Throwable $e) {
             Log::warning('OCR failed on WhatsApp media: ' . $e->getMessage());
         }
 
-        return '';
+        return ['', []];
     }
 
     private function guessExtension(?string $mime, string $mediaType): string
@@ -313,8 +432,9 @@ class ProcessWhatsAppMedia implements ShouldQueue
 
         $body = match ($decision['class']) {
             'progress_video', 'progress_photo' => 'Got it — filed to the gallery.',
-            'payment_sms', 'receipt_paper' => 'Got it — ' . $summary,
-            'invoice' => 'Invoice noted, pending payment confirmation.',
+            'payment_sms', 'receipt_paper', 'flight_ticket' => 'Got it — ' . $summary,
+            'invoice' => 'Invoice noted and filed under Documents. Send the payment confirmation once it is paid.',
+            'quote' => 'Quotation filed under Documents.',
             'cost_request' => 'Noted, pending confirmation.',
             default => null,
         };

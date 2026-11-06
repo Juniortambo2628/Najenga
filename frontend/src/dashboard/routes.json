@@ -132,6 +132,7 @@
     "receipts.analyze-bulk": "/receipts/analyze-bulk",
     "receipts.destroy": "/receipts/{receipt}",
     "receipts.edit": "/receipts/{receipt}/edit",
+    "receipts.file-document": "/receipts/file-document",
     "receipts.index": "/receipts",
     "receipts.match": "/receipts/match",
     "receipts.read-again": "/receipts/{receipt}/read-again",

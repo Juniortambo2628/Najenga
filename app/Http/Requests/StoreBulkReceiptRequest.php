@@ -41,7 +41,7 @@ class StoreBulkReceiptRequest extends FormRequest
             'expenses.*.purpose'         => 'nullable|string',
             'expenses.*.category'        => 'nullable|string',
             'expenses.*.project_id'      => 'nullable|exists:projects,id,deleted_at,NULL',
-            'expenses.*.temp_path'       => 'required|string',
+            'expenses.*.temp_path'       => ['required', 'string', 'regex:' . StoreReceiptRequest::TEMP_PATH],
             'expenses.*.update_matched'  => 'sometimes|boolean',
         ];
     }

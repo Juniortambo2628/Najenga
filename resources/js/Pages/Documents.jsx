@@ -384,6 +384,7 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                         <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center shadow-lg group-hover:scale-105 transition">
                                             <i aria-hidden="true" className={`fas ${
                                                 doc.document_type === 'invoice' ? 'fa-file-invoice-dollar' :
+                                                doc.document_type === 'quote' ? 'fa-file-signature' :
                                                 doc.document_type === 'plan' ? 'fa-ruler-combined' :
                                                 'fa-file-alt'
                                             } text-white text-xl`}></i>
