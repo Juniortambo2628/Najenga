@@ -1,0 +1,10 @@
+{ "lead": 1.1, "tail": 1.6, "lines": [
+  { "id": "open",  "text": "Building is never just bricks.", "file": "open.mp3", "after": 0.45 },
+  { "id": "mess",  "text": "It's receipts in a pocket, photos in a chat, plans in a drawer, and a spreadsheet nobody trusts.", "file": "mess.mp3", "after": 0.55 },
+  { "id": "money", "text": "Send a receipt on WhatsApp. It's read, checked, and filed to its project.", "file": "money.mp3", "after": 0.45 },
+  { "id": "site",  "text": "Site photos are dated and kept, week by week.", "file": "site.mp3", "after": 0.4 },
+  { "id": "files", "text": "Plans and permits wait in folders, right where you left them.", "file": "files.mp3", "after": 0.4 },
+  { "id": "team",  "text": "And everyone gets the right say.", "file": "team.mp3", "after": 2.3 },
+  { "id": "calm",  "text": "The money, the site, the paperwork and the people, in one calm place.", "file": "calm.mp3", "after": 1.0 },
+  { "id": "name",  "text": "Najenga. I'm building.", "file": "name.mp3", "after": 0 }
+] }

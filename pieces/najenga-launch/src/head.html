@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Najenga launch</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #efe9e4; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas { max-width: 100vw; max-height: 100vh; width: auto; height: auto; display: block; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+"use strict";
+// =====================================================================
+//  NAJENGA LAUNCH — a voice-led fixed stage in isometric line art (styles/najenga-iso).
+//  A house rises on a desk while the mess around it is filed: each thing Najenga files becomes a floor,
+//  and red marks only what Najenga has filed. One hard cut: the slam into the real dashboard.
+//  Formats: 9:16 (main) and 16:9 (?format=16:9). Build: node .claude/skills/animate/tools/build.mjs pieces/najenga-launch
+// =====================================================================
+const FORMATS = { '9:16': [1080, 1920], '4:5': [1080, 1350], '1:1': [1080, 1080], '16:9': [1920, 1080] };
+const FORMAT = new URLSearchParams(location.search).get('format') || '9:16';
+const FPS = 24, [W, H] = FORMATS[FORMAT];
+const SANS_HEAD = '"Segoe UI", "Helvetica Neue", Inter, Arial, sans-serif';
+{ const cv = document.getElementById('c'); cv.width = W; cv.height = H; }
+const BPM = 120, BEAT = 60 / BPM, E8 = BEAT / 2, E16 = BEAT / 4;
+const SAFE = { '9:16': { top: 240, bottom: 420, right: 140 }, '4:5': { top: 80, bottom: 160, right: 60 }, '1:1': { top: 60, bottom: 110, right: 60 }, '16:9': { top: 60, bottom: 110, right: 60 } }[FORMAT];
+const CX = (W - SAFE.right) / 2;
+const HAND = SANS_HEAD;
+const onBeat = (t) => +(Math.round(t / E8) * E8).toFixed(4);
+
+// ---- the clock: the voice. With voice.json (tools/voice.mjs) every beat starts ~0.3s after its line's sentence ends;
+//      without it, placeholder times from the story check.
+const HAS_VOICE = typeof VOICE !== 'undefined';
+const VL = (id) => (HAS_VOICE ? VOICE.lines.find((l) => l.id === id) : null);
+const VW = (id, word, n = 1) => {   // when the n-th `word` of line `id` starts (falls back to the line start)
+  const l = VL(id); if (!l) return null;
+  let k = 0; for (const w of l.words || []) if (w.w.toLowerCase().replace(/[^a-z']/g, '') === word && ++k === n) return w.t0;
+  return l.t0;
+};
+const PH = { open: [0.6, 2.2], mess: [2.6, 7.4], money: [8.0, 11.4], site: [12.0, 14.8], files: [15.4, 18.4], team: [19.0, 21.2], calm: [24.6, 28.6], name: [29.6, 31.2] };
+const L0 = (id) => (VL(id) ? VL(id).t0 : PH[id][0]), L1 = (id) => (VL(id) ? VL(id).t1 : PH[id][1]);
+const W0 = (id, word, n, fb) => (VL(id) ? VW(id, word, n) : fb);
+
+const DURATION = HAS_VOICE ? Math.ceil(VOICE.duration * 2) / 2 : 32.5;
+const NFRAMES = Math.round(DURATION * FPS);
+const LOOP_T = NFRAMES / FPS;
+
+// cue times (seconds). Beats start just after the previous sentence ends; pictures land on the words that name them.
+const SLAM = onBeat(L0('calm') - 0.55);            // the payoff hit: in the pause before "The money, the site..."
+const CUE = {
+  plates: 0.05, house: 0.35,
+  receipts: W0('mess', 'receipts', 1, 3.0), chat: W0('mess', 'photos', 1, 4.1), plan: W0('mess', 'plans', 1, 5.0), sheet: W0('mess', 'spreadsheet', 1, 6.0),
+  money: L1('mess') + 0.3, scan: W0('money', 'read', 1, 9.4), filed1: W0('money', 'filed', 1, 10.2),
+  site: L1('money') + 0.3, filed2: W0('site', 'week', 1, 13.8),
+  files: L1('site') + 0.3, filed3: W0('files', 'folders', 1, 16.8),
+  team: L1('files') + 0.3, roof: W0('team', 'say', 1, 20.6),
+  pull: L1('team') + 0.25, slam: SLAM,
+  screen2: W0('calm', 'paperwork', 1, 26.0), back: W0('calm', 'calm', 1, 27.8),
+  logo: L0('name') - 0.2,
+};
+// eras: the desk (everything until the slam), then the tidy desk with the real dashboard (a hard cut on the hit)
+const ERA_LIST = [[0, SLAM, () => sceneDesk()], [SLAM, DURATION, () => sceneCalm()]];
+const SHOTS = [
+  ['open',  0, 0.0,        CUE.receipts, 'a bare foundation on a desk'],
+  ['mess',  0, CUE.receipts, CUE.money,  'receipts, chats, plans and a spreadsheet pile up'],
+  ['money', 0, CUE.money,  CUE.site,     'a receipt on WhatsApp is read and filed: floor 1'],
+  ['site',  0, CUE.site,   CUE.files,    'site photos are dated and kept: floor 2'],
+  ['files', 0, CUE.files,  CUE.team,     'plans and permits go in folders: floor 3'],
+  ['team',  0, CUE.team,   CUE.pull,     'owner, editor, viewer: the roof goes on'],
+  ['hold',  0, CUE.pull,   SLAM,         'the finished house, everything in the air; silence'],
+  ['calm',  1, SLAM,       CUE.logo,     'the slam: the real Najenga dashboard'],
+  ['name',  1, CUE.logo,   DURATION,     'the tidy desk, the house and the Najenga name'],
+];
+const TIMELINE = {
+  width: W, height: H, fps: FPS, bpm: BPM, duration: DURATION, frames: NFRAMES, loop: LOOP_T, safe: SAFE, aspect: FORMAT,
+  format: 'morph-chain',
+  shots: SHOTS.map(([key, era, t0, t1, title], i) => ({ id: i + 1, key, era, t0, t1, title })),
+  cuts: [SLAM],
+  morphs: [],
+  cues: CUE,
+  acts: [
+    { name: '1 Mess',    role: 'build',   t0: 0, t1: CUE.money },
+    { name: '2 Filing',  role: 'journey', t0: CUE.money, t1: CUE.team },
+    { name: '3 Roof',    role: 'peak',    t0: CUE.team, t1: CUE.pull + 0.3 },
+    { name: '4 Silence', role: 'silence', t0: CUE.pull + 0.3, t1: SLAM },
+    { name: '5 Calm',    role: 'gift',    t0: SLAM, t1: CUE.logo },
+    { name: '6 Name',    role: 'goodbye', t0: CUE.logo, t1: DURATION },
+  ],
+  board: [
+    { t: 1.6, title: 'a bare foundation', sound: 'a quiet pad', next: 'the mess piles up' },
+    { t: CUE.sheet + 1.0, title: 'the mess', sound: 'plucks, a buzz', next: 'a receipt arrives in a chat' },
+    { t: CUE.filed1 + 0.8, title: 'receipt read, floor 1', sound: 'blips, a landing', next: 'a camera shutter' },
+    { t: CUE.filed2 + 0.6, title: 'photos dated, floor 2', sound: 'shutter clicks', next: 'folders' },
+    { t: CUE.filed3 + 0.6, title: 'folders, floor 3', sound: 'paper slides', next: 'the team' },
+    { t: CUE.roof + 0.6, title: 'the right say, the roof', sound: 'fullest groove', next: 'pull back' },
+    { t: SLAM - 0.3, title: 'the hold', sound: 'silence', next: 'SLAM' },
+    { t: CUE.screen2 + 0.8, title: 'the real dashboard', sound: 'the loudest hit, a held chord', next: 'pull back' },
+    { t: DURATION - 0.8, title: 'Najenga. I\'m building.', sound: 'fading', next: 'loops' },
+  ],
+  narration: HAS_VOICE ? VOICE.lines.map((l) => ({ id: l.id, t0: l.t0, t1: l.t1, text: l.text })) : [],
+};
+window.TIMELINE = TIMELINE;

@@ -16,7 +16,12 @@ def main():
         del args[i:i + 2]
     from faster_whisper import WhisperModel
     m = WhisperModel(model, device='cpu', compute_type='int8')
-    segs, _ = m.transcribe(args[0], word_timestamps=True, vad_filter=False, beam_size=5, language='en')
+    # decode with ffmpeg (16 kHz mono float32) rather than PyAV, whose versions often mismatch faster-whisper's
+    import subprocess
+    import numpy as np
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', args[0], '-ac', '1', '-ar', '16000', '-f', 'f32le', '-'], capture_output=True, check=True).stdout
+    audio = np.frombuffer(raw, dtype=np.float32)
+    segs, _ = m.transcribe(audio, word_timestamps=True, vad_filter=False, beam_size=5, language='en')
     out = []
     for s in segs:
         for w in s.words or []:

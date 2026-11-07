@@ -1,0 +1,10 @@
+{
+  "name": "najenga-launch",
+  "title": "Najenga launch",
+  "format": { "width": 1080, "height": 1920, "fps": 24, "bpm": 120 },
+  "formats": ["9:16", "16:9"],
+  "storyFormat": "fixed stage, voice-led, one slam",
+  "style": "najenga-iso",
+  "scenes": ["src/scenes.js", "src/scenes2.js"],
+  "review": { "safe": { "top": 240, "bottom": 420, "right": 140 }, "refs": {} }
+}
