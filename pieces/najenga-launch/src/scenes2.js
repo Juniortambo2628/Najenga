@@ -79,8 +79,8 @@ function laptopB() {
 function dashCard() {
   const g = lidGeomB();
   const q = clamp(spring(TT, cu.back, { k: 70, damp: 0.82 }), 0, 1.05);
-  const cw = WIDE ? W * 0.62 : W - 110, ch = cw * 0.625;
-  const fx = WIDE ? LX(0.40) : CX + 8, fy = WIDE ? LY(0.47) : LY(0.45);
+  const cw = WIDE ? W * 0.62 : W - 130, ch = cw * 0.625;
+  const fx = WIDE ? LX(0.40) : W / 2, fy = WIDE ? LY(0.47) : LY(0.45);
   const flat = [[fx - cw / 2, fy - ch / 2], [fx + cw / 2, fy - ch / 2], [fx - cw / 2, fy + ch / 2]];
   const m = 8, lid = [lidPt(g, m, m), lidPt(g, LB.w - m, m), lidPt(g, m, LB.lid - m)];
   const P = flat.map((p, i) => [lerp(p[0], lid[i][0], q), lerp(p[1], lid[i][1], q)]);
