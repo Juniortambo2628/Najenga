@@ -5,8 +5,8 @@
 const cu = CUE;
 // layout per format: where the desk's origin sits on screen, its scale, and where the caption goes
 const LAY = WIDE
-  ? { ox: LX(0.37), oy: LY(0.60), u: 0.86, capX: LX(0.745), capY: LY(0.53), capW: LX(0.38), capAlign: 'left' }
-  : { ox: CX + 30, oy: LY(0.56), u: 0.87, capX: CX, capY: 1420, capW: 840, capAlign: 'center' };
+  ? { ox: LX(0.37), oy: LY(0.60), u: 0.86, capX: LX(0.675), capY: LY(0.53), capW: LX(0.38), capAlign: 'left' }
+  : { ox: CX + 30, oy: LY(0.56), u: 0.87, capX: CX, capY: 1350, capW: 840, capAlign: 'center' };
 const ISO_DESK = { ox: LAY.ox, oy: LAY.oy, u: LAY.u };
 
 // ---- the desk and the house (world units)
@@ -66,7 +66,7 @@ function slip(x, y, z, i, red) {
 }
 function receipts() {
   for (const [x, y, i] of SLIPS) {
-    const t0 = cu.receipts + i * 0.1;
+    const t0 = [cu.receipts, cu.receipts + 0.1, cu.receipts + 0.2, cu.pocket, cu.pocket + 0.12, cu.drawer][i];
     if (TT < t0) continue;
     // at the money beat the slips lift off and fly into the phone's chat
     const up = spring(TT, cu.money + i * 0.08, { k: 60, damp: 0.8 });
@@ -100,6 +100,8 @@ function chatOn(sc) {
   const read = seg(TT, cu.scan, cu.scan + 0.7);
   if (read > 0 && read < 1) faceLine(sc, [[18, 110 + read * 64], [110, 110 + read * 64]], PAL.edge, 3);   // the scan line
   faceLine(sc, [[26, 164], [92, 164]], read >= 1 ? PAL.accent : PAL.edge, read >= 1 ? 5 : HAIR);
+  const ck = clamp(spring(TT, cu.checked, { k: 240, damp: 0.6 }));
+  if (ck > 0.02) faceLine(sc, [[112, 140], [112 + 8 * ck, 148], [112 + 22 * ck, 128 + 20 * (1 - ck)]], PAL.accent, 5);
 }
 // the rolled plan: a cylinder lying along y, tied in the middle
 const PLAN = { x: -252, y: -215, l: 175, r: 18 };
@@ -116,7 +118,7 @@ const LT = { x: 118, y: -226, w: 146, d: 112, h: 8, lid: 104 };
 function laptop() {
   if (TT < cu.sheet) return;
   const z = PZ + dropIn(cu.sheet, 240, { k: 170, damp: 0.55 });
-  const al = 100 * DEG * (spring(TT, cu.sheet + 0.2, { k: 90, damp: 0.6 }) - spring(TT, cu.team, { k: 90, damp: 0.7 }));
+  const al = 100 * DEG * (spring(TT, cu.sheet + 0.2, { k: 90, damp: 0.6 }) - spring(TT, cu.team, { k: 90, damp: 0.7 })) + kick(TT, cu.trusts, { k: 400, damp: 0.25 }) * 6 * DEG;
   isoBox(LT.x, LT.y, z, LT.w, LT.d, LT.h, { r: 10 });
   const top = faceOf([LT.x, LT.y, z + LT.h], [1, 0, 0], [0, 1, 0]);
   isoGrid(10, 3, (i, j) => faceRR(top, 10 + i * 13, 12 + j * 13, 10, 10, 2));
@@ -124,9 +126,11 @@ function laptop() {
   const S = isoSlab(g.o, g.a, g.b, g.n, LT.w, LT.lid, 6, { r: 10 });
   if (S.front === 0 && al > 40 * DEG) {
     const fp = (u, v) => vadd(vadd(g.o, vsc(g.a, u)), vsc(g.b, LT.lid - v));
-    for (let r = 0; r < 5; r++) for (let c = 0; c < 4; c++) faceRR(fp, 12 + c * 32, 12 + r * 16, 30, 14, 1, { seg: 1 });
-    faceLine(fp, [[44, 46], [74, 58]], PAL.edge, 3);   // a cell nobody trusts, crossed out
-    faceLine(fp, [[44, 58], [74, 46]], PAL.edge, 3);
+    const n = Math.floor((TT - cu.sheet - 0.4) * 14);
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 4; c++) if (r * 4 + c < n) faceRR(fp, 12 + c * 32, 12 + r * 16, 30, 14, 1, { seg: 1 });
+    if (TT >= cu.trusts) {   // the cells nobody trusts, crossed out
+      for (const [cu0, cv0] of [[44, 44], [108, 76]]) { faceLine(fp, [[cu0, cv0], [cu0 + 30, cv0 + 14]], PAL.edge, 3); faceLine(fp, [[cu0, cv0 + 14], [cu0 + 30, cv0]], PAL.edge, 3); }
+    }
   }
 }
 
@@ -134,7 +138,7 @@ function laptop() {
 function capNow(str, t0, t1, o = {}) {
   const a = clamp(spring(TT, t0, { k: 120, damp: 0.8 })) * (t1 == null ? 1 : 1 - seg(TT, t1 - 0.2, t1));
   if (a <= 0.001 || TT < t0) return;
-  const sz = o.size ?? (WIDE ? 58 : 54);
+  const sz = o.size ?? (WIDE ? 54 : 54);
   ctx.save(); ctx.globalAlpha = a;
   ctx.font = `${o.weight ?? 500} ${sz}px ${SANS}`; ctx.fillStyle = PAL.text; ctx.textAlign = LAY.capAlign; ctx.textBaseline = 'alphabetic';
   const lines = String(str).split('\n'), y0 = LAY.capY + (1 - a) * 16;

@@ -41,20 +41,24 @@
   [q.filed1, q.filed2, q.filed3, q.roof].forEach((t, i) => motif(t + 0.05, 0.1 + i * 0.012));
 
   // the slam: a short chord stab and a sub on the hit (the loudest moment), then a flat warm chord
-  ['C3', 'G3', 'C4', 'E4', 'G4', 'C5'].forEach((n, i) => pluck(q.slam + i * 0.006, nz(n), 0.36, (i - 2.5) * 0.15, 0.7, 5200, 0.4));
+  ['C3', 'G3', 'C4', 'E4', 'G4', 'C5'].forEach((n, i) => pluck(q.slam + i * 0.006, nz(n), 0.55, (i - 2.5) * 0.15, 0.7, 5200, 0.4));
   pad(q.slam, q.slam + 0.4, ['C3', 'G3', 'C4', 'E4', 'G4', 'C5'], 0.5, { cut: 3600, att: 0.008, rel: 0.35, send: 0.3 });
-  pad(q.slam + 0.5, q.logo + 0.3, ['C3', 'G3', 'C4', 'E4', 'G4'], 0.045, { cut: 1300, att: 0.3, rel: 0.4, send: 0.5 });
-  drone(q.slam + 0.5, q.logo + 0.3, nz('C2'), 0.06, { att: 0.2, rel: 0.4 });
+  sub(q.slam, 0.16); noiseHit(q.slam, 0.25, 'lowpass', 300, 0.8, 0.14, 0, 0.3);
+  pad(q.slam + 0.5, q.logo + 0.3, ['C3', 'G3', 'C4', 'E4', 'G4'], 0.042, { cut: 1300, att: 0.3, rel: 0.4, send: 0.5 });
+  drone(q.slam + 0.5, q.logo + 0.3, nz('C2'), 0.05, { att: 0.2, rel: 0.4 });
   each(grid(q.slam + 1.5), q.logo, BEAT, (t, k) => { if (k % 2 === 0) pluck(t, nz(['E4', 'G4', 'C5', 'G4'][(k / 2) % 4]), 0.035, (k % 4 ? 0.2 : -0.2), 0.6, 2800, 0.4); });
   // the name: back to the opening pad; the house motif on "Najenga", then up to the octave
-  pad(q.logo, T.duration, ['C3', 'G3', 'E4'], 0.032, { type: 'triangle', cut: 900, att: 0.3, rel: 0.6, send: 0.5 });
-  motif(q.logo + 0.2, 0.14);
-  pluck(q.logo + 0.2 + BEAT, nz('C5'), 0.1, 0, 1.2, 2600, 0.45);
+  pad(q.logo, T.duration, ['C3', 'G3', 'E4'], 0.02, { type: 'triangle', cut: 900, att: 0.3, rel: 0.6, send: 0.5 });
+  motif(q.logo + 0.2, 0.07);
+  pluck(q.logo + 0.2 + BEAT, nz('C5'), 0.05, 0, 1.2, 2600, 0.45);
 
   // ================= SFX =================
   to = 's';
   // the mess: receipts landing, the phone buzzing, the plan and the laptop dropping
-  for (let i = 0; i < 6; i++) blip(q.receipts + i * 0.1 + 0.08, 1400 - i * 60, 900, 0.03, 0.022, (i % 2 ? 0.25 : -0.25));
+  [q.receipts, q.receipts + 0.1, q.receipts + 0.2, q.pocket, q.pocket + 0.12, q.drawer].forEach((t, i) => blip(t + 0.08, 1400 - i * 60, 900, 0.03, 0.022, (i % 2 ? 0.25 : -0.25)));
+  noiseHit(q.trusts, 0.1, 'bandpass', 500, 1.5, 0.05, 0.3);
+  blip(q.checked, 1500, 2200, 0.05, 0.04, -0.2);
+  [q.photos, q.photos + 0.15, q.photos + 0.3, q.plans, q.permits, q.permits + 0.2].forEach((t, i) => blip(t + 0.1, 1100 + (i % 3) * 120, 800, 0.03, 0.025, 0.25));
   [q.chat + 0.2, q.chat + 1.4].forEach((t) => { for (let k = 0; k < 3; k++) noiseHit(t + k * 0.07, 0.05, 'lowpass', 180, 1, 0.05, -0.3); });
   noiseHit(q.plan + 0.12, 0.12, 'bandpass', 600, 1.2, 0.04, -0.3);
   blip(q.sheet + 0.1, 700, 500, 0.06, 0.04, 0.3);

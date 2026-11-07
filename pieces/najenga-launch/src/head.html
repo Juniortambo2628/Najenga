@@ -53,9 +53,10 @@ const SLAM = onBeat(L0('calm') - 0.55);            // the payoff hit: in the pau
 const CUE = {
   plates: 0.05, house: 0.35,
   receipts: W0('mess', 'receipts', 1, 3.0), chat: W0('mess', 'photos', 1, 4.1), plan: W0('mess', 'plans', 1, 5.0), sheet: W0('mess', 'spreadsheet', 1, 6.0),
-  money: L1('mess') + 0.3, scan: W0('money', 'read', 1, 9.4), filed1: W0('money', 'filed', 1, 10.2),
-  site: L1('money') + 0.3, filed2: W0('site', 'week', 1, 13.8),
-  files: L1('site') + 0.3, filed3: W0('files', 'folders', 1, 16.8),
+  pocket: W0('mess', 'pocket', 1, 3.6), drawer: W0('mess', 'drawer', 1, 5.4), trusts: W0('mess', 'trusts', 1, 6.8),
+  money: L1('mess') + 0.3, scan: W0('money', 'read', 1, 9.4), checked: W0('money', 'checked', 1, 9.9), filed1: W0('money', 'filed', 1, 10.2),
+  site: L1('money') + 0.3, photos: W0('site', 'photos', 1, 12.4), filed2: W0('site', 'week', 1, 13.8),
+  files: L1('site') + 0.3, plans: W0('files', 'plans', 1, 15.6), permits: W0('files', 'permits', 1, 16.0), filed3: W0('files', 'right', 1, 17.2),
   team: L1('files') + 0.3, roof: W0('team', 'say', 1, 20.6),
   pull: L1('team') + 0.25, slam: SLAM,
   screen2: W0('calm', 'paperwork', 1, 26.0), back: W0('calm', 'calm', 1, 27.8),

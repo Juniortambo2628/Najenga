@@ -34,11 +34,45 @@ function faceFiles(fl, fr) {
   faceRR(fr, 20, 14, 144, 42, 2);
   faceLine(fr, [[20, 35], [164, 35]]);
 }
+// cards that land on the desk where the receipts were, then fly up into the house as their floor is filed
+function flyCards(times, liftAt, k, draw) {
+  times.forEach((t0, i) => {
+    if (TT < t0) return;
+    const up = spring(TT, liftAt - 0.25 + i * 0.06, { k: 70, damp: 0.8 });
+    if (up > 0.97) return;
+    const x = 60 + i * 64, y = 90 + (i % 2) * 54;
+    const z = PZ + dropIn(t0, 240, { k: 170, damp: 0.5 }) + up * (floorZ(k) - PZ + 40);
+    const xx = lerp(x, HS.x + 40 + i * 50, up), yy = lerp(y, HS.y + HS.d - 30, up);
+    draw(xx, yy, z, i);
+  });
+}
+function photoCard(x, y, z) {
+  isoBox(x, y, z, 70, 56, 3, { r: 3, seg: 2 });
+  const fp = faceOf([x, y, z + 3], [1, 0, 0], [0, 1, 0]);
+  faceRR(fp, 6, 6, 58, 44, 2);
+  faceLine(fp, [[10, 44], [26, 26], [40, 36], [60, 18]]);
+}
+function folderCard(x, y, z) {
+  isoBox(x, y, z, 72, 58, 6, { r: 3, seg: 2 });
+  const fp = faceOf([x, y, z + 6], [1, 0, 0], [0, 1, 0]);
+  facePath(fp, [[6, 4], [30, 4], [36, 10], [66, 10]], false); hair(PAL.edge); ctx.stroke();
+  faceLine(fp, [[10, 30], [50, 30]]); faceLine(fp, [[10, 40], [40, 40]]);
+}
+// smoke from the chimney once the roof is on: the house is lived in
+function smoke(t0) {
+  if (TT < t0 + 0.6) return;
+  const x = HS.x + 57, y = HS.y + 41, z = floorZ(3) + 30 + HS.rh + 6;
+  for (let i = 0; i < 2; i++) {
+    const P = []; for (let k = 0; k <= 14; k++) { const q = k / 14; P.push([x - 6 + i * 12 + Math.sin(q * 5 + TT * 2.4 + i * 2) * 9 * q, y - 6 + i * 12, z + 10 + q * 64]); }
+    line3(P, PAL.inner);
+  }
+}
 function house(o = {}) {
   foundation();
   const f = o.settled ? [-9, -9, -9] : [cu.filed1, cu.filed2, cu.filed3];
   [faceMoney, faceSite, faceFiles].forEach((fn, k) => { if (TT >= f[k]) houseFloor(k, f[k], fn); });
   roof(o.settled ? -9 : cu.roof);
+  smoke(o.settled ? -9 : cu.roof);
 }
 
 // ---- the team: three people with the say each one has, set into the desk in front of them
@@ -103,8 +137,10 @@ function dashCard() {
 // ---- the camera: a slow push onto the house while it is filed, a pull back for the hold (springs, no shake)
 const HOUSE_C = () => { const keep = ISO; setIso(ISO_DESK); const p = isoP([HS.x + HS.w / 2, HS.y + HS.d / 2, floorZ(1.2)]); ISO = keep; return p; };
 function pieceCam(era, t) {
-  if (era !== 0) return null;
-  const z = springTrack([[0, 1], [cu.money - 0.4, 1.08], [cu.pull, 0.97]], SPRING.heavy);
+  // a slow, continuous push (a few percent, as the style allows) so held beats still move; a spring pull back for the hold
+  if (era === 1) { const p = HOUSE_C(); return t > cu.logo ? camOf({ z: 1 + 0.035 * EZ.io(seg(t, cu.logo, DURATION)), p, to: p }) : null; }
+  const drift = 0.035 * EZ.io(seg(t, 0.4, cu.money)) + 0.03 * seg(t, cu.money, cu.team) + 0.005 * EZ.io(seg(t, cu.team, cu.pull));
+  const z = 1 + drift + (0.97 - 1.07) * springEase(t - cu.pull, SPRING.heavy.k, SPRING.heavy.d);
   const p = HOUSE_C();
   return camOf({ z, p, to: p });
 }
@@ -118,6 +154,8 @@ function sceneDesk() {
   house();
   phone();
   receipts();
+  flyCards([cu.photos, cu.photos + 0.15, cu.photos + 0.3], cu.filed2, 1, photoCard);
+  flyCards([cu.plans, cu.permits, cu.permits + 0.2], cu.filed3, 2, folderCard);
   team();
   cap('Building is never\njust bricks.', cu.house + 0.4, cu.receipts - 0.1);
   cap('Receipts. Chats.\nPlans. Spreadsheets.', cu.receipts + 0.2, cu.money);
