@@ -32,7 +32,7 @@ export default function ContextMenu({ options, position, onClose }) {
         label: option.label,
         danger: option.danger,
         icon: option.icon ? faIcon(option.icon) : undefined,
-        onClick: option.action,
+        onSelect: option.action,
     }));
 
     return <KitContextMenu items={items} position={position} onClose={onClose} />;
