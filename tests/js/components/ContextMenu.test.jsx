@@ -37,4 +37,13 @@ describe('ContextMenu keyboard support', () => {
         expect(opener).toHaveFocus();
         opener.remove();
     });
+
+    it('runs the chosen option and closes', () => {
+        const action = vi.fn();
+        const onClose = vi.fn();
+        render(<ContextMenu options={[{ label: 'Rename', icon: 'fa-pen', action }]} position={{ x: 0, y: 0 }} onClose={onClose} />);
+        fireEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
+        expect(action).toHaveBeenCalledTimes(1);
+        expect(onClose).toHaveBeenCalled();
+    });
 });
