@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import SummaryCards from '@/Components/SummaryCards';
-import Card from '@/Components/Card';
+import { AdminCard as Card } from '@okjt/dashboard';
 import DashboardPage from '@/Components/DashboardPage';
 import EmptyState from '@/Components/EmptyState';
 import { formatCurrency, formatCurrencyCompact } from '@/Config/currencies';
