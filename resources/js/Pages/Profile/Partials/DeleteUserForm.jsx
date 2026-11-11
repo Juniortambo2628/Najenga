@@ -1,7 +1,6 @@
-import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
+import Button from '@/Components/Button';
 import Modal from '@/Components/Modal';
-import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import { useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
@@ -57,9 +56,9 @@ export default function DeleteUserForm({ className = '' }) {
                 </p>
             </header>
 
-            <DangerButton onClick={confirmUserDeletion}>
+            <Button variant="danger" onClick={confirmUserDeletion}>
                 Delete Account
-            </DangerButton>
+            </Button>
 
             <Modal show={confirmingUserDeletion} onClose={closeModal} maxWidth="md">
                 <div className="p-6">
@@ -87,12 +86,12 @@ export default function DeleteUserForm({ className = '' }) {
                     </div>
 
                     <div className="flex justify-end gap-3">
-                        <SecondaryButton onClick={closeModal}>
+                        <Button variant="secondary" onClick={closeModal}>
                             Cancel
-                        </SecondaryButton>
-                        <DangerButton onClick={deleteUser} disabled={processing}>
+                        </Button>
+                        <Button variant="danger" onClick={deleteUser} disabled={processing}>
                             Delete Account
-                        </DangerButton>
+                        </Button>
                     </div>
                 </div>
             </Modal>

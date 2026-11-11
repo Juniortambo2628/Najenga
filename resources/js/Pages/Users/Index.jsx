@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Button from '@/Components/Button';
 import { Head, Link } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import DashboardPage from '@/Components/DashboardPage';
@@ -8,8 +9,6 @@ import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import StatusBadge from '@/Components/StatusBadge';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
@@ -117,8 +116,8 @@ export default function Index({ users }) {
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <SecondaryButton type="button" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit" disabled={updateUser.pending}>Update User</PrimaryButton>
+                        <Button variant="secondary" type="button" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>Cancel</Button>
+                        <Button type="submit" disabled={updateUser.pending}>Update User</Button>
                     </div>
                 </form>
             ),
@@ -161,8 +160,8 @@ export default function Index({ users }) {
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <SecondaryButton type="button" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>Cancel</SecondaryButton>
-                        <PrimaryButton type="submit" disabled={updateUser.pending}>Update User</PrimaryButton>
+                        <Button variant="secondary" type="button" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>Cancel</Button>
+                        <Button type="submit" disabled={updateUser.pending}>Update User</Button>
                     </div>
                 </form>
             ),

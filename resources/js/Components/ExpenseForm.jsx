@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
+import Button from '@/Components/Button';
 import ResourceFormFields from '@/Components/ResourceFormFields';
 import { expenseFields } from '@/Config/schemas/expense';
 
@@ -59,13 +58,13 @@ export default function ExpenseForm({
 
             <div className="flex items-center justify-end gap-3 pt-2">
                 {onCancel && (
-                    <SecondaryButton type="button" onClick={onCancel}>
+                    <Button variant="secondary" type="button" onClick={onCancel}>
                         Cancel
-                    </SecondaryButton>
+                    </Button>
                 )}
-                <PrimaryButton type="submit">
+                <Button type="submit">
                     {expense ? 'Update Expense' : 'Create Expense'}
-                </PrimaryButton>
+                </Button>
             </div>
         </form>
     );

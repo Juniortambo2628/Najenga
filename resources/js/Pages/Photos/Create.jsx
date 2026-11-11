@@ -1,9 +1,7 @@
 import ResourceFormPage from '@/Components/ResourceFormPage';
+import Button from '@/Components/Button';
 import SelectInput from '@/Components/SelectInput';
 import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
-import CancelButton from '@/Components/CancelButton';
 import { router } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
 import { SOURCE_LABELS, folderOf, isImage, makeBatches, readDroppedEntries } from '@/Utils/photoUpload';
@@ -171,12 +169,12 @@ export default function Create({ projects = [], uploadLimits = { maxFiles: 10, m
                             its folders (e.g. 2025 / October / Oct-7).
                         </p>
                         <div className="mt-4 flex flex-wrap justify-center gap-3">
-                            <SecondaryButton type="button" disabled={busy} onClick={() => folderInputRef.current?.click()}>
+                            <Button variant="secondary" type="button" disabled={busy} onClick={() => folderInputRef.current?.click()}>
                                 <i aria-hidden="true" className="fas fa-folder mr-2"></i>Choose folder
-                            </SecondaryButton>
-                            <SecondaryButton type="button" disabled={busy} onClick={() => fileInputRef.current?.click()}>
+                            </Button>
+                            <Button variant="secondary" type="button" disabled={busy} onClick={() => fileInputRef.current?.click()}>
                                 <i aria-hidden="true" className="fas fa-images mr-2"></i>Choose files
-                            </SecondaryButton>
+                            </Button>
                         </div>
                         <input
                             ref={folderInputRef}
@@ -318,12 +316,12 @@ export default function Create({ projects = [], uploadLimits = { maxFiles: 10, m
 
                 {phase === 'done' ? (
                     <div className="flex justify-end gap-3 pt-4">
-                        <SecondaryButton type="button" onClick={reset}>
+                        <Button variant="secondary" type="button" onClick={reset}>
                             Upload more
-                        </SecondaryButton>
-                        <PrimaryButton type="button" onClick={() => router.visit(route('photos'))}>
+                        </Button>
+                        <Button type="button" onClick={() => router.visit(route('photos'))}>
                             View gallery
-                        </PrimaryButton>
+                        </Button>
                     </div>
                 ) : (
                     <>
@@ -347,14 +345,14 @@ export default function Create({ projects = [], uploadLimits = { maxFiles: 10, m
 
                         <div className="flex justify-end gap-3 pt-4">
                             {items.length > 0 && !busy && (
-                                <SecondaryButton type="button" onClick={reset}>
+                                <Button variant="secondary" type="button" onClick={reset}>
                                     Clear
-                                </SecondaryButton>
+                                </Button>
                             )}
-                            <CancelButton href={route('photos')}>Cancel</CancelButton>
-                            <PrimaryButton type="button" onClick={upload} disabled={busy || !projectId || items.length === 0}>
+                            <Button as="link" variant="secondary" href={route('photos')}>Cancel</Button>
+                            <Button type="button" onClick={upload} disabled={busy || !projectId || items.length === 0}>
                                 {phase === 'uploading' ? `Uploading… ${percent}%` : `Upload ${items.length || ''} photo${items.length === 1 ? '' : 's'}`}
-                            </PrimaryButton>
+                            </Button>
                         </div>
                     </>
                 )}

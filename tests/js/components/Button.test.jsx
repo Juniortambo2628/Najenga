@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Button from '../../../resources/js/Components/Button';
 
+vi.mock('@inertiajs/react', () => ({ Link: ({ href, children, ...rest }) => <a href={href} {...rest}>{children}</a> }));
+
 describe('Button', () => {
     it('renders a button element by default', () => {
         render(<Button>Click me</Button>);
@@ -10,28 +12,38 @@ describe('Button', () => {
         expect(button.tagName).toBe('BUTTON');
     });
 
-    it('applies primary variant class by default', () => {
+    // Najenga's variant names on the kit's: primary is the kit's accent button
+    // ("secondary"), secondary its plain one ("primary").
+    it('primary is the kit\'s accent button', () => {
         render(<Button>Primary</Button>);
-        const button = screen.getByRole('button');
-        expect(button.className).toContain('bg-gradient-to-r');
+        expect(screen.getByRole('button').className).toContain('bg-accent');
     });
 
-    it('applies secondary variant class', () => {
+    it('secondary is the kit\'s plain button', () => {
         render(<Button variant="secondary">Secondary</Button>);
         const button = screen.getByRole('button');
-        expect(button.className).toContain('border-white/10');
+        expect(button.className).toContain('bg-surface/80');
+        expect(button.className).not.toContain('bg-accent');
     });
 
-    it('applies danger variant class', () => {
+    it('danger is the kit\'s danger button', () => {
         render(<Button variant="danger">Danger</Button>);
-        const button = screen.getByRole('button');
-        expect(button.className).toContain('bg-red-600');
+        expect(screen.getByRole('button').className).toContain('text-red-600');
     });
 
-    it('applies ghost variant class', () => {
+    it('ghost is the plain button without its background and border', () => {
         render(<Button variant="ghost">Ghost</Button>);
-        const button = screen.getByRole('button');
-        expect(button.className).toContain('text-gray-400');
+        expect(screen.getByRole('button').className).toContain('!bg-transparent');
+    });
+
+    it('as="link" renders a link to href', () => {
+        render(<Button as="link" href="/photos" variant="secondary">Cancel</Button>);
+        expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/photos');
+    });
+
+    it('shows the kit\'s spinner and is disabled while loading', () => {
+        render(<Button loading>Save</Button>);
+        expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     });
 
     it('handles click events', () => {

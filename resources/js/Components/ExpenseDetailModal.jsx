@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
+import Button from '@/Components/Button';
 import Modal from '@/Components/Modal';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, PAYMENT_LABELS } from '@/Config/expenses';
 import { formatCurrency } from '@/Config/currencies';
 import { useDropzone } from 'react-dropzone';
@@ -26,13 +25,13 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
             <div className="space-y-6">
                 <div className="flex justify-end gap-3">
                     {expense?.id && (
-                        <SecondaryButton as="link" href={`/expenses/${expense.id}`} className="text-xs">
+                        <Button variant="secondary" as="link" href={`/expenses/${expense.id}`} className="text-xs">
                             <i className="fas fa-external-link-alt mr-1"></i>Open page
-                        </SecondaryButton>
+                        </Button>
                     )}
-                    <PrimaryButton onClick={onStartEdit} className="text-xs">
+                    <Button onClick={onStartEdit} className="text-xs">
                         <i aria-hidden="true" className="fas fa-edit mr-1"></i>Edit
-                    </PrimaryButton>
+                    </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                     <DetailRow label="Title" value={titleCase(expense?.title)} />
@@ -140,8 +139,8 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                 <textarea id="ed-description" value={formData.description} onChange={handleChange('description')} rows={3} className="mt-1 block w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50 resize-none" />
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
-                <SecondaryButton type="button" onClick={onCancel}>Cancel</SecondaryButton>
-                <PrimaryButton type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</PrimaryButton>
+                <Button variant="secondary" type="button" onClick={onCancel}>Cancel</Button>
+                <Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
             </div>
         </form>
     );
@@ -206,12 +205,12 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
                     <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-400">Current receipt attached to this expense</span>
                         <div className="flex gap-2">
-                            <SecondaryButton onClick={handleRemove} className="text-xs">
+                            <Button variant="secondary" onClick={handleRemove} className="text-xs">
                                 <i aria-hidden="true" className="fas fa-trash mr-1"></i>Remove
-                            </SecondaryButton>
-                            <PrimaryButton onClick={() => document.getElementById('receipt-replace-input')?.click()} className="text-xs" disabled={uploading}>
+                            </Button>
+                            <Button onClick={() => document.getElementById('receipt-replace-input')?.click()} className="text-xs" disabled={uploading}>
                                 <i aria-hidden="true" className="fas fa-exchange-alt mr-1"></i>Replace
-                            </PrimaryButton>
+                            </Button>
                             <input id="receipt-replace-input" type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => { if (e.target.files?.[0]) onDrop([e.target.files[0]]); e.target.value = ''; }} />
                         </div>
                     </div>

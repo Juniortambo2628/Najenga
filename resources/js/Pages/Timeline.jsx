@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Button from '@/Components/Button';
 import { Head, useForm, router, Link } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import DashboardPage from '@/Components/DashboardPage';
@@ -9,8 +10,6 @@ import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import TextInput from '@/Components/TextInput';
 import SelectInput from '@/Components/SelectInput';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useBulkDelete from '@/Hooks/useBulkDelete';
 import useAction, { visit } from '@/Hooks/useAction';
@@ -483,10 +482,10 @@ export default function Timeline({ timelines = [], expenses = [], photos = [], d
                             <InputError id="timeline-status-error" message={errors.status} className="mt-1" />
                         </div>
                         <div className="flex justify-end gap-3 pt-5 border-t border-white/10">
-                            <SecondaryButton onClick={closeModal} type="button">Cancel</SecondaryButton>
-                            <PrimaryButton type="submit" disabled={processing}>
+                            <Button variant="secondary" onClick={closeModal} type="button">Cancel</Button>
+                            <Button type="submit" disabled={processing}>
                                 {processing ? 'Saving...' : 'Update Milestone'}
-                            </PrimaryButton>
+                            </Button>
                         </div>
                     </form>
                 </div>

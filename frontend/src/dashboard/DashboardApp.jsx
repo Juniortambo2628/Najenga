@@ -6,7 +6,7 @@ import { DashboardProvider, DashboardShell } from '@okjt/dashboard';
 import '@/bootstrap';
 import { InertiaBridge, usePage } from '@inertiajs/react';
 import FlashToast from '@/Components/FlashToast';
-import ConfirmHost from '@/Components/ConfirmHost';
+import { ConfirmHost } from '@okjt/ui';
 import Tour from '@/Components/Tour';
 import { setBadges, setOnline } from '@/Utils/presence';
 import AccountMenu from '../najenga/shell/AccountMenu';

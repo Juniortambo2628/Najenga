@@ -46,7 +46,7 @@ export default function LinkWhatsAppForm({ whatsapp = {} }) {
     };
 
     const unlinkAction = useAction(() => axios.delete('/profile/whatsapp'), {
-        confirm: 'Unlink your WhatsApp number?',
+        confirm: { title: 'Unlink your WhatsApp number?', confirmLabel: 'Unlink', tone: 'danger' },
         success: 'Unlinked',
         error: 'Could not unlink',
         key: () => 'unlink',

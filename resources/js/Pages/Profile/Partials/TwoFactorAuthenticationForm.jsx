@@ -1,10 +1,9 @@
 import { useState } from 'react';
+import Button from '@/Components/Button';
 import axios from 'axios';
 import { router, useForm } from '@inertiajs/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
 import useAction from '@/Hooks/useAction';
 
@@ -22,7 +21,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
     const startSetup = useAction(() => axios.post('/api/2fa/setup').then(reload), { key: () => 'enable' });
 
     const disable = useAction(() => axios.post('/api/2fa/disable').then(reload), {
-        confirm: 'Turn off two-factor authentication?',
+        confirm: { title: 'Turn off two-factor authentication?', confirmLabel: 'Turn off', tone: 'danger' },
         success: 'Two-factor authentication is off',
         key: () => 'disable',
     });
@@ -45,7 +44,7 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
     };
 
     const regenerate = useAction(() => axios.post('/api/2fa/recovery-codes').then(reload), {
-        confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' },
+        confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate', tone: 'danger' },
         key: () => 'regenerate',
     });
 
@@ -66,18 +65,18 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                         <span className="px-3 py-1 rounded-lg bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
                             Enabled
                         </span>
-                        <DangerButton type="button" onClick={() => disable.run()} disabled={disable.pending}>
+                        <Button variant="danger" type="button" onClick={() => disable.run()} disabled={disable.pending}>
                             Disable
-                        </DangerButton>
+                        </Button>
                     </div>
                 ) : pending ? (
                     <span className="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">
                         Setup in progress
                     </span>
                 ) : (
-                    <PrimaryButton type="button" onClick={() => startSetup.run()} disabled={startSetup.pending}>
+                    <Button type="button" onClick={() => startSetup.run()} disabled={startSetup.pending}>
                         Enable
-                    </PrimaryButton>
+                    </Button>
                 )}
             </div>
 
@@ -115,9 +114,9 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                         />
                         <InputError message={confirmForm.errors.code} />
                         <div className="flex items-center gap-2">
-                            <PrimaryButton type="submit" disabled={confirm.pending}>
+                            <Button type="submit" disabled={confirm.pending}>
                                 Confirm
-                            </PrimaryButton>
+                            </Button>
                             <button
                                 type="button"
                                 onClick={() => cancelPending.run()}
@@ -142,12 +141,12 @@ export default function TwoFactorAuthenticationForm({ twoFactor }) {
                 </div>
                 {enabled ? (
                     <div className="flex items-center gap-2">
-                        <PrimaryButton type="button" onClick={() => setShowingCodes((s) => !s)}>
+                        <Button type="button" onClick={() => setShowingCodes((s) => !s)}>
                             {showingCodes ? 'Hide' : 'Show'}
-                        </PrimaryButton>
-                        <PrimaryButton type="button" onClick={() => regenerate.run()} disabled={regenerate.pending}>
+                        </Button>
+                        <Button type="button" onClick={() => regenerate.run()} disabled={regenerate.pending}>
                             Regenerate
-                        </PrimaryButton>
+                        </Button>
                     </div>
                 ) : (
                     <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">
