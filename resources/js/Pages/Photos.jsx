@@ -1,4 +1,5 @@
 import ImageAnnotator from '@/Components/ImageAnnotator';
+import Button from '@/Components/Button';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
@@ -16,7 +17,6 @@ import useFileDownload from '@/Hooks/useFileDownload';
 import useBatchDownload from '@/Hooks/useBatchDownload';
 import useHashHighlight from '@/Hooks/useHashHighlight';
 import EmptyState from '@/Components/EmptyState';
-import PrimaryButton from '@/Components/PrimaryButton';
 import PhotoCard from '@/Components/PhotoCard';
 import DashboardPage from '@/Components/DashboardPage';
 import { rootBreadcrumbs } from '@/Config/navigation';

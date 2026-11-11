@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Button from '@/Components/Button';
 import { Head } from '@inertiajs/react';
 import { useState, useRef } from 'react';
 import axios from 'axios';
@@ -6,8 +7,6 @@ import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import SelectInput from '@/Components/SelectInput';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SecondaryButton from '@/Components/SecondaryButton';
 import DashboardPage from '@/Components/DashboardPage';
 import { EXPENSE_CATEGORIES } from '@/Config/expenses';
 import { rootBreadcrumbs } from '@/Config/navigation';
@@ -649,9 +648,9 @@ export default function ReceiptVerification({ projects = [] }) {
                                     </p>
                                 </div>
                                 <div className="flex justify-end pt-3 border-t border-white/10">
-                                    <SecondaryButton type="button" onClick={() => keepDuplicate(current)}>
+                                    <Button variant="secondary" type="button" onClick={() => keepDuplicate(current)}>
                                         Save it as well
-                                    </SecondaryButton>
+                                    </Button>
                                 </div>
                             </div>
                         ) : queue[currentIndex].status === 'document' ? (
@@ -725,13 +724,13 @@ export default function ReceiptVerification({ projects = [] }) {
                                 </div>
 
                                 <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
-                                    <SecondaryButton type="button" onClick={() => recordDocumentAsExpense(current)}>
+                                    <Button variant="secondary" type="button" onClick={() => recordDocumentAsExpense(current)}>
                                         It's paid: record as expense
-                                    </SecondaryButton>
-                                    <PrimaryButton type="button" disabled={processing} onClick={() => { setErrors({}); fileDocument.run(current); }}>
+                                    </Button>
+                                    <Button type="button" disabled={processing} onClick={() => { setErrors({}); fileDocument.run(current); }}>
                                         <i aria-hidden="true" className="fas fa-folder-plus mr-1"></i>
                                         {fileDocument.pending ? 'Filing...' : 'File under Documents'}
-                                    </PrimaryButton>
+                                    </Button>
                                 </div>
 
                                 {errors.doc_save && (
@@ -937,16 +936,16 @@ export default function ReceiptVerification({ projects = [] }) {
                                 )}
 
                                 <div className="flex justify-end gap-2 pt-3 border-t border-white/10">
-                                    <SecondaryButton
+                                    <Button variant="secondary"
                                         type="button"
                                         onClick={() => { setCurrentIndex(-1); setCurrentFileId(null); }}
                                     >
                                         Cancel
-                                    </SecondaryButton>
-                                    <PrimaryButton type="submit" disabled={processing}>
+                                    </Button>
+                                    <Button type="submit" disabled={processing}>
                                         <i aria-hidden="true" className="fas fa-check mr-1"></i>
                                         {processing ? 'Saving...' : 'Save Expense'}
-                                    </PrimaryButton>
+                                    </Button>
                                 </div>
 
                                 {errors.save && (

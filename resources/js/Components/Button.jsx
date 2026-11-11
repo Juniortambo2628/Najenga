@@ -1,44 +1,29 @@
 import { Link } from '@inertiajs/react';
+import { Button as KitButton } from '@okjt/ui';
 
-const variants = {
-    primary:
-        'inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#8B0000] focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed',
-    secondary:
-        'inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-semibold text-gray-300 transition-all hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed',
-    danger:
-        'inline-flex items-center gap-2 rounded-xl bg-red-600/90 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed',
-    ghost:
-        'inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-400 transition-all hover:text-white hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed',
+/*
+ * Najenga's names for the kit's button variants. The kit calls its accent
+ * button "secondary" and its plain one "primary"; Najenga's pages say
+ * primary for the accent (the main action) and secondary for the plain one.
+ */
+const VARIANTS = {
+    primary: { variant: 'secondary' },
+    secondary: { variant: 'primary' },
+    danger: { variant: 'danger' },
+    ghost: { variant: 'primary', className: '!border-transparent !bg-transparent hover:!bg-white/5' },
 };
 
-export default function Button({
-    variant = 'primary',
-    as = 'button',
-    href,
-    type = 'button',
-    className = '',
-    disabled,
-    children,
-    ...props
-}) {
-    const classes = `${variants[variant] || variants.primary} ${className}`.trim();
+/**
+ * The kit's Button in Najenga's variant names. `as="link"` with `href`
+ * renders the app's Link. Everything else (loading, icon, size, edit,
+ * action) is the kit's.
+ *
+ * @param {'primary'|'secondary'|'danger'|'ghost'} [variant]
+ */
+export default function Button({ variant = 'primary', as, href, className = '', ...props }) {
+    const kit = VARIANTS[variant] || VARIANTS.primary;
+    const classes = [kit.className, className].filter(Boolean).join(' ');
+    const linkProps = as === 'link' && href ? { as: Link, href } : {};
 
-    if (as === 'link' && href) {
-        return (
-            <Link href={href} className={classes} {...props}>
-                {children}
-            </Link>
-        );
-    }
-
-    return (
-        <button
-            type={type}
-            className={classes}
-            disabled={disabled}
-            {...props}
-        >
-            {children}
-        </button>
-    );
+    return <KitButton {...props} {...linkProps} variant={kit.variant} className={classes} />;
 }

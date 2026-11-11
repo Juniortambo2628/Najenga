@@ -1,10 +1,9 @@
 import { useState } from 'react';
+import Button from '@/Components/Button';
 import { router } from '@inertiajs/react';
 import { usePasskeyRegister } from '@laravel/passkeys/react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
 import useAction, { visit } from '@/Hooks/useAction';
 
@@ -68,9 +67,9 @@ export default function PasskeysForm({ passkeys = [] }) {
                     </div>
                 </div>
                 {supported ? (
-                    <PrimaryButton type="button" onClick={() => setAdding(true)} disabled={adding}>
+                    <Button type="button" onClick={() => setAdding(true)} disabled={adding}>
                         Add passkey
-                    </PrimaryButton>
+                    </Button>
                 ) : (
                     <span className="px-3 py-1 rounded-lg bg-white/5 text-gray-400 text-xs font-medium border border-white/10">
                         Browser doesn't support
@@ -101,9 +100,9 @@ export default function PasskeysForm({ passkeys = [] }) {
                         <InputError message={error || registerError} className="mt-2" />
                     </div>
                     <div className="flex items-center gap-2">
-                        <PrimaryButton type="submit" disabled={busy}>
+                        <Button type="submit" disabled={busy}>
                             {busy ? 'Waiting for browser…' : 'Create'}
-                        </PrimaryButton>
+                        </Button>
                         <button type="button" onClick={cancel} className="text-xs text-gray-400 hover:text-white underline">
                             Cancel
                         </button>
@@ -122,9 +121,9 @@ export default function PasskeysForm({ passkeys = [] }) {
                                         Added {relativeDate(p.created_at)} · Last used {relativeDate(p.last_used_at)}
                                     </p>
                                 </div>
-                                <DangerButton type="button" onClick={() => remove(p)}>
+                                <Button variant="danger" type="button" onClick={() => remove(p)}>
                                     Remove
-                                </DangerButton>
+                                </Button>
                             </li>
                         ))}
                     </ul>

@@ -37,4 +37,14 @@ change.
 
 | Step | PR |
 |---|---|
-| 6d.1 | this PR |
+| 6d.1 | #84 |
+| 6d.2 | Buttons, ContextMenu and the confirm dialog: this PR. `Modal` waits on the kit (below). |
+
+## Gaps found in the kit
+
+Fix these in the kit, then finish the step that waits on them.
+
+| Kit piece | Gap | Najenga until then |
+|---|---|---|
+| `@okjt/ui` `Modal` | Widths stop at `5xl` (the receipt and photo preview is `7xl`); its own close button can't be turned off, so a dialog with its own header gets two; no title, tabs or footer | Keeps its own `Modal` |
+| `@okjt/ui` `ContextMenu` | Doesn't return focus to whatever opened it when it closes | Najenga's `ContextMenu` adapter does it |

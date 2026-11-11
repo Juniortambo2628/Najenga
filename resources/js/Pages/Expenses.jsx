@@ -7,7 +7,6 @@ const ExpenseSheet = lazy(() => import('@/Components/ExpenseSheet'));
 import ExpenseForm from '@/Components/ExpenseForm';
 import ExpenseDetailModal from '@/Components/ExpenseDetailModal';
 import EmptyState from '@/Components/EmptyState';
-import PrimaryButton from '@/Components/PrimaryButton';
 import Button from '@/Components/Button';
 import DashboardPage from '@/Components/DashboardPage';
 import { AdminListPanel as ListPanel } from '@okjt/dashboard';
@@ -430,10 +429,10 @@ export default function Expenses({ expenses = [], projects = [] }) {
                         <Button variant="ghost" onClick={() => setIsAssignModalOpen(false)}>
                             Cancel
                         </Button>
-                        <PrimaryButton onClick={handleBulkAssign} disabled={bulkAssign.pending}>
+                        <Button onClick={handleBulkAssign} disabled={bulkAssign.pending}>
                             <i aria-hidden="true" className="fas fa-folder-open mr-1"></i>
                             {assignProjectId ? 'Assign' : 'Remove from Project'}
-                        </PrimaryButton>
+                        </Button>
                     </div>
                 </div>
             </Modal>

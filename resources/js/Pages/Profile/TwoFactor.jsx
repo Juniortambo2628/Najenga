@@ -59,14 +59,14 @@ export default function TwoFactor({ enabled, pending: initialPending, setup = nu
     };
 
     const regenerateAction = useAction(() => axios.post('/api/2fa/recovery-codes'), {
-        confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate' },
+        confirm: { title: 'Regenerate recovery codes?', message: 'Your old codes will stop working.', confirmLabel: 'Regenerate', tone: 'danger' },
         key: () => 'regenerate',
         onSuccess: (response) => setCodes(response.data?.recovery_codes ?? []),
     });
     const regenerate = () => regenerateAction.run();
 
     const disableAction = useAction(() => axios.post('/api/2fa/disable'), {
-        confirm: 'Turn off two-factor authentication?',
+        confirm: { title: 'Turn off two-factor authentication?', confirmLabel: 'Turn off', tone: 'danger' },
         key: () => 'disable',
         onSuccess: () => {
             setIsEnabled(false);

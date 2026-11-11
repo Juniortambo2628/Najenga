@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Button from '@/Components/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useMemo, Fragment } from 'react';
 import ContextMenu from '@/Components/ContextMenu';
@@ -9,12 +10,10 @@ import { Document as PdfDocument, Page, pdfjs } from 'react-pdf';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import EmptyState from '@/Components/EmptyState';
-import PrimaryButton from '@/Components/PrimaryButton';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import SelectInput from '@/Components/SelectInput';
-import SecondaryButton from '@/Components/SecondaryButton';
 import useMultiSelect from '@/Hooks/useMultiSelect';
 import useActiveProject from '@/Hooks/useActiveProject';
 import useContextMenu from '@/Hooks/useContextMenu';
@@ -690,15 +689,15 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                         </div>
                     </div>
                     <div className="mt-6 flex justify-end gap-3">
-                        <SecondaryButton onClick={() => { setIsNewFolderModalOpen(false); setNewFolderName(''); }}>
+                        <Button variant="secondary" onClick={() => { setIsNewFolderModalOpen(false); setNewFolderName(''); }}>
                             Cancel
-                        </SecondaryButton>
-                        <PrimaryButton
+                        </Button>
+                        <Button
                             onClick={submitNewFolder}
                             disabled={!newFolderName.trim() || createFolder.pending}
                         >
                             Create Folder
-                        </PrimaryButton>
+                        </Button>
                     </div>
                 </div>
             </Modal>
@@ -730,10 +729,10 @@ export default function Documents({ documents = [], folders = [], projects = [] 
                                 ))}
                         </SelectInput>
                         <div className="flex justify-end gap-3 pt-4 mt-6 border-t border-white/10">
-                            <SecondaryButton type="button" onClick={() => setMoveTarget(null)}>Cancel</SecondaryButton>
-                            <PrimaryButton type="button" onClick={handleMove} disabled={moving}>
+                            <Button variant="secondary" type="button" onClick={() => setMoveTarget(null)}>Cancel</Button>
+                            <Button type="button" onClick={handleMove} disabled={moving}>
                                 {moving ? 'Moving...' : 'Move'}
-                            </PrimaryButton>
+                            </Button>
                         </div>
                     </div>
                 </Modal>
