@@ -38,7 +38,9 @@ change.
 | Step | PR |
 |---|---|
 | 6d.1 | #84 |
-| 6d.2 | Buttons, ContextMenu and the confirm dialog: this PR. `Modal` waits on the kit (below). |
+| 6d.2 | #85: buttons, ContextMenu and the confirm dialog. `Modal` waits on the kit (below). |
+| 6d.3 | `Card`: this PR. The inputs wait on the kit (below). |
+| 6d.4 | Not done: Najenga's `useFilteredItems` and `useUnsavedChangesGuard` do more than the kit's (below), and `useVisibleActions` / `useRole` decide per project and record where the kit's permissions are one switch for the page. They stay Najenga's. |
 
 ## Gaps found in the kit
 
@@ -48,3 +50,6 @@ Fix these in the kit, then finish the step that waits on them.
 |---|---|---|
 | `@okjt/ui` `Modal` | Widths stop at `5xl` (the receipt and photo preview is `7xl`); its own close button can't be turned off, so a dialog with its own header gets two; no title, tabs or footer | Keeps its own `Modal` |
 | `@okjt/ui` `ContextMenu` | Doesn't return focus to whatever opened it when it closes | Najenga's `ContextMenu` adapter does it |
+| `@okjt/dashboard` `AdminInput`, `AdminSelect`, `AdminTextarea` | No background of their own, so `@tailwindcss/forms` makes them white on a dark dashboard; no `ref` (forms focus fields); label and error built in, where Najenga's forms place them separately | Keeps `TextInput`, `SelectInput`, `TextArea` |
+| `@okjt/dashboard` `useUnsavedChangesGuard` | Only catches link clicks, not the router's own visits; no "Unsaved changes" chip in the header | Keeps its own guard |
+| `@okjt/dashboard` `useFilteredItems` | Searches every field; no project filter, chosen fields or sort | Keeps its own |

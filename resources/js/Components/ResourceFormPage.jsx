@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import DashboardPage from '@/Components/DashboardPage';
-import Card from '@/Components/Card';
+import { AdminCard as Card } from '@okjt/dashboard';
 
 export default function ResourceFormPage({ title, breadcrumbs, children }) {
     return (
@@ -14,7 +14,7 @@ export default function ResourceFormPage({ title, breadcrumbs, children }) {
                     breadcrumbs,
                 }}
             >
-                <Card className="p-8">
+                <Card padding={false} className="p-8">
                     {children}
                 </Card>
             </DashboardPage>
