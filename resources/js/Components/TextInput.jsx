@@ -1,5 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { AdminInput } from '@okjt/dashboard';
+import { FIELD_CLASSES } from './fieldClasses';
 
+/** A text field: the OKJT kit's AdminInput in Najenga's look, with `isFocused` to focus it on mount. */
 export default forwardRef(function TextInput(
     { type = 'text', className = '', isFocused = false, ...props },
     ref,
@@ -16,15 +19,5 @@ export default forwardRef(function TextInput(
         }
     }, [isFocused]);
 
-    return (
-        <input
-            {...props}
-            type={type}
-            className={
-                'w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 transition-all duration-200 focus:outline-none focus:border-[#8B0000] focus:ring-1 focus:ring-[#8B0000]/50 disabled:opacity-50 disabled:cursor-not-allowed ' +
-                className
-            }
-            ref={localRef}
-        />
-    );
+    return <AdminInput bare {...props} type={type} baseClassName={FIELD_CLASSES.input} className={className} ref={localRef} />;
 });
