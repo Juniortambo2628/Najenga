@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { AdminTutorial } from '@okjt/dashboard';
 import axios from 'axios';
 
 /** The tour's stops: an element marked data-tour="…", or none for a centred card. */
@@ -72,28 +72,20 @@ const subscribe = (l) => {
 };
 export const useTourOpen = () => useSyncExternalStore(subscribe, () => open, () => false);
 
-/** The marked element, if it is on screen (the sidebar is off-screen on phones). */
-function visibleTarget(name) {
-    if (!name) return null;
-    const el = document.querySelector(`[data-tour="${name}"]`);
-    if (!el) return null;
-    const rect = el.getBoundingClientRect();
-    const onScreen = rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.left < window.innerWidth;
-    return onScreen ? rect : null;
-}
+/** Najenga's steps as the kit's tour reads them: the element by its data-tour name. */
+const KIT_STEPS = TOUR_STEPS.map((step) => ({ ...step, selector: step.target ? `[data-tour="${step.target}"]` : undefined, target: undefined, name: step.target }));
 
 /**
  * A short tour of the dashboard shell. Starts by itself once for new
  * accounts (on the Dashboard), and again from the account menu. Stops whose
  * element isn't on screen are skipped.
+ *
+ * The OKJT kit's AdminTutorial runs it (the open state, skipping, measuring
+ * each stop's element, ← → and Escape); Najenga draws the spotlight and the
+ * card, and remembers on the account who has finished.
  */
 export default function Tour({ user, autoStart = false }) {
     const isOpen = useTourOpen();
-    const [index, setIndex] = useState(0);
-    const [rect, setRect] = useState(null);
-
-    const steps = TOUR_STEPS.filter((step) => !step.target || visibleTarget(step.target));
-    const step = steps[Math.min(index, steps.length - 1)];
 
     useEffect(() => {
         // Finished in this browser before the account remembered it: carry it over.
@@ -101,36 +93,27 @@ export default function Tour({ user, autoStart = false }) {
         else if (autoStart && shouldAutoStart(user)) startTour();
     }, [autoStart, user]);
 
-    useEffect(() => {
-        if (isOpen) setIndex(0);
-    }, [isOpen]);
-
     const finish = useCallback(() => {
         markDone(user);
         stopTour();
     }, [user]);
 
-    useLayoutEffect(() => {
-        if (!isOpen || !step) return undefined;
-        const measure = () => setRect(visibleTarget(step.target));
-        measure();
-        window.addEventListener('resize', measure);
-        return () => window.removeEventListener('resize', measure);
-    }, [isOpen, step]);
+    return (
+        <AdminTutorial
+            open={isOpen}
+            steps={KIT_STEPS}
+            skipMissing
+            scrollIntoView={false}
+            onComplete={finish}
+            render={(tour) => <TourCard {...tour} />}
+        />
+    );
+}
 
-    useEffect(() => {
-        if (!isOpen) return undefined;
-        const onKey = (e) => {
-            if (e.key === 'Escape') finish();
-            if (e.key === 'ArrowRight') setIndex((i) => Math.min(i + 1, steps.length - 1));
-            if (e.key === 'ArrowLeft') setIndex((i) => Math.max(i - 1, 0));
-        };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [isOpen, finish, steps.length]);
-
-    if (!isOpen || !step || typeof document === 'undefined') return null;
-
+/** The spotlight and the card, as Najenga has always drawn them. */
+function TourCard({ step: kitStep, index, count, rect, next, back, finish }) {
+    const step = { ...kitStep, target: kitStep.name };
+    const steps = { length: count };
     const last = index >= steps.length - 1;
     const pad = 6;
     // The card sits below the target, or beside it for the sidebar; centred without one.
@@ -140,7 +123,7 @@ export default function Tour({ user, autoStart = false }) {
             : { top: rect.bottom + 14, left: Math.min(Math.max(16, rect.left + rect.width / 2 - 160), window.innerWidth - 336) }
         : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
 
-    return createPortal(
+    return (
         <div className="fixed inset-0 z-[60]">
             {rect ? (
                 // A spotlight: everything dimmed except the target.
@@ -170,21 +153,20 @@ export default function Tour({ user, autoStart = false }) {
                         Skip tour
                     </button>
                     {index > 0 && (
-                        <button type="button" onClick={() => setIndex(index - 1)} className="rounded-xl border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5">
+                        <button type="button" onClick={back} className="rounded-xl border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5">
                             Back
                         </button>
                     )}
                     <button
                         type="button"
                         autoFocus
-                        onClick={() => (last ? finish() : setIndex(index + 1))}
+                        onClick={() => (last ? finish() : next())}
                         className="rounded-xl bg-gradient-to-r from-[rgb(139,0,0)] to-[rgb(220,20,60)] px-3 py-1.5 text-sm font-semibold text-white"
                     >
                         {last ? 'Done' : 'Next'}
                     </button>
                 </div>
             </div>
-        </div>,
-        document.body,
+        </div>
     );
 }
