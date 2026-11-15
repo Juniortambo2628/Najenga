@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook as render, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { hasUnsavedChanges } from '@okjt/dashboard';
 
 const handlers = vi.hoisted(() => ({}));
 const routerMock = vi.hoisted(() => ({
@@ -13,6 +15,9 @@ vi.mock('@inertiajs/react', () => ({ router: routerMock }));
 
 import useUnsavedChangesGuard from '../../../resources/js/Hooks/useUnsavedChangesGuard';
 import { useHasUnsavedChanges } from '../../../resources/js/Utils/unsavedChanges';
+
+// The kit's guard (which this one builds on) needs a router, as the app has.
+const renderHook = (hook) => render(hook, { wrapper: MemoryRouter });
 
 const fire = (name, detail) => {
     const event = { detail, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } };
@@ -87,5 +92,12 @@ describe('useUnsavedChangesGuard', () => {
         const event = new Event('beforeunload', { cancelable: true });
         window.dispatchEvent(event);
         expect(event.defaultPrevented).toBe(true);
+    });
+
+    it('reports to the OKJT kit\'s page-wide record', () => {
+        const { unmount } = renderHook(() => useUnsavedChangesGuard(true));
+        expect(hasUnsavedChanges()).toBe(true);
+        unmount();
+        expect(hasUnsavedChanges()).toBe(false);
     });
 });

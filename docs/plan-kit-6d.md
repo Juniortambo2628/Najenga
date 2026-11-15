@@ -40,7 +40,7 @@ change.
 | 6d.1 | #84 |
 | 6d.2 | #85: buttons, ContextMenu and the confirm dialog. `Modal` waits on the kit (below). |
 | 6d.3 | `Card`: this PR. The inputs wait on the kit (below). |
-| 6d.4 | Not done: Najenga's `useFilteredItems` and `useUnsavedChangesGuard` do more than the kit's (below), and `useVisibleActions` / `useRole` decide per project and record where the kit's permissions are one switch for the page. They stay Najenga's. |
+| 6d.4 | Part done (kit 0.5): `useUnsavedChangesGuard` is built on the kit's guard (its page-wide record, the reload prompt, links, `confirmLeave()`); Najenga keeps only the hook into its own router. `useFilteredItems` waits on the kit (G4, R2). `useVisibleActions` / `useRole` stay Najenga's. |
 | 6d.5 | Not done: `useAdminAction` needs a TanStack Query client in every page test, and what it adds (refreshing the kit's history queries and collaboration) Najenga doesn't use; its history drawer is its own. `useAction` stays. |
 | 6d.6 | Waiting for a decision: `NotificationsBell` expects `{ title, message, link, icon }` at the top of each item and marks all read on `POST /notifications/mark-read` (Najenga's are Laravel database notifications with those under `data`, and it marks them one by one or with `read-all`); `AdminTutorial` targets ids, has no open state, doesn't skip stops off screen or take arrow keys. Each needs server or kit changes first. |
 
@@ -51,7 +51,20 @@ Fix these in the kit, then finish the step that waits on them.
 | Kit piece | Gap | Najenga until then |
 |---|---|---|
 | `@okjt/ui` `Modal` | Widths stop at `5xl` (the receipt and photo preview is `7xl`); its own close button can't be turned off, so a dialog with its own header gets two; no title, tabs or footer | Keeps its own `Modal` |
-| `@okjt/ui` `ContextMenu` | Doesn't return focus to whatever opened it when it closes | Najenga's `ContextMenu` adapter does it |
+| `@okjt/ui` `ContextMenu` | ~~Doesn't return focus to whatever opened it~~ Fixed in kit 0.5 | Adapter's own focus return removed |
 | `@okjt/dashboard` `AdminInput`, `AdminSelect`, `AdminTextarea` | No background of their own, so `@tailwindcss/forms` makes them white on a dark dashboard; no `ref` (forms focus fields); label and error built in, where Najenga's forms place them separately | Keeps `TextInput`, `SelectInput`, `TextArea` |
-| `@okjt/dashboard` `useUnsavedChangesGuard` | Only catches link clicks, not the router's own visits; no "Unsaved changes" chip in the header | Keeps its own guard |
+| `@okjt/dashboard` `useUnsavedChangesGuard` | ~~Only catches link clicks; no chip~~ Fixed in kit 0.5 (`confirmLeave`, `useHasUnsavedChanges`) | On the kit's guard |
 | `@okjt/dashboard` `useFilteredItems` | Searches every field; no project filter, chosen fields or sort | Keeps its own |
+
+## Kit 0.5 (R1 of OKJT's consolidation plan)
+
+Kit 0.5 closed the gaps 6d.2, 6d.3 and 6d.6 were waiting on: `Modal` widths
+up to `7xl`, `showClose`, `title` and `footer`; fields with a `ref`, `bare`
+and their own background (`--okjt-field-bg`, `--okjt-field-text`);
+`NotificationsBell`'s `listPath` / `markAllPath` / `map`; `AdminTutorial`'s
+`open`, `skipMissing`, selectors and keys. Still missing: tabs in `Modal`
+(R2, for the user and expense dialogs), and a backdrop option.
+
+Moving the dialogs, fields, bell and tour onto the kit's changes how they
+look (the kit's own styles, in Najenga's dark theme), so it waits for a
+decision on the look before it is built.

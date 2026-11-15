@@ -1,27 +1,6 @@
-import { useSyncExternalStore } from 'react';
-
 /*
- * Which forms on the page have unsaved edits. useUnsavedChangesGuard reports
- * here and the navbar reads it. A store rather than context, because a form
- * may render the layout itself (ResourceForm wraps AuthenticatedLayout).
+ * Which forms on the page have unsaved edits: the OKJT kit's page-wide record.
+ * useUnsavedChangesGuard reports to it (through the kit's guard) and the
+ * navbar reads it.
  */
-const dirtyForms = new Set();
-const listeners = new Set();
-
-export function reportUnsaved(key, dirty) {
-    const had = dirtyForms.has(key);
-    if (dirty === had) return;
-    if (dirty) dirtyForms.add(key);
-    else dirtyForms.delete(key);
-    listeners.forEach((listener) => listener());
-}
-
-function subscribe(listener) {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-}
-
-/** True while any form on the page has unsaved edits. */
-export function useHasUnsavedChanges() {
-    return useSyncExternalStore(subscribe, () => dirtyForms.size > 0, () => false);
-}
+export { useHasUnsavedChanges, hasUnsavedChanges } from '@okjt/dashboard';
