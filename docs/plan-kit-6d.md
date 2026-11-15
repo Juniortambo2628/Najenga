@@ -42,7 +42,7 @@ change.
 | 6d.3 | #86: `Card`. Kit 0.6: the fields on the kit's, with Najenga's classes (`Components/fieldClasses.js`). |
 | 6d.4 | Part done (kit 0.5): `useUnsavedChangesGuard` is built on the kit's guard (its page-wide record, the reload prompt, links, `confirmLeave()`); Najenga keeps only the hook into its own router. `useFilteredItems` waits on the kit (G4, R2). `useVisibleActions` / `useRole` stay Najenga's. |
 | 6d.5 | Not done: `useAdminAction` needs a TanStack Query client in every page test, and what it adds (refreshing the kit's history queries and collaboration) Najenga doesn't use; its history drawer is its own. `useAction` stays. |
-| 6d.6 | Waiting for a decision: `NotificationsBell` expects `{ title, message, link, icon }` at the top of each item and marks all read on `POST /notifications/mark-read` (Najenga's are Laravel database notifications with those under `data`, and it marks them one by one or with `read-all`); `AdminTutorial` targets ids, has no open state, doesn't skip stops off screen or take arrow keys. Each needs server or kit changes first. |
+| 6d.6 | Kit 0.7: the bell on `NotificationsBell` (`useNotifications`, `renderButton` / `renderPanel`, `markOnePath`) and the tour on `AdminTutorial` (`render`, `scrollIntoView={false}`), each drawn in Najenga's look. |
 
 ## Gaps found in the kit
 
@@ -67,4 +67,8 @@ and their own background (`--okjt-field-bg`, `--okjt-field-text`);
 
 Decided (option B): the kit gains style options first, so Najenga switches
 with its screenshots unchanged. Kit 0.6 did that for the fields and the
-dialogs; the bell and the tour need render slots in the kit and come next.
+dialogs, kit 0.7 for the bell and the tour. Still Najenga's own:
+`useFilteredItems` (waits on the kit, G4), `useAction` (6d.5),
+`useVisibleActions` / `useRole`, and what was always Najenga's (receipts,
+OCR, the expense sheet, the annotator, comments, `DetailPage`, `FilePreview`,
+`StatusBadge`).
