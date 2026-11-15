@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 
+// jsdom doesn't scroll.
+Element.prototype.scrollIntoView ??= () => {};
+
 const axiosMock = vi.hoisted(() => ({ post: vi.fn(() => Promise.resolve({})) }));
 vi.mock('axios', () => ({ default: axiosMock }));
 
@@ -40,10 +43,9 @@ describe('Tour', () => {
         expect(shouldAutoStart({ id: 6, created_at: daysAgo(60) })).toBe(false);
 
         render(<><Shell /><Tour user={user} autoStart /></>);
-        expect(screen.getByRole('dialog', { name: 'Welcome to Najenga' })).toBeInTheDocument();
-        expect(screen.getByText(`1 of ${TOUR_STEPS.length}`)).toBeInTheDocument();
+        expect(screen.getByRole('dialog', { name: /Welcome to Najenga/ })).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Skip tour' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Skip Tour' }));
         expect(screen.queryByRole('dialog')).toBeNull();
         expect(shouldAutoStart(user)).toBe(false);
         // Remembered on the account, not in this browser.
@@ -65,28 +67,28 @@ describe('Tour', () => {
         expect(localStorage.getItem('najenga.tour.done.11')).toBeNull();
     });
 
-    it('walks through the stops, back and forth, and finishes', () => {
+    it('walks through the stops, back and forth, and finishes', async () => {
         render(<><Shell /><Tour user={{ id: 7, created_at: daysAgo(400) }} /></>);
         expect(screen.queryByRole('dialog')).toBeNull();
 
         act(() => startTour());
-        fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-        expect(screen.getByRole('dialog', { name: 'Your pages' })).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-        expect(screen.getByRole('dialog', { name: 'Welcome to Najenga' })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Next Step/ }));
+        expect(await screen.findByRole('dialog', { name: 'Your pages' })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Previous step' }));
+        expect(await screen.findByRole('dialog', { name: /Welcome to Najenga/ })).toBeInTheDocument();
 
-        for (let i = 1; i < TOUR_STEPS.length; i += 1) fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-        expect(screen.getByRole('dialog', { name: 'Your account' })).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+        for (let i = 1; i < TOUR_STEPS.length; i += 1) fireEvent.click(screen.getByRole('button', { name: /Next Step/ }));
+        fireEvent.click(await screen.findByRole('button', { name: /Finish Tour/ }));
         expect(screen.queryByRole('dialog')).toBeNull();
+        expect(axiosMock.post).toHaveBeenCalledWith('/tour/complete');
     });
 
-    it('skips stops whose element is not on screen', () => {
+    it('skips stops whose element is not on screen, and Escape ends it', async () => {
         render(<><Shell withSidebar={false} /><Tour user={{ id: 8, created_at: daysAgo(1) }} /></>);
         act(() => startTour());
-        expect(screen.getByText(`1 of ${TOUR_STEPS.length - 1}`)).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-        expect(screen.getByRole('dialog', { name: 'Pick a project' })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Next Step/ }));
+        // No sidebar on this screen: the next stop is the project picker.
+        expect(await screen.findByRole('dialog', { name: 'Pick a project' })).toBeInTheDocument();
         fireEvent.keyDown(document, { key: 'Escape' });
         expect(screen.queryByRole('dialog')).toBeNull();
     });

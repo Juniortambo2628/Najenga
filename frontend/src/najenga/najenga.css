@@ -20,6 +20,12 @@
     color: #fff;
   }
 
+  /* The kit's form fields: translucent with light text, not the forms plugin's white. */
+  :root.admin-theme {
+    --okjt-field-bg: rgb(255 255 255 / 0.05);
+    --okjt-field-text: #ffffff;
+  }
+
   /* Tailwind 3's defaults the pages were written against. */
   .admin-theme *, .admin-theme ::after, .admin-theme ::before, .admin-theme ::backdrop, .admin-theme ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);

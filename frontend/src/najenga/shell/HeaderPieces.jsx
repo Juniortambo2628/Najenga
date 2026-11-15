@@ -1,7 +1,8 @@
 import { usePage } from '@inertiajs/react';
 import ProjectSwitcher from '@/Components/ProjectSwitcher';
 import NavbarShare from '@/Components/NavbarShare';
-import NotificationsDropdown from '@/Components/NotificationsDropdown';
+import { NotificationsBell } from '@okjt/dashboard';
+import { BELL } from '@/Config/notifications';
 import HistoryDrawer from '@/Components/HistoryDrawer';
 import { AlsoHere, OnlineAvatars } from '@/Components/OnlinePeople';
 import { useHasUnsavedChanges } from '@/Utils/unsavedChanges';
@@ -56,7 +57,7 @@ export function Share() {
 export function Notifications() {
   return (
     <div data-tour="notifications">
-      <NotificationsDropdown />
+      <NotificationsBell {...BELL} />
     </div>
   );
 }
