@@ -1,16 +1,20 @@
-import { useEffect, useId } from 'react';
+import { useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import { confirmAction } from '@/Utils/feedback';
-import { reportUnsaved } from '@/Utils/unsavedChanges';
+import { useUnsavedChangesGuard as useKitGuard, confirmLeave } from '@okjt/dashboard';
 
 // Shared by every guard on the page: one answer ("Leave") or one save lets the
 // next visit through for all of them.
 const bypass = { current: false };
 
 /**
- * Warn before leaving a page with unsaved edits: on reload or close (the
- * browser's prompt) and on Inertia navigation (the styled confirm dialog).
- * While `dirty`, the navbar shows an "Unsaved changes" chip.
+ * Warn before leaving a page with unsaved edits.
+ *
+ * The OKJT kit's guard does most of it: the page-wide record of unsaved forms
+ * (the navbar's "Unsaved changes" chip reads it), the browser's prompt on
+ * reload or close, and asking before in-app links. What stays here is
+ * Najenga's own router (the page API in frontend/src/najenga/inertia.jsx):
+ * its visits ask through the kit's confirmLeave(), and the visit a form makes
+ * right after saving is let through.
  *
  *   const form = useForm({...});
  *   useUnsavedChangesGuard(form.isDirty);
@@ -19,20 +23,10 @@ const bypass = { current: false };
  * success handler makes straight after saving (e.g. back to the list).
  */
 export default function useUnsavedChangesGuard(dirty, message = 'Your changes on this page have not been saved.') {
-    const key = useId();
-
-    useEffect(() => {
-        reportUnsaved(key, !!dirty);
-        return () => reportUnsaved(key, false);
-    }, [key, dirty]);
+    useKitGuard(!!dirty, message);
 
     useEffect(() => {
         if (!dirty) return undefined;
-
-        const onBeforeUnload = (e) => {
-            e.preventDefault();
-            e.returnValue = '';
-        };
 
         let writing = false;
         let clearBypass = null;
@@ -64,7 +58,7 @@ export default function useUnsavedChangesGuard(dirty, message = 'Your changes on
             if (url.pathname === window.location.pathname) return undefined;
 
             event.preventDefault();
-            confirmAction({ title: 'Leave without saving?', message, confirmLabel: 'Leave', tone: 'danger' }).then((leave) => {
+            confirmLeave(message).then((leave) => {
                 if (!leave) return;
                 bypass.current = true;
                 router.visit(url.pathname + url.search + url.hash);
@@ -72,9 +66,7 @@ export default function useUnsavedChangesGuard(dirty, message = 'Your changes on
             return false;
         });
 
-        window.addEventListener('beforeunload', onBeforeUnload);
         return () => {
-            window.removeEventListener('beforeunload', onBeforeUnload);
             clearTimeout(clearBypass);
             offStart();
             offSuccess();
