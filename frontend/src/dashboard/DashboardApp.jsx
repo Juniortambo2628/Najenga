@@ -16,6 +16,7 @@ import { http } from './api';
 import { fa, loadFontAwesome } from './icons';
 import { NAV_ITEMS, navFor } from './navigation';
 import { PageDataProvider, seedFirstPage, usePageState } from './page';
+import { FIELD_CLASSES } from '@/Components/fieldClasses';
 
 /**
  * Najenga's dashboard on the OKJT kit: the kit's shell (sidebar, header,
@@ -91,7 +92,7 @@ function Shell({ children }) {
     // Kit components take Najenga's Font Awesome names ('fa-receipt').
     iconFor,
     // The kit's components in Najenga's dark, bold look.
-    componentDefaults: { SidePanel: { variant: 'bold' }, FloatingToolbar: { variant: 'bold' }, SummaryCards: { variant: 'bold' }, PageLayout: { variant: 'bold' }, PageHero: { variant: 'bold' } },
+    componentDefaults: { Field: { classNames: FIELD_CLASSES }, SidePanel: { variant: 'bold' }, FloatingToolbar: { variant: 'bold' }, SummaryCards: { variant: 'bold' }, PageLayout: { variant: 'bold' }, PageHero: { variant: 'bold' } },
     roles: [
       { value: 'owner', label: 'Owner', description: 'Everything, including people and roles' },
       { value: 'editor', label: 'Editor', description: 'Adds and changes records' },
