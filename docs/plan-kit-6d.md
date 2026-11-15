@@ -38,8 +38,8 @@ change.
 | Step | PR |
 |---|---|
 | 6d.1 | #84 |
-| 6d.2 | #85: buttons, ContextMenu and the confirm dialog. `Modal` waits on the kit (below). |
-| 6d.3 | `Card`: this PR. The inputs wait on the kit (below). |
+| 6d.2 | #85: buttons, ContextMenu and the confirm dialog. Kit 0.6: `Modal` on the kit's dialog (Najenga's chrome inside it). |
+| 6d.3 | #86: `Card`. Kit 0.6: the fields on the kit's, with Najenga's classes (`Components/fieldClasses.js`). |
 | 6d.4 | Part done (kit 0.5): `useUnsavedChangesGuard` is built on the kit's guard (its page-wide record, the reload prompt, links, `confirmLeave()`); Najenga keeps only the hook into its own router. `useFilteredItems` waits on the kit (G4, R2). `useVisibleActions` / `useRole` stay Najenga's. |
 | 6d.5 | Not done: `useAdminAction` needs a TanStack Query client in every page test, and what it adds (refreshing the kit's history queries and collaboration) Najenga doesn't use; its history drawer is its own. `useAction` stays. |
 | 6d.6 | Waiting for a decision: `NotificationsBell` expects `{ title, message, link, icon }` at the top of each item and marks all read on `POST /notifications/mark-read` (Najenga's are Laravel database notifications with those under `data`, and it marks them one by one or with `read-all`); `AdminTutorial` targets ids, has no open state, doesn't skip stops off screen or take arrow keys. Each needs server or kit changes first. |
@@ -65,6 +65,6 @@ and their own background (`--okjt-field-bg`, `--okjt-field-text`);
 `open`, `skipMissing`, selectors and keys. Still missing: tabs in `Modal`
 (R2, for the user and expense dialogs), and a backdrop option.
 
-Moving the dialogs, fields, bell and tour onto the kit's changes how they
-look (the kit's own styles, in Najenga's dark theme), so it waits for a
-decision on the look before it is built.
+Decided (option B): the kit gains style options first, so Najenga switches
+with its screenshots unchanged. Kit 0.6 did that for the fields and the
+dialogs; the bell and the tour need render slots in the kit and come next.
