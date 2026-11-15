@@ -1,11 +1,15 @@
-import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    Transition,
-    TransitionChild,
-} from '@headlessui/react';
 import { useState, useEffect } from 'react';
+import { Modal as KitModal } from '@okjt/ui';
+
+/*
+ * Najenga's dialog, on the OKJT kit's Modal: the kit gives the backdrop,
+ * Escape, focus (moved in, kept inside, given back) and the scroll lock;
+ * Najenga draws its own panel, close button, tabs and footer inside it, in
+ * the same markup and classes as before (kit 0.6: overlayClassName,
+ * backdropClassName, classNames).
+ */
+const OVERLAY_CLASS = 'flex transform items-center overflow-y-auto px-4 py-6 transition-all sm:px-0';
+const BACKDROP_CLASS = 'bg-black/80 backdrop-blur-sm';
 
 export default function Modal({
     children,
@@ -46,39 +50,23 @@ export default function Modal({
     const hasTabs = tabs && tabs.length > 0;
 
     return (
-        <Transition show={visible} leave="duration-200">
-            <Dialog
-                as="div"
-                id="modal"
-                className="fixed inset-0 z-50 flex transform items-center overflow-y-auto px-4 py-6 transition-all sm:px-0"
-                onClose={close}
-            >
-                <TransitionChild
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-                </TransitionChild>
-
-                <TransitionChild
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    enterTo="opacity-100 translate-y-0 sm:scale-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                >
-                    <DialogPanel
-                        className={`mb-6 transform overflow-hidden rounded-2xl shadow-2xl transition-all sm:mx-auto sm:w-full ${maxWidthClass} ${
-                            hasTabs
-                                ? 'bg-gradient-to-br from-[#1a0508]/95 via-[#120306]/95 to-[#0a0102]/95 backdrop-blur-xl border border-white/[0.06]'
-                                : 'bg-surface-overlay border border-white/[0.08]'
-                        }`}
-                    >
+        <KitModal
+            open={visible}
+            onClose={onClose}
+            closeable={closeable}
+            showClose={false}
+            label={title || undefined}
+            overlayClassName={OVERLAY_CLASS}
+            backdropClassName={BACKDROP_CLASS}
+            classNames={{
+                panel: `mb-6 overflow-hidden rounded-2xl shadow-2xl sm:mx-auto sm:w-full ${maxWidthClass} ${
+                    hasTabs
+                        ? 'bg-gradient-to-br from-[#1a0508]/95 via-[#120306]/95 to-[#0a0102]/95 backdrop-blur-xl border border-white/[0.06]'
+                        : 'bg-surface-overlay border border-white/[0.08]'
+                }`,
+                body: 'contents',
+            }}
+        >
                         {hasTabs ? (
                             <div className="flex min-h-[520px] max-h-[90vh]">
                                 {/* Left Column - Tabs */}
@@ -88,7 +76,7 @@ export default function Modal({
                                             {subtitle && (
                                                 <p className="text-[11px] font-bold text-[#DC143C] capitalize mb-1.5">{subtitle}</p>
                                             )}
-                                            <DialogTitle as="h3" className="text-lg font-bold text-white leading-tight">{title}</DialogTitle>
+                                            <h3 className="text-lg font-bold text-white leading-tight">{title}</h3>
                                         </div>
                                     )}
                                     <nav className="flex-1 px-4 pb-5 space-y-1" aria-label={title ? `${title} sections` : 'Sections'}>
@@ -153,9 +141,6 @@ export default function Modal({
                                 )}
                             </>
                         )}
-                    </DialogPanel>
-                </TransitionChild>
-            </Dialog>
-        </Transition>
+        </KitModal>
     );
 }
