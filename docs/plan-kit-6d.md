@@ -41,7 +41,7 @@ change.
 | 6d.2 | #85: buttons, ContextMenu and the confirm dialog. Kit 0.6: `Modal` on the kit's dialog (Najenga's chrome inside it). |
 | 6d.3 | #86: `Card`. Kit 0.6: the fields on the kit's, with Najenga's classes (`Components/fieldClasses.js`). |
 | 6d.4 | Done: `useUnsavedChangesGuard` on the kit's guard (kit 0.5); `useFilteredItems` an adapter onto the kit's (kit 0.8: `where`, `searchFields`, `sortFn`). `useVisibleActions` / `useRole` stay Najenga's. |
-| 6d.5 | Not done: `useAdminAction` needs a TanStack Query client in every page test, and what it adds (refreshing the kit's history queries and collaboration) Najenga doesn't use; its history drawer is its own. `useAction` stays. |
+| 6d.5 | Kit 0.9: `useAction` is a thin wrapper on the kit's `useAdminAction` (confirm, pending per item, success toast), with `refreshHistory: false` (Najenga's history is its own). Najenga keeps `visit()`, `only` (Inertia reloads), `allowed` and its error toasts, which read Inertia's validation errors (the kit's `notifyError` doesn't: kit candidate). |
 | 6d.6 | Kit 0.7: the bell on `NotificationsBell` (`useNotifications`, `renderButton` / `renderPanel`, `markOnePath`) and the tour on `AdminTutorial` (`render`, `scrollIntoView={false}`), each drawn in Najenga's look. |
 
 ## Gaps found in the kit

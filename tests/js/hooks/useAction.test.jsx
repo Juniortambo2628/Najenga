@@ -8,6 +8,7 @@ const errorMock = vi.fn();
 vi.mock('@inertiajs/react', () => ({ router: routerMock }));
 vi.mock('react-hot-toast', () => ({
     default: { success: (...args) => successMock(...args), error: (...args) => errorMock(...args) },
+    toast: { success: (...args) => successMock(...args), error: (...args) => errorMock(...args) },
 }));
 
 import useAction, { visit, errorMessage } from '../../../resources/js/Hooks/useAction';
