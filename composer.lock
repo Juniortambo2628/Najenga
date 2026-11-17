@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce18279752d7515eb2e422e6c46cf136",
+    "content-hash": "73308d1b8404e3eb70e7e11ff331a517",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3342,16 +3342,16 @@
         },
         {
             "name": "okjt/laravel-kit",
-            "version": "v0.8.0",
+            "version": "v0.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Juniortambo2628/okjt-laravel-kit.git",
-                "reference": "f8666df063bfbc26733ba96811840a24f10207ad"
+                "reference": "6b11a5325ebc51f121b3077bb29d64e3631fbda0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Juniortambo2628/okjt-laravel-kit/zipball/f8666df063bfbc26733ba96811840a24f10207ad",
-                "reference": "f8666df063bfbc26733ba96811840a24f10207ad",
+                "url": "https://api.github.com/repos/Juniortambo2628/okjt-laravel-kit/zipball/6b11a5325ebc51f121b3077bb29d64e3631fbda0",
+                "reference": "6b11a5325ebc51f121b3077bb29d64e3631fbda0",
                 "shasum": ""
             },
             "require": {
@@ -3395,9 +3395,9 @@
             "description": "The server half of the OKJT kit: workspaces and roles, version history, and the middleware that enforces them, for Laravel 12 APIs.",
             "support": {
                 "issues": "https://github.com/Juniortambo2628/okjt-laravel-kit/issues",
-                "source": "https://github.com/Juniortambo2628/okjt-laravel-kit/tree/v0.8.0"
+                "source": "https://github.com/Juniortambo2628/okjt-laravel-kit/tree/v0.11.0"
             },
-            "time": "2026-11-16T00:04:57+00:00"
+            "time": "2026-11-16T01:59:56+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
