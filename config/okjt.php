@@ -36,7 +36,11 @@ $config = array_replace_recursive($kit, [
         // Secrets and recovery codes encrypted as Laravel Fortify kept them.
         'two_factor' => ['secrets_encrypted' => true],
         'login_codes' => ['notification' => \App\Notifications\LoginCodeNotification::class],
-        'password_reset' => ['path' => '/reset-password'],
+        // link_to_app: the emailed reset link keeps opening
+        // {FRONTEND_URL}/reset-password/{token}, as before laravel-kit 0.10
+        // (whose default, with a password.reset route here, would use the
+        // route's own host instead).
+        'password_reset' => ['path' => '/reset-password', 'link_to_app' => true],
     ],
     'messages' => [
         'bad_credentials' => 'These credentials do not match our records.',

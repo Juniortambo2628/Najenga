@@ -41,7 +41,7 @@ change.
 | 6d.2 | #85: buttons, ContextMenu and the confirm dialog. Kit 0.6: `Modal` on the kit's dialog (Najenga's chrome inside it). |
 | 6d.3 | #86: `Card`. Kit 0.6: the fields on the kit's, with Najenga's classes (`Components/fieldClasses.js`). |
 | 6d.4 | Done: `useUnsavedChangesGuard` on the kit's guard (kit 0.5); `useFilteredItems` an adapter onto the kit's (kit 0.8: `where`, `searchFields`, `sortFn`). `useVisibleActions` / `useRole` stay Najenga's. |
-| 6d.5 | Not done: `useAdminAction` needs a TanStack Query client in every page test, and what it adds (refreshing the kit's history queries and collaboration) Najenga doesn't use; its history drawer is its own. `useAction` stays. |
+| 6d.5 | Kit 0.9: `useAction` is a thin wrapper on the kit's `useAdminAction` (confirm, pending per item, success toast), with `refreshHistory: false` (Najenga's history is its own). Najenga keeps `visit()`, `only` (Inertia reloads), `allowed` and its error toasts, which read Inertia's validation errors (the kit's `notifyError` doesn't: kit candidate). |
 | 6d.6 | Kit 0.7: the bell on `NotificationsBell` (`useNotifications`, `renderButton` / `renderPanel`, `markOnePath`) and the tour on `AdminTutorial` (`render`, `scrollIntoView={false}`), each drawn in Najenga's look. |
 
 ## Gaps found in the kit
@@ -50,7 +50,7 @@ Fix these in the kit, then finish the step that waits on them.
 
 | Kit piece | Gap | Najenga until then |
 |---|---|---|
-| `@okjt/ui` `Modal` | Widths stop at `5xl` (the receipt and photo preview is `7xl`); its own close button can't be turned off, so a dialog with its own header gets two; no title, tabs or footer | Keeps its own `Modal` |
+| `@okjt/ui` `Modal` | ~~Widths stop at `5xl`; close button can't be turned off; no title, tabs or footer~~ Fixed: widths, close and title/footer in kit 0.5, tabs and a footer per tab in kit 0.11 | `Modal` draws its chrome on the kit's dialog (kit 0.6); the user and expense dialogs could move to the kit's `tabs` (a look change, so its own PR with screenshots) |
 | `@okjt/ui` `ContextMenu` | ~~Doesn't return focus to whatever opened it~~ Fixed in kit 0.5 | Adapter's own focus return removed |
 | `@okjt/dashboard` `AdminInput`, `AdminSelect`, `AdminTextarea` | No background of their own, so `@tailwindcss/forms` makes them white on a dark dashboard; no `ref` (forms focus fields); label and error built in, where Najenga's forms place them separately | Keeps `TextInput`, `SelectInput`, `TextArea` |
 | `@okjt/dashboard` `useUnsavedChangesGuard` | ~~Only catches link clicks; no chip~~ Fixed in kit 0.5 (`confirmLeave`, `useHasUnsavedChanges`) | On the kit's guard |
@@ -72,3 +72,19 @@ dialogs, kit 0.7 for the bell and the tour. Still Najenga's own:
 `useVisibleActions` / `useRole`, and what was always Najenga's (receipts,
 OCR, the expense sheet, the annotator, comments, `DetailPage`, `FilePreview`,
 `StatusBadge`).
+
+## Kit 0.11
+
+Versions only; nothing on screen changes. `@okjt/dashboard` 0.11, `@okjt/ui`
+0.6, `okjt/laravel-kit` 0.11 (`@okjt/site` stays 0.3).
+
+- laravel-kit 0.10 changed where emailed reset links point when an app has
+  its own `password.reset` route (Najenga does): Laravel's own link to it.
+  `config/okjt.php` sets `password_reset.link_to_app => true`, so the link
+  stays `{FRONTEND_URL}/reset-password/{token}?email=…` as before.
+- New in the kit, not used here yet: `Modal` `tabs` / `footer` per tab /
+  `fixedHeight` / `sheet`; `shell.tabBar`; `shell.pageSkeleton`;
+  `undoable` / `useUndoableRemoval`; `StepFlow`; `formatNumber` /
+  `formatDateTime` / `statusLabel`. Each would change how something looks
+  or behaves, so each is its own PR.
+
