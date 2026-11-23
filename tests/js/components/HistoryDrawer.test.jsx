@@ -3,7 +3,10 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
 const axiosMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 vi.mock('axios', () => ({ default: axiosMock }));
-vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
+vi.mock('react-hot-toast', () => {
+    const toast = { success: vi.fn(), error: vi.fn() };
+    return { default: toast, toast };
+});
 const routerMock = vi.hoisted(() => ({ reload: vi.fn(), on: () => () => {} }));
 const page = vi.hoisted(() => ({
     component: 'Expenses',
@@ -22,6 +25,9 @@ const version = (over) => ({
 });
 
 beforeEach(() => {
+    // useAction asks through the kit's confirmAction, which uses window.confirm
+    // when no dialog host is mounted (as in this test).
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     vi.clearAllMocks();
     act(() => setActiveProjectId(null));
     axiosMock.get.mockResolvedValue({ data: { data: [version(), version({ id: 2, project_id: 9, label: 'Sand', event: 'deleted', changes: [] })], current_page: 1, last_page: 1 } });
