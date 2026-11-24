@@ -109,12 +109,14 @@ async function fetchVisit(method, url, data) {
   const realMethod = files && method !== 'POST' ? 'POST' : method;
   const body = !send ? undefined : files ? toFormData({ ...data, ...(method !== 'POST' ? { _method: method } : {}) }) : data;
   try {
-    const { data: page } = await request(realMethod, url, {
+    const { data: page, url: landed } = await request(realMethod, url, {
       data: body,
       headers: { 'X-Kit-Page': '1', Accept: 'text/html, application/xhtml+xml' },
     });
     if (page?.component) return page;
-    window.location.assign(url);
+    // Load where the request ended up (after redirects), not the URL asked
+    // for: a POST (e.g. /logout -> /) can't be loaded again as a GET.
+    window.location.assign(landed || url);
     return null;
   } catch (error) {
     // A 403/404/500 answers with the Errors page: show it.
