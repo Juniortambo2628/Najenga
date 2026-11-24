@@ -3,7 +3,8 @@
  * (sign-in is still on the Inertia pages), and its XSRF-TOKEN cookie sent
  * back as X-XSRF-TOKEN for anything that changes data.
  *
- * Calls resolve to { data, status } (axios-like, as the kit expects) and
+ * Calls resolve to { data, status, url } (axios-like, as the kit expects;
+ * url is where any redirects ended up) and
  * reject with an Error carrying `status` and `response.data` (Laravel's
  * { message, errors } for a 422).
  */
@@ -36,7 +37,7 @@ export async function request(method, url, { data, params, headers = {} } = {}) 
     if (res.status === 401 || res.status === 419) window.location.assign('/login');
     throw error;
   }
-  return { data: body, status: res.status };
+  return { data: body, status: res.status, url: res.url || url + query };
 }
 
 export const http = {
