@@ -120,11 +120,11 @@ export default function Index({ receipts = [] }) {
                                         className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                     />
                                 </th>
-                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">ID</th>
-                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Expense ID</th>
+                                <th className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-xs font-medium">ID</th>
+                                <th className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-xs font-medium">Expense ID</th>
                                 <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Filename</th>
                                 <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Status</th>
-                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Created At</th>
+                                <th className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-xs font-medium">Created At</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -146,18 +146,23 @@ export default function Index({ receipts = [] }) {
                                                 className="rounded border-gray-400 bg-white/5 text-[#DC143C] focus:ring-[#DC143C]"
                                             />
                                         </td>
-                                        <td className="px-4 py-2.5 text-gray-300 text-sm">#{receipt.id}</td>
-                                        <td className="px-4 py-2.5 text-gray-300 text-sm">{receipt.expense_id || '-'}</td>
+                                        <td className="hidden md:table-cell px-4 py-2.5 text-gray-300 text-sm">#{receipt.id}</td>
+                                        <td className="hidden md:table-cell px-4 py-2.5 text-gray-300 text-sm">{receipt.expense_id || '-'}</td>
                                         <td className="px-4 py-2.5">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-500">
                                                     <i aria-hidden="true" className="fas fa-file-image text-sm"></i>
                                                 </div>
-                                                <span className="text-white text-sm font-medium hover:text-[#DC143C] transition">
-                                                    <Link href={route('receipts.show', receipt.id)}>
-                                                        {receipt.filename || 'Unknown'}
-                                                    </Link>
-                                                </span>
+                                                <div className="min-w-0">
+                                                    <span className="block text-white text-sm font-medium hover:text-[#DC143C] transition break-all">
+                                                        <Link href={route('receipts.show', receipt.id)}>
+                                                            {receipt.filename || 'Unknown'}
+                                                        </Link>
+                                                    </span>
+                                                    <span className="md:hidden block text-xs text-gray-500 mt-0.5">
+                                                        #{receipt.id} · {new Date(receipt.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-2.5">
@@ -165,7 +170,7 @@ export default function Index({ receipts = [] }) {
                                                 {statusOf(receipt).replace('_', ' ')}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-2.5 text-gray-400 text-sm">
+                                        <td className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-sm">
                                             {new Date(receipt.created_at).toLocaleDateString()}
                                         </td>
                                     </tr>

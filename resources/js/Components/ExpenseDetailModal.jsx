@@ -23,7 +23,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
     if (!editing) {
         return (
             <div className="space-y-6">
-                <div className="flex justify-end gap-3">
+                <div className="flex flex-wrap justify-end gap-3">
                     {expense?.id && (
                         <Button variant="secondary" as="link" href={`/expenses/${expense.id}`} className="text-xs">
                             <i className="fas fa-external-link-alt mr-1"></i>Open page
@@ -37,12 +37,12 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                     <DetailRow label="Title" value={titleCase(expense?.title)} />
                     <DetailRow label="Recipient" value={titleCase(expense?.recipient)} />
                 </div>
-                <div className="grid grid-cols-3 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
                     <DetailRow label="Amount" value={expense ? formatCurrency(expense.amount) : '—'} mono />
                     <DetailRow label="Category" value={expense?.category} />
                     <DetailRow label="Payment Method" value={expense?.payment_method ? (PAYMENT_LABELS[expense.payment_method] || expense.payment_method) : null} />
                 </div>
-                <div className="grid grid-cols-3 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
                     <DetailRow label="Date" value={expense?.expense_date} mono />
                     <DetailRow label="Time" value={expense?.time} mono />
                     <DetailRow label="Reference" value={expense?.reference_number} mono />
@@ -72,7 +72,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                 <TextInput id="ed-title" value={formData.title} onChange={handleChange('title')} className="mt-1 block w-full" />
                 <InputError message={errors.title} className="mt-1" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <InputLabel htmlFor="ed-amount" value="Amount" />
                     <TextInput id="ed-amount" type="number" min="0" step="0.01" value={formData.amount} onChange={handleChange('amount')} className="mt-1 block w-full" />
@@ -84,7 +84,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                     <InputError message={errors.expense_date} className="mt-1" />
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <InputLabel htmlFor="ed-recipient" value="Recipient" />
                     <TextInput id="ed-recipient" value={formData.recipient} onChange={handleChange('recipient')} className="mt-1 block w-full" />
@@ -94,7 +94,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                     <TextInput id="ed-time" value={formData.time} onChange={handleChange('time')} className="mt-1 block w-full" placeholder="e.g. 10:30 AM" />
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <InputLabel htmlFor="ed-category" value="Category" />
                     <SelectInput id="ed-category" value={formData.category} onChange={handleChange('category')} className="mt-1 block w-full">
@@ -115,7 +115,7 @@ function DetailsTab({ expense, editing, formData, setFormData, errors, setErrors
                     </SelectInput>
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <InputLabel htmlFor="ed-reference_number" value="Reference Number" />
                     <TextInput id="ed-reference_number" value={formData.reference_number} onChange={handleChange('reference_number')} className="mt-1 block w-full" />
@@ -195,14 +195,14 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
         <div className="space-y-5">
             {previewUrl ? (
                 <div className="space-y-4">
-                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center min-h-[300px]">
+                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50 flex items-center justify-center min-h-[200px] sm:min-h-[300px]">
                         {previewUrl.endsWith('.pdf') ? (
                             <iframe src={previewUrl} className="w-full h-[400px]" title="Receipt" />
                         ) : (
                             <img loading="lazy" decoding="async"  src={previewUrl} alt="Receipt" className="max-w-full max-h-[400px] object-contain" />
                         )}
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-wrap justify-between items-center gap-3">
                         <span className="text-xs text-gray-400">Current receipt attached to this expense</span>
                         <div className="flex gap-2">
                             <Button variant="secondary" onClick={handleRemove} className="text-xs">
@@ -218,7 +218,7 @@ function ReceiptTab({ expense, onReceiptUpdate }) {
             ) : (
                 <div
                     {...getRootProps()}
-                    className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors duration-300 ${isDragActive ? 'border-[#8B0000] bg-[#8B0000]/10' : 'border-white/20 hover:border-[#8B0000]/50 hover:bg-white/5'}`}
+                    className={`border-2 border-dashed rounded-xl p-6 sm:p-10 text-center cursor-pointer transition-colors duration-300 ${isDragActive ? 'border-[#8B0000] bg-[#8B0000]/10' : 'border-white/20 hover:border-[#8B0000]/50 hover:bg-white/5'}`}
                 >
                     <input {...getInputProps()} />
                     <div className="flex flex-col items-center gap-3">

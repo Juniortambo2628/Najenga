@@ -193,22 +193,32 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                             <table className="w-full text-sm">
                                 <thead className="text-left text-gray-400 border-b border-white/10">
                                     <tr>
-                                        <th className="py-2 pr-3">#</th>
+                                        <th className="hidden md:table-cell py-2 pr-3">#</th>
                                         <th className="py-2 pr-3">Received</th>
-                                        <th className="py-2 pr-3">Processed</th>
+                                        <th className="hidden md:table-cell py-2 pr-3">Processed</th>
                                         <th className="py-2 pr-3">From</th>
-                                        <th className="py-2 pr-3">Status callbacks</th>
-                                        <th className="py-2 pr-3">Error</th>
+                                        <th className="hidden md:table-cell py-2 pr-3">Status callbacks</th>
+                                        <th className="hidden md:table-cell py-2 pr-3">Error</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-gray-200">
                                     {diagnostics.map((e) => (
                                         <tr key={e.id} className="border-b border-white/5 align-top">
-                                            <td className="py-2 pr-3 font-mono text-xs text-gray-400">{e.id}</td>
+                                            <td className="hidden md:table-cell py-2 pr-3 font-mono text-xs text-gray-400">{e.id}</td>
                                             <td className="py-2 pr-3 text-xs text-gray-300">
                                                 {e.received_at ? new Date(e.received_at).toLocaleString() : '—'}
+                                                {/* Phones: the hidden columns, under the time. */}
+                                                <div className="md:hidden mt-1 space-y-0.5">
+                                                    <div>
+                                                        <span className="font-mono text-gray-500">#{e.id}</span>
+                                                        {' · '}
+                                                        {e.processed ? <span className="text-green-400">✓ ok</span> : <span className="text-yellow-300">pending / failed</span>}
+                                                        {e.statuses ? <span className="text-gray-500"> · {e.statuses} status</span> : null}
+                                                    </div>
+                                                    {e.error_message && <div className="text-red-300 break-words">{e.error_message}</div>}
+                                                </div>
                                             </td>
-                                            <td className="py-2 pr-3">
+                                            <td className="hidden md:table-cell py-2 pr-3">
                                                 {e.processed ? (
                                                     <span className="text-green-400 text-xs">✓ ok</span>
                                                 ) : (
@@ -222,7 +232,7 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                                                     <ul className="space-y-1">
                                                         {e.senders.map((s, i) => (
                                                             <li key={i} className="text-xs">
-                                                                <span className="font-mono">+{s.from}</span>
+                                                                <span className="font-mono break-all">+{s.from}</span>
                                                                 <span className="text-gray-500"> · {s.type}</span>
                                                                 {s.matched_user ? (
                                                                     <span className="ml-2 text-green-400">→ {s.matched_user}</span>
@@ -234,8 +244,8 @@ export default function Settings({ config = {}, diagnostics = [] }) {
                                                     </ul>
                                                 )}
                                             </td>
-                                            <td className="py-2 pr-3 text-xs text-gray-400">{e.statuses || 0}</td>
-                                            <td className="py-2 pr-3 text-xs text-red-300 max-w-xs truncate">
+                                            <td className="hidden md:table-cell py-2 pr-3 text-xs text-gray-400">{e.statuses || 0}</td>
+                                            <td className="hidden md:table-cell py-2 pr-3 text-xs text-red-300 max-w-xs truncate">
                                                 {e.error_message || ''}
                                             </td>
                                         </tr>

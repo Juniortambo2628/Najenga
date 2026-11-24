@@ -307,12 +307,12 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                         />
                                     </th>
                                     <th className="px-4 py-2.5">Expense Details</th>
-                                    <th className="px-4 py-2.5">Recipient</th>
-                                    <th className="px-4 py-2.5">Ref / Method</th>
+                                    <th className="hidden md:table-cell px-4 py-2.5">Recipient</th>
+                                    <th className="hidden md:table-cell px-4 py-2.5">Ref / Method</th>
                                     <th className="px-4 py-2.5 text-right">Amount</th>
-                                    <th className="px-4 py-2.5 text-center">Date & Time</th>
-                                    <th className="px-4 py-2.5 text-center">Receipt</th>
-                                    <th className="px-4 py-2.5 text-center">Action</th>
+                                    <th className="hidden md:table-cell px-4 py-2.5 text-center">Date & Time</th>
+                                    <th className="hidden md:table-cell px-4 py-2.5 text-center">Receipt</th>
+                                    <th className="px-2 md:px-4 py-2.5 text-center"><span className="sr-only md:not-sr-only">Action</span></th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -337,11 +337,16 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                             <td className="px-4 py-2.5">
                                                 <span className="block text-white font-medium text-sm">{titleCase(expense.title)}</span>
                                                 {expense.purpose && (
-                                                    <span className="block text-xs text-gray-400 mt-0.5">{expense.purpose}</span>
+                                                    <span className="block text-xs text-gray-400 mt-0.5 line-clamp-2 md:line-clamp-none">{expense.purpose}</span>
                                                 )}
+                                                {/* Phones: the hidden columns' gist; the row opens the rest. */}
+                                                <span className="md:hidden flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                                                    <span>{expense.expense_date}</span>
+                                                    {expense.receipt_url && <i aria-label="Has a receipt" className="fas fa-file-image text-[#DC143C]"></i>}
+                                                </span>
                                             </td>
-                                            <td className="px-4 py-2.5 text-sm">{titleCase(expense.recipient) || '—'}</td>
-                                            <td className="px-4 py-2.5">
+                                            <td className="hidden md:table-cell px-4 py-2.5 text-sm">{titleCase(expense.recipient) || '—'}</td>
+                                            <td className="hidden md:table-cell px-4 py-2.5">
                                                 <div className="text-xs">
                                                     {expense.reference_number && (
                                                         <span className="block text-gray-300 font-mono">{expense.reference_number}</span>
@@ -349,14 +354,14 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                     <span className="text-gray-400">{expense.payment_method ? (expense.payment_method === 'mobile_money' ? 'M-Pesa' : expense.payment_method) : '—'}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-2.5 text-right text-sm text-white font-mono font-medium whitespace-nowrap">
+                                            <td className="px-2 md:px-4 py-2.5 text-right text-sm text-white font-mono font-medium whitespace-nowrap align-top md:align-middle">
                                                 KES {Number(expense.amount).toLocaleString()}
                                             </td>
-                                            <td className="px-4 py-2.5 text-center text-sm whitespace-nowrap">
+                                            <td className="hidden md:table-cell px-4 py-2.5 text-center text-sm whitespace-nowrap">
                                                 <span>{expense.expense_date}</span>
                                                 {expense.time && <span className="block text-xs text-gray-400">{expense.time}</span>}
                                             </td>
-                                            <td className="px-4 py-2.5 text-center">
+                                            <td className="hidden md:table-cell px-4 py-2.5 text-center">
                                                 {expense.receipt_url ? (
                                                     <button
                                                         onClick={() => setPreviewExpense(expense)}
@@ -369,7 +374,7 @@ export default function Expenses({ expenses = [], projects = [] }) {
                                                     <span className="text-gray-400">—</span>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-2.5 text-center">
+                                            <td className="px-2 md:px-4 py-2.5 text-center">
                                                 <button 
                                                     onClick={(e) => openContextMenu(e, expense)}
                                                     aria-label={`Actions for ${expense.title || 'expense'}`}

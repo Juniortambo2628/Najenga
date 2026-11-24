@@ -68,25 +68,38 @@ export default function Modal({
             }}
         >
                         {hasTabs ? (
-                            <div className="flex min-h-[520px] max-h-[90vh]">
+                            /* Phones: title, then the tabs in a row, then the content, full width.
+                               From sm: tabs in a column on the left, content on the right. */
+                            <div className="flex flex-col sm:flex-row sm:min-h-[520px] max-h-[90dvh]">
                                 {/* Left Column - Tabs */}
-                                <div className="w-64 flex-shrink-0 border-r border-white/[0.06] flex flex-col overflow-y-auto custom-scrollbar">
+                                <div className="sm:w-64 flex-shrink-0 border-b sm:border-b-0 sm:border-r border-white/[0.06] flex flex-col sm:overflow-y-auto custom-scrollbar">
                                     {title && (
-                                        <div className="px-6 pt-7 pb-5">
-                                            {subtitle && (
-                                                <p className="text-[11px] font-bold text-[#DC143C] capitalize mb-1.5">{subtitle}</p>
+                                        <div className="flex items-start gap-3 px-5 pt-5 pb-3 sm:px-6 sm:pt-7 sm:pb-5">
+                                            <div className="min-w-0 flex-1">
+                                                {subtitle && (
+                                                    <p className="text-[11px] font-bold text-[#DC143C] capitalize mb-1.5">{subtitle}</p>
+                                                )}
+                                                <h3 className="text-base sm:text-lg font-bold text-white leading-tight break-words">{title}</h3>
+                                            </div>
+                                            {closeable && (
+                                                <button
+                                                    onClick={close}
+                                                    aria-label="Close"
+                                                    className="sm:hidden -mr-2 -mt-1 p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition"
+                                                >
+                                                    <i aria-hidden="true" className="fas fa-times text-sm"></i>
+                                                </button>
                                             )}
-                                            <h3 className="text-lg font-bold text-white leading-tight">{title}</h3>
                                         </div>
                                     )}
-                                    <nav className="flex-1 px-4 pb-5 space-y-1" aria-label={title ? `${title} sections` : 'Sections'}>
+                                    <nav className="flex gap-1 overflow-x-auto px-3 pb-3 sm:block sm:flex-1 sm:overflow-visible sm:px-4 sm:pb-5 sm:space-y-1" aria-label={title ? `${title} sections` : 'Sections'}>
                                         {tabs.map((tab, idx) => (
                                             <button
                                                 key={idx}
                                                 type="button"
                                                 onClick={() => setActiveTab(idx)}
                                                 aria-current={activeTab === idx ? 'true' : undefined}
-                                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                                                className={`flex-shrink-0 whitespace-nowrap sm:w-full flex items-center gap-2 sm:gap-3 px-3.5 py-2 sm:py-2.5 rounded-xl text-sm font-medium transition-all ${
                                                     activeTab === idx
                                                         ? 'bg-white/10 text-white'
                                                         : 'text-gray-400 hover:text-gray-200 hover:bg-white/5'
@@ -100,10 +113,10 @@ export default function Modal({
                                 </div>
 
                                 {/* Right Column - Content */}
-                                <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                                    {/* Close button */}
+                                <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+                                    {/* Close button (phones have it beside the title) */}
                                     {closeable && (
-                                        <div className="flex justify-end p-5 pb-0 flex-shrink-0">
+                                        <div className={`${title ? 'hidden sm:flex' : 'flex'} justify-end p-5 pb-0 flex-shrink-0`}>
                                             <button
                                                 onClick={close}
                                                 aria-label="Close"
@@ -114,7 +127,7 @@ export default function Modal({
                                         </div>
                                     )}
                                     {/* Tab Content */}
-                                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                                    <div className="flex-1 overflow-y-auto p-5 sm:p-8 custom-scrollbar">
                                         {tabs[activeTab]?.content}
                                     </div>
                                 </div>

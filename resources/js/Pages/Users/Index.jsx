@@ -218,10 +218,10 @@ export default function Index({ users }) {
                                     />
                                 </th>
                                 <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">User</th>
-                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Email</th>
-                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Role</th>
-                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Status</th>
-                                <th className="px-4 py-2.5 text-gray-400 text-xs font-medium">Joined</th>
+                                <th className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-xs font-medium">Email</th>
+                                <th className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-xs font-medium">Role</th>
+                                <th className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-xs font-medium">Status</th>
+                                <th className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-xs font-medium">Joined</th>
                                 <th className="px-4 py-2.5 text-gray-400 text-xs font-medium text-right">Actions</th>
                             </tr>
                         </thead>
@@ -242,28 +242,33 @@ export default function Index({ users }) {
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[rgb(139,0,0)] to-[rgb(220,20,60)] flex items-center justify-center text-white font-bold text-sm">
                                                 {user.first_name?.[0]}{user.last_name?.[0]}
                                             </div>
-                                            <div>
+                                            <div className="min-w-0">
                                                 <p className="text-white font-medium">
                                                     <Link href={route('users.show', user.id)} className="hover:text-[#DC143C] transition">
                                                         {user.first_name} {user.last_name}
                                                     </Link>
                                                 </p>
                                                 <p className="text-gray-500 text-sm">@{user.username}</p>
+                                                <p className="md:hidden text-gray-400 text-xs break-all">{user.email}</p>
+                                                <div className="md:hidden flex flex-wrap gap-1 mt-1">
+                                                    <StatusBadge status={user.role} />
+                                                    <StatusBadge status={user.status} />
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-2.5 text-gray-300">{user.email}</td>
-                                    <td className="px-4 py-2.5">
+                                    <td className="hidden md:table-cell px-4 py-2.5 text-gray-300">{user.email}</td>
+                                    <td className="hidden md:table-cell px-4 py-2.5">
                                         <StatusBadge status={user.role} />
                                     </td>
-                                    <td className="px-4 py-2.5">
+                                    <td className="hidden md:table-cell px-4 py-2.5">
                                         <StatusBadge status={user.status} />
                                     </td>
-                                    <td className="px-4 py-2.5 text-gray-400 text-sm">
+                                    <td className="hidden md:table-cell px-4 py-2.5 text-gray-400 text-sm">
                                         {new Date(user.created_at).toLocaleDateString()}
                                     </td>
-                                    <td className="px-4 py-2.5 text-right">
-                                        <div className="flex items-center justify-end gap-2">
+                                    <td className="px-2 md:px-4 py-2.5 text-right">
+                                        <div className="flex items-center justify-end gap-1 md:gap-2">
                                             <button onClick={() => handleEdit(user)} aria-label={`Edit ${user.name}`} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
                                                 <i aria-hidden="true" className="fas fa-edit"></i>
                                             </button>
